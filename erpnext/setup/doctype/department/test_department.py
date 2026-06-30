@@ -1,5 +1,6 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
+from __future__ import annotations
 
 import frappe
 
@@ -7,12 +8,12 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestDepartment(ERPNextTestSuite):
-	def test_remove_department_data(self):
+	def test_remove_department_data(self) -> None:
 		doc = create_department("Test Department", company="_Test Company")
 		frappe.delete_doc("Department", doc.name)
 
 
-def create_department(department_name, parent_department=None, company=None):
+def create_department(department_name: str, parent_department: str | None = None, company: str | None = None):
 	doc = frappe.get_doc(
 		{
 			"doctype": "Department",
