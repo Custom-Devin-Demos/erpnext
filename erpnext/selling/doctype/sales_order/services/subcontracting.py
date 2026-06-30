@@ -3,12 +3,14 @@
 
 """Subcontracting (inward) integration for Sales Order."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
 class SubcontractingService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def validate_fg_item_for_subcontracting(self) -> None:

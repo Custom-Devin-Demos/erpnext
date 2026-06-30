@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -8,7 +10,7 @@ from frappe.model.mapper import get_mapped_doc
 
 
 @frappe.whitelist()
-def make_quotation(source_name: str, target_doc: str | Document | None = None):
+def make_quotation(source_name: str, target_doc: str | Document | None = None) -> Document:
 	def set_missing_values(source, target):
 		_set_missing_values(source, target)
 
@@ -37,7 +39,7 @@ def make_quotation(source_name: str, target_doc: str | Document | None = None):
 
 
 @frappe.whitelist()
-def make_opportunity(source_name: str, target_doc: str | Document | None = None):
+def make_opportunity(source_name: str, target_doc: str | Document | None = None) -> Document:
 	def set_missing_values(source, target):
 		_set_missing_values(source, target)
 
@@ -61,7 +63,7 @@ def make_opportunity(source_name: str, target_doc: str | Document | None = None)
 
 
 @frappe.whitelist()
-def make_payment_entry(source_name: str, target_doc: str | Document | None = None):
+def make_payment_entry(source_name: str, target_doc: str | Document | None = None) -> Document:
 	def set_missing_values(source, target):
 		_set_missing_values(source, target)
 
@@ -85,7 +87,7 @@ def make_payment_entry(source_name: str, target_doc: str | Document | None = Non
 	return target_doc
 
 
-def _set_missing_values(source, target):
+def _set_missing_values(source, target) -> None:
 	address = frappe.get_all(
 		"Dynamic Link",
 		{
@@ -118,7 +120,7 @@ def _set_missing_values(source, target):
 		)
 
 
-def make_contact(args, is_primary_contact=1):
+def make_contact(args, is_primary_contact: int = 1) -> Document:
 	values = {
 		"doctype": "Contact",
 		"is_primary_contact": is_primary_contact,
@@ -163,7 +165,7 @@ def make_contact(args, is_primary_contact=1):
 	return contact
 
 
-def make_address(args, is_primary_address=1, is_shipping_address=1):
+def make_address(args, is_primary_address: int = 1, is_shipping_address: int = 1) -> Document:
 	reqd_fields = []
 	for field in ["city", "country"]:
 		if not args.get(field):

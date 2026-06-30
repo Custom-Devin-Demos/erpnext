@@ -3,6 +3,8 @@
 
 """Status computation and progress tracking for Sales Order."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.desk.notifications import clear_doctype_notifications
@@ -12,7 +14,7 @@ from erpnext.selling.doctype.sales_order.services.subcontracting import Subcontr
 
 
 class StatusService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def set_default_statuses(self) -> None:
