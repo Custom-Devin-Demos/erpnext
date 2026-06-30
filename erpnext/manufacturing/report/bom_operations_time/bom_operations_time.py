@@ -2,17 +2,19 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	data = get_data(filters)
 	columns = get_columns(filters)
 	return columns, data
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	bom_wise_data = {}
 	bom_data, report_data = [], []
 
@@ -43,7 +45,7 @@ def get_data(filters):
 	return report_data
 
 
-def get_filtered_data(filters):
+def get_filtered_data(filters: dict) -> list:
 	bom = frappe.qb.DocType("BOM")
 	bom_ops = frappe.qb.DocType("BOM Operation")
 
@@ -77,7 +79,7 @@ def get_filtered_data(filters):
 	return bom_operation_data
 
 
-def get_bom_count(bom_data):
+def get_bom_count(bom_data: list) -> dict:
 	data = frappe.get_all(
 		"BOM Item",
 		fields=[{"COUNT": "*", "as": "count"}, "bom_no"],
@@ -92,11 +94,11 @@ def get_bom_count(bom_data):
 	return bom_count
 
 
-def get_args():
+def get_args() -> dict:
 	return frappe._dict({"name": "", "item": "", "item_name": "", "uom": ""})
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	return [
 		{"label": _("BOM ID"), "options": "BOM", "fieldname": "name", "fieldtype": "Link", "width": 220},
 		{

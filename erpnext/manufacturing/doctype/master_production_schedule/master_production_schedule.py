@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import math
 
 import frappe
@@ -43,7 +45,7 @@ class MasterProductionSchedule(Document):
 	# end: auto-generated types
 
 	@frappe.whitelist()
-	def get_actual_demand(self):
+	def get_actual_demand(self) -> list | None:
 		self.set("items", [])
 
 		actual_demand_data = self.get_demand_data()
@@ -59,11 +61,11 @@ class MasterProductionSchedule(Document):
 		if not self.is_new():
 			self.save()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_to_date()
 		self.validate_company()
 
-	def validate_company(self):
+	def validate_company(self) -> None:
 		if self.sales_forecast:
 			sales_forecast_company = frappe.db.get_value("Sales Forecast", self.sales_forecast, "company")
 			if sales_forecast_company != self.company:
@@ -78,7 +80,7 @@ class MasterProductionSchedule(Document):
 					)
 				)
 
-	def set_to_date(self):
+	def set_to_date(self) -> None:
 		self.to_date = None
 		for row in self.items:
 			if not self.to_date or getdate(row.delivery_date) > getdate(self.to_date):
@@ -89,7 +91,7 @@ class MasterProductionSchedule(Document):
 			if not self.to_date or getdate(date) > getdate(self.to_date):
 				self.to_date = date
 
-	def get_sales_forecast_data(self):
+	def get_sales_forecast_data(self) -> list:
 		if not self.sales_forecast:
 			return []
 
@@ -105,7 +107,7 @@ class MasterProductionSchedule(Document):
 			order_by="delivery_date asc",
 		)
 
-	def update_item_details(self, data):
+	def update_item_details(self, data: list) -> None:
 		items = [item[0] for item in data if item[0]]
 		item_details = self.get_item_details(items)
 
@@ -115,7 +117,7 @@ class MasterProductionSchedule(Document):
 			if item_code in item_details:
 				item_data.update(item_details[item_code])
 
-	def get_item_details(self, items):
+	def get_item_details(self, items: list) -> dict:
 		doctype = frappe.qb.DocType("Item")
 
 		query = (
@@ -142,7 +144,7 @@ class MasterProductionSchedule(Document):
 
 		return item_wise_details
 
-	def get_cumulative_lead_time(self, item_code, bom_no, time_in_days=0):
+	def get_cumulative_lead_time(self, item_code: str, bom_no: str | None, time_in_days: float = 0) -> float:
 		if not time_in_days:
 			time_in_days = get_item_lead_time(item_code)
 
@@ -161,13 +163,13 @@ class MasterProductionSchedule(Document):
 
 		return time_in_days
 
-	def get_demand_data(self):
+	def get_demand_data(self) -> list:
 		sales_order_data = self.get_sales_orders_data()
 		material_request_data = self.get_material_requests_data()
 
 		return sales_order_data + material_request_data
 
-	def get_material_requests_data(self):
+	def get_material_requests_data(self) -> list:
 		if not self.material_requests:
 			return []
 
@@ -198,7 +200,7 @@ class MasterProductionSchedule(Document):
 
 		return query.run(as_dict=True)
 
-	def get_sales_orders_data(self):
+	def get_sales_orders_data(self) -> list:
 		sales_order_schedules = self.get_sales_order_schedules()
 		ignore_orders = []
 		if sales_order_schedules:
@@ -210,7 +212,7 @@ class MasterProductionSchedule(Document):
 
 		return sales_orders + sales_order_schedules
 
-	def get_items_from_sales_orders(self, ignore_orders=None):
+	def get_items_from_sales_orders(self, ignore_orders: list | None = None) -> list:
 		doctype = frappe.qb.DocType("Sales Order Item")
 		query = (
 			frappe.qb.from_(doctype)
@@ -244,7 +246,7 @@ class MasterProductionSchedule(Document):
 
 		return query.run(as_dict=True)
 
-	def get_sales_order_schedules(self):
+	def get_sales_order_schedules(self) -> list:
 		doctype = frappe.qb.DocType("Delivery Schedule Item")
 		query = frappe.qb.from_(doctype).select(
 			doctype.item_code,
@@ -265,7 +267,7 @@ class MasterProductionSchedule(Document):
 
 		return query.run(as_dict=True)
 
-	def get_item_wise_mps_data(self, data):
+	def get_item_wise_mps_data(self, data: list) -> dict:
 		item_wise_data = frappe._dict({})
 
 		for item in data:
@@ -288,7 +290,7 @@ class MasterProductionSchedule(Document):
 
 		return item_wise_data
 
-	def add_mps_data(self, data):
+	def add_mps_data(self, data: dict) -> None:
 		data = frappe._dict(sorted(data.items(), key=lambda x: x[0][1] or ""))
 
 		for key in data:
@@ -300,7 +302,7 @@ class MasterProductionSchedule(Document):
 			row.warehouse = row.warehouse or self.parent_warehouse
 			self.append("items", row)
 
-	def get_distinct_items(self, data):
+	def get_distinct_items(self, data: list) -> list:
 		items = []
 		for item in data:
 			if item.item_code not in items:
@@ -309,7 +311,7 @@ class MasterProductionSchedule(Document):
 		return items
 
 	@frappe.whitelist()
-	def fetch_materials_requests(self, **data):
+	def fetch_materials_requests(self, **data) -> None:
 		if isinstance(data, str):
 			data = parse_json(data)
 
@@ -334,7 +336,7 @@ class MasterProductionSchedule(Document):
 		if not self.is_new():
 			self.save()
 
-	def get_material_requests(self, data):
+	def get_material_requests(self, data: dict) -> list:
 		doctype = frappe.qb.DocType("Material Request")
 
 		query = (
@@ -365,7 +367,7 @@ class MasterProductionSchedule(Document):
 		return query.run(as_dict=True)
 
 	@frappe.whitelist()
-	def fetch_sales_orders(self, **data):
+	def fetch_sales_orders(self, **data) -> None:
 		if isinstance(data, str):
 			data = parse_json(data)
 
@@ -390,7 +392,7 @@ class MasterProductionSchedule(Document):
 		if not self.is_new():
 			self.save()
 
-	def get_sales_orders(self, kwargs):
+	def get_sales_orders(self, kwargs: dict) -> list:
 		doctype = frappe.qb.DocType("Sales Order")
 
 		query = (
@@ -429,16 +431,16 @@ class MasterProductionSchedule(Document):
 
 		return query.run(as_dict=True)
 
-	def get_items_for_mps(self):
+	def get_items_for_mps(self) -> list | None:
 		if not self.select_items:
 			return
 
 		return [d.item_code for d in self.select_items if d.item_code]
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.enqueue_mrp_creation()
 
-	def enqueue_mrp_creation(self):
+	def enqueue_mrp_creation(self) -> None:
 		frappe.enqueue_doc("Master Production Schedule", self.name, "make_mrp", queue="long", timeout=1800)
 
 		frappe.msgprint(
@@ -447,7 +449,7 @@ class MasterProductionSchedule(Document):
 		)
 
 
-def get_item_lead_time(item_code):
+def get_item_lead_time(item_code: str) -> float:
 	doctype = frappe.qb.DocType("Item Lead Time")
 
 	query = (
@@ -468,7 +470,7 @@ def get_item_lead_time(item_code):
 
 
 @frappe.whitelist()
-def get_mps_details(mps: str):
+def get_mps_details(mps: str) -> dict | None:
 	return frappe.db.get_value(
 		"Master Production Schedule",
 		mps,

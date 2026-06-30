@@ -3,19 +3,30 @@
 
 """BOM explosion helpers for Production Plan material planning."""
 
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import IfNull, Max, Min, Sum
 
 from erpnext.manufacturing.doctype.production_plan.services.planning_queries import get_uom_conversion_factor
 
 
-def get_exploded_items(item_details, company, bom_no, include_non_stock_items, planned_qty=1, doc=None):
+def get_exploded_items(
+	item_details: dict,
+	company: str,
+	bom_no: str,
+	include_non_stock_items: bool,
+	planned_qty: float = 1,
+	doc=None,
+) -> dict:
 	data = _exploded_items_query(company, bom_no, include_non_stock_items, planned_qty)
 	_apply_exploded_conversion(item_details, data)
 	return item_details
 
 
-def _exploded_items_query(company, bom_no, include_non_stock_items, planned_qty):
+def _exploded_items_query(
+	company: str, bom_no: str, include_non_stock_items: bool, planned_qty: float
+) -> list:
 	bei = frappe.qb.DocType("BOM Explosion Item")
 	bom = frappe.qb.DocType("BOM")
 	item = frappe.qb.DocType("Item")
@@ -37,7 +48,7 @@ def _exploded_items_query(company, bom_no, include_non_stock_items, planned_qty)
 	).run(as_dict=True)
 
 
-def _exploded_item_columns(bei, bom, item, item_default, item_uom, planned_qty):
+def _exploded_item_columns(bei, bom, item, item_default, item_uom, planned_qty: float) -> list:
 	# only item_code/stock_uom are grouped; the rest are functionally dependent on the grouped item
 	# or arbitrary per BOM Item on MySQL -> Max() keeps the GROUP BY valid on postgres with the same
 	# value MySQL picked.
@@ -60,12 +71,12 @@ def _exploded_item_columns(bei, bom, item, item_default, item_uom, planned_qty):
 	]
 
 
-def _exploded_item_filter(bei, bom, item, bom_no, include_non_stock_items):
+def _exploded_item_filter(bei, bom, item, bom_no: str, include_non_stock_items: bool):
 	stock_filter = item.is_stock_item.isin([0, 1]) if include_non_stock_items else item.is_stock_item == 1
 	return (bei.docstatus < 2) & (bei.is_sub_assembly_item == 0) & (bom.name == bom_no) & stock_filter
 
 
-def _apply_exploded_conversion(item_details, data):
+def _apply_exploded_conversion(item_details: dict, data: list) -> None:
 	for d in data:
 		if not d.conversion_factor and d.purchase_uom:
 			d.conversion_factor = get_uom_conversion_factor(d.item_code, d.purchase_uom)
@@ -74,15 +85,15 @@ def _apply_exploded_conversion(item_details, data):
 
 def get_subitems(
 	doc,
-	data,
-	item_details,
-	bom_no,
-	company,
-	include_non_stock_items,
-	include_subcontracted_items,
-	parent_qty,
-	planned_qty=1,
-):
+	data: dict,
+	item_details: dict,
+	bom_no: str,
+	company: str,
+	include_non_stock_items: bool,
+	include_subcontracted_items: bool,
+	parent_qty: float,
+	planned_qty: float = 1,
+) -> dict:
 	for d in _subitems_query(company, bom_no, include_non_stock_items, parent_qty, planned_qty):
 		_process_subitem(
 			doc, data, item_details, d, company, include_non_stock_items, include_subcontracted_items
@@ -90,7 +101,9 @@ def get_subitems(
 	return {key: value for key, value in item_details.items() if not value.get("is_phantom_item")}
 
 
-def _subitems_query(company, bom_no, include_non_stock_items, parent_qty, planned_qty):
+def _subitems_query(
+	company: str, bom_no: str, include_non_stock_items: bool, parent_qty: float, planned_qty: float
+) -> list:
 	bom_item = frappe.qb.DocType("BOM Item")
 	bom = frappe.qb.DocType("BOM")
 	item = frappe.qb.DocType("Item")
@@ -114,7 +127,9 @@ def _subitems_query(company, bom_no, include_non_stock_items, parent_qty, planne
 	).run(as_dict=True)
 
 
-def _subitem_columns(bom_item, bom, item, item_default, item_uom, parent_qty, planned_qty):
+def _subitem_columns(
+	bom_item, bom, item, item_default, item_uom, parent_qty: float, planned_qty: float
+) -> list:
 	qty = IfNull(parent_qty * Sum(bom_item.stock_qty / IfNull(bom.quantity, 1)) * planned_qty, 0).as_("qty")
 	# only item_code is grouped; the remaining item-attribute columns are functionally dependent on it,
 	# so Max() returns their single value on both engines. is_phantom_item is the exception: the same
@@ -143,7 +158,7 @@ def _subitem_columns(bom_item, bom, item, item_default, item_uom, parent_qty, pl
 	]
 
 
-def _subitem_filter(bom_item, bom, item, bom_no, include_non_stock_items):
+def _subitem_filter(bom_item, bom, item, bom_no: str, include_non_stock_items: bool):
 	stock_filter = item.is_stock_item.isin([0, 1]) if include_non_stock_items else item.is_stock_item == 1
 	return (
 		(bom.name == bom_no)
@@ -154,8 +169,14 @@ def _subitem_filter(bom_item, bom, item, bom_no, include_non_stock_items):
 
 
 def _process_subitem(
-	doc, data, item_details, d, company, include_non_stock_items, include_subcontracted_items
-):
+	doc,
+	data: dict,
+	item_details: dict,
+	d,
+	company: str,
+	include_non_stock_items: bool,
+	include_subcontracted_items: bool,
+) -> None:
 	if not data.get("include_exploded_items") or not d.default_bom:
 		_merge_subitem(item_details, d)
 
@@ -173,7 +194,7 @@ def _process_subitem(
 			)
 
 
-def _merge_subitem(item_details, d):
+def _merge_subitem(item_details: dict, d) -> None:
 	if d.item_code in item_details:
 		item_details[d.item_code].qty = item_details[d.item_code].qty + d.qty
 		return
@@ -183,7 +204,7 @@ def _merge_subitem(item_details, d):
 	item_details[d.item_code] = d
 
 
-def _should_explode_subitem(d, include_subcontracted_items):
+def _should_explode_subitem(d, include_subcontracted_items: bool) -> bool:
 	return bool(
 		(d.default_material_request_type in ["Manufacture", "Purchase"] and not d.is_sub_contracted)
 		or (d.is_sub_contracted and include_subcontracted_items)

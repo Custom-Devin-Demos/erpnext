@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	data = get_data(filters)
 	columns = get_column(filters)
@@ -15,7 +17,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	data = []
 
 	order_details = {}
@@ -26,7 +28,7 @@ def get_data(filters):
 	return data
 
 
-def get_production_plan_item_details(filters, data, order_details):
+def get_production_plan_item_details(filters: dict, data: list, order_details: dict) -> None:
 	production_plan_doc = frappe.get_cached_doc("Production Plan", filters.get("production_plan"))
 	for row in production_plan_doc.po_items:
 		work_orders = frappe.get_all(
@@ -79,7 +81,9 @@ def get_production_plan_item_details(filters, data, order_details):
 		get_production_plan_sub_assembly_item_details(filters, row, production_plan_doc, data, order_details)
 
 
-def get_production_plan_sub_assembly_item_details(filters, row, production_plan_doc, data, order_details):
+def get_production_plan_sub_assembly_item_details(
+	filters: dict, row, production_plan_doc, data: list, order_details: dict
+) -> None:
 	for item in production_plan_doc.sub_assembly_items:
 		if row.name == item.production_plan_item:
 			subcontracted_item = item.type_of_manufacturing == "Subcontract"
@@ -121,7 +125,7 @@ def get_production_plan_sub_assembly_item_details(filters, row, production_plan_
 				data.append(data_to_append)
 
 
-def get_work_order_details(filters, order_details):
+def get_work_order_details(filters: dict, order_details: dict) -> None:
 	for row in frappe.get_all(
 		"Work Order",
 		filters={"production_plan": filters.get("production_plan"), "docstatus": 1},
@@ -130,7 +134,7 @@ def get_work_order_details(filters, order_details):
 		order_details.setdefault((row.name, row.production_item), row)
 
 
-def get_purchase_order_details(filters, order_details):
+def get_purchase_order_details(filters: dict, order_details: dict) -> None:
 	for row in frappe.get_all(
 		"Purchase Order Item",
 		filters={"production_plan": filters.get("production_plan"), "docstatus": 1},
@@ -141,7 +145,7 @@ def get_purchase_order_details(filters, order_details):
 		order_details.setdefault((row.parent, row.fg_item or row.item_code), row)
 
 
-def get_column(filters):
+def get_column(filters: dict) -> list:
 	return [
 		{
 			"label": _("Finished Good"),

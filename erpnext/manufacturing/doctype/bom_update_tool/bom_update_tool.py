@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 from typing import TYPE_CHECKING, Literal
 
@@ -29,7 +31,7 @@ class BOMUpdateTool(Document):
 
 
 @frappe.whitelist()
-def enqueue_replace_bom(boms: dict | str | None = None, args: dict | str | None = None) -> "BOMUpdateLog":
+def enqueue_replace_bom(boms: dict | str | None = None, args: dict | str | None = None) -> BOMUpdateLog:
 	"""Returns a BOM Update Log (that queues a job) for BOM Replacement."""
 	boms = boms or args
 	boms = frappe.parse_json(boms)
@@ -39,7 +41,7 @@ def enqueue_replace_bom(boms: dict | str | None = None, args: dict | str | None 
 
 
 @frappe.whitelist()
-def enqueue_update_cost() -> "BOMUpdateLog":
+def enqueue_update_cost() -> BOMUpdateLog:
 	"""Returns a BOM Update Log (that queues a job) for BOM Cost Updation."""
 	update_log = create_bom_update_log(update_type="Update Cost")
 	return update_log
@@ -68,7 +70,7 @@ def is_older_log(log: dict) -> bool:
 def create_bom_update_log(
 	boms: dict[str, str] | None = None,
 	update_type: Literal["Replace BOM", "Update Cost"] = "Replace BOM",
-) -> "BOMUpdateLog":
+) -> BOMUpdateLog:
 	"""Creates a BOM Update Log that handles the background job."""
 
 	boms = boms or {}

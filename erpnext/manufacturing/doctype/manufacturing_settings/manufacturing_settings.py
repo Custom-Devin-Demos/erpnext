@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from dateutil.relativedelta import relativedelta
 from frappe.model.document import Document
@@ -38,22 +40,22 @@ class ManufacturingSettings(Document):
 		validate_components_quantities_per_bom: DF.Check
 	# end: auto-generated types
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.reset_values()
 
-	def reset_values(self):
+	def reset_values(self) -> None:
 		if self.backflush_raw_materials_based_on != "BOM" and self.validate_components_quantities_per_bom:
 			self.validate_components_quantities_per_bom = 0
 
 
-def get_mins_between_operations():
+def get_mins_between_operations() -> relativedelta:
 	return relativedelta(
 		minutes=cint(frappe.db.get_single_value("Manufacturing Settings", "mins_between_operations")) or 10
 	)
 
 
 @frappe.whitelist()
-def is_material_consumption_enabled():
+def is_material_consumption_enabled() -> int:
 	if not hasattr(frappe.local, "material_consumption"):
 		frappe.local.material_consumption = cint(
 			frappe.db.get_single_value("Manufacturing Settings", "material_consumption")

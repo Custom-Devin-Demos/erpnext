@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_years, cint, flt, getdate
@@ -11,12 +13,12 @@ from erpnext.accounts.report.financial_statements import get_period_list
 from erpnext.stock.doctype.warehouse.warehouse import get_child_warehouses
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	return ForecastingReport(filters).execute_report()
 
 
 class ExponentialSmoothingForecast:
-	def forecast_future_data(self):
+	def forecast_future_data(self) -> None:
 		for _key, value in self.period_wise_data.items():
 			forecast_data = []
 			for period in self.period_list:
@@ -37,7 +39,7 @@ class ExponentialSmoothingForecast:
 
 
 class ForecastingReport(ExponentialSmoothingForecast):
-	def __init__(self, filters=None):
+	def __init__(self, filters: dict | None = None) -> None:
 		self.filters = frappe._dict(filters or {})
 		self.data = []
 		self.doctype = self.filters.based_on_document
@@ -46,7 +48,7 @@ class ForecastingReport(ExponentialSmoothingForecast):
 		self.fieldtype = "Float" if self.based_on_field == "qty" else "Currency"
 		self.company_currency = erpnext.get_company_currency(self.filters.company)
 
-	def execute_report(self):
+	def execute_report(self) -> tuple:
 		self.prepare_periodical_data()
 		self.forecast_future_data()
 		self.prepare_final_data()
@@ -58,7 +60,7 @@ class ForecastingReport(ExponentialSmoothingForecast):
 
 		return columns, self.data, None, charts, summary_data
 
-	def prepare_periodical_data(self):
+	def prepare_periodical_data(self) -> None:
 		self.period_wise_data = {}
 
 		from_date = add_years(self.filters.from_date, cint(self.filters.no_of_years) * -1)
@@ -95,7 +97,7 @@ class ForecastingReport(ExponentialSmoothingForecast):
 				if total_qty:
 					value["avg"] = flt(sum(list_of_period_value)) / flt(sum(total_qty))
 
-	def get_data_for_forecast(self):
+	def get_data_for_forecast(self) -> list:
 		parent = frappe.qb.DocType(self.doctype)
 		child = frappe.qb.DocType(self.child_doctype)
 
@@ -131,7 +133,7 @@ class ForecastingReport(ExponentialSmoothingForecast):
 
 		return query.run(as_dict=True)
 
-	def prepare_final_data(self):
+	def prepare_final_data(self) -> None:
 		self.data = []
 
 		if not self.period_wise_data:
@@ -140,7 +142,7 @@ class ForecastingReport(ExponentialSmoothingForecast):
 		for key in self.period_wise_data:
 			self.data.append(self.period_wise_data.get(key))
 
-	def add_total(self):
+	def add_total(self) -> None:
 		if not self.data:
 			return
 
@@ -160,7 +162,7 @@ class ForecastingReport(ExponentialSmoothingForecast):
 
 		self.data.append(total_row)
 
-	def get_columns(self):
+	def get_columns(self) -> list:
 		columns = [
 			{
 				"label": _("Item Code"),
@@ -203,7 +205,7 @@ class ForecastingReport(ExponentialSmoothingForecast):
 
 		return columns
 
-	def get_chart_data(self):
+	def get_chart_data(self) -> dict | None:
 		if not self.data:
 			return
 
@@ -237,7 +239,7 @@ class ForecastingReport(ExponentialSmoothingForecast):
 			"type": "line",
 		}
 
-	def get_summary_data(self):
+	def get_summary_data(self) -> list | None:
 		if not self.data:
 			return
 

@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import OrderedDict
 
 import frappe
@@ -70,19 +72,19 @@ class BOMCreator(Document):
 		uom: DF.Link | None
 	# end: auto-generated types
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.set_status()
 		self.set_is_expandable()
 		self.set_conversion_factor()
 		self.set_reference_id()
 		self.set_rate_for_items()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_finished_good()
 		self.validate_items()
 		self.validate_duplicate_item()
 
-	def validate_duplicate_item(self):
+	def validate_duplicate_item(self) -> None:
 		# If same items added multiple times under same parent, raise error
 		item_map = {}
 		for row in self.items:
@@ -104,7 +106,7 @@ class BOMCreator(Document):
 			else:
 				item_map[key] = row.idx
 
-	def validate_finished_good(self):
+	def validate_finished_good(self) -> None:
 		is_stock_item = frappe.get_cached_value("Item", self.item_code, "is_stock_item")
 		if is_stock_item and self.is_phantom:
 			frappe.throw(_("Phantom BOM cannot be created for stock item {0}.").format(self.item_code))
@@ -113,7 +115,7 @@ class BOMCreator(Document):
 				_("Non-phantom BOM cannot be created for non-stock item {0}.").format(self.item_code)
 			)
 
-	def validate_items(self):
+	def validate_items(self) -> None:
 		for row in self.items:
 			if row.is_expandable and row.item_code == self.item_code:
 				frappe.throw(_("Item {0} cannot be added as a sub-assembly of itself").format(row.item_code))
@@ -130,7 +132,7 @@ class BOMCreator(Document):
 					title=_("Remove Parent Row No in Items Table"),
 				)
 
-	def set_status(self, save=False):
+	def set_status(self, save: bool = False) -> None:
 		self.status = {
 			0: "Draft",
 			1: "Submitted",
@@ -141,7 +143,7 @@ class BOMCreator(Document):
 		if save:
 			self.db_set("status", self.status)
 
-	def set_status_completed(self):
+	def set_status_completed(self) -> None:
 		if self.docstatus != 1:
 			return
 
@@ -157,14 +159,14 @@ class BOMCreator(Document):
 		if has_completed:
 			self.status = "Completed"
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.set_status(True)
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.validate_fields()
 		self.set_status()
 
-	def set_reference_id(self):
+	def set_reference_id(self) -> None:
 		parent_reference = {row.idx: row.name for row in self.items}
 
 		for row in self.items:
@@ -183,14 +185,14 @@ class BOMCreator(Document):
 				row.fg_reference_id = self.name
 
 	@frappe.whitelist()
-	def add_boms(self):
+	def add_boms(self) -> None:
 		self.submit()
 
-	def set_rate_for_items(self):
+	def set_rate_for_items(self) -> None:
 		amount = self.get_raw_material_cost()
 		self.raw_material_cost = amount
 
-	def get_raw_material_cost(self, fg_item=None):
+	def get_raw_material_cost(self, fg_item: str | None = None) -> float:
 		if not fg_item:
 			fg_item = self.item_code
 
@@ -223,19 +225,19 @@ class BOMCreator(Document):
 
 		return amount
 
-	def set_is_expandable(self):
+	def set_is_expandable(self) -> None:
 		fg_items = [row.fg_item for row in self.items if row.fg_item != self.item_code]
 		for row in self.items:
 			row.is_expandable = 0
 			if row.item_code in fg_items:
 				row.is_expandable = 1
 
-	def set_conversion_factor(self):
+	def set_conversion_factor(self) -> None:
 		for row in self.items:
 			if not row.conversion_factor:
 				row.conversion_factor = 1.0
 
-	def validate_fields(self):
+	def validate_fields(self) -> None:
 		fields = {
 			"items": "Items",
 		}
@@ -244,15 +246,15 @@ class BOMCreator(Document):
 			if not self.get(field):
 				frappe.throw(_("Please set {0} in BOM Creator {1}").format(_(label), self.name))
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.enqueue_bom_creation()
 
 	@frappe.whitelist()
-	def enqueue_create_boms(self):
+	def enqueue_create_boms(self) -> None:
 		self.check_permission("submit")
 		self.enqueue_bom_creation()
 
-	def enqueue_bom_creation(self):
+	def enqueue_bom_creation(self) -> None:
 		frappe.enqueue(
 			self.create_boms,
 			queue="short",
@@ -264,7 +266,7 @@ class BOMCreator(Document):
 			_("BOMs creation has been enqueued, kindly check the status after some time"), alert=True
 		)
 
-	def create_boms(self):
+	def create_boms(self) -> None:
 		"""
 		Sample data structure of production_item_wise_rm
 		production_item_wise_rm = {
@@ -324,7 +326,7 @@ class BOMCreator(Document):
 
 			frappe.msgprint(_("BOMs creation failed"))
 
-	def create_bom(self, row, production_item_wise_rm):
+	def create_bom(self, row, production_item_wise_rm: dict) -> None:
 		bom_creator_item = row.name if row.name != self.name else ""
 		if frappe.db.exists(
 			"BOM",
@@ -388,7 +390,7 @@ class BOMCreator(Document):
 		production_item_wise_rm[(row.item_code, row.name)].bom_no = bom.name
 
 	@frappe.whitelist()
-	def edit_bom_creator(self, docname: str, data: str | dict):
+	def edit_bom_creator(self, docname: str, data: str | dict) -> Document:
 		if not frappe.db.exists("BOM Creator Item", {"parent": self.name, "name": docname}):
 			frappe.throw(_("BOM Creator Item with name {0} does not exist").format(docname))
 
@@ -412,7 +414,7 @@ class BOMCreator(Document):
 
 		return self
 
-	def has_operations(self):
+	def has_operations(self) -> bool:
 		for row in self.items:
 			if row.operation:
 				return True
@@ -420,11 +422,11 @@ class BOMCreator(Document):
 		return False
 
 	@frappe.whitelist()
-	def get_default_bom(self, item_code: str):
+	def get_default_bom(self, item_code: str) -> str | None:
 		return frappe.get_cached_value("Item", item_code, "default_bom")
 
 	@frappe.whitelist()
-	def add_item(self, **kwargs):
+	def add_item(self, **kwargs) -> Document:
 		if isinstance(kwargs, str):
 			kwargs = frappe.parse_json(kwargs)
 
@@ -454,7 +456,7 @@ class BOMCreator(Document):
 		return self
 
 	@frappe.whitelist()
-	def add_sub_assembly(self, **kwargs):
+	def add_sub_assembly(self, **kwargs) -> Document:
 		if isinstance(kwargs, str):
 			kwargs = frappe.parse_json(kwargs)
 
@@ -522,7 +524,7 @@ class BOMCreator(Document):
 		return self
 
 	@frappe.whitelist()
-	def delete_node(self, **kwargs):
+	def delete_node(self, **kwargs) -> Document:
 		if isinstance(kwargs, str):
 			kwargs = frappe.parse_json(kwargs)
 
@@ -558,7 +560,7 @@ class BOMCreator(Document):
 
 
 @frappe.whitelist()
-def get_children(doctype: str | None = None, parent: str | None = None, **kwargs):
+def get_children(doctype: str | None = None, parent: str | None = None, **kwargs) -> list:
 	frappe.has_permission("BOM Creator", "read", throw=True)
 
 	if isinstance(kwargs, str):
@@ -594,13 +596,13 @@ def get_children(doctype: str | None = None, parent: str | None = None, **kwargs
 	return frappe.get_all("BOM Creator Item", fields=fields, filters=query_filters, order_by="idx")
 
 
-def get_item_details(item_code):
+def get_item_details(item_code: str) -> dict:
 	return frappe.get_cached_value(
 		"Item", item_code, ["item_name", "description", "image", "stock_uom", "default_bom"], as_dict=1
 	)
 
 
-def get_parent_row_no(doc, name):
+def get_parent_row_no(doc, name: str) -> int | None:
 	for row in doc.items:
 		if row.name == name:
 			return row.idx

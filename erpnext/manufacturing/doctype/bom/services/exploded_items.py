@@ -3,23 +3,29 @@
 
 """BOM exploded-items (flat BOM) computation (extracted from bom.py)."""
 
+from __future__ import annotations
+
 from operator import itemgetter
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe.query_builder.functions import IfNull
 from frappe.utils import flt
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class BOMExplodedItemsService:
-	def __init__(self, doc):
+	def __init__(self, doc: Document) -> None:
 		self.doc = doc
 
-	def update_exploded_items(self, save=True):
+	def update_exploded_items(self, save: bool = True) -> None:
 		"""Update Flat BOM, following will be correct data"""
 		self.get_exploded_items()
 		self.add_exploded_items(save=save)
 
-	def get_exploded_items(self):
+	def get_exploded_items(self) -> None:
 		"""Get all raw materials including items from child bom"""
 		self.doc.cur_exploded_items = {}
 		for d in self.doc.get("items"):
@@ -29,7 +35,7 @@ class BOMExplodedItemsService:
 				self.add_to_cur_exploded_items(self._exploded_item_row(d))
 
 	@staticmethod
-	def _exploded_item_row(d):
+	def _exploded_item_row(d) -> dict:
 		return frappe._dict(
 			{
 				"item_code": d.item_code,
@@ -47,7 +53,7 @@ class BOMExplodedItemsService:
 			}
 		)
 
-	def add_to_cur_exploded_items(self, args):
+	def add_to_cur_exploded_items(self, args: dict) -> None:
 		key = args.item_code
 		if args.operation:
 			key = (args.item_code, args.operation)
@@ -57,13 +63,13 @@ class BOMExplodedItemsService:
 		else:
 			self.doc.cur_exploded_items[key] = args
 
-	def get_child_exploded_items(self, bom_no, stock_qty, operation=None):
+	def get_child_exploded_items(self, bom_no: str, stock_qty: float, operation: str | None = None) -> None:
 		"""Add all items from Flat BOM of child BOM"""
 		for d in self._fetch_child_flat_bom_items(bom_no):
 			self.add_to_cur_exploded_items(self._child_exploded_row(d, stock_qty, operation))
 
 	@staticmethod
-	def _fetch_child_flat_bom_items(bom_no):
+	def _fetch_child_flat_bom_items(bom_no: str) -> list:
 		# Did not use qty_consumed_per_unit in the query, as it leads to rounding loss
 		bom_item = frappe.qb.DocType("BOM Explosion Item")
 		bom = frappe.qb.DocType("BOM")
@@ -90,7 +96,7 @@ class BOMExplodedItemsService:
 		).run(as_dict=1)
 
 	@staticmethod
-	def _child_exploded_row(d, stock_qty, operation):
+	def _child_exploded_row(d: dict, stock_qty: float, operation: str | None) -> dict:
 		return frappe._dict(
 			{
 				"item_code": d["item_code"],
@@ -107,7 +113,7 @@ class BOMExplodedItemsService:
 			}
 		)
 
-	def add_exploded_items(self, save=True):
+	def add_exploded_items(self, save: bool = True) -> None:
 		"Add items to Flat BOM table"
 		self.doc.set("exploded_items", [])
 

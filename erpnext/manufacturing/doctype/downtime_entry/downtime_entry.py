@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from frappe.model.document import Document
 from frappe.utils import time_diff_in_hours
 
@@ -34,6 +36,6 @@ class DowntimeEntry(Document):
 		workstation: DF.Link
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.from_time and self.to_time:
 			self.downtime = time_diff_in_hours(self.to_time, self.from_time) * 60
