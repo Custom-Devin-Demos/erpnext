@@ -1,14 +1,20 @@
+from __future__ import annotations
+
 import base64
 import hashlib
 import hmac
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import frappe
 from frappe import _
 
+if TYPE_CHECKING:
+	from collections.abc import Callable
 
-def validate_webhooks_request(doctype, hmac_key, secret_key="secret"):
-	def innerfn(fn):
+
+def validate_webhooks_request(doctype: str, hmac_key: str, secret_key: str = "secret") -> Callable:
+	def innerfn(fn: Callable) -> Callable:
 		settings = frappe.get_doc(doctype)
 
 		if frappe.request and settings and settings.get(secret_key) and not frappe.in_test:
@@ -27,7 +33,9 @@ def validate_webhooks_request(doctype, hmac_key, secret_key="secret"):
 	return innerfn
 
 
-def get_webhook_address(connector_name, method, exclude_uri=False, force_https=False):
+def get_webhook_address(
+	connector_name: str, method: str, exclude_uri: bool = False, force_https: bool = False
+) -> str:
 	endpoint = f"erpnext.erpnext_integrations.connectors.{connector_name}.{method}"
 
 	if exclude_uri:
@@ -47,7 +55,7 @@ def get_webhook_address(connector_name, method, exclude_uri=False, force_https=F
 	return server_url
 
 
-def get_tracking_url(carrier, tracking_number):
+def get_tracking_url(carrier: str, tracking_number: str) -> str:
 	# Return the formatted Tracking URL.
 	tracking_url = ""
 	url_reference = frappe.get_value("Parcel Service", carrier, "url_reference")

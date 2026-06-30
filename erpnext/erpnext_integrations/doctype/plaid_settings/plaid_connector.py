@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 import plaid
 from frappe import _
@@ -8,7 +10,7 @@ from plaid.errors import APIError, InvalidRequestError, ItemError
 
 
 class PlaidConnector:
-	def __init__(self, access_token=None):
+	def __init__(self, access_token: str | None = None) -> None:
 		self.access_token = access_token
 		self.settings = frappe.get_single("Plaid Settings")
 		self.products = ["transactions"]
@@ -20,14 +22,14 @@ class PlaidConnector:
 			api_version="2020-09-14",
 		)
 
-	def get_access_token(self, public_token):
+	def get_access_token(self, public_token: str | None) -> str:
 		if public_token is None:
 			frappe.log_error("Plaid: Public token is missing")
 		response = self.client.Item.public_token.exchange(public_token)
 		access_token = response["access_token"]
 		return access_token
 
-	def get_token_request(self, update_mode=False):
+	def get_token_request(self, update_mode: bool = False) -> dict:
 		country_codes = (
 			["US", "CA", "FR", "IE", "NL", "ES", "GB"]
 			if self.settings.enable_european_access
@@ -54,7 +56,7 @@ class PlaidConnector:
 
 		return args
 
-	def get_link_token(self, update_mode=False):
+	def get_link_token(self, update_mode: bool = False) -> str | None:
 		token_request = self.get_token_request(update_mode)
 
 		try:
@@ -68,7 +70,7 @@ class PlaidConnector:
 		else:
 			return response["link_token"]
 
-	def get_transactions(self, start_date, end_date, account_id=None):
+	def get_transactions(self, start_date: str, end_date: str, account_id: str | None = None) -> list | None:
 		kwargs = dict(access_token=self.access_token, start_date=start_date, end_date=end_date)
 		if account_id:
 			kwargs.update(dict(account_ids=[account_id]))

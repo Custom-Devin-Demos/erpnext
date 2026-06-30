@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt"
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.defaults import get_user_default
 from frappe.utils import cint
@@ -9,7 +11,7 @@ from frappe.utils import cint
 import erpnext.accounts.utils
 
 
-def boot_session(bootinfo):
+def boot_session(bootinfo) -> None:
 	"""boot session - send website info if guest"""
 
 	if frappe.session["user"] != "Guest":
@@ -77,7 +79,7 @@ def boot_session(bootinfo):
 		bootinfo.sysdefaults.repost_allowed_doctypes = frappe.get_hooks("repost_allowed_doctypes")
 
 
-def update_page_info(bootinfo):
+def update_page_info(bootinfo) -> None:
 	bootinfo.page_info.update(
 		{
 			"Chart of Accounts": {"title": "Chart of Accounts", "route": "Tree/Account"},
@@ -90,7 +92,7 @@ def update_page_info(bootinfo):
 	)
 
 
-def bootinfo(bootinfo):
+def bootinfo(bootinfo) -> None:
 	if bootinfo.get("user") and bootinfo["user"].get("name"):
 		bootinfo["user"]["employee"] = ""
 		frappe.session.data.employee = ""

@@ -1,7 +1,13 @@
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+	from collections.abc import Iterator
 
 
-def extract(fileobj, *args, **kwargs):
+def extract(fileobj, *args, **kwargs) -> Iterator[tuple]:
 	"""
 	Extract messages from a JSON file with standard UOM data. To be used by the Babel extractor.
 
