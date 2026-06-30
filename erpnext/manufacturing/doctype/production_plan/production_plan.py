@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -127,16 +129,16 @@ class ProductionPlan(Document):
 		warehouses: DF.TableMultiSelect[ProductionPlanMaterialRequestWarehouse]
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		self.set_onload(
 			"enable_stock_reservation",
 			frappe.db.get_single_value("Stock Settings", "enable_stock_reservation"),
 		)
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_pending_qty_in_row_without_reference()
 		self.calculate_total_planned_qty()
 		self.set_status()
@@ -146,17 +148,17 @@ class ProductionPlan(Document):
 		self.validate_material_request_type()
 		self.enable_auto_reserve_stock()
 
-	def enable_auto_reserve_stock(self):
+	def enable_auto_reserve_stock(self) -> None:
 		if self.is_new() and frappe.db.get_single_value("Stock Settings", "auto_reserve_stock"):
 			self.reserve_stock = 1
 
-	def validate_material_request_type(self):
+	def validate_material_request_type(self) -> None:
 		for row in self.get("mr_items"):
 			if row.from_warehouse and row.material_request_type != "Material Transfer":
 				row.from_warehouse = ""
 
 	@frappe.whitelist()
-	def validate_sales_orders(self, sales_order: str | None = None):
+	def validate_sales_orders(self, sales_order: str | None = None) -> None:
 		sales_orders = []
 
 		if sales_order:
@@ -184,7 +186,7 @@ class ProductionPlan(Document):
 					title=title,
 				)
 
-	def set_pending_qty_in_row_without_reference(self):
+	def set_pending_qty_in_row_without_reference(self) -> None:
 		"Set Pending Qty in independent rows (not from SO or MR)."
 		if self.docstatus > 0:  # set only to initialise value before submit
 			return
@@ -193,12 +195,12 @@ class ProductionPlan(Document):
 			if not item.get("sales_order") or not item.get("material_request"):
 				item.pending_qty = item.planned_qty
 
-	def calculate_total_planned_qty(self):
+	def calculate_total_planned_qty(self) -> None:
 		self.total_planned_qty = 0
 		for d in self.po_items:
 			self.total_planned_qty += flt(d.planned_qty)
 
-	def validate_data(self):
+	def validate_data(self) -> None:
 		for d in self.get("po_items"):
 			if not d.bom_no:
 				frappe.throw(_("Please select BOM for Item in Row {0}").format(d.idx))
@@ -208,7 +210,7 @@ class ProductionPlan(Document):
 			if not flt(d.planned_qty):
 				frappe.throw(_("Please enter Planned Qty for Item {0} at row {1}").format(d.item_code, d.idx))
 
-	def _rename_temporary_references(self):
+	def _rename_temporary_references(self) -> None:
 		"""po_items and sub_assembly_items items are both constructed client side without saving.
 
 		Attempt to fix linkages by using temporary names to map final row names.
@@ -220,14 +222,14 @@ class ProductionPlan(Document):
 			if sub_assy.production_plan_item not in actual_names:
 				sub_assy.production_plan_item = new_name_map.get(sub_assy.production_plan_item)
 
-	def calculate_total_produced_qty(self):
+	def calculate_total_produced_qty(self) -> None:
 		self.total_produced_qty = 0
 		for d in self.po_items:
 			self.total_produced_qty += flt(d.produced_qty)
 
 		self.db_set("total_produced_qty", self.total_produced_qty, update_modified=False)
 
-	def update_produced_pending_qty(self, produced_qty, production_plan_item):
+	def update_produced_pending_qty(self, produced_qty: float, production_plan_item: str) -> None:
 		for data in self.po_items:
 			if data.name == production_plan_item:
 				data.produced_qty = produced_qty
@@ -238,26 +240,26 @@ class ProductionPlan(Document):
 		self.set_status()
 		self.db_set("status", self.status)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_bin_qty()
 		self.update_sales_order()
 		self.add_reference_to_raw_materials()
 		self.update_stock_reservation()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.db_set("status", "Cancelled")
 		self.delete_draft_work_order()
 		self.update_bin_qty()
 		self.update_sales_order()
 		self.update_stock_reservation()
 
-	def update_stock_reservation(self):
+	def update_stock_reservation(self) -> None:
 		if not self.reserve_stock:
 			return
 
 		reserve_stock_for_production_plan(self)
 
-	def add_reference_to_raw_materials(self):
+	def add_reference_to_raw_materials(self) -> None:
 		for item in self.mr_items:
 			if reference := next(
 				(
@@ -280,7 +282,7 @@ class ProductionPlan(Document):
 					)
 				)
 
-	def update_sales_order(self):
+	def update_sales_order(self) -> None:
 		sales_orders = [row.sales_order for row in self.po_items if row.sales_order]
 		if sales_orders:
 			so_wise_planned_qty = self.get_so_wise_planned_qty(sales_orders)
@@ -298,7 +300,7 @@ class ProductionPlan(Document):
 				)
 
 	@staticmethod
-	def get_so_wise_planned_qty(sales_orders):
+	def get_so_wise_planned_qty(sales_orders: list) -> dict:
 		so_wise_planned_qty = frappe._dict()
 		data = frappe.get_all(
 			"Production Plan Item",
@@ -317,7 +319,7 @@ class ProductionPlan(Document):
 
 		return so_wise_planned_qty
 
-	def update_bin_qty(self):
+	def update_bin_qty(self) -> None:
 		for d in self.mr_items:
 			if d.warehouse:
 				bin_name = get_or_make_bin(d.item_code, d.warehouse)
@@ -330,14 +332,14 @@ class ProductionPlan(Document):
 				bin = frappe.get_doc("Bin", bin_name, for_update=True)
 				bin.update_reserved_qty_for_for_sub_assembly()
 
-	def delete_draft_work_order(self):
+	def delete_draft_work_order(self) -> None:
 		for d in frappe.get_all(
 			"Work Order", fields=["name"], filters={"docstatus": 0, "production_plan": ("=", self.name)}
 		):
 			frappe.delete_doc("Work Order", d.name)
 
 	@frappe.whitelist()
-	def set_status(self, close: bool | None = None, update_bin: bool = False):
+	def set_status(self, close: bool | None = None, update_bin: bool = False) -> None:
 		self.status = {0: "Draft", 1: "Submitted", 2: "Cancelled"}.get(self.docstatus)
 
 		if close:
@@ -360,14 +362,14 @@ class ProductionPlan(Document):
 		if update_bin and self.docstatus == 1 and self.status != "Completed":
 			self.update_bin_qty()
 
-	def update_ordered_status(self):
+	def update_ordered_status(self) -> None:
 		for child_table in ["po_items", "sub_assembly_items"]:
 			for item in self.get(child_table):
 				if item.ordered_qty:
 					self.status = "In Process"
 					return
 
-	def update_requested_status(self):
+	def update_requested_status(self) -> None:
 		for d in self.mr_items:
 			if d.requested_qty:
 				self.status = "Material Requested"
@@ -396,7 +398,7 @@ class ProductionPlan(Document):
 			subcontracted_po, purchase_orders
 		)
 
-	def show_list_created_message(self, doctype, doc_list=None):
+	def show_list_created_message(self, doctype: str, doc_list=None):
 		return WorkOrderCreationService(self).show_list_created_message(doctype, doc_list)
 
 	def create_work_order(self, item):
@@ -453,7 +455,7 @@ class ProductionPlan(Document):
 	def get_sub_assembly_items(self, manufacturing_type: str | None = None):
 		return SubAssemblyService(self).get_sub_assembly_items(manufacturing_type=manufacturing_type)
 
-	def set_sub_assembly_items_based_on_level(self, row, bom_data, manufacturing_type=None):
+	def set_sub_assembly_items_based_on_level(self, row, bom_data, manufacturing_type: str | None = None):
 		return SubAssemblyService(self).set_sub_assembly_items_based_on_level(
 			row, bom_data, manufacturing_type
 		)
