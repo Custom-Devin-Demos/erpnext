@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, today
 
@@ -8,13 +10,13 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccountsPayable(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.item = "_Test Item"
 		self.supplier = "_Test Supplier 2"
 		self.creditors_usd = "_Test Payable USD - _TC"
 
-	def test_accounts_payable_for_foreign_currency_supplier(self):
+	def test_accounts_payable_for_foreign_currency_supplier(self) -> None:
 		pi = self.create_purchase_invoice(do_not_submit=True)
 		pi.currency = "USD"
 		pi.conversion_rate = 80
@@ -34,7 +36,7 @@ class TestAccountsPayable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(data[1][0].get("outstanding"), 300)
 		self.assertEqual(data[1][0].get("currency"), "USD")
 
-	def create_purchase_invoice(self, do_not_submit=False):
+	def create_purchase_invoice(self, do_not_submit: bool = False):
 		frappe.set_user("Administrator")
 		pi = make_purchase_invoice(
 			item=self.item,
@@ -54,7 +56,7 @@ class TestAccountsPayable(ERPNextTestSuite, AccountsTestMixin):
 			pi = pi.submit()
 		return pi
 
-	def test_invoice_partially_paid_via_journal_entry(self):
+	def test_invoice_partially_paid_via_journal_entry(self) -> None:
 		pi = self.create_purchase_invoice()  # outstanding 300
 
 		je = frappe.new_doc("Journal Entry")
@@ -95,7 +97,7 @@ class TestAccountsPayable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(row.paid, 120)
 		self.assertEqual(row.outstanding, 180)
 
-	def test_show_remarks_includes_invoice_remark(self):
+	def test_show_remarks_includes_invoice_remark(self) -> None:
 		pi = self.create_purchase_invoice(do_not_submit=True)
 		pi.remarks = "AP test remark"
 		pi.save().submit()
@@ -111,7 +113,7 @@ class TestAccountsPayable(ERPNextTestSuite, AccountsTestMixin):
 		row = next(row for row in execute(filters)[1] if row.voucher_no == pi.name)
 		self.assertIn("AP test remark", row.remarks or "")
 
-	def test_group_by_supplier_totals(self):
+	def test_group_by_supplier_totals(self) -> None:
 		self.create_purchase_invoice()  # outstanding 300
 
 		filters = {
@@ -132,7 +134,7 @@ class TestAccountsPayable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(party_subtotal.get("invoiced"), 300)
 		self.assertEqual(grand_total.get("outstanding"), 300)
 
-	def test_payment_terms_template_filters(self):
+	def test_payment_terms_template_filters(self) -> None:
 		from erpnext.controllers.accounts_controller import get_payment_terms
 
 		template = frappe.get_doc("Payment Terms Template", "_Test Payment Term Template")
@@ -166,7 +168,7 @@ class TestAccountsPayable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(len(report[1]), 2)
 		self.assertEqual([pi.name, expected_payment_term], [row.voucher_no, row.payment_term])
 
-	def test_project_filter(self):
+	def test_project_filter(self) -> None:
 		project = frappe.get_doc("Project", {"project_name": "_Test Project"})
 
 		pi = self.create_purchase_invoice(do_not_submit=True)
@@ -186,7 +188,7 @@ class TestAccountsPayable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(row.project, project.name)
 		self.assertEqual(row.invoiced, 300.0)
 
-	def test_project_on_report_output(self):
+	def test_project_on_report_output(self) -> None:
 		"""
 		Report row must carry the invoice's project.
 		"""

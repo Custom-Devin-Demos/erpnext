@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -32,18 +34,18 @@ class ProcessDeferredAccounting(Document):
 		type: DF.Literal["", "Income", "Expense"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.end_date < self.start_date:
 			frappe.throw(_("End date cannot be before start date"))
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		conditions = build_conditions(self.type, self.account, self.company)
 		if self.type == "Income":
 			convert_deferred_revenue_to_income(self.name, self.start_date, self.end_date, conditions)
 		else:
 			convert_deferred_expense_to_expense(self.name, self.start_date, self.end_date, conditions)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = ["GL Entry"]
 		gl_entries = frappe.get_all(
 			"GL Entry",

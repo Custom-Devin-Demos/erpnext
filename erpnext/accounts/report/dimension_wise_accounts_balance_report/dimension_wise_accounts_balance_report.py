@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -80,7 +82,7 @@ def get_data(filters, dimension_list):
 	return out
 
 
-def set_gl_entries_by_account(dimension_list, filters, account, gl_entries_by_account):
+def set_gl_entries_by_account(dimension_list, filters, account, gl_entries_by_account) -> None:
 	dimension_field = frappe.scrub(filters.get("dimension"))
 
 	gl_filters = {
@@ -114,7 +116,7 @@ def set_gl_entries_by_account(dimension_list, filters, account, gl_entries_by_ac
 		gl_entries_by_account.setdefault(entry.account, []).append(entry)
 
 
-def format_gl_entries(gl_entries_by_account, accounts_by_name, dimension_list, dimension_type):
+def format_gl_entries(gl_entries_by_account, accounts_by_name, dimension_list, dimension_type) -> None:
 	for entries in gl_entries_by_account.values():
 		for entry in entries:
 			d = accounts_by_name.get(entry.account)
@@ -166,7 +168,7 @@ def prepare_data(accounts, filters, company_currency, dimension_list):
 	return data
 
 
-def accumulate_values_into_parents(accounts, accounts_by_name, dimension_list):
+def accumulate_values_into_parents(accounts, accounts_by_name, dimension_list) -> None:
 	"""accumulate children's values in parent accounts"""
 	for d in reversed(accounts):
 		if d.parent_account:

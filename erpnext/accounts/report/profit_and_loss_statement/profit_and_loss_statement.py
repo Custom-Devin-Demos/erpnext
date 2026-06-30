@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -93,7 +95,7 @@ def execute(filters=None):
 
 
 def get_report_summary(
-	period_list, periodicity, income, expense, net_profit_loss, currency, filters, consolidated=False
+	period_list, periodicity, income, expense, net_profit_loss, currency, filters, consolidated: bool = False
 ):
 	net_income, net_expense, net_profit = 0.0, 0.0, 0.0
 
@@ -143,7 +145,7 @@ def get_report_summary(
 	], net_profit
 
 
-def get_net_profit_loss(income, expense, period_list, company, currency=None, consolidated=False):
+def get_net_profit_loss(income, expense, period_list, company, currency=None, consolidated: bool = False):
 	total = 0
 	net_profit_loss = {
 		"account_name": "'" + _("Profit for the year") + "'",
@@ -293,7 +295,7 @@ def _get_data_duckdb(conn, filters, root_type, balance_must_be, period_list):
 	return out
 
 
-def _load_gl_entries_duckdb(conn, filters, period_list, accounts, gl_entries_by_account):
+def _load_gl_entries_duckdb(conn, filters, period_list, accounts, gl_entries_by_account) -> None:
 	from erpnext.accounts.report.trial_balance.trial_balance import (
 		_extra_gl_conditions,
 		_fetch_gl_rows_duckdb,

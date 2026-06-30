@@ -4,6 +4,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
@@ -113,7 +115,7 @@ class AccountsSettings(Document):
 		use_legacy_controller_for_pcv: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_auto_tax_settings()
 		old_doc = self.get_doc_before_save()
 		clear_cache = False
@@ -157,13 +159,13 @@ class AccountsSettings(Document):
 		self.validate_and_sync_auto_reconcile_config()
 		self.update_property_for_accounting_dimension()
 
-	def validate_stale_days(self):
+	def validate_stale_days(self) -> None:
 		if not self.allow_stale and cint(self.stale_days) <= 0:
 			frappe.msgprint(
 				_("Stale Days should start from 1."), title="Error", indicator="red", raise_exception=1
 			)
 
-	def enable_payment_schedule_in_print(self):
+	def enable_payment_schedule_in_print(self) -> None:
 		show_in_print = cint(self.show_payment_schedule_in_print)
 		for doctype in ("Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"):
 			make_property_setter(
@@ -178,7 +180,7 @@ class AccountsSettings(Document):
 				validate_fields_for_doctype=False,
 			)
 
-	def validate_and_sync_auto_reconcile_config(self):
+	def validate_and_sync_auto_reconcile_config(self) -> None:
 		if self.has_value_changed("auto_reconciliation_job_trigger"):
 			if (
 				cint(self.auto_reconciliation_job_trigger) > 0
@@ -192,7 +194,7 @@ class AccountsSettings(Document):
 			if cint(self.reconciliation_queue_size) < 5 or cint(self.reconciliation_queue_size) > 100:
 				frappe.throw(_("Queue Size should be between 5 and 100"))
 
-	def validate_auto_tax_settings(self):
+	def validate_auto_tax_settings(self) -> None:
 		if self.add_taxes_from_item_tax_template and self.add_taxes_from_taxes_and_charges_template:
 			frappe.throw(
 				_("You cannot enable both the settings '{0}' and '{1}'.").format(
@@ -202,7 +204,7 @@ class AccountsSettings(Document):
 				title=_("Auto Tax Settings Error"),
 			)
 
-	def update_property_for_accounting_dimension(self):
+	def update_property_for_accounting_dimension(self) -> None:
 		doctypes = [entry.document_type for entry in self.repost_allowed_types]
 		if not doctypes:
 			return
@@ -214,13 +216,13 @@ class AccountsSettings(Document):
 		set_allow_on_submit_for_dimension_fields(doctypes)
 
 
-def toggle_accounting_dimension_sections(hide):
+def toggle_accounting_dimension_sections(hide) -> None:
 	accounting_dimension_doctypes = frappe.get_hooks("accounting_dimension_doctypes")
 	for doctype in accounting_dimension_doctypes:
 		create_property_setter_for_hiding_field(doctype, "accounting_dimensions_section", hide)
 
 
-def toggle_sales_discount_section(hide):
+def toggle_sales_discount_section(hide) -> None:
 	for doctype in SELLING_DOCTYPES + BUYING_DOCTYPES:
 		meta = frappe.get_meta(doctype)
 		if meta.has_field("additional_discount_section"):
@@ -229,20 +231,20 @@ def toggle_sales_discount_section(hide):
 			create_property_setter_for_hiding_field(doctype, "discount_and_margin", hide)
 
 
-def toggle_loyalty_point_program_section(hide):
+def toggle_loyalty_point_program_section(hide) -> None:
 	for doctype in SELLING_DOCTYPES:
 		meta = frappe.get_meta(doctype)
 		if meta.has_field("loyalty_points_redemption"):
 			create_property_setter_for_hiding_field(doctype, "loyalty_points_redemption", hide)
 
 
-def toggle_subscription_sections(hide):
+def toggle_subscription_sections(hide) -> None:
 	subscription_doctypes = frappe.get_hooks("subscription_doctypes")
 	for doctype in subscription_doctypes:
 		create_property_setter_for_hiding_field(doctype, "subscription_section", hide)
 
 
-def create_property_setter_for_hiding_field(doctype, field_name, hide):
+def create_property_setter_for_hiding_field(doctype, field_name, hide) -> None:
 	make_property_setter(
 		doctype,
 		field_name,
@@ -253,7 +255,7 @@ def create_property_setter_for_hiding_field(doctype, field_name, hide):
 	)
 
 
-def set_allow_on_submit_for_dimension_fields(doctypes):
+def set_allow_on_submit_for_dimension_fields(doctypes) -> None:
 	for dt in doctypes:
 		meta = frappe.get_meta(dt)
 		for dimension in get_accounting_dimensions():

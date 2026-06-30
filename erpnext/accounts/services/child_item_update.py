@@ -3,6 +3,8 @@
 
 """Child item update service: ChildItemUpdater class and helpers for the update_child_qty_rate API."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.workflow import get_workflow_name
@@ -21,7 +23,7 @@ from erpnext.stock.get_item_details import (
 class ChildItemUpdater:
 	"""Validates and applies item-level edits on submitted orders and quotations."""
 
-	def __init__(self, parent_doctype: str, parent_doctype_name: str, child_docname: str = "items"):
+	def __init__(self, parent_doctype: str, parent_doctype_name: str, child_docname: str = "items") -> None:
 		self.parent_doctype = parent_doctype
 		self.parent_doctype_name = parent_doctype_name
 		self.child_docname = child_docname
@@ -235,7 +237,7 @@ class ChildItemUpdater:
 				title=_("Insufficient Permissions"),
 			)
 
-	def _get_new_child_item(self, item_row) -> "frappe.model.document.Document":
+	def _get_new_child_item(self, item_row) -> frappe.model.document.Document:
 		child_doctype = self.parent_doctype + " Item"
 		return set_order_defaults(
 			self.parent_doctype,
@@ -325,7 +327,7 @@ def set_order_defaults(
 	child_doctype: str,
 	child_docname: str,
 	trans_item: dict,
-) -> "frappe.model.document.Document":
+) -> frappe.model.document.Document:
 	"""Return a new child item populated with item master defaults."""
 	from erpnext.accounts.services.taxes import add_taxes_from_tax_template, set_child_tax_template_and_map
 

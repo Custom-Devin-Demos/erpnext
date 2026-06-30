@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import copy
 
 import frappe
@@ -13,7 +15,7 @@ from erpnext.accounts.utils import _delete_adv_pl_entries, _delete_pl_entries, c
 VOUCHER_TYPES = ["Sales Invoice", "Purchase Invoice", "Payment Entry", "Journal Entry"]
 
 
-def repost_ple_for_voucher(voucher_type, voucher_no, gle_map=None):
+def repost_ple_for_voucher(voucher_type, voucher_no, gle_map=None) -> None:
 	if voucher_type and voucher_no and gle_map:
 		_delete_pl_entries(voucher_type, voucher_no)
 		_delete_adv_pl_entries(voucher_type, voucher_no)
@@ -21,7 +23,7 @@ def repost_ple_for_voucher(voucher_type, voucher_no, gle_map=None):
 
 
 @frappe.whitelist()
-def start_payment_ledger_repost(docname: str | None = None):
+def start_payment_ledger_repost(docname: str | None = None) -> None:
 	"""
 	Repost Payment Ledger Entries for Vouchers through Background Job
 	"""
@@ -75,21 +77,21 @@ class RepostPaymentLedger(Document):
 		voucher_type: DF.Link | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.vouchers = []
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.load_vouchers_based_on_filters()
 		self.set_status()
 
-	def load_vouchers_based_on_filters(self):
+	def load_vouchers_based_on_filters(self) -> None:
 		if not self.add_manually:
 			self.repost_vouchers.clear()
 			self.get_vouchers()
 			self.extend("repost_vouchers", copy.deepcopy(self.vouchers))
 
-	def get_vouchers(self):
+	def get_vouchers(self) -> None:
 		self.vouchers.clear()
 
 		filter_on_voucher_types = [self.voucher_type] if self.voucher_type else VOUCHER_TYPES
@@ -109,17 +111,17 @@ class RepostPaymentLedger(Document):
 			entries = query.run(as_dict=True)
 			self.vouchers.extend(entries)
 
-	def set_status(self):
+	def set_status(self) -> None:
 		if self.docstatus == 0:
 			self.repost_status = "Queued"
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		execute_repost_payment_ledger(self.name)
 		frappe.msgprint(_("Repost started in the background"))
 
 
 @frappe.whitelist()
-def execute_repost_payment_ledger(docname: str):
+def execute_repost_payment_ledger(docname: str) -> None:
 	"""Repost Payment Ledger Entries by background job."""
 
 	job_name = "payment_ledger_repost_" + docname

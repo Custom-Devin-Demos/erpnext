@@ -3,6 +3,8 @@
 
 """Fixed asset lifecycle helpers for Sales Invoice."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt, get_link_to_form
@@ -17,7 +19,7 @@ from erpnext.assets.doctype.asset_activity.asset_activity import add_asset_activ
 
 
 class FixedAssetService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def validate_fixed_asset(self) -> None:

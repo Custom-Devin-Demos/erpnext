@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, msgprint, qb
 from frappe.model.document import Document
@@ -69,7 +71,7 @@ class PaymentReconciliation(Document):
 		to_payment_date: DF.Date | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.common_filter_conditions = []
 		self.accounting_dimension_filter_conditions = []
@@ -77,7 +79,7 @@ class PaymentReconciliation(Document):
 		self.dimensions = get_dimensions(with_cost_center_and_project=True)[0]
 		self.user_permissions = get_user_permissions(frappe.session.user)
 
-	def load_from_db(self):
+	def load_from_db(self) -> None:
 		# 'modified' attribute is required for `run_doc_method` to work properly.
 		doc_dict = frappe._dict(
 			{
@@ -105,36 +107,36 @@ class PaymentReconciliation(Document):
 		)
 		super(Document, self).__init__(doc_dict)
 
-	def save(self):
+	def save(self) -> None:
 		return
 
 	@staticmethod
-	def get_list(args):
+	def get_list(args) -> None:
 		pass
 
 	@staticmethod
-	def get_count(args):
+	def get_count(args) -> None:
 		pass
 
 	@staticmethod
-	def get_stats(args):
+	def get_stats(args) -> None:
 		pass
 
-	def db_insert(self, *args, **kwargs):
+	def db_insert(self, *args, **kwargs) -> None:
 		pass
 
-	def db_update(self, *args, **kwargs):
+	def db_update(self, *args, **kwargs) -> None:
 		pass
 
-	def delete(self):
+	def delete(self) -> None:
 		pass
 
 	@frappe.whitelist()
-	def get_unreconciled_entries(self):
+	def get_unreconciled_entries(self) -> None:
 		self.get_nonreconciled_payment_entries()
 		self.get_invoice_entries()
 
-	def get_nonreconciled_payment_entries(self):
+	def get_nonreconciled_payment_entries(self) -> None:
 		self.check_mandatory_to_fetch()
 
 		payment_entries = self.get_payment_entries()
@@ -159,7 +161,7 @@ class PaymentReconciliation(Document):
 	def get_permitted_dimension_values(self, document_type, reference_doctype):
 		return get_allowed_docs_for_doctype(self.user_permissions.get(document_type, []), reference_doctype)
 
-	def validate_permitted_dimension_value(self, document_type, value, allowed):
+	def validate_permitted_dimension_value(self, document_type, value, allowed) -> None:
 		if value and allowed and value not in allowed:
 			frappe.throw(
 				_("You do not have enough permission to access {0}: {1}").format(_(document_type), value),
@@ -288,7 +290,7 @@ class PaymentReconciliation(Document):
 
 		return list(journal_entries)
 
-	def get_return_invoices(self):
+	def get_return_invoices(self) -> None:
 		voucher_type = "Sales Invoice" if self.party_type == "Customer" else "Purchase Invoice"
 		doc = qb.DocType(voucher_type)
 
@@ -358,7 +360,7 @@ class PaymentReconciliation(Document):
 					)
 		return outstanding_dr_or_cr
 
-	def add_payment_entries(self, non_reconciled_payments):
+	def add_payment_entries(self, non_reconciled_payments) -> None:
 		self.set("payments", [])
 
 		for payment in non_reconciled_payments:
@@ -366,7 +368,7 @@ class PaymentReconciliation(Document):
 			row.update(payment)
 			row.is_advance = payment.book_advance_payments_in_separate_party_account
 
-	def get_invoice_entries(self):
+	def get_invoice_entries(self) -> None:
 		# Fetch JVs, Sales and Purchase Invoices for 'invoices' to reconcile against
 
 		self.build_qb_filter_conditions(get_invoices=True)
@@ -407,7 +409,7 @@ class PaymentReconciliation(Document):
 
 		self.add_invoice_entries(non_reconciled_invoices)
 
-	def add_invoice_entries(self, non_reconciled_invoices):
+	def add_invoice_entries(self, non_reconciled_invoices) -> None:
 		# Populate 'invoices' with JVs and Invoices to reconcile against
 		self.set("invoices", [])
 
@@ -475,7 +477,7 @@ class PaymentReconciliation(Document):
 		return new_difference_amount
 
 	@frappe.whitelist()
-	def allocate_entries(self, args: dict):
+	def allocate_entries(self, args: dict) -> None:
 		self.validate_entries()
 
 		exc_gain_loss_posting_date = frappe.db.get_single_value(
@@ -556,7 +558,7 @@ class PaymentReconciliation(Document):
 		res = self.update_dimension_values_in_allocated_entries(res)
 		return res
 
-	def reconcile_allocations(self, skip_ref_details_update_for_pe=False):
+	def reconcile_allocations(self, skip_ref_details_update_for_pe: bool = False) -> None:
 		adjust_allocations_for_taxes(self)
 		dr_or_cr = (
 			"credit_in_account_currency"
@@ -584,7 +586,7 @@ class PaymentReconciliation(Document):
 			reconcile_dr_cr_note(dr_or_cr_notes, self.company, self.dimensions)
 
 	@frappe.whitelist()
-	def reconcile(self):
+	def reconcile(self) -> None:
 		if frappe.get_single_value("Accounts Settings", "auto_reconcile_payments"):
 			running_doc = is_any_doc_running(
 				dict(
@@ -640,12 +642,12 @@ class PaymentReconciliation(Document):
 
 		return payment_details
 
-	def check_mandatory_to_fetch(self):
+	def check_mandatory_to_fetch(self) -> None:
 		for fieldname in ["company", "party_type", "party", "receivable_payable_account"]:
 			if not self.get(fieldname):
 				frappe.throw(_("Please select {0} first").format(_(self.meta.get_label(fieldname))))
 
-	def validate_entries(self):
+	def validate_entries(self) -> None:
 		if not self.get("invoices"):
 			frappe.throw(_("No records found in the Invoices table"))
 
@@ -741,7 +743,7 @@ class PaymentReconciliation(Document):
 
 		return invoice_exchange_map
 
-	def validate_allocation(self):
+	def validate_allocation(self) -> None:
 		unreconciled_invoices = frappe._dict()
 
 		for inv in self.get("invoices"):
@@ -772,7 +774,7 @@ class PaymentReconciliation(Document):
 		if not invoices_to_reconcile:
 			frappe.throw(_("No records found in Allocation table"))
 
-	def build_dimensions_filter_conditions(self):
+	def build_dimensions_filter_conditions(self) -> None:
 		ple = qb.DocType("Payment Ledger Entry")
 		for x in self.dimensions:
 			dimension = x.fieldname
@@ -786,7 +788,9 @@ class PaymentReconciliation(Document):
 						self.get_user_permission_dimension_condition(ple[dimension], allowed)
 					)
 
-	def build_qb_filter_conditions(self, get_invoices=False, get_return_invoices=False):
+	def build_qb_filter_conditions(
+		self, get_invoices: bool = False, get_return_invoices: bool = False
+	) -> None:
 		self.common_filter_conditions.clear()
 		self.accounting_dimension_filter_conditions.clear()
 		self.ple_posting_date_filter.clear()
@@ -832,7 +836,7 @@ class PaymentReconciliation(Document):
 		return conditions
 
 
-def reconcile_dr_cr_note(dr_cr_notes, company, active_dimensions=None):
+def reconcile_dr_cr_note(dr_cr_notes, company, active_dimensions=None) -> None:
 	for inv in dr_cr_notes:
 		if (
 			abs(frappe.db.get_value(inv.voucher_type, inv.voucher_no, "outstanding_amount"))
@@ -937,7 +941,7 @@ def reconcile_dr_cr_note(dr_cr_notes, company, active_dimensions=None):
 
 
 @erpnext.allow_regional
-def adjust_allocations_for_taxes(doc):
+def adjust_allocations_for_taxes(doc) -> None:
 	pass
 
 

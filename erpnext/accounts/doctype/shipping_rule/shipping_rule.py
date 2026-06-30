@@ -4,6 +4,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, msgprint, throw
 from frappe.model.document import Document
@@ -52,12 +54,12 @@ class ShippingRule(Document):
 		shipping_rule_type: DF.Literal["Selling", "Buying"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_from_to_values()
 		self.sort_shipping_rule_conditions()
 		self.validate_overlapping_shipping_rule_conditions()
 
-	def validate_from_to_values(self):
+	def validate_from_to_values(self) -> None:
 		if self.calculate_based_on == "Fixed":
 			if self.conditions:
 				self.set("conditions", [])
@@ -87,7 +89,7 @@ class ShippingRule(Document):
 				ManyBlankToValuesError,
 			)
 
-	def apply(self, doc):
+	def apply(self, doc) -> None:
 		"""Apply shipping rule on given doc. Called from accounts controller"""
 
 		shipping_amount = 0.0
@@ -125,7 +127,7 @@ class ShippingRule(Document):
 
 		return 0.0
 
-	def validate_countries(self, doc):
+	def validate_countries(self, doc) -> None:
 		# validate applicable countries
 		if self.countries:
 			shipping_country = doc.get_shipping_address().get("country")
@@ -140,7 +142,7 @@ class ShippingRule(Document):
 					)
 				)
 
-	def add_shipping_rule_to_tax_table(self, doc, shipping_amount):
+	def add_shipping_rule_to_tax_table(self, doc, shipping_amount) -> None:
 		shipping_charge = {
 			"charge_type": "Actual",
 			"account_head": self.account,
@@ -171,13 +173,13 @@ class ShippingRule(Document):
 			shipping_charge["description"] = self.label
 			doc.append("taxes", shipping_charge)
 
-	def sort_shipping_rule_conditions(self):
+	def sort_shipping_rule_conditions(self) -> None:
 		"""Sort Shipping Rule Conditions based on increasing From Value"""
 		self.shipping_rules_conditions = sorted(self.conditions, key=lambda d: flt(d.from_value))
 		for i, d in enumerate(self.conditions):
 			d.idx = i + 1
 
-	def validate_overlapping_shipping_rule_conditions(self):
+	def validate_overlapping_shipping_rule_conditions(self) -> None:
 		def overlap_exists_between(num_range1, num_range2):
 			"""
 			num_range1 and num_range2 are two ranges

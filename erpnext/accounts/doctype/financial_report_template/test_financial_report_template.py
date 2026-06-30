@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 class FinancialReportTemplateTestCase(ERPNextTestSuite):
 	"""Utility class with common setup and helper methods for all test classes"""
 
-	def cancel_docs(self, docs):
+	def cancel_docs(self, docs) -> None:
 		"""Cancel submitted docs in reverse creation order to avoid dependency issues."""
 		for doc in reversed(docs):
 			if doc:
@@ -17,12 +19,12 @@ class FinancialReportTemplateTestCase(ERPNextTestSuite):
 				if doc.docstatus == 1:
 					doc.cancel()
 
-	def setUp(self):
+	def setUp(self) -> None:
 		"""Set up test data"""
 		self.create_test_template()
 
 	@classmethod
-	def create_test_template(cls):
+	def create_test_template(cls) -> None:
 		"""Create a test financial report template"""
 		if not frappe.db.exists("Financial Report Template", "Test P&L Template"):
 			template = frappe.get_doc(

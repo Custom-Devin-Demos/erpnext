@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.query_builder.functions import Count, Sum
@@ -14,7 +16,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPaymentLedgerEntry(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.ple = qb.DocType("Payment Ledger Entry")
 		self.company = "_Test Company"
 		self.cost_center = "Main - _TC"
@@ -28,7 +30,12 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		self.customer = "_Test Customer"
 
 	def create_sales_invoice(
-		self, qty=1, rate=100, posting_date=None, do_not_save=False, do_not_submit=False
+		self,
+		qty: int = 1,
+		rate: int = 100,
+		posting_date=None,
+		do_not_save: bool = False,
+		do_not_submit: bool = False,
 	):
 		"""
 		Helper function to populate default values in sales invoice
@@ -60,7 +67,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		)
 		return sinv
 
-	def create_payment_entry(self, amount=100, posting_date=None):
+	def create_payment_entry(self, amount: int = 100, posting_date=None):
 		"""
 		Helper function to populate default values in payment entry
 		"""
@@ -78,7 +85,14 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		payment.posting_date = posting_date
 		return payment
 
-	def create_sales_order(self, qty=1, rate=100, posting_date=None, do_not_save=False, do_not_submit=False):
+	def create_sales_order(
+		self,
+		qty: int = 1,
+		rate: int = 100,
+		posting_date=None,
+		do_not_save: bool = False,
+		do_not_submit: bool = False,
+	):
 		if posting_date is None:
 			posting_date = nowdate()
 
@@ -98,7 +112,9 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		)
 		return so
 
-	def create_journal_entry(self, acc1=None, acc2=None, amount=0, posting_date=None, cost_center=None):
+	def create_journal_entry(
+		self, acc1=None, acc2=None, amount: int = 0, posting_date=None, cost_center=None
+	):
 		je = frappe.new_doc("Journal Entry")
 		je.posting_date = posting_date or nowdate()
 		je.company = self.company
@@ -124,7 +140,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		)
 		return je
 
-	def test_payment_against_invoice(self):
+	def test_payment_against_invoice(self) -> None:
 		transaction_date = nowdate()
 		amount = 100
 		ple = self.ple
@@ -169,7 +185,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		self.assertEqual(pl_entries[0], expected_values[0])
 		self.assertEqual(pl_entries[1], expected_values[1])
 
-	def test_partial_payment_against_invoice(self):
+	def test_partial_payment_against_invoice(self) -> None:
 		ple = self.ple
 		transaction_date = nowdate()
 		amount = 100
@@ -217,7 +233,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		self.assertEqual(pl_entries[0], expected_values[0])
 		self.assertEqual(pl_entries[1], expected_values[1])
 
-	def test_cr_note_against_invoice(self):
+	def test_cr_note_against_invoice(self) -> None:
 		ple = self.ple
 		transaction_date = nowdate()
 		amount = 100
@@ -285,7 +301,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		self.assertEqual(pl_entries_si3, expected_values_for_si3)
 		self.assertEqual(pl_entries_cr_note1, expected_values_for_cr_note1)
 
-	def test_je_against_inv_and_note(self):
+	def test_je_against_inv_and_note(self) -> None:
 		ple = self.ple
 		transaction_date = nowdate()
 		amount = 100
@@ -382,7 +398,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		"Accounts Settings",
 		{"unlink_payment_on_cancellation_of_invoice": 1, "delete_linked_ledger_entries": 1},
 	)
-	def test_multi_payment_unlink_on_invoice_cancellation(self):
+	def test_multi_payment_unlink_on_invoice_cancellation(self) -> None:
 		transaction_date = nowdate()
 		amount = 100
 		si = self.create_sales_invoice(qty=1, rate=amount, posting_date=transaction_date)
@@ -411,7 +427,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		"Accounts Settings",
 		{"unlink_payment_on_cancellation_of_invoice": 1, "delete_linked_ledger_entries": 1},
 	)
-	def test_multi_je_unlink_on_invoice_cancellation(self):
+	def test_multi_je_unlink_on_invoice_cancellation(self) -> None:
 		transaction_date = nowdate()
 		amount = 100
 		si = self.create_sales_invoice(qty=1, rate=amount, posting_date=transaction_date)
@@ -448,7 +464,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 			"unlink_advance_payment_on_cancelation_of_order": 1,
 		},
 	)
-	def test_advance_payment_unlink_on_order_cancellation(self):
+	def test_advance_payment_unlink_on_order_cancellation(self) -> None:
 		transaction_date = nowdate()
 		amount = 100
 		so = self.create_sales_order(qty=1, rate=amount, posting_date=transaction_date).save().submit()
@@ -472,7 +488,7 @@ class TestPaymentLedgerEntry(ERPNextTestSuite):
 		"Accounts Settings",
 		{"enable_immutable_ledger": 1},
 	)
-	def test_reverse_entries_on_cancel_for_immutable_ledger(self):
+	def test_reverse_entries_on_cancel_for_immutable_ledger(self) -> None:
 		invoice_posting_date = add_days(nowdate(), -5)
 		gle = qb.DocType("GL Entry")
 		ple = qb.DocType("Payment Ledger Entry")

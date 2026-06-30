@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 # import frappe
 
+from __future__ import annotations
+
 from erpnext.tests.utils import ERPNextTestSuite
 
 

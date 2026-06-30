@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -26,12 +28,12 @@ class ModeofPayment(Document):
 		type: DF.Literal["Cash", "Bank", "General", "Phone"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_accounts()
 		self.validate_repeating_companies()
 		self.validate_pos_mode_of_payment()
 
-	def validate_repeating_companies(self):
+	def validate_repeating_companies(self) -> None:
 		"""Error when Same Company is entered multiple times in accounts"""
 		accounts_list = []
 		for entry in self.accounts:
@@ -40,7 +42,7 @@ class ModeofPayment(Document):
 		if len(accounts_list) != len(set(accounts_list)):
 			frappe.throw(_("Same Company is entered more than once"))
 
-	def validate_accounts(self):
+	def validate_accounts(self) -> None:
 		for entry in self.accounts:
 			"""Error when Company of Ledger account doesn't match with Company Selected"""
 			if frappe.get_cached_value("Account", entry.default_account, "company") != entry.company:
@@ -50,7 +52,7 @@ class ModeofPayment(Document):
 					)
 				)
 
-	def validate_pos_mode_of_payment(self):
+	def validate_pos_mode_of_payment(self) -> None:
 		if not self.enabled:
 			pos_profiles = frappe.get_all(
 				"Sales Invoice Payment",

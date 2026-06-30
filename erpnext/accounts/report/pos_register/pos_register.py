@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import Case
@@ -90,14 +92,14 @@ def get_pos_entries(filters, group_by_field):
 	return query.run(as_dict=1)
 
 
-def concat_mode_of_payments(pos_entries):
+def concat_mode_of_payments(pos_entries) -> None:
 	mode_of_payments = get_mode_of_payments(set(d.pos_invoice for d in pos_entries))
 	for entry in pos_entries:
 		if mode_of_payments.get(entry.pos_invoice):
 			entry.mode_of_payment = ", ".join(mode_of_payments.get(entry.pos_invoice, []))
 
 
-def add_subtotal_row(data, group_invoices, group_by_field, group_by_value):
+def add_subtotal_row(data, group_invoices, group_by_field, group_by_value) -> None:
 	grand_total = sum(d.grand_total for d in group_invoices)
 	paid_amount = sum(d.paid_amount for d in group_invoices)
 	data.append(
@@ -111,7 +113,7 @@ def add_subtotal_row(data, group_invoices, group_by_field, group_by_value):
 	data.append({})
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	if not filters.get("company"):
 		frappe.throw(_("{0} is mandatory").format(_("Company")))
 

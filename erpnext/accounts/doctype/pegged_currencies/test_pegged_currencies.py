@@ -2,3 +2,4 @@
 # See license.txt
 
 # import frappe
+from __future__ import annotations

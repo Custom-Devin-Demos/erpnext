@@ -1,13 +1,15 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 from erpnext.tests.utils import ERPNextTestSuite
 
 
-def test_create_test_data():
+def test_create_test_data() -> None:
 	frappe.set_user("Administrator")
 	# create test item
 	if not frappe.db.exists("Item", "_Test Tesla Car"):
@@ -109,10 +111,10 @@ def test_create_test_data():
 
 
 class TestCouponCode(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		test_create_test_data()
 
-	def test_sales_order_with_coupon_code(self):
+	def test_sales_order_with_coupon_code(self) -> None:
 		frappe.db.set_value("Coupon Code", "SAVE30", "used", 0)
 
 		so = make_sales_order(
@@ -138,7 +140,7 @@ class TestCouponCode(ERPNextTestSuite):
 		so.submit()
 		self.assertEqual(frappe.db.get_value("Coupon Code", "SAVE30", "used"), 1)
 
-	def test_coupon_without_max_use(self):
+	def test_coupon_without_max_use(self) -> None:
 		from erpnext.accounts.doctype.pricing_rule.utils import (
 			update_coupon_code_count,
 			validate_coupon_code,
@@ -174,7 +176,7 @@ class TestCouponCode(ERPNextTestSuite):
 		# Clean up
 		coupon.delete()
 
-	def test_validate_coupon_code_rejections(self):
+	def test_validate_coupon_code_rejections(self) -> None:
 		from frappe.utils import add_days, nowdate
 
 		from erpnext.accounts.doctype.pricing_rule.utils import validate_coupon_code
@@ -210,7 +212,7 @@ class TestCouponCode(ERPNextTestSuite):
 			make_coupon("_Test Coupon Valid", maximum_use=5, used=1, valid_upto=add_days(nowdate(), 5))
 			validate_coupon_code("_Test Coupon Valid")  # no raise
 
-	def test_update_coupon_code_count_cancel_and_exhaust(self):
+	def test_update_coupon_code_count_cancel_and_exhaust(self) -> None:
 		from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
 
 		pricing_rule = frappe.db.get_value("Pricing Rule", {"title": "_Test Pricing Rule for _Test Item"})

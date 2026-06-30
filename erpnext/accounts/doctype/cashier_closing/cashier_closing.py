@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -36,14 +38,14 @@ class CashierClosing(Document):
 		user: DF.Link
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_time()
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.get_outstanding()
 		self.make_calculations()
 
-	def get_outstanding(self):
+	def get_outstanding(self) -> None:
 		si = frappe.qb.DocType("Sales Invoice")
 		values = (
 			frappe.qb.from_(si)
@@ -58,7 +60,7 @@ class CashierClosing(Document):
 		)
 		self.outstanding_amount = flt(values[0][0] if values else 0)
 
-	def make_calculations(self):
+	def make_calculations(self) -> None:
 		total = 0.00
 		for i in self.payments:
 			total += flt(i.amount)
@@ -67,6 +69,6 @@ class CashierClosing(Document):
 			total + self.outstanding_amount + flt(self.expense) - flt(self.custody) + flt(self.returns)
 		)
 
-	def validate_time(self):
+	def validate_time(self) -> None:
 		if self.from_time >= self.time:
 			frappe.throw(_("From Time Should Be Less Than To Time"))

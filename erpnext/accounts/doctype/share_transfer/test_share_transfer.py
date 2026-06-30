@@ -1,6 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.share_transfer.share_transfer import ShareDontExists
@@ -8,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestShareTransfer(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		share_transfers = [
 			{
 				"doctype": "Share Transfer",
@@ -85,7 +87,7 @@ class TestShareTransfer(ERPNextTestSuite):
 			st = frappe.get_doc(d)
 			st.submit()
 
-	def test_invalid_share_transfer(self):
+	def test_invalid_share_transfer(self) -> None:
 		doc = frappe.get_doc(
 			{
 				"doctype": "Share Transfer",

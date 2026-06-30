@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.utils import add_days, flt, getdate, today
@@ -11,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.company_abbr = "_TC"
 		self.customer = "_Test Customer"
@@ -24,7 +26,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.cash = "Cash - _TC"
 		self.debtors_usd = "_Test Receivable USD - _TC"
 
-	def create_sales_invoice(self, no_payment_schedule=False, do_not_submit=False, **args):
+	def create_sales_invoice(self, no_payment_schedule: bool = False, do_not_submit: bool = False, **args):
 		frappe.set_user("Administrator")
 		si = create_sales_invoice(
 			item=self.item,
@@ -57,7 +59,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			si = si.submit()
 		return si
 
-	def create_payment_entry(self, docname, do_not_submit=False):
+	def create_payment_entry(self, docname, do_not_submit: bool = False):
 		pe = get_payment_entry("Sales Invoice", docname, bank_account=self.cash, party_amount=40)
 		pe.paid_from = self.debit_to
 		pe.insert()
@@ -65,7 +67,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			pe.submit()
 		return pe
 
-	def create_credit_note(self, docname, do_not_submit=False):
+	def create_credit_note(self, docname, do_not_submit: bool = False):
 		credit_note = create_sales_invoice(
 			company=self.company,
 			customer=self.customer,
@@ -80,7 +82,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 
 		return credit_note
 
-	def test_pos_receivable(self):
+	def test_pos_receivable(self) -> None:
 		filters = {
 			"company": self.company,
 			"party_type": "Customer",
@@ -112,7 +114,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(expected_data[0], [row.invoiced, row.paid, row.credit_note])
 		pos_inv.cancel()
 
-	def test_accounts_receivable_with_payment(self):
+	def test_accounts_receivable_with_payment(self) -> None:
 		filters = {
 			"company": self.company,
 			"based_on_payment_terms": 1,
@@ -170,7 +172,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			],
 		)
 
-	def test_accounts_receivable_without_payment(self):
+	def test_accounts_receivable_without_payment(self) -> None:
 		filters = {
 			"company": self.company,
 			"based_on_payment_terms": 1,
@@ -206,7 +208,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		"Accounts Settings",
 		{"allow_multi_currency_invoices_against_single_party_account": 1},
 	)
-	def test_allow_multi_currency_invoices_against_single_party_account(self):
+	def test_allow_multi_currency_invoices_against_single_party_account(self) -> None:
 		filters = {
 			"company": self.company,
 			"based_on_payment_terms": 1,
@@ -280,7 +282,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(expected_data, [row.invoice_grand_total, row.invoiced])
 		self.assertFalse(row.get("remarks"))
 
-	def test_accounts_receivable_with_partial_payment(self):
+	def test_accounts_receivable_with_partial_payment(self) -> None:
 		filters = {
 			"company": self.company,
 			"based_on_payment_terms": 1,
@@ -342,7 +344,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 				],
 			)
 
-	def test_cr_note_flag_to_update_self(self):
+	def test_cr_note_flag_to_update_self(self) -> None:
 		filters = {
 			"company": self.company,
 			"report_date": today(),
@@ -416,7 +418,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(expected_data_after_credit_note[0], si_row)
 		self.assertEqual(expected_data_after_credit_note[1], cr_note_row)
 
-	def test_payment_againt_po_in_receivable_report(self):
+	def test_payment_againt_po_in_receivable_report(self) -> None:
 		"""
 		Payments made against Purchase Order will show up as outstanding amount
 		"""
@@ -460,7 +462,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		"Accounts Settings",
 		{"allow_multi_currency_invoices_against_single_party_account": 1, "allow_stale": 0},
 	)
-	def test_exchange_revaluation_for_party(self):
+	def test_exchange_revaluation_for_party(self) -> None:
 		"""
 		Exchange Revaluation for party on Receivable/Payable should be included
 		"""
@@ -513,7 +515,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			],
 		)
 
-	def test_payment_against_credit_note(self):
+	def test_payment_against_credit_note(self) -> None:
 		"""
 		Payment against credit/debit note should be considered against the parent invoice
 		"""
@@ -600,7 +602,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		filters = {"company": self.company, "report_date": today(), "range": "30, 60, 90, 120"}
 		return execute(filters)[1]
 
-	def test_invoice_partially_paid_via_journal_entry(self):
+	def test_invoice_partially_paid_via_journal_entry(self) -> None:
 		si = self.create_sales_invoice(no_payment_schedule=True)  # outstanding 100
 		self.pay_invoice_via_journal_entry(si, 40)
 
@@ -608,14 +610,14 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(row.paid, 40)
 		self.assertEqual(row.outstanding, 60)
 
-	def test_invoice_fully_paid_via_journal_entry(self):
+	def test_invoice_fully_paid_via_journal_entry(self) -> None:
 		si = self.create_sales_invoice(no_payment_schedule=True)  # outstanding 100
 		self.pay_invoice_via_journal_entry(si, 100)
 
 		# a fully settled invoice drops out of the receivable report
 		self.assertEqual([row for row in self.ar_rows() if row.voucher_no == si.name], [])
 
-	def test_credit_note_via_journal_entry_shows_negative_outstanding(self):
+	def test_credit_note_via_journal_entry_shows_negative_outstanding(self) -> None:
 		je = frappe.new_doc("Journal Entry")
 		je.company = self.company
 		je.voucher_type = "Credit Note"
@@ -645,7 +647,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		row = next(row for row in self.ar_rows() if row.voucher_no == je.name)
 		self.assertEqual(row.outstanding, -100)
 
-	def test_show_remarks_includes_invoice_remark(self):
+	def test_show_remarks_includes_invoice_remark(self) -> None:
 		si = self.create_sales_invoice(no_payment_schedule=True, do_not_submit=True)
 		si.remarks = "AR test remark"
 		si.save().submit()
@@ -659,7 +661,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		row = next(row for row in execute(filters)[1] if row.voucher_no == si.name)
 		self.assertIn("AR test remark", row.remarks or "")
 
-	def test_show_delivery_notes_links_delivery_note(self):
+	def test_show_delivery_notes_links_delivery_note(self) -> None:
 		from erpnext.stock.doctype.delivery_note.mapper import make_sales_invoice
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -681,7 +683,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		row = next(row for row in execute(filters)[1] if row.voucher_no == si.name)
 		self.assertIn(dn.name, row.delivery_notes or "")
 
-	def test_group_by_party(self):
+	def test_group_by_party(self) -> None:
 		si1 = self.create_sales_invoice(do_not_submit=True)
 		si1.posting_date = add_days(today(), -1)
 		si1.save().submit()
@@ -737,7 +739,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			],
 		)
 
-	def test_future_payments(self):
+	def test_future_payments(self) -> None:
 		sr = self.create_sales_invoice(do_not_submit=True)
 		sr.is_return = 1
 		sr.items[0].qty = -1
@@ -812,7 +814,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 				[row.invoiced, row.paid, row.outstanding, row.remaining_balance, row.future_amount],
 			)
 
-	def test_future_payments_from_journal_entry(self):
+	def test_future_payments_from_journal_entry(self) -> None:
 		# A single future-dated Journal Entry paying two different invoices must surface as one
 		# future-payment row PER invoice, not collapse the whole sum onto one arbitrary invoice
 		# (regression: the implicit single-group aggregate filed all future JE payments under one key).
@@ -867,7 +869,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(rows_a[0].future_amount, 50.0)
 		self.assertEqual(rows_b[0].future_amount, 50.0)
 
-	def test_sales_person(self):
+	def test_sales_person(self) -> None:
 		sales_person = frappe.get_doc(
 			{"doctype": "Sales Person", "sales_person_name": "John Clark", "enabled": True}
 		).insert()
@@ -890,7 +892,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		row = report[0]
 		self.assertEqual(expected_data, [row.invoiced, row.outstanding, row.sales_person])
 
-	def test_cost_center_filter(self):
+	def test_cost_center_filter(self) -> None:
 		self.create_sales_invoice()
 		filters = {
 			"company": self.company,
@@ -904,7 +906,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		row = report[0]
 		self.assertEqual(expected_data, [row.invoiced, row.outstanding, row.cost_center])
 
-	def test_customer_group_filter(self):
+	def test_customer_group_filter(self) -> None:
 		self.create_sales_invoice()
 		cus_group = frappe.db.get_value("Customer", self.customer, "customer_group")
 		filters = {
@@ -923,7 +925,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		report = execute(filters)[1]
 		self.assertEqual(len(report), 0)
 
-	def test_multi_customer_group_filter(self):
+	def test_multi_customer_group_filter(self) -> None:
 		self.create_sales_invoice()
 		cus_group = frappe.db.get_value("Customer", self.customer, "customer_group")
 		# Create a list of customer groups, e.g., ["Group1", "Group2"]
@@ -944,7 +946,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			# Assert that the customer group of each row is in the list of customer groups
 			self.assertIn(row.customer_group, cus_groups_list)
 
-	def test_party_account_filter(self):
+	def test_party_account_filter(self) -> None:
 		si1 = self.create_sales_invoice()
 		jane = frappe.get_doc(
 			{
@@ -1009,7 +1011,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 				],
 			)
 
-	def test_usd_customer_filter(self):
+	def test_usd_customer_filter(self) -> None:
 		filters = {
 			"company": self.company,
 			"party_type": "Customer",
@@ -1043,7 +1045,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			with self.subTest(field=field):
 				self.assertEqual(report_output.get(field), expected.get(field))
 
-	def test_multi_select_party_filter(self):
+	def test_multi_select_party_filter(self) -> None:
 		self.customer1 = self.customer
 		self.create_customer("_Test Customer 2")
 		self.customer2 = self.customer
@@ -1078,7 +1080,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		output_for = set([x.party for x in report[1]])
 		self.assertEqual(output_for, expected_output)
 
-	def test_report_output_if_party_is_missing(self):
+	def test_report_output_if_party_is_missing(self) -> None:
 		acc_name = "Additional Debtors"
 		if not frappe.db.get_value("Account", filters={"account_name": acc_name, "company": self.company}):
 			additional_receivable_acc = frappe.get_doc(
@@ -1164,7 +1166,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		report_output = sorted(report_output, key=lambda x: x[0])
 		self.assertEqual(expected_data, report_output)
 
-	def test_future_payments_on_foreign_currency(self):
+	def test_future_payments_on_foreign_currency(self) -> None:
 		jane = frappe.get_doc(
 			{
 				"doctype": "Customer",
@@ -1246,7 +1248,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			expected_data, [row.invoiced, row.outstanding, row.remaining_balance, row.future_amount]
 		)
 
-	def test_accounts_receivable_output_for_minor_outstanding(self):
+	def test_accounts_receivable_output_for_minor_outstanding(self) -> None:
 		"""
 		AR/AP should report miniscule outstanding of 0.01. Or else there will be slight difference with General Ledger/Trial Balance
 		"""
@@ -1272,7 +1274,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 			[row.invoice_grand_total, row.invoiced, row.paid, row.outstanding],
 		)
 
-	def test_cost_center_on_report_output(self):
+	def test_cost_center_on_report_output(self) -> None:
 		filters = {
 			"company": self.company,
 			"report_date": today(),
@@ -1306,7 +1308,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		row = report[1][0]
 		self.assertEqual(expected_data_after_payment, [row.voucher_no, row.cost_center, row.outstanding])
 
-	def test_payment_terms_template_filters(self):
+	def test_payment_terms_template_filters(self) -> None:
 		from erpnext.controllers.accounts_controller import get_payment_terms
 
 		payment_term1 = frappe.get_doc(
@@ -1369,7 +1371,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(len(report[1]), 2)
 		self.assertEqual([si.name, payment_term1.payment_term_name], [row.voucher_no, row.payment_term])
 
-	def test_project_filter(self):
+	def test_project_filter(self) -> None:
 		project = frappe.get_doc(
 			{"doctype": "Project", "project_name": "_Test AR Project", "company": self.company}
 		).insert()
@@ -1391,7 +1393,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(row.project, project.name)
 		self.assertEqual(row.invoiced, 100.0)
 
-	def test_project_on_report_output(self):
+	def test_project_on_report_output(self) -> None:
 		"""
 		Report row must carry the invoice's project even when the payment entry
 		has no project set.
@@ -1418,7 +1420,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		row = report[1][0]
 		self.assertEqual([si.name, project.name, 60], [row.voucher_no, row.project, row.outstanding])
 
-	def test_accounts_receivable_respects_user_permissions(self):
+	def test_accounts_receivable_respects_user_permissions(self) -> None:
 		# Party is a dynamic link on Payment Ledger Entry, so user permissions on Customer
 		# must be applied explicitly. The report should only show permitted customers.
 		original_customer = self.customer

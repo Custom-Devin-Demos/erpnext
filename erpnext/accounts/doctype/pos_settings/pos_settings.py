@@ -1,6 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import Counter
 
 import frappe
@@ -26,7 +28,7 @@ class POSSettings(Document):
 		post_change_gl_entries: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		old_doc = self.get_doc_before_save()
 
 		if old_doc.invoice_type != self.invoice_type:
@@ -34,7 +36,7 @@ class POSSettings(Document):
 
 		self.validate_invoice_fields()
 
-	def validate_invoice_fields(self):
+	def validate_invoice_fields(self) -> None:
 		invoice_fields = [field.fieldname for field in self.invoice_fields]
 		duplicate_invoice_fields = {key for key, value in Counter(invoice_fields).items() if value > 1}
 
@@ -44,7 +46,7 @@ class POSSettings(Document):
 					title=_("Duplicate POS Fields"), msg=_("'{0}' has been already added.").format(field)
 				)
 
-	def validate_invoice_type(self):
+	def validate_invoice_type(self) -> None:
 		pos_opening_entries_count = frappe.db.count(
 			"POS Opening Entry", filters={"docstatus": 1, "status": "Open"}
 		)

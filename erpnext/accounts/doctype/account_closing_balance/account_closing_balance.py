@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -43,7 +45,7 @@ class AccountClosingBalance(Document):
 	pass
 
 
-def make_closing_entries(closing_entries, voucher_name, company, closing_date):
+def make_closing_entries(closing_entries, voucher_name, company, closing_date) -> None:
 	accounting_dimensions = get_accounting_dimensions()
 
 	previous_closing_entries = get_previous_closing_entries(company, closing_date, accounting_dimensions)
@@ -153,7 +155,7 @@ def get_previous_closing_entries(company, closing_date, accounting_dimensions):
 	return entries
 
 
-def set_amount_in_reporting_currency(cle, company, closing_date):
+def set_amount_in_reporting_currency(cle, company, closing_date) -> None:
 	default_currency, reporting_currency = frappe.get_cached_value(
 		"Company", company, ["default_currency", "reporting_currency"]
 	)

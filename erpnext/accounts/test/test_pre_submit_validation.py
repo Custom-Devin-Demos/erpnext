@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 from unittest.mock import patch
 
 import frappe
@@ -24,13 +26,13 @@ class _CreditLimitBase(ERPNextTestSuite):
 	OVER = 200.0
 	UNDER = 50.0
 
-	def setUp(self):
+	def setUp(self) -> None:
 		set_credit_limit(self.CUSTOMER, self.COMPANY, self.CREDIT_LIMIT)
 		frappe.message_log.clear()
 
 
 class TestCreditLimitWarnSalesInvoice(_CreditLimitBase):
-	def _make_si(self, amount, is_return=0):
+	def _make_si(self, amount, is_return: int = 0):
 		"""Build an in-memory (unsaved) draft SI."""
 		si = frappe.new_doc("Sales Invoice")
 		si.company = self.COMPANY
@@ -40,32 +42,32 @@ class TestCreditLimitWarnSalesInvoice(_CreditLimitBase):
 		si.append("items", {"item_code": "_Test Item", "qty": 1, "rate": amount})
 		return si
 
-	def test_warns_when_amount_exceeds_credit_limit(self):
+	def test_warns_when_amount_exceeds_credit_limit(self) -> None:
 		"""Orange warning must appear when base_grand_total > credit_limit."""
 		si = self._make_si(self.OVER)
 		_check_credit_limit_warn(si)
 		self.assertTrue(_get_orange_warnings(), "Expected an orange credit-limit warning")
 
-	def test_no_warning_when_amount_within_credit_limit(self):
+	def test_no_warning_when_amount_within_credit_limit(self) -> None:
 		"""No warning when base_grand_total is safely within the credit limit."""
 		si = self._make_si(self.UNDER)
 		_check_credit_limit_warn(si)
 		self.assertFalse(_get_orange_warnings())
 
-	def test_no_warning_for_return_invoices(self):
+	def test_no_warning_for_return_invoices(self) -> None:
 		"""Credit limit check is skipped entirely for return transactions."""
 		si = self._make_si(self.OVER, is_return=1)
 		_check_credit_limit_warn(si)
 		self.assertFalse(_get_orange_warnings())
 
-	def test_no_warning_when_customer_has_no_credit_limit(self):
+	def test_no_warning_when_customer_has_no_credit_limit(self) -> None:
 		"""If the customer has no credit limit configured, no warning is shown."""
 		frappe.db.delete("Customer Credit Limit", {"parent": self.CUSTOMER})
 		si = self._make_si(self.OVER)
 		_check_credit_limit_warn(si)
 		self.assertFalse(_get_orange_warnings())
 
-	def test_no_warning_when_all_items_linked_to_so_or_dn(self):
+	def test_no_warning_when_all_items_linked_to_so_or_dn(self) -> None:
 		"""
 		When every item on the SI already has a sales_order or delivery_note
 		reference, the check is skipped (the SO/DN already counted this amount).
@@ -86,23 +88,23 @@ class TestCreditLimitWarnSalesOrder(_CreditLimitBase):
 		so.append("items", {"item_code": "_Test Item", "qty": 1, "rate": amount})
 		return so
 
-	def test_warns_on_first_save_when_limit_exceeded(self):
+	def test_warns_on_first_save_when_limit_exceeded(self) -> None:
 		so = self._make_so(self.OVER)
 		self.assertTrue(so.is_new(), "Doc should be new (not yet in DB)")
 		_check_credit_limit_warn(so)
 		self.assertTrue(_get_orange_warnings())
 
-	def test_warns_when_amount_exceeds_credit_limit(self):
+	def test_warns_when_amount_exceeds_credit_limit(self) -> None:
 		so = self._make_so(self.OVER)
 		_check_credit_limit_warn(so)
 		self.assertTrue(_get_orange_warnings())
 
-	def test_no_warning_when_amount_within_credit_limit(self):
+	def test_no_warning_when_amount_within_credit_limit(self) -> None:
 		so = self._make_so(self.UNDER)
 		_check_credit_limit_warn(so)
 		self.assertFalse(_get_orange_warnings())
 
-	def test_no_warning_when_bypass_is_set(self):
+	def test_no_warning_when_bypass_is_set(self) -> None:
 		"""
 		When bypass_credit_limit_check=1 on the Customer Credit Limit row,
 		SO's check_credit_limit skips entirely.
@@ -119,7 +121,7 @@ class TestCreditLimitWarnSalesOrder(_CreditLimitBase):
 
 
 class TestCreditLimitWarnDeliveryNote(_CreditLimitBase):
-	def _make_dn(self, amount, bypass=False, against_sales_order=None, against_sales_invoice=None):
+	def _make_dn(self, amount, bypass: bool = False, against_sales_order=None, against_sales_invoice=None):
 		"""Build an in-memory (unsaved) draft DN."""
 		dn = frappe.new_doc("Delivery Note")
 		dn.company = self.COMPANY
@@ -149,18 +151,18 @@ class TestCreditLimitWarnDeliveryNote(_CreditLimitBase):
 
 		return dn
 
-	def test_bypass_false_warns_for_existing_draft(self):
+	def test_bypass_false_warns_for_existing_draft(self) -> None:
 		"""bypass=False, existing draft: proportional extra_amount path still applies."""
 		dn = self._make_dn(self.OVER)
 		_check_credit_limit_warn(dn)
 		self.assertTrue(_get_orange_warnings())
 
-	def test_bypass_false_no_warning_when_under_limit(self):
+	def test_bypass_false_no_warning_when_under_limit(self) -> None:
 		dn = self._make_dn(self.UNDER)
 		_check_credit_limit_warn(dn)
 		self.assertFalse(_get_orange_warnings())
 
-	def test_bypass_false_no_warning_when_all_items_linked_to_so(self):
+	def test_bypass_false_no_warning_when_all_items_linked_to_so(self) -> None:
 		"""
 		Items fully linked to a SO are excluded from unlinked_net.
 		extra_amount becomes 0 → check is skipped.
@@ -169,7 +171,7 @@ class TestCreditLimitWarnDeliveryNote(_CreditLimitBase):
 		_check_credit_limit_warn(dn)
 		self.assertFalse(_get_orange_warnings())
 
-	def test_bypass_false_partial_link_warns_proportionally(self):
+	def test_bypass_false_partial_link_warns_proportionally(self) -> None:
 		"""
 		Two items: one linked to SO, one unlinked.
 		Only the unlinked portion should count toward the credit limit check.
@@ -197,7 +199,7 @@ class TestCreditLimitWarnDeliveryNote(_CreditLimitBase):
 
 	# bypass=True -----------------------------------------------------------
 
-	def test_bypass_true_warns_on_first_save_new_doc(self):
+	def test_bypass_true_warns_on_first_save_new_doc(self) -> None:
 		"""
 		bypass=True: existing doc.check_credit_limit() handles extra_amount
 		internally (base_grand_total for items not against SI).
@@ -207,7 +209,7 @@ class TestCreditLimitWarnDeliveryNote(_CreditLimitBase):
 		_check_credit_limit_warn(dn)
 		self.assertTrue(_get_orange_warnings())
 
-	def test_bypass_true_no_warning_when_all_items_billed(self):
+	def test_bypass_true_no_warning_when_all_items_billed(self) -> None:
 		"""
 		bypass=True: items already linked to a SI are excluded from extra_amount.
 		If all items have against_sales_invoice set, extra_amount=0 → no check.
@@ -226,7 +228,7 @@ class TestPackedQtyWarn(ERPNextTestSuite):
 	COMPANY = "_Test Company"
 	CUSTOMER = "_Test Customer"
 
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.message_log.clear()
 
 	def _make_dn(self):
@@ -239,13 +241,13 @@ class TestPackedQtyWarn(ERPNextTestSuite):
 		)
 		return dn
 
-	def test_no_warning_for_new_doc(self):
+	def test_no_warning_for_new_doc(self) -> None:
 		"""New doc has no packing slip in DB, so validate_packed_qty is skipped."""
 		dn = self._make_dn()
 		_check_packed_qty_warn(dn)
 		self.assertFalse(_get_orange_warnings())
 
-	def test_warns_when_packed_qty_mismatches(self):
+	def test_warns_when_packed_qty_mismatches(self) -> None:
 		"""When validate_packed_qty raises, an orange warning is produced."""
 		dn = self._make_dn()
 		with patch.object(
@@ -256,7 +258,7 @@ class TestPackedQtyWarn(ERPNextTestSuite):
 			_check_packed_qty_warn(dn)
 		self.assertTrue(_get_orange_warnings())
 
-	def test_no_warning_when_packed_qty_matches(self):
+	def test_no_warning_when_packed_qty_matches(self) -> None:
 		"""When validate_packed_qty passes silently, no warning is produced."""
 		dn = self._make_dn()
 		with patch.object(dn, "validate_packed_qty", return_value=None):

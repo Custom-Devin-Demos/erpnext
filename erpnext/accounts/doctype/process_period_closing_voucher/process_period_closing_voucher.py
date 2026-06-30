@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import copy
 from datetime import timedelta
 
@@ -38,21 +40,21 @@ class ProcessPeriodClosingVoucher(Document):
 		z_opening_balances: DF.Table[ProcessPeriodClosingVoucherDetail]
 	# end: auto-generated types
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate(self):
+	def validate(self) -> None:
 		self.status = "Queued"
 		self.populate_processing_tables()
 
-	def populate_processing_tables(self):
+	def populate_processing_tables(self) -> None:
 		self.generate_pcv_dates()
 		self.generate_opening_balances_dates()
 
 	def get_dates(self, start, end):
 		return [start + timedelta(days=x) for x in range((end - start).days + 1)]
 
-	def generate_pcv_dates(self):
+	def generate_pcv_dates(self) -> None:
 		self.normal_balances = []
 		pcv = frappe.get_doc("Period Closing Voucher", self.parent_pcv)
 
@@ -66,7 +68,7 @@ class ProcessPeriodClosingVoucher(Document):
 				"normal_balances", {"processing_date": x, "status": "Queued", "report_type": "Balance Sheet"}
 			)
 
-	def generate_opening_balances_dates(self):
+	def generate_opening_balances_dates(self) -> None:
 		self.z_opening_balances = []
 
 		pcv = frappe.get_doc("Period Closing Voucher", self.parent_pcv)
@@ -82,15 +84,15 @@ class ProcessPeriodClosingVoucher(Document):
 					{"processing_date": x, "status": "Queued", "report_type": "Balance Sheet"},
 				)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		start_pcv_processing(self.name)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		cancel_pcv_processing(self.name)
 
 
 @frappe.whitelist()
-def start_pcv_processing(docname: str):
+def start_pcv_processing(docname: str) -> None:
 	if frappe.db.get_value("Process Period Closing Voucher", docname, "status") in ["Queued", "Running"]:
 		frappe.has_permission("Process Period Closing Voucher", "write", doc=docname, throw=True)
 		frappe.db.set_value("Process Period Closing Voucher", docname, "status", "Running")
@@ -136,7 +138,7 @@ def start_pcv_processing(docname: str):
 
 
 @frappe.whitelist()
-def pause_pcv_processing(docname: str):
+def pause_pcv_processing(docname: str) -> None:
 	ppcv = qb.DocType("Process Period Closing Voucher")
 	qb.update(ppcv).set(ppcv.status, "Paused").where(ppcv.name.eq(docname)).run()
 
@@ -151,7 +153,7 @@ def pause_pcv_processing(docname: str):
 
 
 @frappe.whitelist()
-def cancel_pcv_processing(docname: str):
+def cancel_pcv_processing(docname: str) -> None:
 	ppcv = qb.DocType("Process Period Closing Voucher")
 	qb.update(ppcv).set(ppcv.status, "Cancelled").where(ppcv.name.eq(docname)).run()
 
@@ -165,7 +167,7 @@ def cancel_pcv_processing(docname: str):
 
 
 @frappe.whitelist()
-def resume_pcv_processing(docname: str):
+def resume_pcv_processing(docname: str) -> None:
 	ppcv = qb.DocType("Process Period Closing Voucher")
 	qb.update(ppcv).set(ppcv.status, "Running").where(ppcv.name.eq(docname)).run()
 
@@ -182,7 +184,7 @@ def resume_pcv_processing(docname: str):
 		schedule_next_date(docname)
 
 
-def update_default_dimensions(dimension_fields, gl_entry, dimension_values):
+def update_default_dimensions(dimension_fields, gl_entry, dimension_values) -> None:
 	for i, dimension in enumerate(dimension_fields):
 		gl_entry[dimension] = dimension_values[i]
 
@@ -248,7 +250,7 @@ def get_gle_for_closing_account(pcv, dimension_balance, dimensions):
 
 
 @frappe.whitelist()
-def schedule_next_date(docname: str):
+def schedule_next_date(docname: str) -> None:
 	timeout = frappe.db.get_single_value("Accounts Settings", "pcv_job_timeout") or 3600
 
 	ppcvd = qb.DocType("Process Period Closing Voucher Detail")
@@ -422,7 +424,7 @@ def get_closing_account_closing_entry(closing_account_gle, pcv):
 	return closing_entries_for_closing_account
 
 
-def summarize_and_post_ledger_entries(docname):
+def summarize_and_post_ledger_entries(docname) -> None:
 	# P&L accounts
 	pl_accounts_reverse_gle, closing_account_gle = get_gl_entries(docname)
 	gl_entries = pl_accounts_reverse_gle + closing_account_gle
@@ -529,7 +531,7 @@ def build_dimension_wise_balance_dict(gl_entries):
 	return dimension_balances
 
 
-def process_individual_date(docname: str, date, report_type, parentfield):
+def process_individual_date(docname: str, date, report_type, parentfield) -> None:
 	current_date_status = frappe.db.get_value(
 		"Process Period Closing Voucher Detail",
 		{"processing_date": date, "report_type": report_type, "parentfield": parentfield},

@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
@@ -10,7 +12,7 @@ class TestModeofPayment(ERPNextTestSuite):
 	pass
 
 
-def set_default_account_for_mode_of_payment(mode_of_payment, company, account):
+def set_default_account_for_mode_of_payment(mode_of_payment, company, account) -> None:
 	mode_of_payment.reload()
 	if frappe.db.exists(
 		"Mode of Payment Account", {"parent": mode_of_payment.mode_of_payment, "company": company}

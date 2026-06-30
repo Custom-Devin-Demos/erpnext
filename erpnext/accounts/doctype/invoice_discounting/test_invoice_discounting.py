@@ -1,6 +1,8 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, flt, nowdate
 
@@ -12,7 +14,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestInvoiceDiscounting(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.ar_credit = create_account(
 			account_name="_Test Accounts Receivable Credit",
 			parent_account="Accounts Receivable - _TC",
@@ -43,7 +45,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 		)
 		frappe.db.set_value("Company", "_Test Company", "default_bank_account", self.bank_account)
 
-	def test_total_amount(self):
+	def test_total_amount(self) -> None:
 		inv1 = create_sales_invoice(rate=200)
 		inv2 = create_sales_invoice(rate=500)
 
@@ -59,7 +61,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 		)
 		self.assertEqual(inv_disc.total_amount, 700)
 
-	def test_gl_entries_in_base_currency(self):
+	def test_gl_entries_in_base_currency(self) -> None:
 		inv = create_sales_invoice(rate=200)
 		inv_disc = create_invoice_discounting(
 			[inv.name],
@@ -77,7 +79,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 		for _i, gle_value in enumerate(gle):
 			self.assertEqual([gle_value.debit, gle_value.credit], expected_gle.get(gle_value.account))
 
-	def test_loan_on_submit(self):
+	def test_loan_on_submit(self) -> None:
 		inv = create_sales_invoice(rate=300)
 		inv_disc = create_invoice_discounting(
 			[inv.name],
@@ -93,7 +95,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 		self.assertEqual(inv_disc.status, "Sanctioned")
 		self.assertEqual(inv_disc.loan_end_date, add_days(inv_disc.loan_start_date, inv_disc.loan_period))
 
-	def test_on_disbursed(self):
+	def test_on_disbursed(self) -> None:
 		inv = create_sales_invoice(rate=500)
 		inv_disc = create_invoice_discounting(
 			[inv.name],
@@ -135,7 +137,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 		inv.reload()
 		self.assertEqual(inv.outstanding_amount, 500)
 
-	def test_on_close_after_loan_period(self):
+	def test_on_close_after_loan_period(self) -> None:
 		inv = create_sales_invoice(rate=600)
 		inv_disc = create_invoice_discounting(
 			[inv.name],
@@ -173,7 +175,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 
 		self.assertEqual(inv_disc.status, "Settled")
 
-	def test_on_close_after_loan_period_after_inv_payment(self):
+	def test_on_close_after_loan_period_after_inv_payment(self) -> None:
 		inv = create_sales_invoice(rate=600)
 		inv_disc = create_invoice_discounting(
 			[inv.name],
@@ -206,7 +208,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 		self.assertEqual(je2.accounts[1].account, self.bank_account)
 		self.assertEqual(je2.accounts[1].credit_in_account_currency, flt(inv_disc.total_amount))
 
-	def test_on_close_before_loan_period(self):
+	def test_on_close_before_loan_period(self) -> None:
 		inv = create_sales_invoice(rate=700)
 		inv_disc = create_invoice_discounting(
 			[inv.name],
@@ -234,7 +236,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 		self.assertEqual(je2.accounts[1].account, self.bank_account)
 		self.assertEqual(je2.accounts[1].credit_in_account_currency, flt(inv_disc.total_amount))
 
-	def test_make_payment_before_loan_period(self):
+	def test_make_payment_before_loan_period(self) -> None:
 		# it has problem
 		inv = create_sales_invoice(rate=700)
 		inv_disc = create_invoice_discounting(
@@ -266,7 +268,7 @@ class TestInvoiceDiscounting(ERPNextTestSuite):
 		inv.reload()
 		self.assertEqual(inv.outstanding_amount, 0)
 
-	def test_make_payment_before_after_period(self):
+	def test_make_payment_before_after_period(self) -> None:
 		# it has problem
 		inv = create_sales_invoice(rate=700)
 		inv_disc = create_invoice_discounting(

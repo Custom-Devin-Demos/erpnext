@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import copy
 
 import frappe
@@ -116,7 +118,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_revenue(data, period_list, include_in_gross=1):
+def get_revenue(data, period_list, include_in_gross: int = 1):
 	revenue = [item for item in data if item["include_in_gross"] == include_in_gross or item["is_group"] == 1]
 
 	data_to_be_removed = True
@@ -145,7 +147,7 @@ def remove_parent_with_no_child(data):
 	return data, data_to_be_removed
 
 
-def adjust_account_totals(data, period_list):
+def adjust_account_totals(data, period_list) -> None:
 	totals = {}
 	for d in reversed(data):
 		if d.get("is_group"):
@@ -173,7 +175,7 @@ def set_total(node, value, complete_list, totals):
 
 
 def get_profit(
-	gross_income, gross_expense, period_list, company, profit_type, currency=None, consolidated=False
+	gross_income, gross_expense, period_list, company, profit_type, currency=None, consolidated: bool = False
 ):
 	profit_loss = {
 		"account_name": "'" + _(profit_type) + "'",
@@ -208,7 +210,7 @@ def get_net_profit(
 	period_list,
 	company,
 	currency=None,
-	consolidated=False,
+	consolidated: bool = False,
 ):
 	profit_loss = {
 		"account_name": "'" + _("Net Profit") + "'",

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Max, Sum
@@ -38,7 +40,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	if not filters.fiscal_year:
 		frappe.throw(_("Fiscal Year {0} is required").format(filters.fiscal_year))
 
@@ -141,7 +143,9 @@ def get_data(filters):
 	return data
 
 
-def get_opening_balances(filters, ignore_is_opening, exchange_rate=None, ignore_reporting_currency=True):
+def get_opening_balances(
+	filters, ignore_is_opening, exchange_rate=None, ignore_reporting_currency: bool = True
+):
 	balance_sheet_opening = get_rootwise_opening_balances(
 		filters, "Balance Sheet", ignore_is_opening, exchange_rate, ignore_reporting_currency
 	)
@@ -154,7 +158,7 @@ def get_opening_balances(filters, ignore_is_opening, exchange_rate=None, ignore_
 
 
 def get_rootwise_opening_balances(
-	filters, report_type, ignore_is_opening, exchange_rate=None, ignore_reporting_currency=True
+	filters, report_type, ignore_is_opening, exchange_rate=None, ignore_reporting_currency: bool = True
 ):
 	gle = []
 
@@ -239,8 +243,8 @@ def get_opening_balance(
 	accounting_dimensions,
 	period_closing_voucher=None,
 	start_date=None,
-	ignore_is_opening=0,
-	ignore_reporting_currency=True,
+	ignore_is_opening: int = 0,
+	ignore_reporting_currency: bool = True,
 ):
 	closing_balance = frappe.qb.DocType(doctype)
 	accounts = frappe.db.get_all("Account", filters={"report_type": report_type}, pluck="name")
@@ -358,10 +362,10 @@ def calculate_values(
 	gl_entries_by_account,
 	opening_balances,
 	show_net_values,
-	ignore_is_opening=0,
+	ignore_is_opening: int = 0,
 	exchange_rate=None,
-	ignore_reporting_currency=True,
-):
+	ignore_reporting_currency: bool = True,
+) -> None:
 	init = {
 		"opening_debit": 0.0,
 		"opening_credit": 0.0,
@@ -400,7 +404,7 @@ def calculate_values(
 			prepare_opening_closing(d)
 
 
-def calculate_total_row(data, company_currency, show_group_accounts=True):
+def calculate_total_row(data, company_currency, show_group_accounts: bool = True):
 	total_row = {
 		"account": "'" + _("Total") + "'",
 		"account_name": "'" + _("Total") + "'",
@@ -417,7 +421,7 @@ def calculate_total_row(data, company_currency, show_group_accounts=True):
 		"currency": company_currency,
 	}
 
-	def sum_value_fields(row):
+	def sum_value_fields(row) -> None:
 		for field in value_fields:
 			total_row[field] += row[field]
 
@@ -431,7 +435,7 @@ def calculate_total_row(data, company_currency, show_group_accounts=True):
 	return total_row
 
 
-def accumulate_values_into_parents(accounts, accounts_by_name):
+def accumulate_values_into_parents(accounts, accounts_by_name) -> None:
 	for d in reversed(accounts):
 		if d.parent_account:
 			for key in value_fields:
@@ -559,7 +563,7 @@ def get_columns():
 	]
 
 
-def prepare_opening_closing(row):
+def prepare_opening_closing(row) -> None:
 	dr_or_cr = "debit" if row["root_type"] in ["Asset", "Equity", "Expense"] else "credit"
 	reverse_dr_or_cr = "credit" if dr_or_cr == "debit" else "debit"
 

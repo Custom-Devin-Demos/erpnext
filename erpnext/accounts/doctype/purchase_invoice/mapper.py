@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -52,20 +54,20 @@ def make_purchase_receipt(
 		args = {}
 	args = frappe.parse_json(args)
 
-	def post_parent_process(source_parent, target_parent):
+	def post_parent_process(source_parent, target_parent) -> None:
 		remove_items_with_zero_qty(target_parent)
 		set_missing_values(source_parent, target_parent)
 
-	def remove_items_with_zero_qty(target_parent):
+	def remove_items_with_zero_qty(target_parent) -> None:
 		target_parent.items = [row for row in target_parent.get("items") if row.get("qty") != 0]
 
-	def set_missing_values(source_parent, target_parent):
+	def set_missing_values(source_parent, target_parent) -> None:
 		target_parent.run_method("set_missing_values")
 		if args and args.get("merge_taxes"):
 			merge_taxes(source_parent, target_parent)
 		target_parent.run_method("calculate_taxes_and_totals")
 
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		from erpnext.controllers.sales_and_purchase_return import get_returned_qty_map_for_row
 
 		returned_qty_map = (

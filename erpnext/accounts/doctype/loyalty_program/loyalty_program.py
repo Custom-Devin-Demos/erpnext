@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from datetime import date
 
 import frappe
@@ -38,10 +40,10 @@ class LoyaltyProgram(Document):
 		to_date: DF.Date | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_lowest_tier()
 
-	def validate_lowest_tier(self):
+	def validate_lowest_tier(self) -> None:
 		tiers = sorted(self.collection_rules, key=lambda x: x.min_spent)
 		if tiers and tiers[0].min_spent != 0:
 			frappe.throw(
@@ -52,7 +54,7 @@ class LoyaltyProgram(Document):
 
 
 def get_loyalty_details(
-	customer, loyalty_program, expiry_date=None, company=None, include_expired_entry=False
+	customer, loyalty_program, expiry_date=None, company=None, include_expired_entry: bool = False
 ):
 	if not expiry_date:
 		expiry_date = today()

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -67,7 +69,7 @@ class Budget(Document):
 		to_fiscal_year: DF.Link
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.get(frappe.scrub(self.budget_against)):
 			frappe.throw(_("{0} is mandatory").format(self.budget_against))
 		self.validate_budget_amount()
@@ -79,24 +81,24 @@ class Budget(Document):
 		self.validate_applicable_for()
 		self.validate_existing_expenses()
 
-	def validate_budget_amount(self):
+	def validate_budget_amount(self) -> None:
 		if self.budget_amount <= 0:
 			frappe.throw(_("Budget Amount can not be {0}.").format(self.budget_amount))
 
-	def validate_fiscal_year(self):
+	def validate_fiscal_year(self) -> None:
 		if self.from_fiscal_year:
 			self.validate_fiscal_year_company(self.from_fiscal_year, self.company)
 		if self.to_fiscal_year:
 			self.validate_fiscal_year_company(self.to_fiscal_year, self.company)
 
-	def validate_fiscal_year_company(self, fiscal_year, company):
+	def validate_fiscal_year_company(self, fiscal_year, company) -> None:
 		linked_companies = frappe.get_all(
 			"Fiscal Year Company", filters={"parent": fiscal_year}, pluck="company"
 		)
 		if linked_companies and company not in linked_companies:
 			frappe.throw(_("Fiscal Year {0} is not available for Company {1}.").format(fiscal_year, company))
 
-	def set_fiscal_year_dates(self):
+	def set_fiscal_year_dates(self) -> None:
 		if self.from_fiscal_year:
 			self.budget_start_date = frappe.get_cached_value(
 				"Fiscal Year", self.from_fiscal_year, "year_start_date"
@@ -109,7 +111,7 @@ class Budget(Document):
 		if self.budget_start_date > self.budget_end_date:
 			frappe.throw(_("From Fiscal Year cannot be greater than To Fiscal Year"))
 
-	def validate_duplicate(self):
+	def validate_duplicate(self) -> None:
 		budget_against_field = frappe.scrub(self.budget_against)
 		budget_against = self.get(budget_against_field)
 		account = self.account
@@ -148,7 +150,7 @@ class Budget(Document):
 				DuplicateBudgetError,
 			)
 
-	def validate_account(self):
+	def validate_account(self) -> None:
 		if not self.account:
 			frappe.throw(_("Account is mandatory"))
 
@@ -167,13 +169,13 @@ class Budget(Document):
 				).format(self.account)
 			)
 
-	def set_null_value(self):
+	def set_null_value(self) -> None:
 		if self.budget_against == "Cost Center":
 			self.project = None
 		else:
 			self.cost_center = None
 
-	def validate_applicable_for(self):
+	def validate_applicable_for(self) -> None:
 		if self.applicable_on_material_request and not (
 			self.applicable_on_purchase_order and self.applicable_on_booking_actual_expenses
 		):
@@ -191,7 +193,7 @@ class Budget(Document):
 		):
 			self.applicable_on_booking_actual_expenses = 1
 
-	def validate_existing_expenses(self):
+	def validate_existing_expenses(self) -> None:
 		if self.is_new() and self.revision_of:
 			return
 
@@ -232,14 +234,14 @@ class Budget(Document):
 				title=_("Budget Limit Exceeded"),
 			)
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.allocate_budget()
 		self.budget_distribution_total = sum(flt(row.amount) for row in self.budget_distribution)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.validate_distribution_totals()
 
-	def allocate_budget(self):
+	def allocate_budget(self) -> None:
 		if self._should_skip_allocation():
 			return
 
@@ -274,7 +276,7 @@ class Budget(Document):
 			and old.budget_end_date == self.budget_end_date
 		)
 
-	def _recalculate_manual_distribution(self):
+	def _recalculate_manual_distribution(self) -> None:
 		for row in self.budget_distribution:
 			row.amount = flt((row.percent / 100) * self.budget_amount, 3)
 
@@ -297,7 +299,7 @@ class Budget(Document):
 
 		return bool(self.distribute_equally)
 
-	def _regenerate_distribution(self):
+	def _regenerate_distribution(self) -> None:
 		self.set("budget_distribution", [])
 
 		periods = self.get_budget_periods()
@@ -350,11 +352,11 @@ class Budget(Document):
 			"Yearly": 12,
 		}.get(frequency, 1)
 
-	def add_allocated_amount(self, row, row_percent):
+	def add_allocated_amount(self, row, row_percent) -> None:
 		row.amount = flt(self.budget_amount * row_percent / 100, 3)
 		row.percent = flt(row_percent, 3)
 
-	def validate_distribution_totals(self):
+	def validate_distribution_totals(self) -> None:
 		if self.should_regenerate_budget_distribution():
 			return
 
@@ -374,7 +376,7 @@ class Budget(Document):
 			)
 
 
-def validate_expense_against_budget(params, expense_amount=0):
+def validate_expense_against_budget(params, expense_amount: int = 0) -> None:
 	params = frappe._dict(params)
 	if not frappe.db.count("Budget", cache=True):
 		return
@@ -497,7 +499,7 @@ def validate_expense_against_budget(params, expense_amount=0):
 				validate_budget_records(params, budget_records, expense_amount)
 
 
-def validate_budget_records(params, budget_records, expense_amount):
+def validate_budget_records(params, budget_records, expense_amount) -> None:
 	for budget in budget_records:
 		if flt(budget.budget_amount):
 			yearly_action, monthly_action = get_actions(params, budget)
@@ -537,7 +539,9 @@ def validate_budget_records(params, budget_records, expense_amount):
 				)
 
 
-def compare_expense_with_budget(params, budget_amount, action_for, action, budget_against, amount=0):
+def compare_expense_with_budget(
+	params, budget_amount, action_for, action, budget_against, amount: int = 0
+) -> None:
 	params.actual_expense, params.requested_amount, params.ordered_amount = get_actual_expense(params), 0, 0
 	if not amount:
 		params.requested_amount, params.ordered_amount = (

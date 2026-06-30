@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb
 from frappe.query_builder import Criterion
@@ -133,7 +135,7 @@ def calculate_values(accounts, gl_entries_by_account, filters):
 	return total_row
 
 
-def accumulate_values_into_parents(accounts, accounts_by_name):
+def accumulate_values_into_parents(accounts, accounts_by_name) -> None:
 	for d in reversed(accounts):
 		if d.parent_account:
 			for key in value_fields:
@@ -212,7 +214,7 @@ def get_columns(filters):
 
 
 def set_gl_entries_by_account(
-	company, from_date, to_date, based_on, gl_entries_by_account, ignore_closing_entries=False
+	company, from_date, to_date, based_on, gl_entries_by_account, ignore_closing_entries: bool = False
 ):
 	"""Returns a dict like { "account": [gl entries], ... }"""
 	gl = qb.DocType("GL Entry")

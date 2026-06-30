@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, msgprint
 from frappe.model.document import Document
@@ -40,7 +42,7 @@ class BankClearance(Document):
 	# end: auto-generated types
 
 	@frappe.whitelist()
-	def get_payment_entries(self):
+	def get_payment_entries(self) -> None:
 		if not (self.from_date and self.to_date):
 			frappe.throw(_("From Date and To Date are Mandatory"))
 
@@ -90,7 +92,7 @@ class BankClearance(Document):
 			row.update(d)
 
 	@frappe.whitelist()
-	def update_clearance_date(self):
+	def update_clearance_date(self) -> None:
 		invalid_document = []
 		invalid_cheque_date = []
 		entries_to_update = []

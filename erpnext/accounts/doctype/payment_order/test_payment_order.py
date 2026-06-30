@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import getdate
 
@@ -18,7 +20,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPaymentOrder(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		# generate and use a uniq hash identifier for 'Bank Account' and it's linked GL 'Account' to avoid validation error
 		uniq_identifier = frappe.generate_hash(length=10)
 		self.gl_account = create_gl_account("_Test Bank " + uniq_identifier)
@@ -26,7 +28,7 @@ class TestPaymentOrder(ERPNextTestSuite):
 			gl_account=self.gl_account, bank_account_name="Checking Account " + uniq_identifier
 		)
 
-	def test_payment_order_creation_against_payment_entry(self):
+	def test_payment_order_creation_against_payment_entry(self) -> None:
 		purchase_invoice = make_purchase_invoice()
 		payment_entry = get_payment_entry(
 			"Purchase Invoice", purchase_invoice.name, bank_account=self.gl_account

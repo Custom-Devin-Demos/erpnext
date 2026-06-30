@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -31,7 +33,7 @@ class CouponCode(Document):
 		valid_upto: DF.Date | None
 	# end: auto-generated types
 
-	def autoname(self):
+	def autoname(self) -> None:
 		self.coupon_name = strip(self.coupon_name)
 		self.name = self.coupon_name
 
@@ -41,7 +43,7 @@ class CouponCode(Document):
 			elif self.coupon_type == "Gift Card":
 				self.coupon_code = frappe.generate_hash()[:10].upper()
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.coupon_type == "Gift Card":
 			self.maximum_use = 1
 			if not self.customer:

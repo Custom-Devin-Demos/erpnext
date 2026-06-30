@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -27,7 +29,7 @@ class MonthlyDistribution(Document):
 	# end: auto-generated types
 
 	@frappe.whitelist()
-	def get_months(self):
+	def get_months(self) -> None:
 		month_list = [
 			"January",
 			"February",
@@ -50,7 +52,7 @@ class MonthlyDistribution(Document):
 			mnth.idx = idx
 			idx += 1
 
-	def validate(self):
+	def validate(self) -> None:
 		total = sum(flt(d.percentage_allocation) for d in self.get("percentages"))
 
 		if flt(total, 2) != 100.0:

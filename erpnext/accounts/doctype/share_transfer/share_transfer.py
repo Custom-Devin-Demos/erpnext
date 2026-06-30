@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.exceptions import ValidationError
@@ -42,7 +44,7 @@ class ShareTransfer(Document):
 		transfer_type: DF.Literal["", "Issue", "Purchase", "Transfer"]
 	# end: auto-generated types
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		if self.transfer_type == "Issue":
 			shareholder = self.get_company_shareholder()
 			shareholder.append(
@@ -94,7 +96,7 @@ class ShareTransfer(Document):
 			)
 			doc.save()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		if self.transfer_type == "Issue":
 			compnay_shareholder = self.get_company_shareholder()
 			self.remove_shares(compnay_shareholder.name)
@@ -148,7 +150,7 @@ class ShareTransfer(Document):
 			)
 			from_shareholder.save()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.get_company_shareholder()
 		self.basic_validations()
 		self.folio_no_validation()
@@ -166,7 +168,7 @@ class ShareTransfer(Document):
 					_("The shares don't exist with the {0}").format(self.from_shareholder), ShareDontExists
 				)
 
-	def basic_validations(self):
+	def basic_validations(self) -> None:
 		if self.transfer_type == "Purchase":
 			self.to_shareholder = ""
 			if not self.from_shareholder:
@@ -219,7 +221,7 @@ class ShareTransfer(Document):
 
 		return "Outside"
 
-	def folio_no_validation(self):
+	def folio_no_validation(self) -> None:
 		shareholder_fields = ["from_shareholder", "to_shareholder"]
 		for shareholder_field in shareholder_fields:
 			shareholder_name = self.get(shareholder_field)
@@ -239,7 +241,7 @@ class ShareTransfer(Document):
 				):
 					frappe.throw(_("The folio numbers are not matching"))
 
-	def autoname_folio(self, shareholder, is_company=False):
+	def autoname_folio(self, shareholder, is_company: bool = False):
 		if is_company:
 			doc = self.get_company_shareholder()
 		else:
@@ -248,7 +250,7 @@ class ShareTransfer(Document):
 		doc.save()
 		return doc.folio_no
 
-	def remove_shares(self, shareholder):
+	def remove_shares(self, shareholder) -> None:
 		# query = {'from_no': share_starting_no, 'to_no': share_ending_no}
 		# Shares exist for sure
 		# Iterate over all entries and modify entry if in entry

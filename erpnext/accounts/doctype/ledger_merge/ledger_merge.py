@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Wahni Green Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -59,7 +61,7 @@ def form_start_merge(docname: str):
 	return frappe.get_doc("Ledger Merge", docname).start_merge()
 
 
-def start_merge(docname):
+def start_merge(docname) -> None:
 	ledger_merge = frappe.get_doc("Ledger Merge", docname)
 	successful_merges = 0
 	total = len(ledger_merge.merge_accounts)

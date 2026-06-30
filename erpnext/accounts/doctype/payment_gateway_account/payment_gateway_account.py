@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 
@@ -24,17 +26,17 @@ class PaymentGatewayAccount(Document):
 		payment_gateway: DF.Link
 	# end: auto-generated types
 
-	def autoname(self):
+	def autoname(self) -> None:
 		abbr = frappe.db.get_value("Company", self.company, "abbr")
 		self.name = self.payment_gateway + " - " + self.currency + " - " + abbr
 
-	def validate(self):
+	def validate(self) -> None:
 		self.currency = frappe.get_cached_value("Account", self.payment_account, "account_currency")
 
 		self.update_default_payment_gateway()
 		self.set_as_default_if_not_set()
 
-	def update_default_payment_gateway(self):
+	def update_default_payment_gateway(self) -> None:
 		if self.is_default:
 			frappe.db.set_value(
 				"Payment Gateway Account",
@@ -43,7 +45,7 @@ class PaymentGatewayAccount(Document):
 				0,
 			)
 
-	def set_as_default_if_not_set(self):
+	def set_as_default_if_not_set(self) -> None:
 		if not frappe.db.exists(
 			"Payment Gateway Account", {"is_default": 1, "name": ("!=", self.name), "company": self.company}
 		):

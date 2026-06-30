@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # License: MIT. See LICENSE
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb
 from frappe.query_builder import functions
@@ -16,7 +18,7 @@ class Deferred_Item:
 	Helper class for processing items with deferred revenue/expense
 	"""
 
-	def __init__(self, item, inv, gle_entries):
+	def __init__(self, item, inv, gle_entries) -> None:
 		self.name = item
 		self.parent = inv.name
 		self.item_name = gle_entries[0].item_name
@@ -143,7 +145,7 @@ class Deferred_Item:
 			entry.credit = amount
 		return entry
 
-	def simulate_future_posting(self):
+	def simulate_future_posting(self) -> None:
 		"""
 		simulate future posting by creating dummy gl entries. starts from the last posting date.
 		"""
@@ -185,7 +187,7 @@ class Deferred_Item:
 
 
 class Deferred_Invoice:
-	def __init__(self, invoice, items, filters, period_list):
+	def __init__(self, invoice, items, filters, period_list) -> None:
 		"""
 		Helper class for processing invoices with deferred revenue/expense items
 		invoice - string : invoice name
@@ -228,7 +230,7 @@ class Deferred_Invoice:
 				self.period_total[idx].actual += item_total[idx].actual
 		return self.period_total
 
-	def estimate_future(self):
+	def estimate_future(self) -> None:
 		"""
 		create dummy GL entries for upcoming months for all items in invoice
 		"""
@@ -249,7 +251,7 @@ class Deferred_Invoice:
 
 
 class Deferred_Revenue_and_Expense_Report:
-	def __init__(self, filters=None):
+	def __init__(self, filters=None) -> None:
 		"""
 		Initialize deferred revenue/expense report with user provided filters or system defaults, if none is provided
 		"""
@@ -282,7 +284,7 @@ class Deferred_Revenue_and_Expense_Report:
 		# holds period wise total for report
 		self.period_total = []
 
-	def get_period_list(self):
+	def get_period_list(self) -> None:
 		"""
 		Figure out selected period based on filters
 		"""
@@ -296,7 +298,7 @@ class Deferred_Revenue_and_Expense_Report:
 			company=self.filters.company,
 		)
 
-	def get_invoices(self):
+	def get_invoices(self) -> None:
 		"""
 		Get all sales and purchase invoices which has deferred revenue/expense items
 		"""
@@ -372,14 +374,14 @@ class Deferred_Revenue_and_Expense_Report:
 				)
 			)
 
-	def estimate_future(self):
+	def estimate_future(self) -> None:
 		"""
 		For all Invoices estimate upcoming postings
 		"""
 		for x in self.deferred_invoices:
 			x.estimate_future()
 
-	def calculate_revenue_and_expense(self):
+	def calculate_revenue_and_expense(self) -> None:
 		"""
 		calculate the deferred revenue/expense for all invoices
 		"""
@@ -477,7 +479,7 @@ class Deferred_Revenue_and_Expense_Report:
 
 		return chart
 
-	def run(self, *args, **kwargs):
+	def run(self, *args, **kwargs) -> None:
 		"""
 		Run report and generate data
 		"""

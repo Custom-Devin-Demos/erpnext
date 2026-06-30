@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -13,11 +15,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestProcessPeriodClosingVoucher(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.db.set_single_value("Accounts Settings", "use_legacy_controller_for_pcv", 0)
 		self.company = "_Test Company"
 
-	def make_period_closing_voucher(self, posting_date, submit=True):
+	def make_period_closing_voucher(self, posting_date, submit: bool = True):
 		fy = get_fiscal_year(posting_date, company="_Test Company")
 		pcv = frappe.get_doc(
 			{
@@ -48,7 +50,7 @@ class TestProcessPeriodClosingVoucher(ERPNextTestSuite):
 		ppcv.save()
 		return ppcv
 
-	def set_processing_date_status(self, date, ppcv, rpt_type, parentfield, status):
+	def set_processing_date_status(self, date, ppcv, rpt_type, parentfield, status) -> None:
 		frappe.db.set_value(
 			"Process Period Closing Voucher Detail",
 			{"processing_date": date, "parent": ppcv, "report_type": rpt_type, "parentfield": parentfield},
@@ -63,7 +65,7 @@ class TestProcessPeriodClosingVoucher(ERPNextTestSuite):
 			"closing_balance",
 		)
 
-	def test_opening_balance_double_counting(self):
+	def test_opening_balance_double_counting(self) -> None:
 		ppcv = self.make_process_pcv()
 		self.assertEqual(self.pcv.is_first_period_closing_voucher(), True)
 		opening_jv = make_journal_entry(

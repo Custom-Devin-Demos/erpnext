@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils.nestedset import NestedSet
@@ -31,22 +33,22 @@ class CostCenter(NestedSet):
 
 	nsm_parent_field = "parent_cost_center"
 
-	def autoname(self):
+	def autoname(self) -> None:
 		from erpnext.accounts.utils import get_autoname_with_number
 
 		self.name = get_autoname_with_number(self.cost_center_number, self.cost_center_name, self.company)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_mandatory()
 		self.validate_parent_cost_center()
 
-	def validate_mandatory(self):
+	def validate_mandatory(self) -> None:
 		if self.cost_center_name != self.company and not self.parent_cost_center:
 			frappe.throw(_("Please enter parent cost center"))
 		elif self.cost_center_name == self.company and self.parent_cost_center:
 			frappe.throw(_("Root cannot have a parent cost center"))
 
-	def validate_parent_cost_center(self):
+	def validate_parent_cost_center(self) -> None:
 		if self.parent_cost_center:
 			if not frappe.db.get_value("Cost Center", self.parent_cost_center, "is_group"):
 				frappe.throw(
@@ -100,7 +102,7 @@ class CostCenter(NestedSet):
 			"Cost Center Allocation Percentage", filters={"cost_center": self.name, "docstatus": 1}
 		)
 
-	def before_rename(self, olddn, newdn, merge=False):
+	def before_rename(self, olddn, newdn, merge: bool = False):
 		# Add company abbr if not provided
 		from erpnext.setup.doctype.company.company import get_name_with_abbr
 
@@ -113,7 +115,7 @@ class CostCenter(NestedSet):
 
 		return new_cost_center
 
-	def after_rename(self, olddn, newdn, merge=False):
+	def after_rename(self, olddn, newdn, merge: bool = False) -> None:
 		super().after_rename(olddn, newdn, merge)
 
 		if not merge:
@@ -142,7 +144,7 @@ class CostCenter(NestedSet):
 				self.db_set("cost_center_name", cost_center_name)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Cost Center", ["lft", "rgt"])
 
 

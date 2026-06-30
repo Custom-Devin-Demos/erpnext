@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -29,20 +31,20 @@ class AccountingDimensionFilter(Document):
 		fieldname: DF.Data | None
 	# end: auto-generated types
 
-	def before_save(self):
+	def before_save(self) -> None:
 		# If restriction is not applied on values, then remove all the dimensions and set allow_or_restrict to Restrict
 		if not self.apply_restriction_on_values:
 			self.allow_or_restrict = "Restrict"
 			self.set("dimensions", [])
 
-	def validate(self):
+	def validate(self) -> None:
 		self.fieldname = frappe.db.get_value(
 			"Accounting Dimension", {"document_type": self.accounting_dimension}, "fieldname"
 		) or frappe.scrub(self.accounting_dimension)  # scrub to handle default accounting dimension
 
 		self.validate_applicable_accounts()
 
-	def validate_applicable_accounts(self):
+	def validate_applicable_accounts(self) -> None:
 		ApplicableOnAccount = frappe.qb.DocType("Applicable On Account")
 		AccountingDimensionFilter = frappe.qb.DocType("Accounting Dimension Filter")
 
@@ -106,7 +108,7 @@ def get_dimension_filter_map():
 	return dimension_filter_map
 
 
-def build_map(map_object, dimension, account, filter_value, allow_or_restrict, is_mandatory):
+def build_map(map_object, dimension, account, filter_value, allow_or_restrict, is_mandatory) -> None:
 	map_object.setdefault(
 		(dimension, account),
 		{"allowed_dimensions": [], "is_mandatory": is_mandatory, "allow_or_restrict": allow_or_restrict},

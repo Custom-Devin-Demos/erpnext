@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb
 from frappe.query_builder import Criterion
@@ -57,7 +59,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	if (filters.get("payment_type") == _("Incoming") and filters.get("party_type") == "Supplier") or (
 		filters.get("payment_type") == _("Outgoing") and filters.get("party_type") == "Customer"
 	):

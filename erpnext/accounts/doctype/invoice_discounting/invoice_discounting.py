@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -45,22 +47,22 @@ class InvoiceDiscounting(AccountsController):
 		total_amount: DF.Currency
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_mandatory()
 		self.validate_invoices()
 		self.calculate_total_amount()
 		self.set_status()
 		self.set_end_date()
 
-	def set_end_date(self):
+	def set_end_date(self) -> None:
 		if self.loan_start_date and self.loan_period:
 			self.loan_end_date = add_days(self.loan_start_date, self.loan_period)
 
-	def validate_mandatory(self):
+	def validate_mandatory(self) -> None:
 		if self.docstatus == 1 and not (self.loan_start_date and self.loan_period):
 			frappe.throw(_("Loan Start Date and Loan Period are mandatory to save the Invoice Discounting"))
 
-	def validate_invoices(self):
+	def validate_invoices(self) -> None:
 		discounted_invoices = [
 			record.sales_invoice
 			for record in frappe.get_all(
@@ -86,19 +88,19 @@ class InvoiceDiscounting(AccountsController):
 					).format(record.idx, frappe.bold(actual_outstanding), frappe.bold(record.sales_invoice))
 				)
 
-	def calculate_total_amount(self):
+	def calculate_total_amount(self) -> None:
 		self.total_amount = sum(flt(d.outstanding_amount) for d in self.invoices)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_sales_invoice()
 		self.make_gl_entries()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.set_status(cancel=1)
 		self.update_sales_invoice()
 		self.make_gl_entries()
 
-	def set_status(self, status=None, cancel=0):
+	def set_status(self, status=None, cancel: int = 0) -> None:
 		if status:
 			self.status = status
 			self.db_set("status", status)
@@ -116,7 +118,7 @@ class InvoiceDiscounting(AccountsController):
 		if cancel:
 			self.db_set("status", self.status, update_modified=True)
 
-	def update_sales_invoice(self):
+	def update_sales_invoice(self) -> None:
 		for d in self.invoices:
 			if self.docstatus == 1:
 				is_discounted = 1
@@ -127,7 +129,7 @@ class InvoiceDiscounting(AccountsController):
 				is_discounted = 1 if discounted_invoice else 0
 			frappe.db.set_value("Sales Invoice", d.sales_invoice, "is_discounted", is_discounted)
 
-	def make_gl_entries(self):
+	def make_gl_entries(self) -> None:
 		company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
 
 		gl_entries = []

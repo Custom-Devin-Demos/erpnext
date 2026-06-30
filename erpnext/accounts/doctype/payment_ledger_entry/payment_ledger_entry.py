@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -51,7 +53,7 @@ class PaymentLedgerEntry(Document):
 		voucher_type: DF.Link | None
 	# end: auto-generated types
 
-	def validate_account(self):
+	def validate_account(self) -> None:
 		account = frappe.get_cached_value(
 			"Account", self.account, fieldname=["account_type", "company"], as_dict=True
 		)
@@ -62,7 +64,7 @@ class PaymentLedgerEntry(Document):
 		if account.account_type != self.account_type:
 			frappe.throw(_("{0} account is not of type {1}").format(self.account, self.account_type))
 
-	def validate_account_details(self):
+	def validate_account_details(self) -> None:
 		"""Account must be ledger, active and not freezed"""
 
 		account = frappe.get_cached_value(
@@ -88,7 +90,7 @@ class PaymentLedgerEntry(Document):
 				)
 			)
 
-	def validate_allowed_dimensions(self):
+	def validate_allowed_dimensions(self) -> None:
 		dimension_filter_map = get_dimension_filter_map()
 		for key, value in dimension_filter_map.items():
 			dimension = key[0]
@@ -124,7 +126,7 @@ class PaymentLedgerEntry(Document):
 							InvalidAccountDimensionError,
 						)
 
-	def validate_dimensions_for_pl_and_bs(self):
+	def validate_dimensions_for_pl_and_bs(self) -> None:
 		account_type = frappe.get_cached_value("Account", self.account, "report_type")
 
 		for dimension in get_checks_for_pl_and_bs_accounts():
@@ -152,10 +154,10 @@ class PaymentLedgerEntry(Document):
 						).format(dimension.label, self.account)
 					)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_account()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		adv_adj = self.flags.adv_adj
 		if not self.flags.from_repost:
 			validate_frozen_account(self.company, self.account, adv_adj)
@@ -176,6 +178,6 @@ class PaymentLedgerEntry(Document):
 			)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Payment Ledger Entry", ["against_voucher_no", "against_voucher_type"])
 	frappe.db.add_index("Payment Ledger Entry", ["voucher_no", "voucher_type"])

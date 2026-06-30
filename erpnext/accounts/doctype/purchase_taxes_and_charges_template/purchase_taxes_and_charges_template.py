@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 
@@ -31,10 +33,10 @@ class PurchaseTaxesandChargesTemplate(Document):
 		title: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		valdiate_taxes_and_charges_template(self)
 
-	def autoname(self):
+	def autoname(self) -> None:
 		if self.company and self.title:
 			abbr = frappe.get_cached_value("Company", self.company, "abbr")
 			self.name = f"{self.title} - {abbr}"

@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cint
 
@@ -12,7 +14,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPOSProfile(ERPNextTestSuite):
-	def test_pos_profile(self):
+	def test_pos_profile(self) -> None:
 		frappe.set_user("Administrator")
 		make_pos_profile()
 
@@ -31,7 +33,7 @@ class TestPOSProfile(ERPNextTestSuite):
 			self.assertEqual(len(items), products_count)
 			self.assertEqual(len(customers), customers_count)
 
-	def test_disabled_pos_profile_creation(self):
+	def test_disabled_pos_profile_creation(self) -> None:
 		make_pos_profile(name="_Test POS Profile 001", disabled=1)
 
 		pos_profile = frappe.get_doc("POS Profile", "_Test POS Profile 001")
@@ -39,7 +41,7 @@ class TestPOSProfile(ERPNextTestSuite):
 		if pos_profile:
 			self.assertEqual(pos_profile.disabled, 1)
 
-	def test_disabled_pos_profile_after_opening(self):
+	def test_disabled_pos_profile_after_opening(self) -> None:
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile
 		from erpnext.accounts.doctype.pos_opening_entry.test_pos_opening_entry import create_opening_entry
 
@@ -52,7 +54,7 @@ class TestPOSProfile(ERPNextTestSuite):
 			pos_profile.disabled = 1
 			self.assertRaises(frappe.ValidationError, pos_profile.save)
 
-	def test_disabled_pos_profile_after_completing_session(self):
+	def test_disabled_pos_profile_after_completing_session(self) -> None:
 		from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import (
 			make_closing_entry_from_opening,
 		)

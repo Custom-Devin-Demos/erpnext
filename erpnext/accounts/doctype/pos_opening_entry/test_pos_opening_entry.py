@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.core.doctype.user_permission.test_user_permission import create_user
 
@@ -11,27 +13,27 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPOSOpeningEntry(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.db.set_single_value("POS Settings", "invoice_type", "POS Invoice")
 		make_stock_entry(target="_Test Warehouse - _TC", qty=2, basic_rate=100)
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile
 
 		self.init_user_and_profile = init_user_and_profile
 
-	def test_pos_opening_entry(self):
+	def test_pos_opening_entry(self) -> None:
 		test_user, pos_profile = self.init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		self.assertEqual(opening_entry.status, "Open")
 		self.assertNotEqual(opening_entry.docstatus, 0)
 
-	def test_pos_opening_entry_on_disabled_pos(self):
+	def test_pos_opening_entry_on_disabled_pos(self) -> None:
 		test_user, pos_profile = self.init_user_and_profile(disabled=1)
 
 		with self.assertRaises(frappe.ValidationError):
 			create_opening_entry(pos_profile, test_user.name)
 
-	def test_multiple_pos_opening_entries_for_same_pos_profile(self):
+	def test_multiple_pos_opening_entries_for_same_pos_profile(self) -> None:
 		test_user, pos_profile = self.init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
@@ -39,7 +41,7 @@ class TestPOSOpeningEntry(ERPNextTestSuite):
 		with self.assertRaises(frappe.ValidationError):
 			create_opening_entry(pos_profile, test_user.name)
 
-	def test_multiple_pos_opening_entry_for_multiple_pos_profiles(self):
+	def test_multiple_pos_opening_entry_for_multiple_pos_profiles(self) -> None:
 		test_user, pos_profile = self.init_user_and_profile()
 		opening_entry_1 = create_opening_entry(pos_profile, test_user.name)
 
@@ -57,7 +59,7 @@ class TestPOSOpeningEntry(ERPNextTestSuite):
 		self.assertEqual(opening_entry_2.status, "Open")
 		self.assertEqual(opening_entry_2.user, cashier_user.name)
 
-	def test_multiple_pos_opening_entry_for_same_pos_profile_by_multiple_user(self):
+	def test_multiple_pos_opening_entry_for_same_pos_profile_by_multiple_user(self) -> None:
 		test_user, pos_profile = self.init_user_and_profile()
 		cashier_user = create_user("test_cashier@example.com", "Accounts Manager", "Sales Manager")
 
@@ -67,7 +69,7 @@ class TestPOSOpeningEntry(ERPNextTestSuite):
 		with self.assertRaises(frappe.ValidationError):
 			create_opening_entry(pos_profile, cashier_user.name)
 
-	def test_user_assignment_to_multiple_pos_profile(self):
+	def test_user_assignment_to_multiple_pos_profile(self) -> None:
 		test_user, pos_profile = self.init_user_and_profile()
 		opening_entry_1 = create_opening_entry(pos_profile, test_user.name)
 		self.assertEqual(opening_entry_1.user, test_user.name)
@@ -76,7 +78,7 @@ class TestPOSOpeningEntry(ERPNextTestSuite):
 		with self.assertRaises(frappe.ValidationError):
 			create_opening_entry(pos_profile2, test_user.name)
 
-	def test_cancel_pos_opening_entry_without_invoices(self):
+	def test_cancel_pos_opening_entry_without_invoices(self) -> None:
 		test_user, pos_profile = self.init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name, get_obj=True)
 
@@ -84,7 +86,7 @@ class TestPOSOpeningEntry(ERPNextTestSuite):
 		self.assertEqual(opening_entry.status, "Cancelled")
 		self.assertNotEqual(opening_entry.docstatus, 1)
 
-	def test_cancel_pos_opening_entry_with_invoice(self):
+	def test_cancel_pos_opening_entry_with_invoice(self) -> None:
 		test_user, pos_profile = self.init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name, get_obj=True)
 
@@ -96,7 +98,7 @@ class TestPOSOpeningEntry(ERPNextTestSuite):
 		self.assertRaises(frappe.ValidationError, opening_entry.cancel)
 
 
-def create_opening_entry(pos_profile, user, get_obj=False):
+def create_opening_entry(pos_profile, user, get_obj: bool = False):
 	entry = frappe.new_doc("POS Opening Entry")
 	entry.pos_profile = pos_profile.name
 	entry.user = user

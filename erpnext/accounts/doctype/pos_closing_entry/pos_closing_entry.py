@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from datetime import datetime
 
 import frappe
@@ -59,26 +61,26 @@ class POSClosingEntry(StatusUpdater):
 		user: DF.Link
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_posting_date_and_time()
 		self.fetch_invoice_type()
 		self.validate_pos_opening_entry()
 		self.validate_invoice_mode()
 
-	def set_posting_date_and_time(self):
+	def set_posting_date_and_time(self) -> None:
 		if self.posting_date:
 			self.posting_date = frappe.utils.nowdate()
 		if self.posting_time:
 			self.posting_time = frappe.utils.nowtime()
 
-	def fetch_invoice_type(self):
+	def fetch_invoice_type(self) -> None:
 		self.invoice_type = frappe.db.get_single_value("POS Settings", "invoice_type")
 
-	def validate_pos_opening_entry(self):
+	def validate_pos_opening_entry(self) -> None:
 		if frappe.db.get_value("POS Opening Entry", self.pos_opening_entry, "status") != "Open":
 			frappe.throw(_("Selected POS Opening Entry should be open."), title=_("Invalid Opening Entry"))
 
-	def validate_invoice_mode(self):
+	def validate_invoice_mode(self) -> None:
 		if self.invoice_type == "POS Invoice":
 			self.validate_duplicate_pos_invoices()
 			self.validate_pos_invoices()
@@ -90,7 +92,7 @@ class POSClosingEntry(StatusUpdater):
 		self.validate_duplicate_sales_invoices()
 		self.validate_sales_invoices()
 
-	def validate_duplicate_pos_invoices(self):
+	def validate_duplicate_pos_invoices(self) -> None:
 		pos_occurences = {}
 		for idx, inv in enumerate(self.pos_invoices, 1):
 			pos_occurences.setdefault(inv.pos_invoice, []).append(idx)
@@ -105,7 +107,7 @@ class POSClosingEntry(StatusUpdater):
 		if error_list:
 			frappe.throw(error_list, title=_("Duplicate POS Invoices found"), as_list=True)
 
-	def validate_pos_invoices(self):
+	def validate_pos_invoices(self) -> None:
 		invalid_rows = []
 		for d in self.pos_invoices:
 			invalid_row = {"idx": d.idx}
@@ -143,7 +145,7 @@ class POSClosingEntry(StatusUpdater):
 
 		frappe.throw(error_list, title=_("Invalid POS Invoices"), as_list=True)
 
-	def validate_duplicate_sales_invoices(self):
+	def validate_duplicate_sales_invoices(self) -> None:
 		sales_invoice_occurrences = {}
 		for idx, inv in enumerate(self.sales_invoices, 1):
 			sales_invoice_occurrences.setdefault(inv.sales_invoice, []).append(idx)
@@ -158,7 +160,7 @@ class POSClosingEntry(StatusUpdater):
 		if error_list:
 			frappe.throw(error_list, title=_("Duplicate Sales Invoices found"), as_list=True)
 
-	def validate_sales_invoices(self):
+	def validate_sales_invoices(self) -> None:
 		invalid_rows = []
 		for d in self.sales_invoices:
 			invalid_row = {"idx": d.idx}
@@ -208,7 +210,7 @@ class POSClosingEntry(StatusUpdater):
 
 		frappe.throw(error_list, title=_("Invalid Sales Invoices"), as_list=True)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		consolidate_pos_invoices(closing_entry=self)
 		frappe.publish_realtime(
 			f"poe_{self.pos_opening_entry}",
@@ -218,31 +220,31 @@ class POSClosingEntry(StatusUpdater):
 
 		self.update_sales_invoices_closing_entry()
 
-	def before_cancel(self):
+	def before_cancel(self) -> None:
 		self.check_pce_is_cancellable()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		unconsolidate_pos_invoices(closing_entry=self)
 
 		self.update_sales_invoices_closing_entry(cancel=True)
 
 	@frappe.whitelist()
-	def retry(self):
+	def retry(self) -> None:
 		consolidate_pos_invoices(closing_entry=self)
 
-	def update_opening_entry(self, for_cancel=False):
+	def update_opening_entry(self, for_cancel: bool = False) -> None:
 		opening_entry = frappe.get_doc("POS Opening Entry", self.pos_opening_entry)
 		opening_entry.pos_closing_entry = self.name if not for_cancel else None
 		opening_entry.set_status()
 		opening_entry.save()
 
-	def update_sales_invoices_closing_entry(self, cancel=False):
+	def update_sales_invoices_closing_entry(self, cancel: bool = False) -> None:
 		for d in self.sales_invoices:
 			frappe.db.set_value(
 				"Sales Invoice", d.sales_invoice, "pos_closing_entry", self.name if not cancel else None
 			)
 
-	def check_pce_is_cancellable(self):
+	def check_pce_is_cancellable(self) -> None:
 		if frappe.db.exists("POS Opening Entry", {"pos_profile": self.pos_profile, "status": "Open"}):
 			frappe.throw(
 				title=_("Cannot cancel POS Closing Entry"),

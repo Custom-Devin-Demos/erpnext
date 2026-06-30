@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, bold
 from frappe.model.document import Document
@@ -196,10 +198,10 @@ class POSInvoice(SalesInvoice):
 		write_off_outstanding_amount_automatically: DF.Check
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.customer:
 			frappe.throw(_("Please select Customer first"))
 
@@ -237,10 +239,10 @@ class POSInvoice(SalesInvoice):
 
 			validate_coupon_code(self.coupon_code)
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.set_outstanding_amount()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		# create the loyalty point ledger entry if the customer is enrolled in any loyalty program
 		if not self.is_return and self.loyalty_program:
 			LoyaltyService(self).make_loyalty_point_entry()
@@ -266,7 +268,7 @@ class POSInvoice(SalesInvoice):
 		if self.is_return and self.invoice_type_in_pos == "Sales Invoice":
 			self.create_and_add_consolidated_sales_invoice()
 
-	def before_cancel(self):
+	def before_cancel(self) -> None:
 		if (
 			self.consolidated_invoice
 			and frappe.db.get_value("Sales Invoice", self.consolidated_invoice, "docstatus") == 1
@@ -285,7 +287,7 @@ class POSInvoice(SalesInvoice):
 				title=_("Not Allowed"),
 			)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = ["Payment Ledger Entry", "Serial and Batch Bundle"]
 		# run on cancel method of selling controller
 		super(SalesInvoice, self).on_cancel()
@@ -305,13 +307,13 @@ class POSInvoice(SalesInvoice):
 
 		self.delink_serial_and_batch_bundle()
 
-	def clear_unallocated_mode_of_payments(self):
+	def clear_unallocated_mode_of_payments(self) -> None:
 		self.set("payments", self.get("payments", {"amount": ["not in", [0, None, ""]]}))
 
 		sip = frappe.qb.DocType("Sales Invoice Payment")
 		frappe.qb.from_(sip).delete().where(sip.parent == self.name).where(sip.amount == 0).run()
 
-	def create_and_add_consolidated_sales_invoice(self):
+	def create_and_add_consolidated_sales_invoice(self) -> None:
 		sales_inv = self.create_return_sales_invoice()
 		self.db_set("consolidated_invoice", sales_inv.name)
 		self.set_status(update=True)
@@ -352,7 +354,7 @@ class POSInvoice(SalesInvoice):
 
 		return return_sales_invoice
 
-	def delink_serial_and_batch_bundle(self):
+	def delink_serial_and_batch_bundle(self) -> None:
 		for row in self.items:
 			if row.serial_and_batch_bundle:
 				if not self.consolidated_invoice:
@@ -365,7 +367,7 @@ class POSInvoice(SalesInvoice):
 				frappe.get_doc("Serial and Batch Bundle", row.serial_and_batch_bundle).cancel()
 				row.db_set("serial_and_batch_bundle", None)
 
-	def submit_serial_batch_bundle(self, table_name):
+	def submit_serial_batch_bundle(self, table_name) -> None:
 		for item in self.get(table_name):
 			if item.serial_and_batch_bundle:
 				doc = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
@@ -393,7 +395,7 @@ class POSInvoice(SalesInvoice):
 						_("Payment related to {0} is not completed").format(pay.mode_of_payment)
 					)
 
-	def validate_stock_availablility(self):
+	def validate_stock_availablility(self) -> None:
 		if self.is_return:
 			return
 
@@ -466,12 +468,12 @@ class POSInvoice(SalesInvoice):
 							title=_("Insufficient Stock"),
 						)
 
-	def validate_is_pos_using_sales_invoice(self):
+	def validate_is_pos_using_sales_invoice(self) -> None:
 		self.invoice_type_in_pos = frappe.db.get_single_value("POS Settings", "invoice_type")
 		if self.invoice_type_in_pos == "Sales Invoice" and not self.is_return:
 			frappe.throw(_("Sales Invoice mode is activated in POS. Please create Sales Invoice instead."))
 
-	def validate_serialised_or_batched_item(self):
+	def validate_serialised_or_batched_item(self) -> None:
 		error_msg = []
 		for d in self.get("items"):
 			error_msg = ""
@@ -490,7 +492,7 @@ class POSInvoice(SalesInvoice):
 		if error_msg:
 			frappe.throw(error_msg, title=_("Serial / Batch Bundle Missing"), as_list=True)
 
-	def validate_return_items_qty(self):
+	def validate_return_items_qty(self) -> None:
 		if not self.get("is_return"):
 			return
 
@@ -530,11 +532,11 @@ class POSInvoice(SalesInvoice):
 							).format(d.idx, bold_serial_no, bold_return_against)
 						)
 
-	def validate_mode_of_payment(self):
+	def validate_mode_of_payment(self) -> None:
 		if len(self.payments) == 0:
 			frappe.throw(_("At least one mode of payment is required for POS invoice."))
 
-	def validate_change_account(self):
+	def validate_change_account(self) -> None:
 		if (
 			self.change_amount
 			and self.account_for_change_amount
@@ -546,7 +548,7 @@ class POSInvoice(SalesInvoice):
 				)
 			)
 
-	def validate_change_amount(self):
+	def validate_change_amount(self) -> None:
 		grand_total = flt(self.rounded_total) or flt(self.grand_total)
 		base_grand_total = flt(self.base_rounded_total) or flt(self.base_grand_total)
 		if not flt(self.change_amount) and grand_total < flt(self.paid_amount):
@@ -558,7 +560,7 @@ class POSInvoice(SalesInvoice):
 		if flt(self.change_amount) and not self.account_for_change_amount:
 			frappe.msgprint(_("Please enter Account for Change Amount"), raise_exception=1)
 
-	def validate_payment_amount(self):
+	def validate_payment_amount(self) -> None:
 		total_amount_in_payments = 0
 		for entry in self.payments:
 			total_amount_in_payments += entry.amount
@@ -573,7 +575,7 @@ class POSInvoice(SalesInvoice):
 			if total_amount_in_payments and total_amount_in_payments < invoice_total:
 				frappe.throw(_("Total payments amount can't be greater than {0}").format(-invoice_total))
 
-	def validate_company_with_pos_company(self):
+	def validate_company_with_pos_company(self) -> None:
 		if self.company != frappe.db.get_value("POS Profile", self.pos_profile, "company"):
 			frappe.throw(
 				_("Company {0} does not match with POS Profile Company {1}").format(
@@ -581,11 +583,11 @@ class POSInvoice(SalesInvoice):
 				)
 			)
 
-	def set_outstanding_amount(self):
+	def set_outstanding_amount(self) -> None:
 		total = flt(self.rounded_total) or flt(self.grand_total)
 		self.outstanding_amount = total - flt(self.paid_amount) if total > flt(self.paid_amount) else 0
 
-	def validate_loyalty_transaction(self):
+	def validate_loyalty_transaction(self) -> None:
 		if self.redeem_loyalty_points and (
 			not self.loyalty_redemption_account or not self.loyalty_redemption_cost_center
 		):
@@ -600,7 +602,7 @@ class POSInvoice(SalesInvoice):
 		if self.redeem_loyalty_points and self.loyalty_program and self.loyalty_points:
 			validate_loyalty_points(self, self.loyalty_points)
 
-	def set_status(self, update=False, status=None, update_modified=True):
+	def set_status(self, update: bool = False, status=None, update_modified: bool = True) -> None:
 		if self.is_new():
 			if self.get("amended_from"):
 				self.status = "Draft"
@@ -660,7 +662,7 @@ class POSInvoice(SalesInvoice):
 		if update:
 			self.db_set("status", self.status, update_modified=update_modified)
 
-	def set_pos_fields(self, for_validate=False):
+	def set_pos_fields(self, for_validate: bool = False):
 		"""Set retail related fields from POS Profiles"""
 		from erpnext.stock.get_item_details import (
 			ItemDetailsCtx,
@@ -794,7 +796,7 @@ class POSInvoice(SalesInvoice):
 			}
 
 	@frappe.whitelist()
-	def reset_mode_of_payments(self):
+	def reset_mode_of_payments(self) -> None:
 		if self.pos_profile:
 			pos_profile = frappe.get_cached_doc("POS Profile", self.pos_profile)
 			update_multi_mode_option(self, pos_profile)
@@ -861,7 +863,7 @@ class POSInvoice(SalesInvoice):
 			return frappe.get_doc("Payment Request", pr)
 
 	@frappe.whitelist()
-	def update_payments(self, payments: list):
+	def update_payments(self, payments: list) -> None:
 		if self.status == "Consolidated":
 			frappe.throw(_("Create Payment Entry for Consolidated POS Invoices."))
 
@@ -1062,8 +1064,8 @@ def make_merge_log(invoices: str | list):
 		return merge_log.as_dict()
 
 
-def add_return_modes(doc, pos_profile):
-	def append_payment(payment_mode):
+def add_return_modes(doc, pos_profile) -> None:
+	def append_payment(payment_mode) -> None:
 		payment = doc.append("payments", {})
 		payment.default = payment_mode.default
 		payment.mode_of_payment = payment_mode.parent

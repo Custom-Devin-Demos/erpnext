@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, bold
 from frappe.model.document import Document
@@ -21,7 +23,7 @@ class PartyLink(Document):
 		secondary_role: DF.Link | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.primary_role not in ["Customer", "Supplier"]:
 			frappe.throw(
 				_(

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cint, get_link_to_form
@@ -35,14 +37,14 @@ class POSOpeningEntry(StatusUpdater):
 		user: DF.Link
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_pos_profile_and_cashier()
 		self.check_open_pos_exists()
 		self.check_user_already_assigned()
 		self.validate_payment_method_account()
 		self.set_status()
 
-	def validate_pos_profile_and_cashier(self):
+	def validate_pos_profile_and_cashier(self) -> None:
 		if not frappe.db.exists("POS Profile", self.pos_profile):
 			frappe.throw(_("POS Profile {0} does not exist.").format(self.pos_profile))
 
@@ -61,7 +63,7 @@ class POSOpeningEntry(StatusUpdater):
 		if not cint(frappe.db.get_value("User", self.user, "enabled")):
 			frappe.throw(_("User {0} is disabled. Please select valid user/cashier").format(self.user))
 
-	def check_open_pos_exists(self):
+	def check_open_pos_exists(self) -> None:
 		if frappe.db.exists("POS Opening Entry", {"pos_profile": self.pos_profile, "status": "Open"}):
 			frappe.throw(
 				title=_("POS Opening Entry Exists"),
@@ -70,14 +72,14 @@ class POSOpeningEntry(StatusUpdater):
 				).format(frappe.bold(self.pos_profile)),
 			)
 
-	def check_user_already_assigned(self):
+	def check_user_already_assigned(self) -> None:
 		if frappe.db.exists("POS Opening Entry", {"user": self.user, "status": "Open"}):
 			frappe.throw(
 				title=_("Cannot Assign Cashier"),
 				msg=_("Cashier is currently assigned to another POS."),
 			)
 
-	def validate_payment_method_account(self):
+	def validate_payment_method_account(self) -> None:
 		invalid_modes = []
 		for d in self.balance_details:
 			if d.mode_of_payment:
@@ -96,13 +98,13 @@ class POSOpeningEntry(StatusUpdater):
 				msg = _("Please set default Cash or Bank account in Mode of Payments {0}")
 			frappe.throw(msg.format(", ".join(invalid_modes)), title=_("Missing Account"))
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.set_status(update=True)
 
-	def before_cancel(self):
+	def before_cancel(self) -> None:
 		self.check_poe_is_cancellable()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.set_status(update=True)
 		frappe.publish_realtime(
 			f"poe_{self.name}",
@@ -110,7 +112,7 @@ class POSOpeningEntry(StatusUpdater):
 			docname=f"POS Opening Entry/{self.name}",
 		)
 
-	def check_poe_is_cancellable(self):
+	def check_poe_is_cancellable(self) -> None:
 		from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import get_invoices
 
 		invoices = get_invoices(

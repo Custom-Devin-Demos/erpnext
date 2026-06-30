@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # MIT License. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestFinancialRatios(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.abbr = "_TC"
 		# The report matches the group accounts by their account_type, which the
@@ -17,10 +19,10 @@ class TestFinancialRatios(ERPNextTestSuite):
 		self.set_account_type("Fixed Assets", "Fixed Asset")
 		self.set_account_type("Direct Income", "Direct Income")
 
-	def set_account_type(self, account_name, account_type):
+	def set_account_type(self, account_name, account_type) -> None:
 		frappe.db.set_value("Account", f"{account_name} - {self.abbr}", "account_type", account_type)
 
-	def test_fixed_asset_turnover_uses_net_fixed_assets(self):
+	def test_fixed_asset_turnover_uses_net_fixed_assets(self) -> None:
 		# Acquire a fixed asset worth 10,000 funded by equity.
 		self.make_journal_entry("Buildings", "Capital Stock", 10000)
 		# Book sales of 20,000 collected in cash. Total assets now = 30,000
@@ -53,7 +55,7 @@ class TestFinancialRatios(ERPNextTestSuite):
 			periodicity="Yearly",
 		)
 
-	def make_journal_entry(self, debit_account, credit_account, amount):
+	def make_journal_entry(self, debit_account, credit_account, amount) -> None:
 		journal_entry = frappe.new_doc("Journal Entry")
 		journal_entry.posting_date = today()
 		journal_entry.company = self.company

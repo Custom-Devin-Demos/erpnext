@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 
@@ -27,6 +29,6 @@ class DunningType(Document):
 		rate_of_interest: DF.Float
 	# end: auto-generated types
 
-	def autoname(self):
+	def autoname(self) -> None:
 		company_abbr = frappe.get_value("Company", self.company, "abbr")
 		self.name = f"{self.dunning_type} - {company_abbr}"

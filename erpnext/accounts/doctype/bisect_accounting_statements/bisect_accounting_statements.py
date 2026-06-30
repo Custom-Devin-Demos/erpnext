@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import datetime
 from collections import deque
 from math import floor
@@ -34,10 +36,10 @@ class BisectAccountingStatements(Document):
 		to_date: DF.Datetime | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_dates()
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		if getdate(self.from_date) > getdate(self.to_date):
 			frappe.throw(
 				_("From Date: {0} cannot be greater than To date: {1}").format(
@@ -45,7 +47,7 @@ class BisectAccountingStatements(Document):
 				)
 			)
 
-	def bfs(self, from_date: datetime, to_date: datetime):
+	def bfs(self, from_date: datetime, to_date: datetime) -> None:
 		# Make Root node
 		node = frappe.new_doc("Bisect Nodes")
 		node.root = None
@@ -83,7 +85,7 @@ class BisectAccountingStatements(Document):
 
 				cur_node.save()
 
-	def dfs(self, from_date: datetime, to_date: datetime):
+	def dfs(self, from_date: datetime, to_date: datetime) -> None:
 		# Make Root node
 		node = frappe.new_doc("Bisect Nodes")
 		node.root = None
@@ -122,7 +124,7 @@ class BisectAccountingStatements(Document):
 				cur_node.save()
 
 	@frappe.whitelist(methods=["POST"])
-	def build_tree(self):
+	def build_tree(self) -> None:
 		frappe.db.delete("Bisect Nodes")
 
 		# Convert str to datetime format
@@ -145,7 +147,7 @@ class BisectAccountingStatements(Document):
 		self.get_report_summary()
 		self.save()
 
-	def get_report_summary(self):
+	def get_report_summary(self) -> None:
 		filters = {
 			"company": self.company,
 			"filter_based_on": "Date Range",
@@ -159,7 +161,7 @@ class BisectAccountingStatements(Document):
 		self.b_s_summary = bs_summary.execute_script_report(filters=filters)[5]
 		self.difference = abs(self.p_l_summary - self.b_s_summary)
 
-	def update_node(self):
+	def update_node(self) -> None:
 		current_node = frappe.get_doc("Bisect Nodes", self.current_node)
 		current_node.balance_sheet_summary = self.b_s_summary
 		current_node.profit_loss_summary = self.p_l_summary
@@ -171,13 +173,13 @@ class BisectAccountingStatements(Document):
 		"Assertion method"
 		return frappe.db.get_value("Bisect Nodes", self.current_node, "generated")
 
-	def fetch_summary_info_from_current_node(self):
+	def fetch_summary_info_from_current_node(self) -> None:
 		current_node = frappe.get_doc("Bisect Nodes", self.current_node)
 		self.p_l_summary = current_node.balance_sheet_summary
 		self.b_s_summary = current_node.profit_loss_summary
 		self.difference = abs(self.p_l_summary - self.b_s_summary)
 
-	def fetch_or_calculate(self):
+	def fetch_or_calculate(self) -> None:
 		if self.current_node_has_summary_info():
 			self.fetch_summary_info_from_current_node()
 		else:
@@ -185,7 +187,7 @@ class BisectAccountingStatements(Document):
 			self.update_node()
 
 	@frappe.whitelist()
-	def bisect_left(self):
+	def bisect_left(self) -> None:
 		if self.current_node is not None:
 			cur_node = frappe.get_doc("Bisect Nodes", self.current_node)
 			if cur_node.left_child is not None:
@@ -199,7 +201,7 @@ class BisectAccountingStatements(Document):
 				frappe.msgprint(_("No more children on Left"))
 
 	@frappe.whitelist()
-	def bisect_right(self):
+	def bisect_right(self) -> None:
 		if self.current_node is not None:
 			cur_node = frappe.get_doc("Bisect Nodes", self.current_node)
 			if cur_node.right_child is not None:
@@ -213,7 +215,7 @@ class BisectAccountingStatements(Document):
 				frappe.msgprint(_("No more children on Right"))
 
 	@frappe.whitelist()
-	def move_up(self):
+	def move_up(self) -> None:
 		if self.current_node is not None:
 			cur_node = frappe.get_doc("Bisect Nodes", self.current_node)
 			if cur_node.root is not None:

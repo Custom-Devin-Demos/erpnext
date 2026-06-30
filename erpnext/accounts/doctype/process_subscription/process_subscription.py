@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 from frappe.utils import create_batch, getdate
@@ -22,10 +24,10 @@ class ProcessSubscription(Document):
 		subscription: DF.Link | None
 	# end: auto-generated types
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.process_all_subscription()
 
-	def process_all_subscription(self):
+	def process_all_subscription(self) -> None:
 		filters = {"status": ("!=", "Cancelled")}
 
 		if self.subscription:
@@ -44,7 +46,7 @@ class ProcessSubscription(Document):
 
 def create_subscription_process(
 	subscription: str | None = None, posting_date: DateTimeLikeObject | None = None
-):
+) -> None:
 	"""Create a new Process Subscription document"""
 	doc = frappe.new_doc("Process Subscription")
 	doc.subscription = subscription
