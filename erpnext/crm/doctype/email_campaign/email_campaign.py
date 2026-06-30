@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.core.doctype.communication.email import make
@@ -27,7 +29,7 @@ class EmailCampaign(Document):
 		status: DF.Literal["", "Scheduled", "In Progress", "Completed", "Unsubscribed"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_date()
 		# checking if email is set for lead. Not checking for contact as email is a mandatory field for contact.
 		if self.email_campaign_for == "Lead":
@@ -35,7 +37,7 @@ class EmailCampaign(Document):
 		self.validate_email_campaign_already_exists()
 		self.update_status()
 
-	def set_date(self):
+	def set_date(self) -> None:
 		if getdate(self.start_date) < getdate(today()):
 			frappe.throw(_("Start Date cannot be before the current date"))
 
@@ -50,13 +52,13 @@ class EmailCampaign(Document):
 
 		self.end_date = add_days(getdate(self.start_date), max(send_after_days))
 
-	def validate_lead(self):
+	def validate_lead(self) -> None:
 		lead_email_id = frappe.db.get_value("Lead", self.recipient, "email_id")
 		if not lead_email_id:
 			lead_name = frappe.db.get_value("Lead", self.recipient, "lead_name")
 			frappe.throw(_("Please set an email id for the Lead {0}").format(lead_name))
 
-	def validate_email_campaign_already_exists(self):
+	def validate_email_campaign_already_exists(self) -> None:
 		email_campaign_exists = frappe.db.exists(
 			"Email Campaign",
 			{
@@ -73,7 +75,7 @@ class EmailCampaign(Document):
 				)
 			)
 
-	def update_status(self):
+	def update_status(self) -> None:
 		start_date = getdate(self.start_date)
 		end_date = getdate(self.end_date)
 		today_date = getdate(today())
@@ -90,7 +92,7 @@ class EmailCampaign(Document):
 
 
 # called through hooks to send campaign mails to leads
-def send_email_to_leads_or_contacts():
+def send_email_to_leads_or_contacts() -> None:
 	today_date = getdate(today())
 
 	# Get all active email campaigns in a single query
@@ -129,7 +131,7 @@ def send_email_to_leads_or_contacts():
 				)
 
 
-def send_mail(entry, email_campaign):
+def send_mail(entry, email_campaign) -> dict | None:
 	campaign_for = email_campaign.get("email_campaign_for")
 	recipient = email_campaign.get("recipient")
 	sender_user = email_campaign.get("sender")
@@ -205,7 +207,7 @@ def send_mail(entry, email_campaign):
 
 
 # called from hooks on doc_event Email Unsubscribe
-def unsubscribe_recipient(unsubscribe, method):
+def unsubscribe_recipient(unsubscribe, method) -> None:
 	if unsubscribe.reference_doctype != "Email Campaign":
 		return
 
@@ -225,7 +227,7 @@ def unsubscribe_recipient(unsubscribe, method):
 
 
 # called through hooks to update email campaign status daily
-def set_email_campaign_status():
+def set_email_campaign_status() -> None:
 	email_campaigns = frappe.get_all(
 		"Email Campaign",
 		filters={"status": ("!=", "Unsubscribed")},

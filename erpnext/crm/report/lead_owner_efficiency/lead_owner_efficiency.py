@@ -2,19 +2,21 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from frappe import _
 
 from erpnext.crm.report.campaign_efficiency.campaign_efficiency import get_lead_data
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	columns = get_columns()
 	data = get_lead_data(filters, "Lead Owner")
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"fieldname": "lead_owner",

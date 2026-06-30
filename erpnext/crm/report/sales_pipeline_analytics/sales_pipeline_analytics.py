@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 from itertools import groupby
 
@@ -13,22 +15,22 @@ from frappe.utils import cint, flt, getdate
 from erpnext.setup.utils import get_exchange_rate
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	return SalesPipelineAnalytics(filters).run()
 
 
 class SalesPipelineAnalytics:
-	def __init__(self, filters=None):
+	def __init__(self, filters: dict | None = None) -> None:
 		self.filters = frappe._dict(filters or {})
 
-	def validate_filters(self):
+	def validate_filters(self) -> None:
 		if not self.filters.from_date:
 			frappe.throw(_("From Date is mandatory"))
 
 		if not self.filters.to_date:
 			frappe.throw(_("To Date is mandatory"))
 
-	def run(self):
+	def run(self) -> tuple:
 		self.validate_filters()
 		self.get_columns()
 		self.get_data()
@@ -36,13 +38,13 @@ class SalesPipelineAnalytics:
 
 		return self.columns, self.data, None, self.chart
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = []
 
 		self.set_range_columns()
 		self.set_pipeline_based_on_column()
 
-	def set_range_columns(self):
+	def set_range_columns(self) -> None:
 		based_on = {"Number": "Int", "Amount": "Currency"}[self.filters.get("based_on")]
 
 		if self.filters.get("range") == "Monthly":
@@ -59,7 +61,7 @@ class SalesPipelineAnalytics:
 					{"fieldname": f"Q{quarter}", "fieldtype": based_on, "label": f"Q{quarter}", "width": 200}
 				)
 
-	def set_pipeline_based_on_column(self):
+	def set_pipeline_based_on_column(self) -> None:
 		if self.filters.get("pipeline_by") == "Owner":
 			self.columns.insert(
 				0, {"fieldname": "opportunity_owner", "label": _("Opportunity Owner"), "width": 200}
@@ -68,7 +70,7 @@ class SalesPipelineAnalytics:
 		elif self.filters.get("pipeline_by") == "Sales Stage":
 			self.columns.insert(0, {"fieldname": "sales_stage", "label": _("Sales Stage"), "width": 200})
 
-	def get_fields(self):
+	def get_fields(self) -> None:
 		self.based_on = {"Owner": "_assign as opportunity_owner", "Sales Stage": "sales_stage"}[
 			self.filters.get("pipeline_by")
 		]
@@ -99,7 +101,7 @@ class SalesPipelineAnalytics:
 
 		self.period_by = {"Monthly": "month", "Quarterly": "quarter"}[self.filters.get("range")]
 
-	def get_data(self):
+	def get_data(self) -> None:
 		self.get_fields()
 
 		opp = frappe.qb.DocType("Opportunity")
@@ -160,7 +162,7 @@ class SalesPipelineAnalytics:
 		self.get_periodic_data()
 		self.append_data(self.pipeline_by, self.period_by)
 
-	def get_conditions(self):
+	def get_conditions(self) -> list:
 		conditions = []
 
 		if self.filters.get("opportunity_source"):
@@ -182,7 +184,7 @@ class SalesPipelineAnalytics:
 
 		return conditions
 
-	def get_chart_data(self):
+	def get_chart_data(self) -> dict:
 		labels = []
 		datasets = []
 
@@ -196,7 +198,7 @@ class SalesPipelineAnalytics:
 
 		return self.chart
 
-	def get_periodic_data(self):
+	def get_periodic_data(self) -> None:
 		self.periodic_data = frappe._dict()
 
 		based_on = {"Number": "count", "Amount": "amount"}[self.filters.get("based_on")]
@@ -226,7 +228,7 @@ class SalesPipelineAnalytics:
 			else:
 				self.set_formatted_data(period, value, count_or_amount, None)
 
-	def set_formatted_data(self, period, value, count_or_amount, assigned_to):
+	def set_formatted_data(self, period, value, count_or_amount, assigned_to) -> None:
 		if assigned_to:
 			if len(assigned_to) > 1:
 				if self.filters.get("assigned_to"):
@@ -249,7 +251,7 @@ class SalesPipelineAnalytics:
 			self.periodic_data.setdefault(value, frappe._dict()).setdefault(period, 0)
 			self.periodic_data[value][period] += count_or_amount
 
-	def check_for_assigned_to(self, period, value, count_or_amount, assigned_to, info):
+	def check_for_assigned_to(self, period, value, count_or_amount, assigned_to, info) -> None:
 		if self.filters.get("assigned_to"):
 			for data in json.loads(info.get("opportunity_owner") or "[]"):
 				if data == self.filters.get("assigned_to"):
@@ -257,7 +259,7 @@ class SalesPipelineAnalytics:
 		else:
 			self.set_formatted_data(period, value, count_or_amount, assigned_to)
 
-	def get_month_list(self):
+	def get_month_list(self) -> list:
 		month_list = []
 		current_date = getdate(self.filters.get("from_date"))
 
@@ -267,7 +269,7 @@ class SalesPipelineAnalytics:
 
 		return month_list
 
-	def append_to_dataset(self, datasets):
+	def append_to_dataset(self, datasets: list) -> None:
 		range_by = {"Monthly": "month", "Quarterly": "quarter"}[self.filters.get("range")]
 
 		based_on = {"Amount": "amount", "Number": "count"}[self.filters.get("based_on")]
@@ -286,7 +288,7 @@ class SalesPipelineAnalytics:
 					count[i] = count[i] + info[based_on]
 		datasets.append({"name": based_on, "values": count})
 
-	def append_data(self, pipeline_by, period_by):
+	def append_data(self, pipeline_by: str, period_by: str) -> None:
 		self.data = []
 		for pipeline, period_data in self.periodic_data.items():
 			row = {pipeline_by: pipeline}
@@ -302,11 +304,11 @@ class SalesPipelineAnalytics:
 
 			self.data.append(row)
 
-	def get_default_currency(self):
+	def get_default_currency(self) -> str | None:
 		company = self.filters.get("company")
 		return frappe.db.get_value("Company", company, ["default_currency"])
 
-	def get_currency_rate(self, from_currency, to_currency):
+	def get_currency_rate(self, from_currency: str, to_currency: str) -> float:
 		cacheobj = frappe.cache()
 
 		if cacheobj.get(from_currency):
@@ -317,7 +319,7 @@ class SalesPipelineAnalytics:
 			cacheobj.set(from_currency, value)
 			return flt(str(cacheobj.get(from_currency), "UTF-8"))
 
-	def convert_to_base_currency(self):
+	def convert_to_base_currency(self) -> None:
 		default_currency = self.get_default_currency()
 		for data in self.query_result:
 			if data.get("currency") != default_currency:

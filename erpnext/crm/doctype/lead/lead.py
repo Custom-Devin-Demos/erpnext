@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.contacts.address_and_contact import (
@@ -84,13 +86,13 @@ class Lead(SellingController, CRMNote):
 		whatsapp_no: DF.Data | None
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		customer = frappe.db.get_value("Customer", {"lead_name": self.name})
 		self.get("__onload").is_customer = customer
 		load_address_and_contact(self)
 		self.set_onload("linked_prospects", self.get_linked_prospects())
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_full_name()
 		self.set_lead_name()
 		self.set_title()
@@ -98,7 +100,7 @@ class Lead(SellingController, CRMNote):
 		self.check_email_id_is_unique()
 		self.validate_email_id()
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		self.contact_doc = None
 		if frappe.db.get_single_value("CRM Settings", "auto_creation_of_contact"):
 			if self.utm_source == "Existing Customer" and self.customer:
@@ -116,24 +118,24 @@ class Lead(SellingController, CRMNote):
 		if self.lead_name and not any([self.first_name, self.middle_name, self.last_name]):
 			self.first_name, self.middle_name, self.last_name = parse_full_name(self.lead_name)
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		self.link_to_contact()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.update_prospect()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		frappe.db.set_value("Issue", {"lead": self.name}, "lead", None)
 		delete_contact_and_address(self.doctype, self.name)
 		self.remove_link_from_prospect()
 
-	def set_full_name(self):
+	def set_full_name(self) -> None:
 		if self.first_name:
 			self.lead_name = " ".join(
 				filter(None, [self.salutation, self.first_name, self.middle_name, self.last_name])
 			)
 
-	def set_lead_name(self):
+	def set_lead_name(self) -> None:
 		if not self.lead_name:
 			# Check for leads being created through data import
 			if not self.company_name and not self.email_id and not self.flags.ignore_mandatory:
@@ -143,10 +145,10 @@ class Lead(SellingController, CRMNote):
 			elif self.email_id:
 				self.lead_name = self.email_id.split("@")[0]
 
-	def set_title(self):
+	def set_title(self) -> None:
 		self.title = self.company_name or self.lead_name
 
-	def check_email_id_is_unique(self):
+	def check_email_id_is_unique(self) -> None:
 		if self.email_id:
 			# validate email is unique
 			if not frappe.db.get_single_value("CRM Settings", "allow_lead_duplication_based_on_emails"):
@@ -165,7 +167,7 @@ class Lead(SellingController, CRMNote):
 						frappe.DuplicateEntryError,
 					)
 
-	def validate_email_id(self):
+	def validate_email_id(self) -> None:
 		if self.email_id:
 			if not self.flags.ignore_email_validation:
 				validate_email_address(self.email_id, throw=True)
@@ -173,7 +175,7 @@ class Lead(SellingController, CRMNote):
 			if self.email_id == self.lead_owner:
 				frappe.throw(_("Lead Owner cannot be same as the Lead Email Address"))
 
-	def link_to_contact(self):
+	def link_to_contact(self) -> None:
 		# update contact links
 		if self.contact_doc:
 			self.contact_doc.append(
@@ -181,7 +183,7 @@ class Lead(SellingController, CRMNote):
 			)
 			self.contact_doc.save()
 
-	def update_prospect(self):
+	def update_prospect(self) -> None:
 		lead_row_name = frappe.db.get_value("Prospect Lead", filters={"lead": self.name}, fieldname="name")
 		if lead_row_name:
 			lead_row = frappe.get_doc("Prospect Lead", lead_row_name)
@@ -196,7 +198,7 @@ class Lead(SellingController, CRMNote):
 			)
 			lead_row.db_update()
 
-	def remove_link_from_prospect(self):
+	def remove_link_from_prospect(self) -> None:
 		linked_prospects = self.get_linked_prospects()
 
 		for linked_prospect in linked_prospects:
@@ -213,29 +215,29 @@ class Lead(SellingController, CRMNote):
 					prospect.remove(to_remove)
 					prospect.save(ignore_permissions=True)
 
-	def get_linked_prospects(self):
+	def get_linked_prospects(self) -> list:
 		return frappe.get_all(
 			"Prospect Lead",
 			filters={"lead": self.name},
 			fields=["parent"],
 		)
 
-	def has_customer(self):
+	def has_customer(self) -> str | None:
 		return frappe.db.get_value("Customer", {"lead_name": self.name})
 
-	def has_opportunity(self):
+	def has_opportunity(self) -> str | None:
 		return frappe.db.get_value("Opportunity", {"party_name": self.name, "status": ["!=", "Lost"]})
 
-	def has_quotation(self):
+	def has_quotation(self) -> str | None:
 		return frappe.db.get_value(
 			"Quotation", {"party_name": self.name, "docstatus": 1, "status": ["!=", "Lost"]}
 		)
 
-	def has_lost_quotation(self):
+	def has_lost_quotation(self) -> str | None:
 		return frappe.db.get_value("Quotation", {"party_name": self.name, "docstatus": 1, "status": "Lost"})
 
 	@frappe.whitelist()
-	def create_prospect_and_contact(self, data: dict):
+	def create_prospect_and_contact(self, data: dict) -> None:
 		data = frappe._dict(data)
 		if data.create_contact:
 			self.create_contact()
@@ -243,7 +245,7 @@ class Lead(SellingController, CRMNote):
 		if data.create_prospect:
 			self.create_prospect(data.prospect_name)
 
-	def create_contact(self):
+	def create_contact(self) -> Document:
 		if not self.lead_name:
 			self.set_full_name()
 			self.set_lead_name()
@@ -274,7 +276,7 @@ class Lead(SellingController, CRMNote):
 
 		return contact
 
-	def create_prospect(self, company_name):
+	def create_prospect(self, company_name: str | None) -> None:
 		try:
 			prospect = frappe.new_doc("Prospect")
 
@@ -307,7 +309,7 @@ class Lead(SellingController, CRMNote):
 		except frappe.DuplicateEntryError:
 			frappe.throw(_("Prospect {0} already exists").format(company_name or self.company_name))
 
-	def get_notification_email(self):
+	def get_notification_email(self) -> str | None:
 		"""Hook to return the target email address for notifications."""
 		if self.lead_owner:
 			return frappe.db.get_value("User", self.lead_owner, "email")
@@ -321,7 +323,7 @@ def get_lead_details(
 	posting_date: DateTimeLikeObject | None = None,
 	company: str | None = None,
 	doctype: str | None = None,
-):
+) -> dict:
 	if not lead:
 		return {}
 
@@ -360,7 +362,7 @@ def get_lead_details(
 	return out
 
 
-def get_lead_with_phone_number(number):
+def get_lead_with_phone_number(number: str | None) -> str | None:
 	if not number:
 		return
 
@@ -381,7 +383,7 @@ def get_lead_with_phone_number(number):
 
 
 @frappe.whitelist()
-def add_lead_to_prospect(lead: str, prospect: str):
+def add_lead_to_prospect(lead: str, prospect: str) -> None:
 	prospect = frappe.get_doc("Prospect", prospect)
 	prospect.append("leads", {"lead": lead})
 	prospect.save()

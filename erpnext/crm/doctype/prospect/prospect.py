@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.contacts.address_and_contact import (
 	delete_contact_and_address,
@@ -41,16 +43,16 @@ class Prospect(CRMNote):
 		website: DF.Data | None
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		load_address_and_contact(self)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.link_with_lead_contact_and_address()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		delete_contact_and_address(self.doctype, self.name)
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		carry_forward_communication_and_comments = frappe.db.get_single_value(
 			"CRM Settings", "carry_forward_communication_and_comments"
 		)
@@ -67,7 +69,7 @@ class Prospect(CRMNote):
 				link_communications("Opportunity", row.opportunity, self)
 			link_open_events("Opportunity", row.opportunity, self)
 
-	def link_with_lead_contact_and_address(self):
+	def link_with_lead_contact_and_address(self) -> None:
 		for row in self.leads:
 			links = frappe.get_all(
 				"Dynamic Link",
@@ -86,7 +88,7 @@ class Prospect(CRMNote):
 					linked_doc.append("links", {"link_doctype": self.doctype, "link_name": self.name})
 					linked_doc.save(ignore_permissions=True)
 
-	def get_notification_email(self):
+	def get_notification_email(self) -> str | None:
 		"""Hook to return the target email address for notifications."""
 		if self.prospect_owner:
 			return frappe.db.get_value("User", self.prospect_owner, "email")
@@ -95,8 +97,8 @@ class Prospect(CRMNote):
 
 
 @frappe.whitelist()
-def make_customer(source_name: str, target_doc: str | Document | None = None):
-	def set_missing_values(source, target):
+def make_customer(source_name: str, target_doc: str | Document | None = None) -> Document:
+	def set_missing_values(source, target) -> None:
 		target.customer_type = "Company"
 		target.company_name = source.name
 		target.customer_group = source.customer_group or frappe.db.get_default("Customer Group")
@@ -119,8 +121,8 @@ def make_customer(source_name: str, target_doc: str | Document | None = None):
 
 
 @frappe.whitelist()
-def make_opportunity(source_name: str, target_doc: str | Document | None = None):
-	def set_missing_values(source, target):
+def make_opportunity(source_name: str, target_doc: str | Document | None = None) -> Document:
+	def set_missing_values(source, target) -> None:
 		target.opportunity_from = "Prospect"
 		target.customer_name = source.company_name
 		target.customer_group = source.customer_group or frappe.db.get_default("Customer Group")
@@ -143,7 +145,7 @@ def make_opportunity(source_name: str, target_doc: str | Document | None = None)
 
 
 @frappe.whitelist()
-def get_opportunities(prospect: str):
+def get_opportunities(prospect: str) -> list:
 	return frappe.get_list(
 		"Opportunity",
 		filters={"opportunity_from": "Prospect", "party_name": prospect},

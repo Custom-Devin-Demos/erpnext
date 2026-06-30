@@ -2,20 +2,22 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
 from frappe.utils import add_days, flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	columns = get_columns("utm_campaign")
 	data = get_lead_data(filters or {}, "utm_campaign")
 	return columns, data
 
 
-def get_columns(based_on):
+def get_columns(based_on: str) -> list:
 	return [
 		{"fieldname": frappe.scrub(based_on), "label": _(based_on), "fieldtype": "Data", "width": 150},
 		{"fieldname": "lead_count", "label": _("Lead Count"), "fieldtype": "Int", "width": 80},
@@ -29,7 +31,7 @@ def get_columns(based_on):
 	]
 
 
-def get_lead_data(filters, based_on):
+def get_lead_data(filters: dict, based_on: str) -> list:
 	based_on_field = frappe.scrub(based_on)
 
 	lead_filters = [[based_on_field, "is", "set"]]
@@ -63,21 +65,21 @@ def get_lead_data(filters, based_on):
 	return data
 
 
-def get_lead_quotation_count(leads):
+def get_lead_quotation_count(leads: list) -> int:
 	return frappe.db.count("Quotation", {"quotation_to": "Lead", "party_name": ["in", leads]})
 
 
-def get_lead_opp_count(leads):
+def get_lead_opp_count(leads: list) -> int:
 	return frappe.db.count("Opportunity", {"opportunity_from": "Lead", "party_name": ["in", leads]})
 
 
-def get_quotation_ordered_count(leads):
+def get_quotation_ordered_count(leads: list) -> int:
 	return frappe.db.count(
 		"Quotation", {"status": "Ordered", "quotation_to": "Lead", "party_name": ["in", leads]}
 	)
 
 
-def get_order_amount(leads):
+def get_order_amount(leads: list) -> float:
 	so_item = frappe.qb.DocType("Sales Order Item")
 	quotation = frappe.qb.DocType("Quotation")
 	return (
