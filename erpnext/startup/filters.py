@@ -1,4 +1,7 @@
-def get_filters_config():
+from __future__ import annotations
+
+
+def get_filters_config() -> dict:
 	filters_config = {
 		"fiscal year": {
 			"label": "Fiscal Year",

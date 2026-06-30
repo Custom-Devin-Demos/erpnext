@@ -1,13 +1,15 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestBoot(ERPNextTestSuite):
-	def test_boot_session_populates_companies_and_party_types(self):
+	def test_boot_session_populates_companies_and_party_types(self) -> None:
 		# boot_session reads Customer count, Company list and Party Type account types via ORM/qb
 		# (formerly raw SQL with ifnull, which is invalid on Postgres). Exercises that on both engines.
 		from erpnext.startup.boot import boot_session

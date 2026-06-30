@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -32,13 +34,13 @@ class PlaidSettings(Document):
 
 	@staticmethod
 	@frappe.whitelist()
-	def get_link_token():
+	def get_link_token() -> str | None:
 		plaid = PlaidConnector()
 		return plaid.get_link_token()
 
 
 @frappe.whitelist()
-def get_plaid_configuration():
+def get_plaid_configuration() -> dict | str:
 	if frappe.db.get_single_value("Plaid Settings", "enabled"):
 		plaid_settings = frappe.get_single("Plaid Settings")
 		return {
@@ -51,7 +53,7 @@ def get_plaid_configuration():
 
 
 @frappe.whitelist()
-def add_institution(token: str, response: str | dict):
+def add_institution(token: str, response: str | dict) -> Document | None:
 	response = frappe.parse_json(response)
 
 	plaid = PlaidConnector()
@@ -80,7 +82,7 @@ def add_institution(token: str, response: str | dict):
 
 
 @frappe.whitelist()
-def add_bank_accounts(response: str | dict, bank: str | dict, company: str):
+def add_bank_accounts(response: str | dict, bank: str | dict, company: str) -> list:
 	response = frappe.parse_json(response)
 	bank = frappe.parse_json(bank)
 	result = []
@@ -183,21 +185,21 @@ def add_bank_accounts(response: str | dict, bank: str | dict, company: str):
 	return result
 
 
-def add_account_type(account_type):
+def add_account_type(account_type: str) -> None:
 	try:
 		frappe.get_doc({"doctype": "Bank Account Type", "account_type": account_type}).insert()
 	except Exception:
 		frappe.throw(frappe.get_traceback())
 
 
-def add_account_subtype(account_subtype):
+def add_account_subtype(account_subtype: str) -> None:
 	try:
 		frappe.get_doc({"doctype": "Bank Account Subtype", "account_subtype": account_subtype}).insert()
 	except Exception:
 		frappe.throw(frappe.get_traceback())
 
 
-def sync_transactions(bank, bank_account):
+def sync_transactions(bank: str, bank_account: str) -> None:
 	"""Sync transactions based on the last integration date as the start date, after sync is completed
 	add the transaction date of the oldest transaction as the last integration date."""
 	last_transaction_date = frappe.db.get_value("Bank Account", bank_account, "last_integration_date")
@@ -229,7 +231,9 @@ def sync_transactions(bank, bank_account):
 		frappe.log_error(frappe.get_traceback(), _("Plaid transactions sync error"))
 
 
-def get_transactions(bank, bank_account=None, start_date=None, end_date=None):
+def get_transactions(
+	bank: str, bank_account: str | None = None, start_date: str | None = None, end_date: str | None = None
+) -> list:
 	access_token = None
 
 	if bank_account:
@@ -256,7 +260,7 @@ def get_transactions(bank, bank_account=None, start_date=None, end_date=None):
 	return transactions
 
 
-def new_bank_transaction(transaction):
+def new_bank_transaction(transaction: dict) -> list:
 	result = []
 
 	bank_account = frappe.db.get_value("Bank Account", dict(integration_id=transaction["account_id"]))
@@ -273,7 +277,7 @@ def new_bank_transaction(transaction):
 	if transaction["category"]:
 		try:
 			tags += transaction["category"]
-			tags += [f'Plaid Cat. {transaction["category_id"]}']
+			tags += [f"Plaid Cat. {transaction['category_id']}"]
 		except KeyError:
 			pass
 
@@ -315,14 +319,14 @@ def new_bank_transaction(transaction):
 	return result
 
 
-def automatic_synchronization():
+def automatic_synchronization() -> None:
 	settings = frappe.get_doc("Plaid Settings", "Plaid Settings")
 	if settings.enabled == 1 and settings.automatic_sync == 1:
 		enqueue_synchronization()
 
 
 @frappe.whitelist()
-def enqueue_synchronization():
+def enqueue_synchronization() -> None:
 	plaid_accounts = frappe.get_all(
 		"Bank Account", filters={"integration_id": ["!=", ""]}, fields=["name", "bank"]
 	)
@@ -336,12 +340,12 @@ def enqueue_synchronization():
 
 
 @frappe.whitelist()
-def get_link_token_for_update(access_token: str):
+def get_link_token_for_update(access_token: str) -> str | None:
 	plaid = PlaidConnector(access_token)
 	return plaid.get_link_token(update_mode=True)
 
 
-def get_company(bank_account_name):
+def get_company(bank_account_name: str) -> str:
 	from frappe.defaults import get_user_default
 
 	company_names = frappe.db.get_all("Company", pluck="name")
@@ -356,7 +360,7 @@ def get_company(bank_account_name):
 
 
 @frappe.whitelist()
-def update_bank_account_ids(response: str | dict):
+def update_bank_account_ids(response: str | dict) -> list:
 	data = frappe.parse_json(response)
 	institution_name = data["institution"]["name"]
 	bank = frappe.get_doc("Bank", institution_name).as_dict()

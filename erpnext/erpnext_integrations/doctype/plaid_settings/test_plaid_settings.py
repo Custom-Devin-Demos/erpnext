@@ -1,5 +1,7 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -16,19 +18,19 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPlaidSettings(ERPNextTestSuite):
-	def test_plaid_disabled(self):
+	def test_plaid_disabled(self) -> None:
 		frappe.db.set_single_value("Plaid Settings", "enabled", 0)
 		self.assertEqual(get_plaid_configuration(), "disabled")
 
-	def test_add_account_type(self):
+	def test_add_account_type(self) -> None:
 		add_account_type("brokerage")
 		self.assertEqual(frappe.get_doc("Bank Account Type", "brokerage").name, "brokerage")
 
-	def test_add_account_subtype(self):
+	def test_add_account_subtype(self) -> None:
 		add_account_subtype("loan")
 		self.assertEqual(frappe.get_doc("Bank Account Subtype", "loan").name, "loan")
 
-	def test_new_transaction(self):
+	def test_new_transaction(self) -> None:
 		if not frappe.db.exists("Bank", "Citi"):
 			frappe.get_doc({"doctype": "Bank", "bank_name": "Citi"}).insert()
 
