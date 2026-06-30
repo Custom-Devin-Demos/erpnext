@@ -3,6 +3,8 @@
 
 """Document-mapping and query helpers for BOM (extracted from bom.py)."""
 
+from __future__ import annotations
+
 from functools import partial
 
 import frappe
@@ -35,7 +37,7 @@ _VARIANT_BOM_MAPPING = {
 
 
 @frappe.whitelist()
-def get_children(parent: str | None = None, is_root: bool = False, **filters):
+def get_children(parent: str | None = None, is_root: bool = False, **filters) -> list | None:
 	frappe.has_permission("BOM", "read", throw=True)
 
 	if not parent or parent == "BOM":
@@ -51,7 +53,7 @@ def get_children(parent: str | None = None, is_root: bool = False, **filters):
 	return bom_items
 
 
-def _bom_child_items(parent):
+def _bom_child_items(parent: str) -> list:
 	return frappe.get_all(
 		"BOM Item",
 		fields=["item_code", "bom_no as value", "stock_qty", "qty", "is_phantom_item", "bom_no"],
@@ -60,7 +62,7 @@ def _bom_child_items(parent):
 	)
 
 
-def _enrich_bom_items(bom_items, bom_doc):
+def _enrich_bom_items(bom_items: list, bom_doc: Document) -> None:
 	item_names = tuple(d.get("item_code") for d in bom_items)
 	items = frappe.get_list(
 		"Item",
@@ -75,7 +77,7 @@ def _enrich_bom_items(bom_items, bom_doc):
 
 
 @frappe.whitelist()
-def get_bom_diff(bom1: str, bom2: str):
+def get_bom_diff(bom1: str, bom2: str) -> dict:
 	frappe.has_permission("BOM", "read", throw=True)
 	if bom1 == bom2:
 		frappe.throw(
@@ -92,7 +94,7 @@ def get_bom_diff(bom1: str, bom2: str):
 	return out
 
 
-def _diff_table_field(df, doc1, doc2, out):
+def _diff_table_field(df, doc1: Document, doc2: Document, out: dict) -> None:
 	from frappe.model import table_fields
 
 	if df.fieldtype not in table_fields:
@@ -109,7 +111,7 @@ def _diff_table_field(df, doc1, doc2, out):
 			out.removed.append([df.fieldname, d.as_dict()])
 
 
-def _collect_row_changes(df, identifier, old_map, new_value, out):
+def _collect_row_changes(df, identifier: str, old_map: dict, new_value: list, out: dict) -> None:
 	for i, d in enumerate(new_value):
 		if d.get(identifier) not in old_map:
 			out.added.append([df.fieldname, d.as_dict()])
@@ -124,7 +126,7 @@ def _collect_row_changes(df, identifier, old_map, new_value, out):
 @frappe.validate_and_sanitize_search_inputs
 def item_query(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict | None = None
-):
+) -> list:
 	frappe.has_permission("Item", "read", throw=True)
 
 	searchfields = frappe.get_meta("Item", cached=True).get_search_fields()
@@ -145,7 +147,7 @@ def item_query(
 	)
 
 
-def _item_query_filters(filters):
+def _item_query_filters(filters: dict | None) -> list:
 	query_filters = [["disabled", "=", 0], [IfNull(Field("end_of_life"), "3099-12-31"), ">", today()]]
 	if filters and filters.get("item_code"):
 		if not frappe.get_cached_value("Item", filters.get("item_code"), "has_variants"):
@@ -156,7 +158,7 @@ def _item_query_filters(filters):
 	return query_filters
 
 
-def _item_query_or_filters(txt, searchfields, query_filters):
+def _item_query_or_filters(txt: str | None, searchfields: list, query_filters: list) -> dict:
 	if not txt:
 		return {}
 
@@ -180,7 +182,7 @@ def make_variant_bom(
 	item: str,
 	variant_items: str | list,
 	target_doc: Document | str | None = None,
-):
+) -> Document:
 	frappe.has_permission("BOM", "write", throw=True)
 
 	postprocess = partial(
@@ -189,7 +191,7 @@ def make_variant_bom(
 	return get_mapped_doc("BOM", source_name, _VARIANT_BOM_MAPPING, target_doc, postprocess)
 
 
-def _postprocess_variant_bom(source, doc, item, variant_items, source_name):
+def _postprocess_variant_bom(source, doc, item: str, variant_items: str | list, source_name: str) -> None:
 	from erpnext.manufacturing.doctype.work_order.work_order import add_variant_item
 
 	item_data = get_item_details(item)
