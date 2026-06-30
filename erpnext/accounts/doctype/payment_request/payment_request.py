@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -126,10 +128,10 @@ class PaymentRequest(Document):
 		transaction_date: DF.Date | None
 	# end: auto-generated types
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.get("__islocal"):
 			self.status = "Draft"
 		self.validate_reference_document()
@@ -138,7 +140,7 @@ class PaymentRequest(Document):
 		# self.validate_currency()
 		self.validate_subscription_details()
 
-	def validate_against_payment_reference(self):
+	def validate_against_payment_reference(self) -> None:
 		if not self.payment_reference:
 			return
 
@@ -156,11 +158,11 @@ class PaymentRequest(Document):
 
 			seen.add(r.payment_schedule)
 
-	def validate_reference_document(self):
+	def validate_reference_document(self) -> None:
 		if not self.reference_doctype or not self.reference_name:
 			frappe.throw(_("To create a Payment Request reference document is required"))
 
-	def validate_payment_request_amount(self):
+	def validate_payment_request_amount(self) -> None:
 		if self.payment_reference:
 			return
 		if self.grand_total == 0:
@@ -190,14 +192,14 @@ class PaymentRequest(Document):
 					)
 				)
 
-	def validate_currency(self):
+	def validate_currency(self) -> None:
 		ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
 		if self.payment_account and ref_doc.currency != frappe.get_cached_value(
 			"Account", self.payment_account, "account_currency"
 		):
 			frappe.throw(_("Transaction currency must be same as Payment Gateway currency"))
 
-	def validate_subscription_details(self):
+	def validate_subscription_details(self) -> None:
 		if self.is_a_subscription:
 			amount = 0
 			for subscription_plan in self.subscription_plans:
@@ -222,7 +224,7 @@ class PaymentRequest(Document):
 					).format(self.grand_total, amount)
 				)
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		if (
 			self.currency != self.party_account_currency
 			and self.party_account_currency == get_company_currency(self.company)
@@ -266,10 +268,10 @@ class PaymentRequest(Document):
 				self.send_email()
 				self.make_communication_entry()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_reference_advance_payment_status()
 
-	def _process_v2_gateway(self):
+	def _process_v2_gateway(self) -> None:
 		"""Process payment using the new PaymentController interface (v2 gateways)."""
 		tx_data = self.get_tx_data()
 		with payment_app_import_guard():
@@ -403,7 +405,7 @@ class PaymentRequest(Document):
 			"country": address.country or "",
 		}
 
-	def request_phone_payment(self):
+	def request_phone_payment(self) -> None:
 		controller = _get_payment_gateway_controller(self.payment_gateway)
 		request_amount = self.get_request_amount()
 
@@ -438,12 +440,12 @@ class PaymentRequest(Document):
 		request_amounts = sum(json.loads(d).get("request_amount") for d in data_of_completed_requests)
 		return request_amounts
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.check_if_payment_entry_exists()
 		self.set_as_cancelled()
 		self.update_reference_advance_payment_status()
 
-	def make_invoice(self):
+	def make_invoice(self) -> None:
 		from erpnext.selling.doctype.sales_order.mapper import make_sales_invoice
 
 		si = make_sales_invoice(self.reference_name, ignore_permissions=True)
@@ -461,7 +463,7 @@ class PaymentRequest(Document):
 		except Exception:
 			return False
 
-	def set_payment_request_url(self):
+	def set_payment_request_url(self) -> None:
 		if self.payment_account and self.payment_gateway and self.payment_gateway_validation():
 			self.payment_url = self.get_payment_url()
 
@@ -508,7 +510,7 @@ class PaymentRequest(Document):
 
 			return payment_entry
 
-	def create_payment_entry(self, submit=True):
+	def create_payment_entry(self, submit: bool = True):
 		"""create entry"""
 		frappe.flags.ignore_account_permission = True
 
@@ -583,7 +585,7 @@ class PaymentRequest(Document):
 
 		return payment_entry
 
-	def send_email(self):
+	def send_email(self) -> None:
 		"""send email with payment link"""
 		email_args = {
 			"recipients": self.email_to,
@@ -621,13 +623,13 @@ class PaymentRequest(Document):
 		if self.message:
 			return frappe.render_template(self.message, context)
 
-	def set_failed(self):
+	def set_failed(self) -> None:
 		pass
 
-	def set_as_cancelled(self):
+	def set_as_cancelled(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def check_if_payment_entry_exists(self):
+	def check_if_payment_entry_exists(self) -> None:
 		if self.status == "Paid":
 			if frappe.db.exists(
 				"Payment Entry Reference",
@@ -635,7 +637,7 @@ class PaymentRequest(Document):
 			):
 				frappe.throw(_("Payment Entry already exists"), title=_("Error"))
 
-	def make_communication_entry(self):
+	def make_communication_entry(self) -> None:
 		"""Make communication entry"""
 		comm = frappe.get_doc(
 			{
@@ -656,12 +658,12 @@ class PaymentRequest(Document):
 
 			return create_stripe_subscription(gateway_controller, data)
 
-	def update_reference_advance_payment_status(self):
+	def update_reference_advance_payment_status(self) -> None:
 		if self.reference_doctype in get_advance_payment_doctypes():
 			ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
 			ref_doc.set_advance_payment_status()
 
-	def _allocate_payment_request_to_pe_references(self, references):
+	def _allocate_payment_request_to_pe_references(self, references) -> None:
 		"""
 		Allocate the Payment Request to the Payment Entry references based on\n
 		    - Allocated Amount.
@@ -921,7 +923,7 @@ def make_payment_request(**args):
 	return pr.as_dict()
 
 
-def apply_payment_references(pr, payment_reference):
+def apply_payment_references(pr, payment_reference) -> None:
 	existing_refs = pr.get("payment_reference") or []
 
 	existing_ids = {r.get("payment_schedule") for r in existing_refs if r.get("payment_schedule")}
@@ -1028,7 +1030,7 @@ def get_irequest_status(payment_requests: None | list = None) -> list:
 	return res
 
 
-def cancel_old_payment_requests(ref_dt, ref_dn):
+def cancel_old_payment_requests(ref_dt, ref_dn) -> None:
 	PR = frappe.qb.DocType("Payment Request")
 
 	if res := (
@@ -1120,7 +1122,7 @@ def make_payment_entry(docname: str):
 	return doc.create_payment_entry(submit=False).as_dict()
 
 
-def update_payment_requests_as_per_pe_references(references=None, cancel=False):
+def update_payment_requests_as_per_pe_references(references=None, cancel: bool = False) -> None:
 	"""
 	Update Payment Request's `Status` and `Outstanding Amount` based on Payment Entry Reference's `Allocated Amount`.
 	"""
@@ -1228,7 +1230,7 @@ def get_subscription_details(reference_doctype: str, reference_name: str):
 def make_payment_order(source_name: str, target_doc: str | Document | None = None):
 	from frappe.model.mapper import get_mapped_doc
 
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		target.payment_order_type = "Payment Request"
 		target.append(
 			"references",
@@ -1259,7 +1261,7 @@ def make_payment_order(source_name: str, target_doc: str | Document | None = Non
 	return doclist
 
 
-def validate_payment(doc, method=None):
+def validate_payment(doc, method=None) -> None:
 	if doc.reference_doctype != "Payment Request" or (
 		frappe.db.get_value(doc.reference_doctype, doc.reference_docname, "status") != "Paid"
 	):

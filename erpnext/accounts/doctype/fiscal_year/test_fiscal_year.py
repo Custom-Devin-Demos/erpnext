@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import now_datetime
 
@@ -8,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestFiscalYear(ERPNextTestSuite):
-	def test_extra_year(self):
+	def test_extra_year(self) -> None:
 		if frappe.db.exists("Fiscal Year", "_Test Fiscal Year 2000"):
 			frappe.delete_doc("Fiscal Year", "_Test Fiscal Year 2000")
 
@@ -23,7 +25,7 @@ class TestFiscalYear(ERPNextTestSuite):
 
 		self.assertRaises(frappe.exceptions.InvalidDates, fy.insert)
 
-	def test_company_fiscal_year_overlap(self):
+	def test_company_fiscal_year_overlap(self) -> None:
 		for name in ["_Test Global FY 2001", "_Test Company FY 2001"]:
 			if frappe.db.exists("Fiscal Year", name):
 				frappe.delete_doc("Fiscal Year", name)

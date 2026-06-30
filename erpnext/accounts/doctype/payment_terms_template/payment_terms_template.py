@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -26,11 +28,11 @@ class PaymentTermsTemplate(Document):
 		terms: DF.Table[PaymentTermsTemplateDetail]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_invoice_portion()
 		self.validate_terms()
 
-	def validate_invoice_portion(self):
+	def validate_invoice_portion(self) -> None:
 		total_portion = 0
 		for term in self.terms:
 			total_portion += flt(term.get("invoice_portion", 0))
@@ -38,7 +40,7 @@ class PaymentTermsTemplate(Document):
 		if flt(total_portion, 2) != 100.00:
 			frappe.msgprint(_("Combined invoice portion must equal 100%"), raise_exception=1, indicator="red")
 
-	def validate_terms(self):
+	def validate_terms(self) -> None:
 		terms = []
 		for term in self.terms:
 			if self.allocate_payment_based_on_payment_terms and not term.payment_term:

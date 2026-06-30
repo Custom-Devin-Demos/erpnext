@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import ast
 import json
 import math
@@ -355,7 +357,7 @@ class FinancialReportEngine:
 class DataCollector:
 	"""Data collector that fetches all data in optimized queries"""
 
-	def __init__(self, filters: dict[str, Any], periods: list[dict]):
+	def __init__(self, filters: dict[str, Any], periods: list[dict]) -> None:
 		self.filters = filters
 		self.periods = periods
 		self.company = filters.get("company")
@@ -363,7 +365,7 @@ class DataCollector:
 		self.query_builder = FinancialQueryBuilder(filters, periods)
 		self.account_fields = {field.fieldname for field in frappe.get_meta("Account").fields}
 
-	def add_account_request(self, row):
+	def add_account_request(self, row) -> None:
 		self.account_requests.append(
 			{
 				"row": row,
@@ -488,7 +490,7 @@ class DataCollector:
 class FinancialQueryBuilder:
 	"""Centralized query builder for financial data"""
 
-	def __init__(self, filters: dict[str, Any], periods: list[dict]):
+	def __init__(self, filters: dict[str, Any], periods: list[dict]) -> None:
 		self.filters = filters
 		self.periods = periods
 		self.company = filters.get("company")
@@ -699,7 +701,7 @@ class FinancialQueryBuilder:
 
 				current_balance = closing_balance
 
-	def _handle_balance_accumulation(self, balances_data):
+	def _handle_balance_accumulation(self, balances_data) -> None:
 		for account_data in balances_data.values():
 			account_data: AccountData
 
@@ -788,7 +790,7 @@ class FinancialQueryBuilder:
 class FilterExpressionParser:
 	"""Direct filter expression to SQL condition builder"""
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.validator = AccountFilterValidator()
 
 	def build_conditions(self, report_rows, table):
@@ -906,7 +908,7 @@ class FilterExpressionParser:
 class FormulaFieldExtractor:
 	"""Extract field values from filter formulas without SQL execution"""
 
-	def __init__(self, field_name: str, exclude_operators: list[str] | None = None):
+	def __init__(self, field_name: str, exclude_operators: list[str] | None = None) -> None:
 		"""
 		Initialize field extractor.
 
@@ -932,7 +934,7 @@ class FormulaFieldExtractor:
 
 		return values
 
-	def _extract_recursive(self, parsed, values: set):
+	def _extract_recursive(self, parsed, values: set) -> None:
 		if isinstance(parsed, list) and len(parsed) == 3:
 			# Simple condition: ["field", "operator", "value"]
 			field, operator, value = parsed
@@ -957,7 +959,7 @@ class FormulaFieldUpdater:
 
 	def __init__(
 		self, field_name: str, value_mapping: dict[str, str], exclude_operators: list[str] | None = None
-	):
+	) -> None:
 		"""
 		Initialize field updater.
 
@@ -1121,7 +1123,7 @@ class RowProcessor:
 	Handles dependency resolution and calculation order.
 	"""
 
-	def __init__(self, context: ReportContext):
+	def __init__(self, context: ReportContext) -> None:
 		self.context = context
 		self.period_list = context.period_list
 		self.row_values = {}  # For formula calculations
@@ -1212,14 +1214,14 @@ class RowProcessor:
 class DependencyResolver:
 	"""Optimized dependency resolver with better circular reference detection"""
 
-	def __init__(self, template):
+	def __init__(self, template) -> None:
 		self.template: FinancialReportTemplate = template
 		self.rows = template.rows
 		self.row_map = {row.reference_code: row for row in self.rows if row.reference_code}
 		self.dependencies = {}
 		self._validate_dependencies()
 
-	def _validate_dependencies(self):
+	def _validate_dependencies(self) -> None:
 		"""Validate dependencies using the new validation framework"""
 
 		validator = DependencyValidator(self.template)
@@ -1296,7 +1298,7 @@ class DependencyResolver:
 class FormulaCalculator:
 	"""Enhanced formula calculator with better error handling"""
 
-	def __init__(self, row_data: dict[str, list[float]], period_list: list[dict]):
+	def __init__(self, row_data: dict[str, list[float]], period_list: list[dict]) -> None:
 		self.row_data = row_data
 		self.period_list = period_list
 		self.precision = get_currency_precision()
@@ -1368,7 +1370,7 @@ class FormulaCalculator:
 
 
 class DataFormatter:
-	def __init__(self, context: ReportContext):
+	def __init__(self, context: ReportContext) -> None:
 		self.context = context
 		self.formatting_engine = FormattingEngine()
 
@@ -1413,7 +1415,7 @@ class DataFormatter:
 
 		return self.formatter.get_columns(self.organizer.section_with_max_segments.segments, base_columns)
 
-	def _expand_segments_with_details(self):
+	def _expand_segments_with_details(self) -> None:
 		for section in self.organizer.sections:
 			for segment in section.segments:
 				expanded_rows = []
@@ -1431,10 +1433,10 @@ class DataFormatter:
 class FormattingEngine:
 	"""Manages formatting rules and application"""
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.initialize_rules()
 
-	def initialize_rules(self):
+	def initialize_rules(self) -> None:
 		self.rules = [
 			FormattingRule(
 				condition=lambda rd: getattr(rd.row, "bold_text", False), format_properties={"bold": True}
@@ -1483,7 +1485,7 @@ class FormattingEngine:
 class SegmentOrganizer:
 	"""Handles segment organization by `Column Break`, `Section Break` and metadata extraction"""
 
-	def __init__(self, processed_rows: list[RowData]):
+	def __init__(self, processed_rows: list[RowData]) -> None:
 		self.sections = self._organize_into_sections(processed_rows)
 
 		# ensure same segment length across sections
@@ -1607,7 +1609,7 @@ class SegmentOrganizer:
 
 
 class RowFormatterBase(ABC):
-	def __init__(self, context: ReportContext, formatting_engine: FormattingEngine):
+	def __init__(self, context: ReportContext, formatting_engine: FormattingEngine) -> None:
 		self.context = context
 		self.period_list = context.period_list
 		self.formatting_engine = formatting_engine
@@ -1723,7 +1725,7 @@ class MultiSegmentFormatter(RowFormatterBase):
 
 		return columns
 
-	def _add_segment_data(self, formatted: dict, row_data: RowData, segment: SegmentData):
+	def _add_segment_data(self, formatted: dict, row_data: RowData, segment: SegmentData) -> None:
 		segment_values = self._get_values(row_data)
 
 		for key, value in segment_values.items():
@@ -1734,7 +1736,7 @@ class MultiSegmentFormatter(RowFormatterBase):
 
 		formatted["segment_values"][segment.id] = segment_values
 
-	def _add_empty_segment(self, formatted: dict, segment: SegmentData):
+	def _add_empty_segment(self, formatted: dict, segment: SegmentData) -> None:
 		formatted[f"account_{segment.id}"] = ""
 		for period in self.period_list:
 			formatted[f"{segment.id}_{period['key']}"] = ""
@@ -1745,7 +1747,7 @@ class MultiSegmentFormatter(RowFormatterBase):
 class DetailRowBuilder:
 	"""Builds detail rows for account breakdown"""
 
-	def __init__(self, filters: dict, parent_row_data: RowData):
+	def __init__(self, filters: dict, parent_row_data: RowData) -> None:
 		self.filters = filters
 		self.parent_row_data = parent_row_data
 
@@ -1801,7 +1803,7 @@ class DetailRowBuilder:
 
 
 class ChartDataGenerator:
-	def __init__(self, context: ReportContext):
+	def __init__(self, context: ReportContext) -> None:
 		self.context = context
 		self.processed_rows = context.processed_rows
 		self.period_list = context.period_list
@@ -1855,7 +1857,7 @@ class ChartDataGenerator:
 
 
 class GrowthViewTransformer:
-	def __init__(self, context: ReportContext):
+	def __init__(self, context: ReportContext) -> None:
 		self.context = context
 		self.formatted_rows = context.raw_data.get("formatted_data", [])
 		self.period_list = context.period_list

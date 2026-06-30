@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, msgprint
 from frappe.core.doctype.user_permission.user_permission import get_permitted_documents
@@ -75,7 +77,7 @@ class POSProfile(Document):
 		write_off_limit: DF.Currency
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_disabled()
 		self.validate_default_profile()
 		self.validate_all_link_fields()
@@ -83,7 +85,7 @@ class POSProfile(Document):
 		self.validate_payment_methods()
 		self.validate_accounting_dimensions()
 
-	def validate_accounting_dimensions(self):
+	def validate_accounting_dimensions(self) -> None:
 		acc_dims = get_checks_for_pl_and_bs_accounts()
 		for acc_dim in acc_dims:
 			if (
@@ -101,7 +103,7 @@ class POSProfile(Document):
 					title=_("Mandatory Accounting Dimension"),
 				)
 
-	def validate_disabled(self):
+	def validate_disabled(self) -> None:
 		old_doc = self.get_doc_before_save()
 
 		if (
@@ -116,7 +118,7 @@ class POSProfile(Document):
 				)
 			)
 
-	def validate_default_profile(self):
+	def validate_default_profile(self) -> None:
 		for row in self.applicable_for_users:
 			pfu = frappe.qb.DocType("POS Profile User")
 			pf = frappe.qb.DocType("POS Profile")
@@ -149,7 +151,7 @@ class POSProfile(Document):
 					).format(row.user, row.idx)
 				)
 
-	def validate_all_link_fields(self):
+	def validate_all_link_fields(self) -> None:
 		accounts = {
 			"Account": [self.income_account, self.expense_account],
 			"Cost Center": [self.cost_center],
@@ -163,7 +165,7 @@ class POSProfile(Document):
 				):
 					frappe.throw(_("{0} does not belong to Company {1}").format(link_dn, self.company))
 
-	def validate_duplicate_groups(self):
+	def validate_duplicate_groups(self) -> None:
 		item_groups = [d.item_group for d in self.item_groups]
 		customer_groups = [d.customer_group for d in self.customer_groups]
 
@@ -178,7 +180,7 @@ class POSProfile(Document):
 				title=_("Duplicate Customer Group"),
 			)
 
-	def validate_payment_methods(self):
+	def validate_payment_methods(self) -> None:
 		if not self.payments:
 			frappe.throw(_("Payment methods are mandatory. Please add at least one payment method."))
 
@@ -207,13 +209,13 @@ class POSProfile(Document):
 				msg = _("Please set default Cash or Bank account in Mode of Payments {0}")
 			frappe.throw(msg.format(", ".join(invalid_modes)), title=_("Missing Account"))
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.set_defaults()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self.set_defaults(include_current_pos=False)
 
-	def set_defaults(self, include_current_pos=True):
+	def set_defaults(self, include_current_pos: bool = True) -> None:
 		frappe.defaults.clear_default("is_pos")
 
 		pfu = frappe.qb.DocType("POS Profile User")

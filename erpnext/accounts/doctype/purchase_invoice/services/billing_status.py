@@ -3,6 +3,8 @@
 
 """Purchase Receipt billing sync and provisional-entry cancellation for Purchase Invoice."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.query_builder.functions import Sum
@@ -15,7 +17,7 @@ from erpnext.stock.doctype.purchase_receipt.services.billing_status import (
 
 
 class BillingStatusService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def update_billing_status_in_pr(self, update_modified: bool = True) -> None:

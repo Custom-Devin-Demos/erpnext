@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.tax_rule.tax_rule import ConflictingTaxRule, get_tax_template
@@ -10,10 +12,10 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestTaxRule(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.db.set_single_value("Shopping Cart Settings", "enabled", 0)
 
-	def test_conflict(self):
+	def test_conflict(self) -> None:
 		tax_rule1 = make_tax_rule(
 			customer="_Test Customer",
 			sales_tax_template="_Test Sales Taxes and Charges Template - _TC",
@@ -29,7 +31,7 @@ class TestTaxRule(ERPNextTestSuite):
 
 		self.assertRaises(ConflictingTaxRule, tax_rule2.save)
 
-	def test_conflict_with_non_overlapping_dates(self):
+	def test_conflict_with_non_overlapping_dates(self) -> None:
 		tax_rule1 = make_tax_rule(
 			customer="_Test Customer",
 			sales_tax_template="_Test Sales Taxes and Charges Template - _TC",
@@ -48,7 +50,7 @@ class TestTaxRule(ERPNextTestSuite):
 		tax_rule2.save()
 		self.assertTrue(tax_rule2.name)
 
-	def test_for_parent_customer_group(self):
+	def test_for_parent_customer_group(self) -> None:
 		tax_rule1 = make_tax_rule(
 			customer_group="All Customer Groups",
 			sales_tax_template="_Test Sales Taxes and Charges Template - _TC",
@@ -61,7 +63,7 @@ class TestTaxRule(ERPNextTestSuite):
 			"_Test Sales Taxes and Charges Template - _TC",
 		)
 
-	def test_for_parent_supplier_group(self):
+	def test_for_parent_supplier_group(self) -> None:
 		purchase_template = "_Test Purchase Taxes and Charges Template - _TC"
 		if not frappe.db.exists("Purchase Taxes and Charges Template", purchase_template):
 			frappe.get_doc(
@@ -105,7 +107,7 @@ class TestTaxRule(ERPNextTestSuite):
 			purchase_template,
 		)
 
-	def test_use_for_shopping_cart_filter(self):
+	def test_use_for_shopping_cart_filter(self) -> None:
 		city = "Test Cart City"
 		# higher priority ensures this rule wins when use_for_shopping_cart is not filtered
 		make_tax_rule(
@@ -144,7 +146,7 @@ class TestTaxRule(ERPNextTestSuite):
 			"_Test Sales Taxes and Charges Template - _TC",
 		)
 
-	def test_use_for_shopping_cart_default(self):
+	def test_use_for_shopping_cart_default(self) -> None:
 		city = "Test Default Cart City"
 		# use_for_shopping_cart not set — Check field defaults to 0
 		make_tax_rule(
@@ -172,7 +174,7 @@ class TestTaxRule(ERPNextTestSuite):
 			)
 		)
 
-	def test_conflict_with_overlapping_dates(self):
+	def test_conflict_with_overlapping_dates(self) -> None:
 		tax_rule1 = make_tax_rule(
 			customer="_Test Customer",
 			sales_tax_template="_Test Sales Taxes and Charges Template - _TC",
@@ -192,11 +194,11 @@ class TestTaxRule(ERPNextTestSuite):
 
 		self.assertRaises(ConflictingTaxRule, tax_rule2.save)
 
-	def test_tax_template(self):
+	def test_tax_template(self) -> None:
 		tax_rule = make_tax_rule()
 		self.assertEqual(tax_rule.purchase_tax_template, None)
 
-	def test_select_tax_rule_based_on_customer(self):
+	def test_select_tax_rule_based_on_customer(self) -> None:
 		make_tax_rule(
 			customer="_Test Customer",
 			sales_tax_template="_Test Sales Taxes and Charges Template - _TC",
@@ -220,7 +222,7 @@ class TestTaxRule(ERPNextTestSuite):
 			"_Test Sales Taxes and Charges Template 2 - _TC",
 		)
 
-	def test_select_tax_rule_based_on_tax_category(self):
+	def test_select_tax_rule_based_on_tax_category(self) -> None:
 		make_tax_rule(
 			customer="_Test Customer",
 			tax_category="_Test Tax Category 1",
@@ -262,7 +264,7 @@ class TestTaxRule(ERPNextTestSuite):
 			"_Test Sales Taxes and Charges Template - _TC",
 		)
 
-	def test_select_tax_rule_based_on_better_match(self):
+	def test_select_tax_rule_based_on_better_match(self) -> None:
 		make_tax_rule(
 			customer="_Test Customer",
 			billing_city="Test City",
@@ -287,7 +289,7 @@ class TestTaxRule(ERPNextTestSuite):
 			"_Test Sales Taxes and Charges Template - _TC",
 		)
 
-	def test_select_tax_rule_based_on_state_match(self):
+	def test_select_tax_rule_based_on_state_match(self) -> None:
 		make_tax_rule(
 			customer="_Test Customer",
 			shipping_state="Test State",
@@ -308,7 +310,7 @@ class TestTaxRule(ERPNextTestSuite):
 			"_Test Sales Taxes and Charges Template - _TC",
 		)
 
-	def test_select_tax_rule_based_on_better_priority(self):
+	def test_select_tax_rule_based_on_better_priority(self) -> None:
 		make_tax_rule(
 			customer="_Test Customer",
 			billing_city="Test City",
@@ -330,7 +332,7 @@ class TestTaxRule(ERPNextTestSuite):
 			"_Test Sales Taxes and Charges Template 1 - _TC",
 		)
 
-	def test_select_tax_rule_based_cross_matching_keys(self):
+	def test_select_tax_rule_based_cross_matching_keys(self) -> None:
 		make_tax_rule(
 			customer="_Test Customer",
 			billing_city="Test City",
@@ -350,7 +352,7 @@ class TestTaxRule(ERPNextTestSuite):
 			None,
 		)
 
-	def test_select_tax_rule_based_cross_partially_keys(self):
+	def test_select_tax_rule_based_cross_partially_keys(self) -> None:
 		make_tax_rule(
 			customer="_Test Customer",
 			billing_city="Test City",
@@ -369,7 +371,7 @@ class TestTaxRule(ERPNextTestSuite):
 			"_Test Sales Taxes and Charges Template 1 - _TC",
 		)
 
-	def test_taxes_fetch_via_tax_rule(self):
+	def test_taxes_fetch_via_tax_rule(self) -> None:
 		make_tax_rule(
 			customer="_Test Customer",
 			billing_city="_Test City",

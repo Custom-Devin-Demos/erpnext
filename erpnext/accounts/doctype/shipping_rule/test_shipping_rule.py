@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.shipping_rule.shipping_rule import (
@@ -12,22 +14,22 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestShippingRule(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.load_test_records("Shipping Rule")
 
-	def test_from_greater_than_to(self):
+	def test_from_greater_than_to(self) -> None:
 		shipping_rule = frappe.copy_doc(self.globalTestRecords["Shipping Rule"][0])
 		shipping_rule.name = self.globalTestRecords["Shipping Rule"][0].get("name")
 		shipping_rule.get("conditions")[0].from_value = 101
 		self.assertRaises(FromGreaterThanToError, shipping_rule.insert)
 
-	def test_many_zero_to_values(self):
+	def test_many_zero_to_values(self) -> None:
 		shipping_rule = frappe.copy_doc(self.globalTestRecords["Shipping Rule"][0])
 		shipping_rule.name = self.globalTestRecords["Shipping Rule"][0].get("name")
 		shipping_rule.get("conditions")[0].to_value = 0
 		self.assertRaises(ManyBlankToValuesError, shipping_rule.insert)
 
-	def test_overlapping_conditions(self):
+	def test_overlapping_conditions(self) -> None:
 		for range_a, range_b in [
 			((50, 150), (0, 100)),
 			((50, 150), (100, 200)),

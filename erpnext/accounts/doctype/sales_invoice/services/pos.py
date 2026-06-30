@@ -3,6 +3,8 @@
 
 """POS helpers for Sales Invoice."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cint, flt, get_link_to_form
@@ -337,7 +339,7 @@ def get_bank_cash_account(mode_of_payment: str, company: str) -> dict:
 
 
 def update_multi_mode_option(doc, pos_profile) -> None:
-	def append_payment(payment_mode):
+	def append_payment(payment_mode) -> None:
 		payment = doc.append("payments", {})
 		payment.default = payment_mode.default
 		payment.mode_of_payment = payment_mode.mop

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from datetime import date
 
 import frappe
@@ -105,7 +107,7 @@ class Subscription(Document):
 		trial_period_start: DF.Date | None
 	# end: auto-generated types
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		# update start just before the subscription doc is created
 		self.update_subscription_period(self.start_date)
 
@@ -149,7 +151,7 @@ class Subscription(Document):
 			return add_days(period_start, -self.number_of_days)
 		return period_end
 
-	def update_subscription_period(self, date: DateTimeLikeObject | None = None):
+	def update_subscription_period(self, date: DateTimeLikeObject | None = None) -> None:
 		"""
 		Subscription period is the period to be billed. This method updates the
 		beginning of the billing period and end of the billing period.
@@ -373,7 +375,7 @@ class Subscription(Document):
 
 		self.validate_party_billing_currency()
 
-	def validate_party_billing_currency(self):
+	def validate_party_billing_currency(self) -> None:
 		"""
 		Subscription should be of the same currency as the Party's default billing currency or company default.
 		"""
@@ -837,7 +839,7 @@ class Subscription(Document):
 		self.save()
 
 	@frappe.whitelist()
-	def force_fetch_subscription_updates(self):
+	def force_fetch_subscription_updates(self) -> None:
 		"""
 		Process Subscription and create Invoices even if current date doesn't lie between next_billing_period_start and next_billing_period_end
 		It makes use of 'Proces Subscription' to force processing in a specific 'posting_date'

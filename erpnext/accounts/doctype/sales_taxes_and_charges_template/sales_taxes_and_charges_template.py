@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -36,21 +38,21 @@ class SalesTaxesandChargesTemplate(Document):
 		title: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		valdiate_taxes_and_charges_template(self)
 
-	def autoname(self):
+	def autoname(self) -> None:
 		if self.company and self.title:
 			abbr = frappe.get_cached_value("Company", self.company, "abbr")
 			self.name = f"{self.title} - {abbr}"
 
-	def set_missing_values(self):
+	def set_missing_values(self) -> None:
 		for data in self.taxes:
 			if data.charge_type == "On Net Total" and flt(data.rate) == 0.0:
 				data.rate = frappe.get_cached_value("Account", data.account_head, "tax_rate")
 
 
-def valdiate_taxes_and_charges_template(doc):
+def valdiate_taxes_and_charges_template(doc) -> None:
 	# default should not be disabled
 	# if not doc.is_default and not frappe.get_all(doc.doctype, filters={"is_default": 1}):
 	# 	doc.is_default = 1
@@ -77,12 +79,12 @@ def valdiate_taxes_and_charges_template(doc):
 		validate_inclusive_tax(tax, doc)
 
 
-def validate_disabled(doc):
+def validate_disabled(doc) -> None:
 	if doc.is_default and doc.disabled:
 		frappe.throw(_("Disabled template must not be default template"))
 
 
-def validate_for_tax_category(doc):
+def validate_for_tax_category(doc) -> None:
 	if not doc.tax_category:
 		return
 

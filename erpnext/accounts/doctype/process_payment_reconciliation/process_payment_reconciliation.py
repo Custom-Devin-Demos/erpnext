@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -37,14 +39,14 @@ class ProcessPaymentReconciliation(Document):
 		to_payment_date: DF.Date | None
 
 	# end: auto-generated types
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_receivable_payable_account()
 		self.validate_bank_cash_account()
 
-	def validate_receivable_payable_account(self):
+	def validate_receivable_payable_account(self) -> None:
 		if self.receivable_payable_account:
 			if self.company != frappe.db.get_value("Account", self.receivable_payable_account, "company"):
 				frappe.throw(
@@ -53,7 +55,7 @@ class ProcessPaymentReconciliation(Document):
 					)
 				)
 
-	def validate_bank_cash_account(self):
+	def validate_bank_cash_account(self) -> None:
 		if self.bank_cash_account:
 			if self.company != frappe.db.get_value("Account", self.bank_cash_account, "company"):
 				frappe.throw(
@@ -62,15 +64,15 @@ class ProcessPaymentReconciliation(Document):
 					)
 				)
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.status = ""
 		self.error_log = ""
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.db_set("status", "Queued")
 		self.db_set("error_log", None)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.db_set("status", "Cancelled")
 		log = frappe.db.get_value("Process Payment Reconciliation Log", filters={"process_pr": self.name})
 		if log:
@@ -129,7 +131,7 @@ def is_job_running(job_name: str) -> bool:
 
 
 @frappe.whitelist()
-def pause_job_for_doc(docname: str | None = None):
+def pause_job_for_doc(docname: str | None = None) -> None:
 	if docname:
 		frappe.has_permission("Process Payment Reconciliation", "write", doc=docname, throw=True)
 		frappe.db.set_value("Process Payment Reconciliation", docname, "status", "Paused")
@@ -139,7 +141,7 @@ def pause_job_for_doc(docname: str | None = None):
 
 
 @frappe.whitelist()
-def trigger_job_for_doc(docname: str | None = None):
+def trigger_job_for_doc(docname: str | None = None) -> None:
 	"""
 	Trigger background job
 	"""
@@ -191,7 +193,7 @@ def trigger_job_for_doc(docname: str | None = None):
 		frappe.msgprint(_("Scheduler is Inactive. Can't trigger job now."))
 
 
-def trigger_reconciliation_for_queued_docs():
+def trigger_reconciliation_for_queued_docs() -> None:
 	"""
 	Will be called from Cron Job
 	Fetch queued docs and start reconciliation process for each one

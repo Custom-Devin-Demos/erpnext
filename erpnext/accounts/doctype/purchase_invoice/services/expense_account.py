@@ -3,6 +3,8 @@
 
 """Expense account resolution for Purchase Invoice items."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, throw
 from frappe.utils import get_link_to_form
@@ -14,7 +16,7 @@ from erpnext.controllers.accounts_controller import validate_account_head
 
 
 class ExpenseAccountService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def set_expense_account(self, for_validate: bool = False) -> None:

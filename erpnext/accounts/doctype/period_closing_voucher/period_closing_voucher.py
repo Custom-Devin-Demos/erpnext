@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import copy
 
 import frappe
@@ -39,14 +41,14 @@ class PeriodClosingVoucher(AccountsController):
 		transaction_date: DF.Date | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_start_and_end_date()
 		self.check_if_previous_year_closed()
 		self.block_if_future_closing_voucher_exists()
 		self.check_closing_account_type()
 		self.check_closing_account_currency()
 
-	def validate_start_and_end_date(self):
+	def validate_start_and_end_date(self) -> None:
 		self.fy_start_date, self.fy_end_date = frappe.db.get_value(
 			"Fiscal Year", self.fiscal_year, ["year_start_date", "year_end_date"]
 		)
@@ -67,7 +69,7 @@ class PeriodClosingVoucher(AccountsController):
 		if getdate(self.period_end_date) > getdate(self.fy_end_date):
 			frappe.throw(_("Period End Date cannot be greater than Fiscal Year End Date"))
 
-	def check_if_previous_year_closed(self):
+	def check_if_previous_year_closed(self) -> None:
 		last_year_closing = add_days(self.fy_start_date, -1)
 		previous_fiscal_year = get_fiscal_year(last_year_closing, company=self.company, boolean=True)
 		if not previous_fiscal_year:
@@ -101,7 +103,7 @@ class PeriodClosingVoucher(AccountsController):
 
 		frappe.throw(_("Previous Year is not closed, please close it first"))
 
-	def block_if_future_closing_voucher_exists(self):
+	def block_if_future_closing_voucher_exists(self) -> None:
 		future_closing_voucher = self.get_future_closing_voucher()
 		if future_closing_voucher and future_closing_voucher[0][0]:
 			action = "cancel" if self.docstatus == 2 else "create"
@@ -118,7 +120,7 @@ class PeriodClosingVoucher(AccountsController):
 			"name",
 		)
 
-	def check_closing_account_type(self):
+	def check_closing_account_type(self) -> None:
 		closing_account_type = frappe.get_cached_value("Account", self.closing_account_head, "root_type")
 
 		if closing_account_type not in ["Liability", "Equity"]:
@@ -126,13 +128,13 @@ class PeriodClosingVoucher(AccountsController):
 				_("Closing Account {0} must be of type Liability / Equity").format(self.closing_account_head)
 			)
 
-	def check_closing_account_currency(self):
+	def check_closing_account_currency(self) -> None:
 		account_currency = get_account_currency(self.closing_account_head)
 		company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
 		if account_currency != company_currency:
 			frappe.throw(_("Currency of the Closing Account must be {0}").format(company_currency))
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.db_set("gle_processing_status", "In Progress")
 		if frappe.get_single_value("Accounts Settings", "use_legacy_controller_for_pcv"):
 			self.make_gl_entries()
@@ -140,7 +142,7 @@ class PeriodClosingVoucher(AccountsController):
 			ppcv = frappe.get_doc({"doctype": "Process Period Closing Voucher", "parent_pcv": self.name})
 			ppcv.save().submit()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = (
 			"GL Entry",
 			"Stock Ledger Entry",
@@ -156,12 +158,12 @@ class PeriodClosingVoucher(AccountsController):
 		self.db_set("gle_processing_status", "In Progress")
 		self.cancel_gl_entries()
 
-	def cancel_process_pcv_docs(self):
+	def cancel_process_pcv_docs(self) -> None:
 		ppcvs = frappe.db.get_all("Process Period Closing Voucher", {"parent_pcv": self.name, "docstatus": 1})
 		for x in ppcvs:
 			frappe.get_doc("Process Period Closing Voucher", x.name).cancel()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		super().on_trash()
 		ppcvs = frappe.db.get_all(
 			"Process Period Closing Voucher", {"parent_pcv": self.name, "docstatus": ["in", [1, 2]]}
@@ -169,7 +171,7 @@ class PeriodClosingVoucher(AccountsController):
 		for x in ppcvs:
 			frappe.delete_doc("Process Period Closing Voucher", x.name, force=True, ignore_permissions=True)
 
-	def make_gl_entries(self):
+	def make_gl_entries(self) -> None:
 		if frappe.db.estimate_count("GL Entry") > 100_000:
 			frappe.enqueue(
 				process_gl_and_closing_entries,
@@ -263,7 +265,7 @@ class PeriodClosingVoucher(AccountsController):
 		self.update_default_dimensions(gl_entry, dimensions)
 		return gl_entry
 
-	def update_default_dimensions(self, gl_entry, dimensions):
+	def update_default_dimensions(self, gl_entry, dimensions) -> None:
 		for i, dimension in enumerate(self.accounting_dimension_fields):
 			gl_entry[dimension] = dimensions[i]
 
@@ -285,11 +287,13 @@ class PeriodClosingVoucher(AccountsController):
 
 		return acc_bal_dict
 
-	def get_accounting_dimension_fields(self):
+	def get_accounting_dimension_fields(self) -> None:
 		default_dimensions = ["cost_center", "finance_book", "project"]
 		self.accounting_dimension_fields = default_dimensions + get_accounting_dimensions()
 
-	def get_gl_entries_for_current_period(self, report_type, only_opening_entries=False, as_iterator=False):
+	def get_gl_entries_for_current_period(
+		self, report_type, only_opening_entries: bool = False, as_iterator: bool = False
+	):
 		gle = frappe.qb.DocType("GL Entry")
 		account = frappe.qb.DocType("Account")
 
@@ -443,7 +447,7 @@ class PeriodClosingVoucher(AccountsController):
 		if not first_pcv or first_pcv == self.name:
 			return True
 
-	def cancel_gl_entries(self):
+	def cancel_gl_entries(self) -> None:
 		if self.get_gle_count_against_current_pcv() > 5000:
 			frappe.enqueue(
 				process_cancellation,
@@ -466,7 +470,7 @@ class PeriodClosingVoucher(AccountsController):
 		)
 
 
-def process_gl_and_closing_entries(doc):
+def process_gl_and_closing_entries(doc) -> None:
 	from erpnext.accounts.general_ledger import make_gl_entries
 
 	try:
@@ -491,7 +495,7 @@ def process_gl_and_closing_entries(doc):
 		)
 
 
-def process_cancellation(voucher_type, voucher_no):
+def process_cancellation(voucher_type, voucher_no) -> None:
 	from erpnext.accounts.general_ledger import make_reverse_gl_entries
 
 	try:
@@ -513,7 +517,7 @@ def process_cancellation(voucher_type, voucher_no):
 		)
 
 
-def delete_closing_entries(voucher_no):
+def delete_closing_entries(voucher_no) -> None:
 	closing_balance = frappe.qb.DocType("Account Closing Balance")
 	frappe.qb.from_(closing_balance).delete().where(
 		closing_balance.period_closing_voucher == voucher_no

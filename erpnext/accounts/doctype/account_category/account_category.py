@@ -1,5 +1,7 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+from __future__ import annotations
+
 import json
 import os
 
@@ -24,7 +26,7 @@ class AccountCategory(Document):
 		root_type: DF.Literal["", "Asset", "Liability", "Income", "Expense", "Equity"]
 	# end: auto-generated types
 
-	def after_rename(self, old_name, new_name, merge):
+	def after_rename(self, old_name, new_name, merge) -> None:
 		from erpnext.accounts.doctype.financial_report_template.financial_report_engine import (
 			FormulaFieldUpdater,
 		)
@@ -56,7 +58,7 @@ class AccountCategory(Document):
 			)
 
 
-def import_account_categories(template_path: str):
+def import_account_categories(template_path: str) -> None:
 	categories_file = os.path.join(template_path, "account_categories.json")
 
 	if not os.path.exists(categories_file):
@@ -68,7 +70,7 @@ def import_account_categories(template_path: str):
 	create_account_categories(categories)
 
 
-def create_account_categories(categories: list[dict]):
+def create_account_categories(categories: list[dict]) -> None:
 	if not categories:
 		return
 

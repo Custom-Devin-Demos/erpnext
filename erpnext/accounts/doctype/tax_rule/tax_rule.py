@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import functools
 
 import frappe
@@ -65,12 +67,12 @@ class TaxRule(Document):
 		use_for_shopping_cart: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_tax_template()
 		self.validate_from_to_dates("from_date", "to_date")
 		self.validate_filters()
 
-	def validate_tax_template(self):
+	def validate_tax_template(self) -> None:
 		if self.tax_type == "Sales":
 			self.purchase_tax_template = self.supplier = self.supplier_group = None
 			if self.customer:
@@ -85,7 +87,7 @@ class TaxRule(Document):
 		if not (self.sales_tax_template or self.purchase_tax_template):
 			frappe.throw(_("Tax Template is mandatory."))
 
-	def validate_filters(self):
+	def validate_filters(self) -> None:
 		TaxRule = DocType("Tax Rule")
 
 		filters = {

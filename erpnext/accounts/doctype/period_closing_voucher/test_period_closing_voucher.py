@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -13,11 +15,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPeriodClosingVoucher(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		super().setUp()
 		frappe.db.set_single_value("Accounts Settings", "use_legacy_controller_for_pcv", 1)
 
-	def test_closing_entry(self):
+	def test_closing_entry(self) -> None:
 		cost_center = create_cost_center("Test Cost Center 1")
 
 		jv1 = make_journal_entry(
@@ -69,7 +71,7 @@ class TestPeriodClosingVoucher(ERPNextTestSuite):
 		self.assertEqual(pcv.gle_processing_status, "Completed")
 		self.assertEqual(tuple(pcv_gle), expected_gle)
 
-	def test_cost_center_wise_posting(self):
+	def test_cost_center_wise_posting(self) -> None:
 		surplus_account = create_account()
 
 		cost_center1 = create_cost_center("Main")
@@ -133,7 +135,7 @@ class TestPeriodClosingVoucher(ERPNextTestSuite):
 			)
 		)
 
-	def test_period_closing_with_finance_book_entries(self):
+	def test_period_closing_with_finance_book_entries(self) -> None:
 		surplus_account = create_account()
 		cost_center = create_cost_center("Test Cost Center 1")
 
@@ -186,7 +188,7 @@ class TestPeriodClosingVoucher(ERPNextTestSuite):
 		# compare order-independently: postgres and MariaDB order NULL finance_book differently
 		self.assertSequenceEqual(sorted(pcv_gle, key=str), sorted(expected_gle, key=str))
 
-	def test_gl_entries_restrictions(self):
+	def test_gl_entries_restrictions(self) -> None:
 		cost_center = create_cost_center("Test Cost Center 1")
 
 		self.make_period_closing_voucher(posting_date="2021-03-31")
@@ -205,7 +207,7 @@ class TestPeriodClosingVoucher(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, jv1.submit)
 
-	def test_closing_balance_with_dimensions_and_test_reposting_entry(self):
+	def test_closing_balance_with_dimensions_and_test_reposting_entry(self) -> None:
 		cost_center1 = create_cost_center("Test Cost Center 1")
 		cost_center2 = create_cost_center("Test Cost Center 2")
 
@@ -315,7 +317,7 @@ class TestPeriodClosingVoucher(ERPNextTestSuite):
 		repost_doc.posting_date = today()
 		repost_doc.save()
 
-	def make_period_closing_voucher(self, posting_date, submit=True):
+	def make_period_closing_voucher(self, posting_date, submit: bool = True):
 		surplus_account = create_account()
 		cost_center = create_cost_center("Test Cost Center 1")
 		fy = get_fiscal_year(posting_date, company="Test PCV Company")
@@ -342,7 +344,7 @@ class TestPeriodClosingVoucher(ERPNextTestSuite):
 		"Accounts Settings",
 		{"enable_immutable_ledger": 1},
 	)
-	def test_immutable_ledger_reverse_entry_uses_passed_posting_date_after_pcv(self):
+	def test_immutable_ledger_reverse_entry_uses_passed_posting_date_after_pcv(self) -> None:
 		cost_center = create_cost_center("Test Cost Center 1")
 
 		jv = make_journal_entry(

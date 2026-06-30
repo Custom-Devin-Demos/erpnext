@@ -1,6 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, today
 
@@ -14,13 +16,13 @@ from erpnext.tests.utils import ERPNextTestSuite
 class TestOpeningInvoiceCreationTool(ERPNextTestSuite):
 	def make_invoices(
 		self,
-		invoice_type="Sales",
+		invoice_type: str = "Sales",
 		company=None,
 		invoices=None,
 		project=None,
 		cost_center=None,
 		department=None,
-		return_doc=False,
+		return_doc: bool = False,
 	):
 		doc = frappe.get_single("Opening Invoice Creation Tool")
 		args = get_opening_invoice_creation_dict(
@@ -38,7 +40,7 @@ class TestOpeningInvoiceCreationTool(ERPNextTestSuite):
 
 		return doc.make_invoices()
 
-	def test_opening_sales_invoice_creation(self):
+	def test_opening_sales_invoice_creation(self) -> None:
 		invoices = self.make_invoices(company="_Test Opening Invoice Company")
 
 		self.assertEqual(len(invoices), 2)
@@ -54,7 +56,7 @@ class TestOpeningInvoiceCreationTool(ERPNextTestSuite):
 		# Check if update stock is not enabled
 		self.assertEqual(si.update_stock, 0)
 
-	def check_expected_values(self, invoices, expected_value, invoice_type="Sales"):
+	def check_expected_values(self, invoices, expected_value, invoice_type: str = "Sales") -> None:
 		doctype = "Sales Invoice" if invoice_type == "Sales" else "Purchase Invoice"
 
 		for invoice_idx, invoice in enumerate(invoices or []):
@@ -62,12 +64,12 @@ class TestOpeningInvoiceCreationTool(ERPNextTestSuite):
 			for field_idx, field in enumerate(expected_value["keys"]):
 				self.assertEqual(si.get(field, ""), expected_value[invoice_idx][field_idx])
 
-	def test_opening_invoice_requires_temporary_account_type(self):
+	def test_opening_invoice_requires_temporary_account_type(self) -> None:
 		doc = self.make_invoices(company="_Test Opening Invoice Company", return_doc=True)
 		doc.invoices[0].temporary_opening_account = "Sales - _TOIC"
 		self.assertRaises(frappe.ValidationError, doc.make_invoices)
 
-	def test_opening_purchase_invoice_creation(self):
+	def test_opening_purchase_invoice_creation(self) -> None:
 		invoices = self.make_invoices(invoice_type="Purchase", company="_Test Opening Invoice Company")
 
 		self.assertEqual(len(invoices), 2)
@@ -78,7 +80,7 @@ class TestOpeningInvoiceCreationTool(ERPNextTestSuite):
 		}
 		self.check_expected_values(invoices, expected_value, "Purchase")
 
-	def test_opening_sales_invoice_creation_with_missing_debit_account(self):
+	def test_opening_sales_invoice_creation_with_missing_debit_account(self) -> None:
 		party_1, party_2 = make_customer("Customer A"), make_customer("Customer B")
 
 		old_default_receivable_account = frappe.db.get_value(
@@ -106,7 +108,7 @@ class TestOpeningInvoiceCreationTool(ERPNextTestSuite):
 			old_default_receivable_account,
 		)
 
-	def test_renaming_of_invoice_using_invoice_number_field(self):
+	def test_renaming_of_invoice_using_invoice_number_field(self) -> None:
 		party_1, party_2 = make_customer("Customer A"), make_customer("Customer B")
 		invoices = self.make_invoices(
 			company="_Test Opening Invoice Company",
@@ -118,7 +120,7 @@ class TestOpeningInvoiceCreationTool(ERPNextTestSuite):
 
 		self.assertEqual(invoices[0], "TEST-NEW-INV-11")
 
-	def test_opening_invoice_with_accounting_dimension(self):
+	def test_opening_invoice_with_accounting_dimension(self) -> None:
 		invoices = self.make_invoices(
 			invoice_type="Sales", company="_Test Opening Invoice Company", department="Sales - _TOIC"
 		)
@@ -126,7 +128,7 @@ class TestOpeningInvoiceCreationTool(ERPNextTestSuite):
 		for invoice in invoices:
 			self.assertEqual(frappe.db.get_value("Sales Invoice", invoice, "department"), "Sales - _TOIC")
 
-	def test_opening_entry_project_linking(self):
+	def test_opening_entry_project_linking(self) -> None:
 		doc = self.make_invoices(
 			company="_Test Opening Invoice Company", invoice_type="Sales", return_doc=True
 		)

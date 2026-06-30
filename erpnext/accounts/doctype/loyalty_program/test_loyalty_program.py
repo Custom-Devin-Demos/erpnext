@@ -1,5 +1,7 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
+
 import unittest
 
 import frappe
@@ -15,7 +17,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestLoyaltyProgram(ERPNextTestSuite):
-	def test_loyalty_points_earned_single_tier(self):
+	def test_loyalty_points_earned_single_tier(self) -> None:
 		frappe.db.set_value("Customer", "Test Loyalty Customer", "loyalty_program", "Test Single Loyalty")
 		# create a new sales invoice
 		si_original = create_sales_invoice_record()
@@ -64,7 +66,7 @@ class TestLoyaltyProgram(ERPNextTestSuite):
 		for d in [si_redeem, si_original]:
 			d.cancel()
 
-	def test_loyalty_points_earned_multiple_tier(self):
+	def test_loyalty_points_earned_multiple_tier(self) -> None:
 		frappe.db.set_value("Customer", "Test Loyalty Customer", "loyalty_program", "Test Multiple Loyalty")
 		# assign multiple tier program to the customer
 		customer = frappe.get_doc("Customer", {"customer_name": "Test Loyalty Customer"})
@@ -121,7 +123,7 @@ class TestLoyaltyProgram(ERPNextTestSuite):
 		for d in [si_redeem, si_original]:
 			d.cancel()
 
-	def test_cancel_sales_invoice(self):
+	def test_cancel_sales_invoice(self) -> None:
 		"""cancelling the sales invoice should cancel the earned points"""
 		frappe.db.set_value("Customer", "Test Loyalty Customer", "loyalty_program", "Test Single Loyalty")
 		# create a new sales invoice
@@ -140,7 +142,7 @@ class TestLoyaltyProgram(ERPNextTestSuite):
 		lpe = frappe.db.exists("Loyalty Point Entry", lpe.name)
 		self.assertEqual(True, (lpe is None))
 
-	def test_sales_invoice_return(self):
+	def test_sales_invoice_return(self) -> None:
 		frappe.db.set_value("Customer", "Test Loyalty Customer", "loyalty_program", "Test Single Loyalty")
 		# create a new sales invoice
 		si_original = create_sales_invoice_record(2)
@@ -189,7 +191,7 @@ class TestLoyaltyProgram(ERPNextTestSuite):
 			except frappe.TimestampMismatchError:
 				frappe.get_doc("Sales Invoice", d.name).cancel()
 
-	def test_loyalty_points_for_dashboard(self):
+	def test_loyalty_points_for_dashboard(self) -> None:
 		doc = frappe.get_doc("Customer", "Test Loyalty Customer")
 		company_wise_info = get_dashboard_info("Customer", doc.name, doc.loyalty_program)
 
@@ -197,7 +199,7 @@ class TestLoyaltyProgram(ERPNextTestSuite):
 			self.assertTrue(d.get("loyalty_points"))
 
 	@unittest.mock.patch("erpnext.accounts.doctype.loyalty_program.loyalty_program.get_loyalty_details")
-	def test_tier_selection(self, mock_get_loyalty_details):
+	def test_tier_selection(self, mock_get_loyalty_details) -> None:
 		# Create a new loyalty program with multiple tiers
 		loyalty_program = frappe.get_doc(
 			{
@@ -290,7 +292,7 @@ def get_points_earned(self):
 	return points_earned or 0
 
 
-def create_sales_invoice_record(qty=1):
+def create_sales_invoice_record(qty: int = 1):
 	# return sales invoice doc object
 	return frappe.get_doc(
 		{

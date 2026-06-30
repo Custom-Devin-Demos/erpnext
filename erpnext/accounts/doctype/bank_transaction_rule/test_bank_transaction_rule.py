@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.exceptions import ValidationError
@@ -10,7 +12,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
 		self.bank = "HDFC - _TC"
@@ -20,7 +22,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		qb.from_(bank_dt).delete().where(bank_dt.name == "HDFC").run()
 		self.create_bank_account()
 
-	def create_bank_account(self):
+	def create_bank_account(self) -> None:
 		bank = frappe.get_doc(
 			{
 				"doctype": "Bank",
@@ -46,7 +48,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 	def _unique_rule_name(self, prefix: str) -> str:
 		return f"{prefix}-{frappe.generate_hash(length=8)}"
 
-	def _make_transaction(self, company=None, withdrawal=0, deposit=0, description=None):
+	def _make_transaction(self, company=None, withdrawal: int = 0, deposit: int = 0, description=None):
 		doc = frappe.new_doc("Bank Transaction")
 		doc.company = company or self.company
 		doc.withdrawal = withdrawal
@@ -72,12 +74,12 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 
 	# --- evaluate_rule ---
 
-	def test_evaluate_rule_company_mismatch(self):
+	def test_evaluate_rule_company_mismatch(self) -> None:
 		doc = self._rule("co", [{"check": "Contains", "value": "foo"}])
 		tx = self._make_transaction(company="Nonexistent Company XYZ", deposit=1, description="foo")
 		self.assertFalse(doc.evaluate_rule(tx))
 
-	def test_evaluate_rule_withdrawal_type(self):
+	def test_evaluate_rule_withdrawal_type(self) -> None:
 		doc = self._rule("wd", [{"check": "Contains", "value": "pay"}], transaction_type="Withdrawal")
 		self.assertFalse(
 			doc.evaluate_rule(self._make_transaction(withdrawal=0, deposit=100, description="payment"))
@@ -86,7 +88,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 			doc.evaluate_rule(self._make_transaction(withdrawal=50, deposit=0, description="payment"))
 		)
 
-	def test_evaluate_rule_deposit_type(self):
+	def test_evaluate_rule_deposit_type(self) -> None:
 		doc = self._rule("dep", [{"check": "Contains", "value": "inc"}], transaction_type="Deposit")
 		self.assertFalse(
 			doc.evaluate_rule(self._make_transaction(withdrawal=50, deposit=0, description="income"))
@@ -95,7 +97,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 			doc.evaluate_rule(self._make_transaction(withdrawal=0, deposit=50, description="income"))
 		)
 
-	def test_evaluate_rule_min_max_amount(self):
+	def test_evaluate_rule_min_max_amount(self) -> None:
 		doc = self._rule("amt", [{"check": "Contains", "value": "x"}], min_amount=10, max_amount=100)
 		self.assertFalse(doc.evaluate_rule(self._make_transaction(deposit=5, description="x")))
 		self.assertTrue(doc.evaluate_rule(self._make_transaction(deposit=10, description="x")))
@@ -105,29 +107,29 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		doc_w = self._rule("amt_wd", [{"check": "Contains", "value": "x"}], min_amount=10, max_amount=100)
 		self.assertTrue(doc_w.evaluate_rule(self._make_transaction(withdrawal=10, description="x")))
 
-	def test_evaluate_rule_description_contains(self):
+	def test_evaluate_rule_description_contains(self) -> None:
 		doc = self._rule("ct", [{"check": "Contains", "value": "amazon"}])
 		self.assertTrue(
 			doc.evaluate_rule(self._make_transaction(deposit=1, description="AMAZON marketplace"))
 		)
 		self.assertFalse(doc.evaluate_rule(self._make_transaction(deposit=1, description="other vendor")))
 
-	def test_evaluate_rule_description_starts_with(self):
+	def test_evaluate_rule_description_starts_with(self) -> None:
 		doc = self._rule("sw", [{"check": "Starts With", "value": "wire"}])
 		self.assertTrue(doc.evaluate_rule(self._make_transaction(deposit=1, description="WIRE transfer in")))
 		self.assertFalse(doc.evaluate_rule(self._make_transaction(deposit=1, description="in wire")))
 
-	def test_evaluate_rule_description_ends_with(self):
+	def test_evaluate_rule_description_ends_with(self) -> None:
 		doc = self._rule("ew", [{"check": "Ends With", "value": "fee"}])
 		self.assertTrue(doc.evaluate_rule(self._make_transaction(deposit=1, description="Bank monthly FEE")))
 		self.assertFalse(doc.evaluate_rule(self._make_transaction(deposit=1, description="fee reversed")))
 
-	def test_evaluate_rule_description_regex(self):
+	def test_evaluate_rule_description_regex(self) -> None:
 		doc = self._rule("rx", [{"check": "Regex", "value": r"inv-\d+"}])
 		self.assertTrue(doc.evaluate_rule(self._make_transaction(deposit=1, description="INV-12345 payment")))
 		self.assertFalse(doc.evaluate_rule(self._make_transaction(deposit=1, description="invoice abc")))
 
-	def test_evaluate_rule_composite_fails_on_description(self):
+	def test_evaluate_rule_composite_fails_on_description(self) -> None:
 		doc = self._rule(
 			"cmp",
 			[{"check": "Contains", "value": "target"}],
@@ -137,7 +139,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		)
 		self.assertFalse(doc.evaluate_rule(self._make_transaction(deposit=50, description="other merchant")))
 
-	def test_evaluate_rule_empty_description_rules_returns_false(self):
+	def test_evaluate_rule_empty_description_rules_returns_false(self) -> None:
 		doc = frappe.get_doc(
 			{
 				"doctype": "Bank Transaction Rule",
@@ -153,12 +155,12 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 
 	# --- validate ---
 
-	def test_validate_min_amount_greater_than_max(self):
+	def test_validate_min_amount_greater_than_max(self) -> None:
 		doc = self._rule("minmax", [{"check": "Contains", "value": "x"}], min_amount=200, max_amount=100)
 		with self.assertRaises(ValidationError):
 			doc.insert()
 
-	def test_validate_payment_entry_requires_party_type(self):
+	def test_validate_payment_entry_requires_party_type(self) -> None:
 		doc = self._rule(
 			"pe_pt",
 			[{"check": "Contains", "value": "x"}],
@@ -169,7 +171,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		with self.assertRaises(ValidationError):
 			doc.insert()
 
-	def test_validate_payment_entry_requires_party(self):
+	def test_validate_payment_entry_requires_party(self) -> None:
 		doc = self._rule(
 			"pe_p",
 			[{"check": "Contains", "value": "x"}],
@@ -180,7 +182,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		with self.assertRaises(ValidationError):
 			doc.insert()
 
-	def test_validate_payment_entry_requires_account(self):
+	def test_validate_payment_entry_requires_account(self) -> None:
 		doc = self._rule(
 			"pe_a",
 			[{"check": "Contains", "value": "x"}],
@@ -192,7 +194,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		with self.assertRaises(ValidationError):
 			doc.insert()
 
-	def test_validate_bank_entry_single_requires_account(self):
+	def test_validate_bank_entry_single_requires_account(self) -> None:
 		doc = self._rule(
 			"be_acc",
 			[{"check": "Contains", "value": "x"}],
@@ -202,7 +204,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		with self.assertRaises(ValidationError):
 			doc.insert()
 
-	def test_validate_bank_entry_multiple_requires_accounts(self):
+	def test_validate_bank_entry_multiple_requires_accounts(self) -> None:
 		doc = self._rule(
 			"be_ma",
 			[{"check": "Contains", "value": "x"}],
@@ -213,7 +215,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		with self.assertRaises(ValidationError):
 			doc.insert()
 
-	def test_validate_bank_entry_multiple_last_row_must_not_have_debit_or_credit(self):
+	def test_validate_bank_entry_multiple_last_row_must_not_have_debit_or_credit(self) -> None:
 		doc = self._rule(
 			"be_last",
 			[{"check": "Contains", "value": "x"}],
@@ -227,7 +229,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		with self.assertRaises(ValidationError):
 			doc.insert()
 
-	def test_validate_invalid_regex(self):
+	def test_validate_invalid_regex(self) -> None:
 		doc = self._rule("bad_rx", [{"check": "Regex", "value": "["}])
 		with self.assertRaises(ValidationError):
 			doc.insert()
@@ -242,7 +244,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 			**fields,
 		)
 
-	def test_validate_bank_entry_multiple_valid_amount_formulas(self):
+	def test_validate_bank_entry_multiple_valid_amount_formulas(self) -> None:
 		doc = self._multiple_accounts_rule(
 			"be_formula",
 			accounts=[
@@ -254,7 +256,7 @@ class TestBankTransactionRule(ERPNextTestSuite, AccountsTestMixin):
 		doc.insert()
 		self.assertTrue(doc.name)
 
-	def test_validate_bank_entry_multiple_invalid_amount_formulas(self):
+	def test_validate_bank_entry_multiple_invalid_amount_formulas(self) -> None:
 		malicious_formulas = [
 			"__import__('os')",
 			"eval('1+1')",

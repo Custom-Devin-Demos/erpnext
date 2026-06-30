@@ -1,6 +1,8 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.promotional_scheme.promotional_scheme import TransactionExists
@@ -9,11 +11,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPromotionalScheme(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		if frappe.db.exists("Promotional Scheme", "_Test Scheme"):
 			frappe.delete_doc("Promotional Scheme", "_Test Scheme")
 
-	def test_promotional_scheme(self):
+	def test_promotional_scheme(self) -> None:
 		ps = make_promotional_scheme(applicable_for="Customer", customer="_Test Customer")
 		price_rules = frappe.get_all(
 			"Pricing Rule",
@@ -59,7 +61,7 @@ class TestPromotionalScheme(ERPNextTestSuite):
 		)
 		self.assertEqual(price_rules, [])
 
-	def test_promotional_scheme_without_applicable_for(self):
+	def test_promotional_scheme_without_applicable_for(self) -> None:
 		ps = make_promotional_scheme()
 		price_rules = frappe.get_all("Pricing Rule", filters={"promotional_scheme": ps.name})
 
@@ -69,7 +71,7 @@ class TestPromotionalScheme(ERPNextTestSuite):
 		price_rules = frappe.get_all("Pricing Rule", filters={"promotional_scheme": ps.name})
 		self.assertEqual(price_rules, [])
 
-	def test_change_applicable_for_in_promotional_scheme(self):
+	def test_change_applicable_for_in_promotional_scheme(self) -> None:
 		ps = make_promotional_scheme()
 		price_rules = frappe.get_all("Pricing Rule", filters={"promotional_scheme": ps.name})
 		self.assertTrue(len(price_rules), 1)
@@ -89,7 +91,7 @@ class TestPromotionalScheme(ERPNextTestSuite):
 		price_rules = frappe.get_all("Pricing Rule", filters={"promotional_scheme": ps.name})
 		self.assertEqual(price_rules, [])
 
-	def test_change_applicable_for_values_in_promotional_scheme(self):
+	def test_change_applicable_for_values_in_promotional_scheme(self) -> None:
 		ps = make_promotional_scheme(applicable_for="Customer", customer="_Test Customer")
 		ps.append("customer", {"customer": "_Test Customer 2"})
 		ps.save()
@@ -114,7 +116,7 @@ class TestPromotionalScheme(ERPNextTestSuite):
 		self.assertEqual(price_rules, [])
 		frappe.delete_doc("Promotional Scheme", ps.name)
 
-	def test_min_max_amount_configuration(self):
+	def test_min_max_amount_configuration(self) -> None:
 		ps = make_promotional_scheme()
 		ps.price_discount_slabs[0].min_amount = 10
 		ps.price_discount_slabs[0].max_amount = 1000
@@ -131,7 +133,7 @@ class TestPromotionalScheme(ERPNextTestSuite):
 		price_rules = frappe.get_all("Pricing Rule", filters={"promotional_scheme": ps.name})
 		self.assertEqual(price_rules, [])
 
-	def test_pricing_rule_for_product_discount_slabs(self):
+	def test_pricing_rule_for_product_discount_slabs(self) -> None:
 		ps = make_promotional_scheme()
 		ps.set("price_discount_slabs", [])
 		ps.set(
@@ -153,7 +155,7 @@ class TestPromotionalScheme(ERPNextTestSuite):
 			[pr.min_qty, pr.free_item, pr.free_qty, pr.recurse_for], [12, "_Test Item 2", 1, 12]
 		)
 
-	def test_validation_on_recurse_with_mixed_condition(self):
+	def test_validation_on_recurse_with_mixed_condition(self) -> None:
 		ps = make_promotional_scheme()
 		ps.set("price_discount_slabs", [])
 		ps.set(

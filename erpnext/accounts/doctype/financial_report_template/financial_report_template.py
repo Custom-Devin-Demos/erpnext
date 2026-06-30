@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import os
 import shutil
 
@@ -31,10 +33,10 @@ class FinancialReportTemplate(Document):
 		template_name: DF.Data
 	# end: auto-generated types
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.clear_hidden_fields()
 
-	def clear_hidden_fields(self):
+	def clear_hidden_fields(self) -> None:
 		style_data_sources = {"Blank Line", "Column Break", "Section Break"}
 
 		for row in self.rows:
@@ -44,18 +46,18 @@ class FinancialReportTemplate(Document):
 			if row.data_source in style_data_sources:
 				row.calculation_formula = None
 
-	def validate(self):
+	def validate(self) -> None:
 		validator = TemplateValidator(self)
 		result = validator.validate()
 		result.notify_user()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self._export_template()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self._delete_template()
 
-	def _export_template(self):
+	def _export_template(self) -> None:
 		from frappe.modules.utils import export_module_json
 
 		if not self.module:
@@ -64,7 +66,7 @@ class FinancialReportTemplate(Document):
 		export_module_json(self, True, self.module)
 		self._export_account_categories()
 
-	def _delete_template(self):
+	def _delete_template(self) -> None:
 		if not self.module or not frappe.conf.developer_mode:
 			return
 
@@ -73,7 +75,7 @@ class FinancialReportTemplate(Document):
 
 		shutil.rmtree(dir_path, ignore_errors=True)
 
-	def _export_account_categories(self):
+	def _export_account_categories(self) -> None:
 		import json
 
 		from erpnext.accounts.doctype.financial_report_template.financial_report_engine import (
@@ -127,7 +129,7 @@ class FinancialReportTemplate(Document):
 			json.dump(sorted_categories, f, indent=2)
 
 
-def sync_financial_report_templates(chart_of_accounts=None, existing_company=None):
+def sync_financial_report_templates(chart_of_accounts=None, existing_company=None) -> None:
 	from erpnext.accounts.doctype.account.chart_of_accounts.chart_of_accounts import get_chart
 
 	# If COA is being created for an existing company,
@@ -152,7 +154,7 @@ def sync_financial_report_templates(chart_of_accounts=None, existing_company=Non
 		_sync_templates_for(app)
 
 
-def _sync_templates_for(app_name):
+def _sync_templates_for(app_name) -> None:
 	templates = []
 
 	for module_name in frappe.local.app_modules.get(app_name) or []:

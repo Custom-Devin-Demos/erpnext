@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 from erpnext.accounts.doctype.bank_statement_import.bank_statement_import import (
 	is_mt940_format,
 	preprocess_mt940_content,
@@ -11,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 class TestBankStatementImport(ERPNextTestSuite):
 	"""Unit tests for Bank Statement Import functions"""
 
-	def test_preprocess_mt940_content_with_long_statement_number(self):
+	def test_preprocess_mt940_content_with_long_statement_number(self) -> None:
 		"""Test that statement numbers longer than 5 digits are truncated to last 5 digits"""
 		# Test case with 6-digit statement number (167619 -> 67619)
 		mt940_content = ":28C:167619/1"
@@ -19,7 +21,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		result = preprocess_mt940_content(mt940_content)
 		self.assertEqual(result, expected_content)
 
-	def test_preprocess_mt940_content_with_normal_statement_number(self):
+	def test_preprocess_mt940_content_with_normal_statement_number(self) -> None:
 		"""Test that statement numbers with 5 or fewer digits are unchanged"""
 		# Test case with 5-digit statement number (should remain unchanged)
 		mt940_content = ":28C:12345/1"
@@ -31,7 +33,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		result = preprocess_mt940_content(mt940_content)
 		self.assertEqual(result, mt940_content)  # Should be unchanged
 
-	def test_preprocess_mt940_content_without_sequence_number(self):
+	def test_preprocess_mt940_content_without_sequence_number(self) -> None:
 		"""Test statement number truncation without sequence number"""
 		# Test case with long statement number but no sequence (no /1)
 		mt940_content = ":28C:987654321"
@@ -39,7 +41,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		result = preprocess_mt940_content(mt940_content)
 		self.assertEqual(result, expected_content)
 
-	def test_preprocess_mt940_content_multiple_occurrences(self):
+	def test_preprocess_mt940_content_multiple_occurrences(self) -> None:
 		"""Test multiple statement numbers in the same content"""
 		mt940_content = """:28C:167619/1
 :28C:987654/2"""
@@ -48,7 +50,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		result = preprocess_mt940_content(mt940_content)
 		self.assertEqual(result, expected_content)
 
-	def test_preprocess_mt940_content_edge_cases(self):
+	def test_preprocess_mt940_content_edge_cases(self) -> None:
 		"""Test edge cases like empty content and content without :28C: tags"""
 		# Test empty content
 		self.assertEqual(preprocess_mt940_content(""), "")
@@ -60,7 +62,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		result = preprocess_mt940_content(content_without_28c)
 		self.assertEqual(result, content_without_28c)  # Should be unchanged
 
-	def test_preprocess_mt940_content_with_full_mt940_document(self):
+	def test_preprocess_mt940_content_with_full_mt940_document(self) -> None:
 		"""Test preprocessing with complete MT940 document"""
 		mt940_content = """:20:STARTUMSE
 :25:12345678901234567890
@@ -81,7 +83,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		result = preprocess_mt940_content(mt940_content)
 		self.assertEqual(result, expected_content)
 
-	def test_is_mt940_format_detection(self):
+	def test_is_mt940_format_detection(self) -> None:
 		"""Test MT940 format detection function"""
 		# Valid MT940 content with all required tags
 		valid_mt940 = """:20:STARTUMSE
@@ -106,7 +108,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		# Empty content
 		self.assertFalse(is_mt940_format(""))
 
-	def test_preprocess_mt940_content_boundary_conditions(self):
+	def test_preprocess_mt940_content_boundary_conditions(self) -> None:
 		"""Test boundary conditions for statement number length"""
 		# Test exactly 6 digits (should be truncated)
 		mt940_content = ":28C:123456/1"
@@ -125,7 +127,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		result = preprocess_mt940_content(mt940_content)
 		self.assertEqual(result, expected_content)
 
-	def test_preprocess_mt940_content_real_world_case(self):
+	def test_preprocess_mt940_content_real_world_case(self) -> None:
 		"""Test with real-world MT940 content that was failing in production"""
 		# This is based on actual MT940 content that was causing parsing errors (sanitized)
 		mt940_content = """{1:F0112345678901X0000000000}{2:I94012345678901XN}{4:
@@ -188,7 +190,7 @@ class TestBankStatementImport(ERPNextTestSuite):
 		self.assertIn(":20:STMTREF167619", result)  # Reference should remain unchanged
 		self.assertIn("UPI/TEST USER/123456789/PaidViaTestApp", result)
 
-	def test_preprocess_mt940_content_whitespace_variants(self):
+	def test_preprocess_mt940_content_whitespace_variants(self) -> None:
 		"""Test handling of whitespace and different line endings"""
 		# Test with trailing spaces
 		mt940_content = ":28C:167619/1   \n"

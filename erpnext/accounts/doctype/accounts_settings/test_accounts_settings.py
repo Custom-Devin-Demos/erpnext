@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccountsSettings(ERPNextTestSuite):
-	def test_stale_days(self):
+	def test_stale_days(self) -> None:
 		cur_settings = frappe.get_doc("Accounts Settings", "Accounts Settings")
 		cur_settings.allow_stale = 0
 		cur_settings.stale_days = 0

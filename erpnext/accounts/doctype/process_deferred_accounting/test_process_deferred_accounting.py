@@ -1,6 +1,8 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.account.test_account import create_account
@@ -13,7 +15,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestProcessDeferredAccounting(ERPNextTestSuite):
-	def test_creation_of_ledger_entry_on_submit(self):
+	def test_creation_of_ledger_entry_on_submit(self) -> None:
 		"""test creation of gl entries on submission of document"""
 		change_acc_settings(acc_frozen_till_date="2023-05-31", book_deferred_entries_based_on="Months")
 
@@ -76,7 +78,7 @@ class TestProcessDeferredAccounting(ERPNextTestSuite):
 		check_gl_entries(self, si.name, original_gle, "2023-07-01")
 		change_acc_settings()
 
-	def test_pda_submission_and_cancellation(self):
+	def test_pda_submission_and_cancellation(self) -> None:
 		pda = frappe.get_doc(
 			doctype="Process Deferred Accounting",
 			posting_date="2019-01-01",
@@ -90,8 +92,8 @@ class TestProcessDeferredAccounting(ERPNextTestSuite):
 
 
 def change_acc_settings(
-	company="_Test Company", acc_frozen_till_date=None, book_deferred_entries_based_on="Days"
-):
+	company: str = "_Test Company", acc_frozen_till_date=None, book_deferred_entries_based_on: str = "Days"
+) -> None:
 	acc_settings = frappe.get_doc("Accounts Settings", "Accounts Settings")
 	acc_settings.book_deferred_entries_based_on = book_deferred_entries_based_on
 	frappe.db.set_value("Company", company, "accounts_frozen_till_date", acc_frozen_till_date)

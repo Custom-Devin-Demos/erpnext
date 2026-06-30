@@ -4,6 +4,8 @@
 """Document builders that map a source document to a Journal Entry or to a
 Payment Entry raised against it."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from frappe.model.document import Document
 
 
@@ -27,5 +29,5 @@ class PaymentReconciliationInvoice(Document):
 	# end: auto-generated types
 
 	@staticmethod
-	def get_list(args):
+	def get_list(args) -> None:
 		pass

@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.utils import add_days, today
@@ -16,7 +18,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestBankReconciliationTool(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
 		self.bank = "HDFC - _TC"
@@ -25,7 +27,7 @@ class TestBankReconciliationTool(ERPNextTestSuite, AccountsTestMixin):
 		qb.from_(bank_dt).delete().where(bank_dt.name == "HDFC").run()
 		self.create_bank_account()
 
-	def create_bank_account(self):
+	def create_bank_account(self) -> None:
 		bank = frappe.get_doc(
 			{
 				"doctype": "Bank",
@@ -48,7 +50,7 @@ class TestBankReconciliationTool(ERPNextTestSuite, AccountsTestMixin):
 			.name
 		)
 
-	def test_auto_reconcile(self):
+	def test_auto_reconcile(self) -> None:
 		# make payment
 		from_date = add_days(today(), -1)
 		to_date = today()

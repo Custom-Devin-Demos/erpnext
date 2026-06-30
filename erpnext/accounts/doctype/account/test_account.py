@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import nowdate
 
@@ -14,7 +16,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccount(ERPNextTestSuite):
-	def test_rename_account(self):
+	def test_rename_account(self) -> None:
 		if not frappe.db.exists("Account", "1210 - Debtors - _TC"):
 			acc = frappe.new_doc("Account")
 			acc.account_name = "Debtors"
@@ -46,7 +48,7 @@ class TestAccount(ERPNextTestSuite):
 
 		frappe.delete_doc("Account", "1211-11-4 - 6 - Debtors 1 - Test - - _TC")
 
-	def test_merge_account(self):
+	def test_merge_account(self) -> None:
 		create_account(
 			account_name="Current Assets",
 			is_group=1,
@@ -126,7 +128,7 @@ class TestAccount(ERPNextTestSuite):
 			"Receivable USD - _TC",
 		)
 
-	def test_account_sync(self):
+	def test_account_sync(self) -> None:
 		frappe.local.flags.pop("ignore_root_company_validation", None)
 
 		acc = frappe.new_doc("Account")
@@ -144,7 +146,7 @@ class TestAccount(ERPNextTestSuite):
 		self.assertEqual(acc_tc_4, "Test Sync Account - _TC4")
 		self.assertEqual(acc_tc_5, "Test Sync Account - _TC5")
 
-	def test_add_account_to_a_group(self):
+	def test_add_account_to_a_group(self) -> None:
 		frappe.db.set_value("Account", "Office Rent - _TC3", "is_group", 1)
 
 		acc = frappe.new_doc("Account")
@@ -155,7 +157,7 @@ class TestAccount(ERPNextTestSuite):
 
 		frappe.db.set_value("Account", "Office Rent - _TC3", "is_group", 0)
 
-	def test_account_rename_sync(self):
+	def test_account_rename_sync(self) -> None:
 		frappe.local.flags.pop("ignore_root_company_validation", None)
 
 		acc = frappe.new_doc("Account")
@@ -193,7 +195,7 @@ class TestAccount(ERPNextTestSuite):
 		frappe.delete_doc("Account", "1234 - Test Rename Sync Account - _TC4")
 		frappe.delete_doc("Account", "1234 - Test Rename Sync Account - _TC5")
 
-	def test_account_currency_sync(self):
+	def test_account_currency_sync(self) -> None:
 		"""
 		In a parent->child company setup, child should inherit parent account currency if explicitly specified.
 		"""
@@ -243,7 +245,7 @@ class TestAccount(ERPNextTestSuite):
 		frappe.delete_doc("Account", "_Test Bank JPY - _TC6")
 		frappe.delete_doc("Account", "_Test Bank JPY - _TC7")
 
-	def test_child_company_account_rename_sync(self):
+	def test_child_company_account_rename_sync(self) -> None:
 		frappe.local.flags.pop("ignore_root_company_validation", None)
 
 		acc = frappe.new_doc("Account")
@@ -286,7 +288,7 @@ class TestAccount(ERPNextTestSuite):
 		for doc in to_delete:
 			frappe.delete_doc("Account", doc)
 
-	def test_validate_account_currency(self):
+	def test_validate_account_currency(self) -> None:
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 
 		if not frappe.db.get_value("Account", "Test Currency Account - _TC"):
@@ -306,7 +308,7 @@ class TestAccount(ERPNextTestSuite):
 		acc.account_currency = "USD"
 		self.assertRaises(frappe.ValidationError, acc.save)
 
-	def test_account_balance(self):
+	def test_account_balance(self) -> None:
 		from erpnext.accounts.utils import get_balance_on
 
 		if not frappe.db.exists("Account", "Test Percent Account %5 - _TC"):

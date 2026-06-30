@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import (
@@ -20,12 +22,12 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPOSClosingEntry(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		init_user_and_profile()
 		make_stock_entry(target="_Test Warehouse - _TC", qty=2, basic_rate=100)
 		frappe.db.set_single_value("POS Settings", "invoice_type", "POS Invoice")
 
-	def test_pos_closing_entry(self):
+	def test_pos_closing_entry(self) -> None:
 		test_user, pos_profile = init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
@@ -55,7 +57,7 @@ class TestPOSClosingEntry(ERPNextTestSuite):
 		self.assertEqual(pcv_doc.total_quantity, 2)
 		self.assertEqual(pcv_doc.net_total, 6700)
 
-	def test_pos_closing_without_item_code(self):
+	def test_pos_closing_without_item_code(self) -> None:
 		"""
 		Test if POS Closing Entry is created without item code
 		"""
@@ -73,7 +75,7 @@ class TestPOSClosingEntry(ERPNextTestSuite):
 
 		self.assertTrue(pcv_doc.name)
 
-	def test_pos_qty_for_item(self):
+	def test_pos_qty_for_item(self) -> None:
 		"""
 		Test if quantity is calculated correctly for an item in POS Closing Entry
 		"""
@@ -108,7 +110,7 @@ class TestPOSClosingEntry(ERPNextTestSuite):
 		test_item_qty_after_sales = get_test_item_qty(pos_profile)
 		self.assertEqual(test_item_qty_after_sales, test_item_qty - 1)
 
-	def test_cancelling_of_pos_closing_entry(self):
+	def test_cancelling_of_pos_closing_entry(self) -> None:
 		test_user, pos_profile = init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
@@ -152,7 +154,7 @@ class TestPOSClosingEntry(ERPNextTestSuite):
 		pos_inv1.load_from_db()
 		self.assertEqual(pos_inv1.status, "Paid")
 
-	def test_pos_closing_for_required_accounting_dimension_in_pos_profile(self):
+	def test_pos_closing_for_required_accounting_dimension_in_pos_profile(self) -> None:
 		"""
 		test case to check whether we can create POS Closing Entry without mandatory accounting dimension
 		"""
@@ -193,7 +195,7 @@ class TestPOSClosingEntry(ERPNextTestSuite):
 		accounting_dimension_department.mandatory_for_bs = 0
 		accounting_dimension_department.save()
 
-	def test_merging_into_sales_invoice_for_batched_item(self):
+	def test_merging_into_sales_invoice_for_batched_item(self) -> None:
 		frappe.flags.print_message = False
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import (
 			init_user_and_profile,
@@ -290,7 +292,7 @@ class TestPOSClosingEntry(ERPNextTestSuite):
 		self.assertEqual(batch_qty_with_pos, 10.0)
 
 	@ERPNextTestSuite.change_settings("POS Settings", {"invoice_type": "Sales Invoice"})
-	def test_closing_entries_with_sales_invoice(self):
+	def test_closing_entries_with_sales_invoice(self) -> None:
 		test_user, pos_profile = init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
@@ -326,7 +328,7 @@ class TestPOSClosingEntry(ERPNextTestSuite):
 		pos_si2.reload()
 		self.assertEqual(pos_si2.pos_closing_entry, pcv_doc.name)
 
-	def test_sales_invoice_in_pos_invoice_mode(self):
+	def test_sales_invoice_in_pos_invoice_mode(self) -> None:
 		"""
 		Test Sales Invoice and Return Sales Invoice creation during POS Invoice mode.
 		"""
@@ -388,7 +390,7 @@ class TestPOSClosingEntry(ERPNextTestSuite):
 			self.assertIn(pos_rsi1.name, [d.sales_invoice for d in pcv_doc2.sales_invoices])
 			self.assertEqual(pcv_doc2.grand_total, 200)
 
-	def test_pos_invoice_in_sales_invoice_mode(self):
+	def test_pos_invoice_in_sales_invoice_mode(self) -> None:
 		"""
 		Test POS Invoice and Return POS Invoice creation during Sales Invoice mode.
 		"""

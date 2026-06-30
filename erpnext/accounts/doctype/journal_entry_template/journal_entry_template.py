@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -43,10 +45,10 @@ class JournalEntryTemplate(Document):
 		]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_party()
 
-	def validate_party(self):
+	def validate_party(self) -> None:
 		"""
 		Loop over all accounts and see if party and party type is set correctly
 		"""

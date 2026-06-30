@@ -3,13 +3,15 @@
 
 """Status computation and display helpers for Sales Invoice."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cint, flt, getdate, nowdate
 
 
 class StatusService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def set_status(

@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.utils import nowdate
@@ -11,14 +13,14 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestLedgerHealth(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
 		self.debit_to = "Debtors - _TC"
 		self.income_account = "Sales - _TC"
 		self.configure_monitoring_tool()
 
-	def configure_monitoring_tool(self):
+	def configure_monitoring_tool(self) -> None:
 		monitor_settings = frappe.get_doc("Ledger Health Monitor")
 		monitor_settings.enable_health_monitor = True
 		monitor_settings.enable_for_last_x_days = 60
@@ -29,12 +31,12 @@ class TestLedgerHealth(ERPNextTestSuite, AccountsTestMixin):
 			monitor_settings.append("companies", {"company": self.company})
 		monitor_settings.save()
 
-	def clear_old_entries(self):
+	def clear_old_entries(self) -> None:
 		super().clear_old_entries()
 		lh = qb.DocType("Ledger Health")
 		qb.from_(lh).delete().run()
 
-	def create_journal(self):
+	def create_journal(self) -> None:
 		je = frappe.new_doc("Journal Entry")
 		je.company = self.company
 		je.voucher_type = "Journal Entry"
@@ -52,7 +54,7 @@ class TestLedgerHealth(ERPNextTestSuite, AccountsTestMixin):
 		je.save().submit()
 		self.je = je
 
-	def test_debit_credit_mismatch(self):
+	def test_debit_credit_mismatch(self) -> None:
 		self.create_journal()
 
 		# manually cause debit-credit mismatch
@@ -80,7 +82,7 @@ class TestLedgerHealth(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(len(actual), 1)
 		self.assertEqual(expected, actual[0])
 
-	def test_gl_and_pl_mismatch(self):
+	def test_gl_and_pl_mismatch(self) -> None:
 		self.create_journal()
 
 		# manually cause GL and PL discrepancy

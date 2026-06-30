@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import datetime
 
 import frappe
@@ -44,24 +46,24 @@ class BankAccount(Document):
 		statement_password: DF.Password | None
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)
 
-	def autoname(self):
+	def autoname(self) -> None:
 		self.name = self.account_name + " - " + self.bank
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		delete_contact_and_address("Bank Account", self.name)
 
 		# Delete all bank balances
 		frappe.db.delete("Bank Account Balance", filters={"bank_account": self.name})
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_is_company_account()
 		self.update_default_bank_account()
 
-	def validate_is_company_account(self):
+	def validate_is_company_account(self) -> None:
 		if self.is_company_account:
 			if not self.company:
 				frappe.throw(_("Company is mandatory for company account"))
@@ -71,7 +73,7 @@ class BankAccount(Document):
 
 			self.validate_account()
 
-	def validate_account(self):
+	def validate_account(self) -> None:
 		if accounts := frappe.db.get_all(
 			"Bank Account", filters={"account": self.account, "name": ["!=", self.name]}, as_list=1
 		):
@@ -82,7 +84,7 @@ class BankAccount(Document):
 				)
 			)
 
-	def update_default_bank_account(self):
+	def update_default_bank_account(self) -> None:
 		if self.is_default and not self.disabled:
 			frappe.db.set_value(
 				"Bank Account",
@@ -189,7 +191,9 @@ def get_closing_balance_as_per_statement(bank_account: str, date: str):
 
 
 @frappe.whitelist()
-def set_closing_balance_as_per_statement(bank_account: str, date: str | datetime.date, balance: float):
+def set_closing_balance_as_per_statement(
+	bank_account: str, date: str | datetime.date, balance: float
+) -> None:
 	"""
 	Set the closing balance as per statement for a bank account and date
 	"""

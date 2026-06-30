@@ -1,13 +1,15 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestCostCenter(ERPNextTestSuite):
-	def test_cost_center_creation_against_child_node(self):
+	def test_cost_center_creation_against_child_node(self) -> None:
 		cost_center = frappe.get_doc(
 			{
 				"doctype": "Cost Center",
@@ -21,7 +23,7 @@ class TestCostCenter(ERPNextTestSuite):
 		self.assertRaises(frappe.ValidationError, cost_center.save)
 
 
-def create_cost_center(**args):
+def create_cost_center(**args) -> None:
 	args = frappe._dict(args)
 	if args.cost_center_name:
 		company = args.company or "_Test Company"

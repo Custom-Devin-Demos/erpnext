@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import re
 
 import frappe
@@ -84,7 +86,7 @@ class BankTransactionRule(Document):
 		transaction_type: DF.Literal["Any", "Withdrawal", "Deposit"]
 	# end: auto-generated types
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		"""Assign the next priority number for the new rule"""
 		if not self.priority:
 			# Get the highest priority for rules in the same company
@@ -98,7 +100,7 @@ class BankTransactionRule(Document):
 			# Set priority to 1 if no rules exist, otherwise increment by 1
 			self.priority = (highest_priority or 0) + 1
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.min_amount and self.max_amount:
 			if self.min_amount > self.max_amount:
 				frappe.throw(_("Min amount cannot be greater than max amount."))
@@ -153,7 +155,7 @@ class BankTransactionRule(Document):
 				if account_company != self.company:
 					frappe.throw(_("Account company does not match with the rule company."))
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		"""
 		Delete the matched rule from the bank transaction
 		"""
@@ -164,7 +166,7 @@ class BankTransactionRule(Document):
 		except Exception:
 			pass
 
-	def after_delete(self):
+	def after_delete(self) -> None:
 		"""
 		Rearrange the priorities of the rules
 		"""
@@ -225,7 +227,7 @@ class BankTransactionRule(Document):
 		return False
 
 
-def scheduler_run_rule_evaluation():
+def scheduler_run_rule_evaluation() -> None:
 	automatically_run_rules_on_unreconciled_transactions = frappe.db.get_single_value(
 		"Accounts Settings", "automatically_run_rules_on_unreconciled_transactions"
 	)
@@ -235,12 +237,12 @@ def scheduler_run_rule_evaluation():
 
 
 @frappe.whitelist(methods=["POST"])
-def run_rule_evaluation(force_evaluate: bool = False):
+def run_rule_evaluation(force_evaluate: bool = False) -> None:
 	frappe.has_permission("Bank Transaction", ptype="read", throw=True)
 	frappe.enqueue(method=_run_rule_evaluation, force_evaluate=force_evaluate)
 
 
-def _run_rule_evaluation(force_evaluate=False):
+def _run_rule_evaluation(force_evaluate: bool = False) -> None:
 	"""
 	Run the rule evaluation for all bank transactions
 

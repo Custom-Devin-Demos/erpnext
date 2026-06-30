@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from datetime import date
 
 import frappe
@@ -34,10 +36,10 @@ class SubscriptionPlan(Document):
 		product_price_id: DF.Data | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_interval_count()
 
-	def validate_interval_count(self):
+	def validate_interval_count(self) -> None:
 		if self.billing_interval_count < 1:
 			frappe.throw(_("Billing Interval Count cannot be less than 1"))
 

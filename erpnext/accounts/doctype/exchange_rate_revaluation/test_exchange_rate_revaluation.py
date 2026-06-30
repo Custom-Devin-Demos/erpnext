@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import functions
 from frappe.query_builder.utils import DocType
@@ -14,7 +16,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestExchangeRateRevaluation(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.item = "_Test Item"
 		self.customer = "_Test Customer"
@@ -22,7 +24,7 @@ class TestExchangeRateRevaluation(ERPNextTestSuite, AccountsTestMixin):
 		self.debtors_usd = "_Test Receivable USD - _TC"
 		self.set_system_and_company_settings()
 
-	def set_system_and_company_settings(self):
+	def set_system_and_company_settings(self) -> None:
 		# set number and currency precision
 		system_settings = frappe.get_doc("System Settings")
 		system_settings.float_precision = 2
@@ -40,7 +42,7 @@ class TestExchangeRateRevaluation(ERPNextTestSuite, AccountsTestMixin):
 		"Accounts Settings",
 		{"allow_multi_currency_invoices_against_single_party_account": 1, "allow_stale": 0},
 	)
-	def test_01_revaluation_of_forex_balance(self):
+	def test_01_revaluation_of_forex_balance(self) -> None:
 		"""
 		Test Forex account balance and Journal creation post Revaluation
 		"""
@@ -94,7 +96,7 @@ class TestExchangeRateRevaluation(ERPNextTestSuite, AccountsTestMixin):
 		"Accounts Settings",
 		{"allow_multi_currency_invoices_against_single_party_account": 1, "allow_stale": 0},
 	)
-	def test_02_accounts_only_with_base_currency_balance(self):
+	def test_02_accounts_only_with_base_currency_balance(self) -> None:
 		"""
 		Test Revaluation on Forex account with balance only in base currency
 		"""
@@ -167,7 +169,7 @@ class TestExchangeRateRevaluation(ERPNextTestSuite, AccountsTestMixin):
 		"Accounts Settings",
 		{"allow_multi_currency_invoices_against_single_party_account": 1, "allow_stale": 0},
 	)
-	def test_03_accounts_only_with_account_currency_balance(self):
+	def test_03_accounts_only_with_account_currency_balance(self) -> None:
 		"""
 		Test Revaluation on Forex account with balance only in account currency
 		"""
@@ -262,7 +264,7 @@ class TestExchangeRateRevaluation(ERPNextTestSuite, AccountsTestMixin):
 		"Accounts Settings",
 		{"allow_multi_currency_invoices_against_single_party_account": 1, "allow_stale": 0},
 	)
-	def test_04_get_account_details_function(self):
+	def test_04_get_account_details_function(self) -> None:
 		si = create_sales_invoice(
 			item=self.item,
 			company=self.company,

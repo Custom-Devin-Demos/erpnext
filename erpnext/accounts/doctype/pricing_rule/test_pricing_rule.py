@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
@@ -14,11 +16,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPricingRule(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		setup_pricing_rule_data()
 		self.enterClassContext(self.change_settings("Selling Settings", validate_selling_price=0))
 
-	def test_pricing_rule_for_discount(self):
+	def test_pricing_rule_for_discount(self) -> None:
 		from frappe import MandatoryError
 
 		from erpnext.stock.get_item_details import get_item_details
@@ -102,7 +104,7 @@ class TestPricingRule(ERPNextTestSuite):
 		details = get_item_details(args)
 		self.assertEqual(details.get("discount_percentage"), 15)
 
-	def test_pricing_rule_for_margin(self):
+	def test_pricing_rule_for_margin(self) -> None:
 		from erpnext.stock.get_item_details import get_item_details
 
 		test_record = {
@@ -154,7 +156,7 @@ class TestPricingRule(ERPNextTestSuite):
 		self.assertEqual(details.get("margin_type"), "Percentage")
 		self.assertEqual(details.get("margin_rate_or_amount"), 10)
 
-	def test_mixed_conditions_for_item_group(self):
+	def test_mixed_conditions_for_item_group(self) -> None:
 		for item in ["Mixed Cond Item 1", "Mixed Cond Item 2"]:
 			make_item(item, {"item_group": "Products"})
 			make_item_price(item, "_Test Price List", 100)
@@ -202,7 +204,7 @@ class TestPricingRule(ERPNextTestSuite):
 		details = get_item_details(args)
 		self.assertEqual(details.get("discount_percentage"), 10)
 
-	def test_unset_group_condition(self):
+	def test_unset_group_condition(self) -> None:
 		"""
 		If args are not set for group condition, then pricing rule should not be applied.
 		"""
@@ -252,7 +254,7 @@ class TestPricingRule(ERPNextTestSuite):
 		customer.territory = territory
 		customer.save()
 
-	def test_pricing_rule_for_variants(self):
+	def test_pricing_rule_for_variants(self) -> None:
 		from erpnext.stock.get_item_details import get_item_details
 
 		if not frappe.db.exists("Item", "Test Variant PRT"):
@@ -333,7 +335,7 @@ class TestPricingRule(ERPNextTestSuite):
 		details = get_item_details(args)
 		self.assertEqual(details.get("discount_percentage"), 17.5)
 
-	def test_pricing_rule_for_stock_qty(self):
+	def test_pricing_rule_for_stock_qty(self) -> None:
 		test_record = {
 			"doctype": "Pricing Rule",
 			"title": "_Test Pricing Rule",
@@ -375,7 +377,7 @@ class TestPricingRule(ERPNextTestSuite):
 		self.assertEqual(so.items[0].discount_percentage, 0)
 		self.assertEqual(so.items[0].rate, 100)
 
-	def test_pricing_rule_with_margin_and_discount(self):
+	def test_pricing_rule_with_margin_and_discount(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		make_pricing_rule(
 			selling=1, margin_type="Percentage", margin_rate_or_amount=10, discount_percentage=10
@@ -392,7 +394,7 @@ class TestPricingRule(ERPNextTestSuite):
 		self.assertEqual(item.discount_amount, 110)
 		self.assertEqual(item.rate, 990)
 
-	def test_pricing_rule_with_margin_and_discount_amount(self):
+	def test_pricing_rule_with_margin_and_discount_amount(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		make_pricing_rule(
 			selling=1,
@@ -413,7 +415,7 @@ class TestPricingRule(ERPNextTestSuite):
 		self.assertEqual(item.rate, 990)
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"allow_multiple_items": 1})
-	def test_pricing_rule_for_product_discount_on_same_item(self):
+	def test_pricing_rule_for_product_discount_on_same_item(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		test_record = {
 			"doctype": "Pricing Rule",
@@ -444,7 +446,7 @@ class TestPricingRule(ERPNextTestSuite):
 		self.assertEqual(so.items[1].is_free_item, 1)
 		self.assertEqual(so.items[1].item_code, "_Test Item")
 
-	def test_pricing_rule_for_product_discount_on_different_item(self):
+	def test_pricing_rule_for_product_discount_on_different_item(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		test_record = {
 			"doctype": "Pricing Rule",
@@ -476,7 +478,7 @@ class TestPricingRule(ERPNextTestSuite):
 		self.assertEqual(so.items[1].is_free_item, 1)
 		self.assertEqual(so.items[1].item_code, "_Test Item 2")
 
-	def test_dont_enforce_free_item_qty(self):
+	def test_dont_enforce_free_item_qty(self) -> None:
 		# this test is only for testing non-enforcement as all other tests in this file already test with enforcement
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		test_record = {
@@ -524,7 +526,7 @@ class TestPricingRule(ERPNextTestSuite):
 		so.reload()
 		self.assertEqual(len(so.items), 1)
 
-	def test_cumulative_pricing_rule(self):
+	def test_cumulative_pricing_rule(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Cumulative Pricing Rule")
 		test_record = {
 			"doctype": "Pricing Rule",
@@ -572,7 +574,7 @@ class TestPricingRule(ERPNextTestSuite):
 
 		self.assertTrue(details)
 
-	def test_pricing_rule_for_condition(self):
+	def test_pricing_rule_for_condition(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 
 		make_pricing_rule(
@@ -603,7 +605,7 @@ class TestPricingRule(ERPNextTestSuite):
 		item = si.items[0]
 		self.assertEqual(item.rate, 900)
 
-	def test_multiple_pricing_rules(self):
+	def test_multiple_pricing_rules(self) -> None:
 		make_pricing_rule(
 			discount_percentage=20,
 			selling=1,
@@ -625,7 +627,7 @@ class TestPricingRule(ERPNextTestSuite):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 2")
 
-	def test_multiple_pricing_rules_with_apply_discount_on_discounted_rate(self):
+	def test_multiple_pricing_rules_with_apply_discount_on_discounted_rate(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 
 		make_pricing_rule(
@@ -651,7 +653,7 @@ class TestPricingRule(ERPNextTestSuite):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 2")
 
-	def test_item_price_with_pricing_rule(self):
+	def test_item_price_with_pricing_rule(self) -> None:
 		item = make_item("Water Flask")
 		make_item_price("Water Flask", "_Test Price List", 100)
 
@@ -690,7 +692,7 @@ class TestPricingRule(ERPNextTestSuite):
 		frappe.get_doc("Item Price", {"item_code": "Water Flask"}).delete()
 		item.delete()
 
-	def test_item_price_with_blank_uom_pricing_rule(self):
+	def test_item_price_with_blank_uom_pricing_rule(self) -> None:
 		properties = {
 			"item_code": "Item Blank UOM",
 			"stock_uom": "Nos",
@@ -747,7 +749,7 @@ class TestPricingRule(ERPNextTestSuite):
 
 		item.delete()
 
-	def test_item_price_with_selling_uom_pricing_rule(self):
+	def test_item_price_with_selling_uom_pricing_rule(self) -> None:
 		properties = {
 			"item_code": "Item UOM other than Stock",
 			"stock_uom": "Nos",
@@ -805,7 +807,7 @@ class TestPricingRule(ERPNextTestSuite):
 
 		item.delete()
 
-	def test_item_group_price_with_blank_uom_pricing_rule(self):
+	def test_item_group_price_with_blank_uom_pricing_rule(self) -> None:
 		group = frappe.get_doc(doctype="Item Group", item_group_name="_Test Pricing Rule Item Group")
 		group.save()
 		properties = {
@@ -865,7 +867,7 @@ class TestPricingRule(ERPNextTestSuite):
 		item.delete()
 		group.delete()
 
-	def test_item_group_price_with_selling_uom_pricing_rule(self):
+	def test_item_group_price_with_selling_uom_pricing_rule(self) -> None:
 		group = frappe.get_doc(doctype="Item Group", item_group_name="_Test Pricing Rule Item Group UOM")
 		group.save()
 		properties = {
@@ -931,7 +933,7 @@ class TestPricingRule(ERPNextTestSuite):
 		item.delete()
 		group.delete()
 
-	def test_pricing_rule_for_different_currency(self):
+	def test_pricing_rule_for_different_currency(self) -> None:
 		make_item("Test Sanitizer Item")
 
 		pricing_rule_record = {
@@ -1005,7 +1007,7 @@ class TestPricingRule(ERPNextTestSuite):
 		details = get_item_details(args)
 		self.assertEqual(details.price_list_rate, 100.0)
 
-	def test_pricing_rule_for_transaction(self):
+	def test_pricing_rule_for_transaction(self) -> None:
 		make_item("Water Flask 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		make_pricing_rule(
@@ -1028,7 +1030,7 @@ class TestPricingRule(ERPNextTestSuite):
 		for doc in [si, si1]:
 			doc.delete()
 
-	def test_pricing_rule_for_transaction_with_condition(self):
+	def test_pricing_rule_for_transaction_with_condition(self) -> None:
 		make_item("PR Transaction Condition")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		make_pricing_rule(
@@ -1052,7 +1054,7 @@ class TestPricingRule(ERPNextTestSuite):
 		for doc in [si, si1]:
 			doc.delete()
 
-	def test_remove_pricing_rule(self):
+	def test_remove_pricing_rule(self) -> None:
 		item = make_item("Water Flask")
 		make_item_price("Water Flask", "_Test Price List", 100)
 
@@ -1094,7 +1096,7 @@ class TestPricingRule(ERPNextTestSuite):
 		frappe.get_doc("Item Price", {"item_code": "Water Flask"}).delete()
 		item.delete()
 
-	def test_multiple_pricing_rules_with_min_qty(self):
+	def test_multiple_pricing_rules_with_min_qty(self) -> None:
 		make_pricing_rule(
 			discount_percentage=20,
 			selling=1,
@@ -1126,7 +1128,7 @@ class TestPricingRule(ERPNextTestSuite):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 2")
 
-	def test_pricing_rule_for_other_items_cond_with_amount(self):
+	def test_pricing_rule_for_other_items_cond_with_amount(self) -> None:
 		item = make_item("Water Flask New")
 		other_item = make_item("Other Water Flask New")
 		make_item_price(item.name, "_Test Price List", 100)
@@ -1189,7 +1191,7 @@ class TestPricingRule(ERPNextTestSuite):
 		rule.delete()
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"allow_multiple_items": 1})
-	def test_pricing_rule_for_product_free_item_rounded_qty_and_recursion(self):
+	def test_pricing_rule_for_product_free_item_rounded_qty_and_recursion(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		test_record = {
 			"doctype": "Pricing Rule",
@@ -1235,7 +1237,7 @@ class TestPricingRule(ERPNextTestSuite):
 		self.assertEqual(len(so.items), 1)
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"allow_multiple_items": 1})
-	def test_pricing_rule_for_product_free_item_round_free_qty(self):
+	def test_pricing_rule_for_product_free_item_round_free_qty(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		test_record = {
 			"doctype": "Pricing Rule",
@@ -1274,7 +1276,7 @@ class TestPricingRule(ERPNextTestSuite):
 		self.assertEqual(so.items[1].item_code, "_Test Item")
 		self.assertEqual(so.items[1].qty, 10)
 
-	def test_apply_multiple_pricing_rules_for_discount_percentage_and_amount(self):
+	def test_apply_multiple_pricing_rules_for_discount_percentage_and_amount(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 2")
 		test_record = {
@@ -1327,7 +1329,7 @@ class TestPricingRule(ERPNextTestSuite):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 2")
 
-	def test_priority_of_multiple_pricing_rules(self):
+	def test_priority_of_multiple_pricing_rules(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 2")
 
@@ -1383,7 +1385,7 @@ class TestPricingRule(ERPNextTestSuite):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 2")
 
-	def test_pricing_rules_with_and_without_apply_multiple(self):
+	def test_pricing_rules_with_and_without_apply_multiple(self) -> None:
 		item = make_item("PR Item 99")
 
 		test_records = [
@@ -1445,7 +1447,7 @@ class TestPricingRule(ERPNextTestSuite):
 			item_group_rule.delete()
 			item_code_rule.delete()
 
-	def test_validation_on_mixed_condition_with_recursion(self):
+	def test_validation_on_mixed_condition_with_recursion(self) -> None:
 		pricing_rule = make_pricing_rule(
 			discount_percentage=10,
 			selling=1,
@@ -1457,7 +1459,7 @@ class TestPricingRule(ERPNextTestSuite):
 		pricing_rule.is_recursive = True
 		self.assertRaises(frappe.ValidationError, pricing_rule.save)
 
-	def test_ignore_pricing_rule_for_credit_note(self):
+	def test_ignore_pricing_rule_for_credit_note(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		pricing_rule = make_pricing_rule(
 			discount_percentage=20,
@@ -1488,7 +1490,7 @@ class TestPricingRule(ERPNextTestSuite):
 		credit_note.delete()
 		si.cancel()
 
-	def test_ignore_pricing_rule_for_debit_note(self):
+	def test_ignore_pricing_rule_for_debit_note(self) -> None:
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		pricing_rule = make_pricing_rule(
 			discount_percentage=20,
@@ -1578,14 +1580,14 @@ def make_pricing_rule(**args):
 	return doc
 
 
-def setup_pricing_rule_data():
+def setup_pricing_rule_data() -> None:
 	if not frappe.db.exists("UTM Campaign", "_Test Campaign"):
 		frappe.get_doc(
 			{"doctype": "UTM Campaign", "description": "_Test Campaign", "name": "_Test Campaign"}
 		).insert()
 
 
-def make_item_price(item, price_list_name, item_price):
+def make_item_price(item, price_list_name, item_price) -> None:
 	frappe.get_doc(
 		{
 			"doctype": "Item Price",

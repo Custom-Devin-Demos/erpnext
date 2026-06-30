@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -15,7 +17,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
 		self.supplier = "_Test Supplier"
@@ -25,7 +27,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 		self.cash = "Cash - _TC"
 		self.debtors_usd = "_Test Receivable USD - _TC"
 
-	def create_sales_invoice(self, do_not_submit=False):
+	def create_sales_invoice(self, do_not_submit: bool = False):
 		si = create_sales_invoice(
 			item=self.item,
 			company=self.company,
@@ -63,7 +65,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 		)
 		return so
 
-	def test_01_unreconcile_invoice(self):
+	def test_01_unreconcile_invoice(self) -> None:
 		si1 = self.create_sales_invoice()
 		si2 = self.create_sales_invoice()
 
@@ -110,7 +112,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(len(pe.references), 1)
 		self.assertEqual(pe.unallocated_amount, 100)
 
-	def test_02_unreconcile_one_payment_among_multi_payments(self):
+	def test_02_unreconcile_one_payment_among_multi_payments(self) -> None:
 		"""
 		Scenario: 2 payments, both split against 2 different invoices
 		Unreconcile only one payment from one invoice
@@ -177,7 +179,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(pe1.unallocated_amount, 0)
 		self.assertEqual(pe2.unallocated_amount, 50)
 
-	def test_03_unreconciliation_on_multi_currency_invoice(self):
+	def test_03_unreconciliation_on_multi_currency_invoice(self) -> None:
 		self.create_customer("_Test MC Customer USD", "USD")
 		si1 = self.create_sales_invoice(do_not_submit=True)
 		si1.currency = "USD"
@@ -242,7 +244,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 			0,
 		)
 
-	def test_04_unreconciliation_on_multi_currency_invoice(self):
+	def test_04_unreconciliation_on_multi_currency_invoice(self) -> None:
 		"""
 		2 payments split against 2 foreign currency invoices
 		"""
@@ -331,7 +333,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 			1,
 		)
 
-	def test_05_unreconcile_order(self):
+	def test_05_unreconcile_order(self) -> None:
 		so = self.create_sales_order()
 
 		pe = self.create_payment_entry()
@@ -373,7 +375,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 		so.reload()
 		self.assertEqual(so.advance_paid, 0)
 
-	def test_06_unreconcile_advance_from_payment_entry(self):
+	def test_06_unreconcile_advance_from_payment_entry(self) -> None:
 		so1 = self.create_sales_order()
 		so2 = self.create_sales_order()
 
@@ -423,7 +425,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 
 		self.disable_advance_as_liability()
 
-	def test_07_adv_from_so_to_invoice(self):
+	def test_07_adv_from_so_to_invoice(self) -> None:
 		frappe.db.set_value("Company", self.company, "book_advance_payments_in_separate_party_account", 1)
 		frappe.db.set_value(
 			"Company", self.company, "default_advance_received_account", "Advance Received - _TC"
@@ -489,7 +491,7 @@ class TestUnreconcilePayment(ERPNextTestSuite, AccountsTestMixin):
 
 		self.disable_advance_as_liability()
 
-	def test_unreconcile_advance_from_journal_entry(self):
+	def test_unreconcile_advance_from_journal_entry(self) -> None:
 		po = create_purchase_order(
 			company=self.company,
 			supplier=self.supplier,

@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from datetime import date
 
 import frappe
@@ -40,15 +42,15 @@ class ExchangeRateRevaluation(Document):
 		total_gain_loss: DF.Currency
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_rounding_loss_allowance()
 		self.set_total_gain_loss()
 
-	def validate_rounding_loss_allowance(self):
+	def validate_rounding_loss_allowance(self) -> None:
 		if self.rounding_loss_allowance < 0 or self.rounding_loss_allowance >= 1:
 			frappe.throw(_("Rounding Loss Allowance should be between 0 and 1"))
 
-	def set_total_gain_loss(self):
+	def set_total_gain_loss(self) -> None:
 		total_gain_loss = 0
 
 		gain_loss_booked = 0
@@ -71,14 +73,14 @@ class ExchangeRateRevaluation(Document):
 		self.gain_loss_unbooked = gain_loss_unbooked
 		self.total_gain_loss = flt(total_gain_loss, self.precision("total_gain_loss"))
 
-	def validate_mandatory(self):
+	def validate_mandatory(self) -> None:
 		if not (self.company and self.posting_date):
 			frappe.throw(_("Please select Company and Posting Date to get entries"))
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.remove_accounts_without_gain_loss()
 
-	def remove_accounts_without_gain_loss(self):
+	def remove_accounts_without_gain_loss(self) -> None:
 		self.accounts = [account for account in self.accounts if account.gain_loss]
 
 		if not self.accounts:
@@ -90,7 +92,7 @@ class ExchangeRateRevaluation(Document):
 			indicator="yellow",
 		)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = "GL Entry"
 
 	@frappe.whitelist()
@@ -131,7 +133,7 @@ class ExchangeRateRevaluation(Document):
 
 		return True
 
-	def fetch_and_calculate_accounts_data(self):
+	def fetch_and_calculate_accounts_data(self) -> None:
 		accounts = self.get_accounts_data()
 		if accounts:
 			for acc in accounts:
@@ -328,7 +330,7 @@ class ExchangeRateRevaluation(Document):
 
 		return accounts
 
-	def throw_invalid_response_message(self, account_details):
+	def throw_invalid_response_message(self, account_details) -> None:
 		if account_details:
 			message = _("No outstanding invoices require exchange rate revaluation")
 		else:

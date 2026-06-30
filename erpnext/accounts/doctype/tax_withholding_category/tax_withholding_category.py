@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
@@ -37,13 +39,13 @@ class TaxWithholdingCategory(Document):
 		tax_on_excess_amount: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		# TODO: Disable single threshold if tax on excess is enabled
 		self.validate_dates()
 		self.validate_companies_and_accounts()
 		self.validate_thresholds()
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		group_rates = defaultdict(list)
 		for d in self.get("rates"):
 			if getdate(d.from_date) >= getdate(d.to_date):
@@ -65,7 +67,7 @@ class TaxWithholdingCategory(Document):
 
 				last_to_date = d.to_date
 
-	def validate_companies_and_accounts(self):
+	def validate_companies_and_accounts(self) -> None:
 		existing_accounts = set()
 		companies = set()
 		for d in self.get("accounts"):
@@ -81,7 +83,7 @@ class TaxWithholdingCategory(Document):
 			validate_account_head(d.idx, d.get("account"), d.get("company"))
 			existing_accounts.add(d.get("account"))
 
-	def validate_thresholds(self):
+	def validate_thresholds(self) -> None:
 		for d in self.get("rates"):
 			if d.cumulative_threshold and d.single_threshold and d.cumulative_threshold < d.single_threshold:
 				frappe.throw(
@@ -120,7 +122,7 @@ class TaxWithholdingDetails:
 		party_type: str,
 		party: str,
 		company: str,
-	):
+	) -> None:
 		self.tax_withholding_categories = tax_withholding_categories
 		self.tax_withholding_group = tax_withholding_group
 		self.posting_date = posting_date

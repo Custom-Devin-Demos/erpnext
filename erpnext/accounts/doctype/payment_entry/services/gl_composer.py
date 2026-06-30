@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -37,12 +39,12 @@ class PaymentEntryGLComposer(BaseGLComposer):
 		self.set_transaction_currency_and_rate_in_gl_map(gl_entries, doc)
 		return gl_entries
 
-	def set_transaction_currency_and_rate_in_gl_map(self, gl_entries, doc):
+	def set_transaction_currency_and_rate_in_gl_map(self, gl_entries, doc) -> None:
 		for gle in gl_entries:
 			gle.setdefault("transaction_currency", doc.transaction_currency)
 			gle.setdefault("transaction_exchange_rate", doc.transaction_exchange_rate)
 
-	def add_party_gl_entries(self, gl_entries):
+	def add_party_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		if not doc.party_account:
 			return
@@ -169,7 +171,7 @@ class PaymentEntryGLComposer(BaseGLComposer):
 				)
 			gl_entries.append(gle)
 
-	def add_bank_gl_entries(self, gl_entries):
+	def add_bank_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		if doc.payment_type in ("Pay", "Internal Transfer"):
 			gl_entries.append(
@@ -207,7 +209,7 @@ class PaymentEntryGLComposer(BaseGLComposer):
 				)
 			)
 
-	def add_tax_gl_entries(self, gl_entries):
+	def add_tax_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		for d in doc.get("taxes"):
 			account_currency = get_account_currency(d.account_head)
@@ -273,7 +275,7 @@ class PaymentEntryGLComposer(BaseGLComposer):
 					)
 				)
 
-	def add_deductions_gl_entries(self, gl_entries):
+	def add_deductions_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		for d in doc.get("deductions"):
 			if not d.amount:

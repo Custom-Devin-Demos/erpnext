@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.utils import add_days, flt, nowdate
@@ -37,7 +39,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			)
 		return journals
 
-	def test_payment_entry_against_order(self):
+	def test_payment_entry_against_order(self) -> None:
 		so = make_sales_order()
 		pe = get_payment_entry("Sales Order", so.name, bank_account="_Test Cash - _TC")
 		pe.paid_from = "Debtors - _TC"
@@ -60,7 +62,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		so_advance_paid = frappe.db.get_value("Sales Order", so.name, "advance_paid")
 		self.assertEqual(so_advance_paid, 0)
 
-	def test_payment_against_sales_order_usd_to_inr(self):
+	def test_payment_against_sales_order_usd_to_inr(self) -> None:
 		so = make_sales_order(
 			customer="_Test Customer USD", currency="USD", qty=1, rate=100, do_not_submit=True
 		)
@@ -92,7 +94,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		so_advance_paid = frappe.db.get_value("Sales Order", so.name, "advance_paid")
 		self.assertEqual(so_advance_paid, 0)
 
-	def test_payment_entry_for_blocked_supplier_invoice(self):
+	def test_payment_entry_for_blocked_supplier_invoice(self) -> None:
 		supplier = frappe.get_doc("Supplier", "_Test Supplier")
 		supplier.on_hold = 1
 		supplier.hold_type = "Invoices"
@@ -103,7 +105,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		supplier.on_hold = 0
 		supplier.save()
 
-	def test_payment_entry_for_blocked_supplier_payments(self):
+	def test_payment_entry_for_blocked_supplier_payments(self) -> None:
 		supplier = frappe.get_doc("Supplier", "_Test Supplier")
 		supplier.on_hold = 1
 		supplier.hold_type = "Payments"
@@ -122,7 +124,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		supplier.on_hold = 0
 		supplier.save()
 
-	def test_payment_entry_for_blocked_supplier_payments_today_date(self):
+	def test_payment_entry_for_blocked_supplier_payments_today_date(self) -> None:
 		supplier = frappe.get_doc("Supplier", "_Test Supplier")
 		supplier.on_hold = 1
 		supplier.hold_type = "Payments"
@@ -142,7 +144,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		supplier.on_hold = 0
 		supplier.save()
 
-	def test_payment_entry_for_blocked_supplier_payments_past_date(self):
+	def test_payment_entry_for_blocked_supplier_payments_past_date(self) -> None:
 		# this test is meant to fail only if something fails in the try block
 		with self.assertRaises(Exception):
 			try:
@@ -163,7 +165,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			else:
 				raise Exception
 
-	def test_payment_entry_against_si_usd_to_usd(self):
+	def test_payment_entry_against_si_usd_to_usd(self) -> None:
 		si = create_sales_invoice(
 			customer="_Test Customer USD",
 			debit_to="_Test Receivable USD - _TC",
@@ -195,7 +197,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		outstanding_amount = flt(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"))
 		self.assertEqual(outstanding_amount, 100)
 
-	def test_reference_outstanding_amount_on_advance_pull(self):
+	def test_reference_outstanding_amount_on_advance_pull(self) -> None:
 		from erpnext.selling.doctype.sales_order.mapper import make_sales_invoice
 
 		so = make_sales_order(qty=1, rate=1000)
@@ -219,7 +221,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(pe.references[0].reference_name, si.name)
 		self.assertEqual(pe.references[0].outstanding_amount, si.outstanding_amount)
 
-	def test_payment_entry_against_pi(self):
+	def test_payment_entry_against_pi(self) -> None:
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier USD",
 			debit_to="_Test Payable USD - _TC",
@@ -246,7 +248,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		outstanding_amount = flt(frappe.db.get_value("Sales Invoice", pi.name, "outstanding_amount"))
 		self.assertEqual(outstanding_amount, 0)
 
-	def test_payment_against_sales_invoice_to_check_status(self):
+	def test_payment_against_sales_invoice_to_check_status(self) -> None:
 		si = create_sales_invoice(
 			customer="_Test Customer USD",
 			debit_to="_Test Receivable USD - _TC",
@@ -275,7 +277,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(flt(outstanding_amount), 100)
 		self.assertEqual(status, "Unpaid")
 
-	def test_payment_entry_against_payment_terms(self):
+	def test_payment_entry_against_payment_terms(self) -> None:
 		si = create_sales_invoice(do_not_save=1, qty=1, rate=200)
 		create_payment_terms_template()
 		si.payment_terms_template = "Test Receivable Template"
@@ -303,7 +305,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(si.payment_schedule[0].paid_amount, 200.0)
 		self.assertEqual(si.payment_schedule[1].paid_amount, 36.0)
 
-	def test_payment_entry_against_payment_terms_with_discount_on_pi(self):
+	def test_payment_entry_against_payment_terms_with_discount_on_pi(self) -> None:
 		pi = make_purchase_invoice(do_not_save=1)
 		create_payment_terms_template_with_discount()
 		pi.payment_terms_template = "Test Discount Template"
@@ -345,7 +347,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(pe.deductions[0].amount, -29.5)
 		self.assertEqual(pe.difference_amount, 0)
 
-	def test_payment_entry_against_payment_terms_with_discount(self):
+	def test_payment_entry_against_payment_terms_with_discount(self) -> None:
 		si = create_sales_invoice(do_not_save=1, qty=1, rate=200)
 		create_payment_terms_template_with_discount()
 		si.payment_terms_template = "Test Discount Template"
@@ -391,7 +393,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(si.payment_schedule[0].outstanding, 0)
 		self.assertEqual(si.payment_schedule[0].discounted_amount, 23.6)
 
-	def test_payment_entry_against_payment_terms_with_discount_amount(self):
+	def test_payment_entry_against_payment_terms_with_discount_amount(self) -> None:
 		si = create_sales_invoice(do_not_save=1, qty=1, rate=200)
 
 		si.payment_terms_template = "Test Discount Amount Template"
@@ -455,7 +457,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 	)
 	def test_payment_entry_multicurrency_si_with_base_currency_accounting_early_payment_discount(
 		self,
-	):
+	) -> None:
 		"""
 		1. Multi-currency SI with single currency accounting (company currency)
 		2. PE with early payment discount
@@ -509,7 +511,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		outstanding_amount = flt(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"))
 		self.assertEqual(outstanding_amount, 0)
 
-	def test_payment_entry_multicurrency_accounting_si_with_early_payment_discount(self):
+	def test_payment_entry_multicurrency_accounting_si_with_early_payment_discount(self) -> None:
 		"""
 		1. Multi-currency SI with multi-currency accounting
 		2. PE with early payment discount and also exchange loss
@@ -568,7 +570,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		outstanding_amount = flt(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"))
 		self.assertEqual(outstanding_amount, 0)
 
-	def test_payment_against_purchase_invoice_to_check_status(self):
+	def test_payment_against_purchase_invoice_to_check_status(self) -> None:
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier USD",
 			debit_to="_Test Payable USD - _TC",
@@ -599,7 +601,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(flt(outstanding_amount), 250)
 		self.assertEqual(status, "Unpaid")
 
-	def test_payment_entry_against_si_usd_to_inr(self):
+	def test_payment_entry_against_si_usd_to_inr(self) -> None:
 		si = create_sales_invoice(
 			customer="_Test Customer USD",
 			debit_to="_Test Receivable USD - _TC",
@@ -635,7 +637,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		outstanding_amount = flt(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"))
 		self.assertEqual(outstanding_amount, 80)
 
-	def test_payment_entry_against_si_usd_to_usd_with_deduction_in_base_currency(self):
+	def test_payment_entry_against_si_usd_to_usd_with_deduction_in_base_currency(self) -> None:
 		si = create_sales_invoice(
 			customer="_Test Customer USD",
 			debit_to="_Test Receivable USD - _TC",
@@ -665,7 +667,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		# payment entry will not be generating difference amount
 		self.assertEqual(flt(pe.references[0].exchange_gain_loss, 2), -94.74)
 
-	def test_payment_entry_retrieves_last_exchange_rate(self):
+	def test_payment_entry_retrieves_last_exchange_rate(self) -> None:
 		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import save_new_records
 
 		self.load_test_records("Currency Exchange")
@@ -691,7 +693,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 
 		self.assertEqual(pe.source_exchange_rate, 65.1, f"{pe.source_exchange_rate} is not equal to {65.1}")
 
-	def test_internal_transfer_usd_to_inr(self):
+	def test_internal_transfer_usd_to_inr(self) -> None:
 		pe = frappe.new_doc("Payment Entry")
 		pe.payment_type = "Internal Transfer"
 		pe.company = "_Test Company"
@@ -726,7 +728,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 
 		self.validate_gl_entries(pe.name, expected_gle)
 
-	def test_payment_against_negative_sales_invoice(self):
+	def test_payment_against_negative_sales_invoice(self) -> None:
 		si1 = create_sales_invoice()
 
 		# create full payment entry against si1
@@ -806,7 +808,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		outstanding_amount = flt(frappe.db.get_value("Sales Invoice", si1.name, "outstanding_amount"))
 		self.assertEqual(outstanding_amount, -100)
 
-	def validate_gl_entries(self, voucher_no, expected_gle):
+	def validate_gl_entries(self, voucher_no, expected_gle) -> None:
 		gl_entries = self.get_gle(voucher_no)
 
 		self.assertTrue(gl_entries)
@@ -825,7 +827,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			order_by="account asc",
 		)
 
-	def test_payment_entry_write_off_difference(self):
+	def test_payment_entry_write_off_difference(self) -> None:
 		si = create_sales_invoice()
 		pe = get_payment_entry("Sales Invoice", si.name, bank_account="_Test Cash - _TC")
 		pe.reference_no = "1"
@@ -858,7 +860,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 
 		self.validate_gl_entries(pe.name, expected_gle)
 
-	def test_payment_entry_exchange_gain_loss(self):
+	def test_payment_entry_exchange_gain_loss(self) -> None:
 		si = create_sales_invoice(
 			customer="_Test Customer USD",
 			debit_to="_Test Receivable USD - _TC",
@@ -894,7 +896,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		outstanding_amount = flt(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"))
 		self.assertEqual(outstanding_amount, 0)
 
-	def test_payment_entry_against_sales_invoice_with_cost_centre(self):
+	def test_payment_entry_against_sales_invoice_with_cost_centre(self) -> None:
 		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 
 		cost_center = "_Test Cost Center for BS Account - _TC"
@@ -937,7 +939,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		for gle in gl_entries:
 			self.assertEqual(expected_values[gle.account]["cost_center"], gle.cost_center)
 
-	def test_payment_entry_against_purchase_invoice_with_cost_center(self):
+	def test_payment_entry_against_purchase_invoice_with_cost_center(self) -> None:
 		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 
 		cost_center = "_Test Cost Center for BS Account - _TC"
@@ -980,7 +982,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		for gle in gl_entries:
 			self.assertEqual(expected_values[gle.account]["cost_center"], gle.cost_center)
 
-	def test_payment_entry_account_and_party_balance_with_cost_center(self):
+	def test_payment_entry_account_and_party_balance_with_cost_center(self) -> None:
 		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 		from erpnext.accounts.utils import get_balance_on
 
@@ -1014,7 +1016,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(flt(expected_party_balance), party_balance)
 		self.assertEqual(flt(expected_party_account_balance, 2), flt(party_account_balance, 2))
 
-	def test_gl_of_multi_currency_payment_transaction(self):
+	def test_gl_of_multi_currency_payment_transaction(self) -> None:
 		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import save_new_records
 
 		self.load_test_records("Currency Exchange")
@@ -1062,7 +1064,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		)
 		self.assertEqual(gl_entries, expected_gl_entries)
 
-	def test_multi_currency_payment_entry_with_taxes(self):
+	def test_multi_currency_payment_entry_with_taxes(self) -> None:
 		payment_entry = create_payment_entry(
 			party="_Test Supplier USD", paid_to="_Test Payable USD - _TC", save=True
 		)
@@ -1083,7 +1085,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			flt(payment_entry.total_taxes_and_charges, 2), flt(10 / payment_entry.target_exchange_rate, 2)
 		)
 
-	def test_gl_of_multi_currency_payment_with_taxes(self):
+	def test_gl_of_multi_currency_payment_with_taxes(self) -> None:
 		frappe.db.set_single_value("Accounts Settings", "merge_similar_account_heads", 1)
 		payment_entry = create_payment_entry(
 			party="_Test Supplier USD", paid_to="_Test Payable USD - _TC", save=True
@@ -1124,7 +1126,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 
 		self.assertEqual(gl_entries, expected_gl_entries)
 
-	def test_payment_entry_with_inclusive_tax(self):
+	def test_payment_entry_with_inclusive_tax(self) -> None:
 		# inclusive tax built server-side: base_tax_amount is None until apply_taxes()
 		payment_entry = create_payment_entry(paid_amount=1180)
 		payment_entry.append(
@@ -1145,7 +1147,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(flt(payment_entry.total_taxes_and_charges, 2), 180.0)
 		self.assertEqual(flt(payment_entry.unallocated_amount, 2), 1000.0)
 
-	def test_payment_entry_against_onhold_purchase_invoice(self):
+	def test_payment_entry_against_onhold_purchase_invoice(self) -> None:
 		pi = make_purchase_invoice()
 
 		pe = get_payment_entry("Purchase Invoice", pi.name, bank_account="_Test Bank USD - _TC")
@@ -1160,11 +1162,11 @@ class TestPaymentEntry(ERPNextTestSuite):
 
 		self.assertIn("is on hold", str(err.exception).lower())
 
-	def test_payment_entry_for_employee(self):
+	def test_payment_entry_for_employee(self) -> None:
 		employee = make_employee("test_payment_entry@salary.com", company="_Test Company")
 		create_payment_entry(party_type="Employee", party=employee, save=True)
 
-	def test_duplicate_payment_entry_allocate_amount(self):
+	def test_duplicate_payment_entry_allocate_amount(self) -> None:
 		si = create_sales_invoice()
 
 		pe_draft = get_payment_entry("Sales Invoice", si.name)
@@ -1175,7 +1177,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, pe_draft.submit)
 
-	def test_duplicate_payment_entry_partial_allocate_amount(self):
+	def test_duplicate_payment_entry_partial_allocate_amount(self) -> None:
 		si = create_sales_invoice()
 
 		pe_draft = get_payment_entry("Sales Invoice", si.name)
@@ -1188,7 +1190,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, pe_draft.submit)
 
-	def test_details_update_on_reference_table(self):
+	def test_details_update_on_reference_table(self) -> None:
 		from erpnext.accounts.party import get_party_account
 
 		so = make_sales_order(
@@ -1226,7 +1228,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			"allow_multi_currency_invoices_against_single_party_account": 1,
 		},
 	)
-	def test_overallocation_validation_on_payment_terms(self):
+	def test_overallocation_validation_on_payment_terms(self) -> None:
 		"""
 		Validate Allocation on Payment Entry based on Payment Schedule. Upon overallocation, validation error must be thrown.
 
@@ -1321,7 +1323,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			"allow_multi_currency_invoices_against_single_party_account": 1,
 		},
 	)
-	def test_overallocation_validation_shouldnt_misfire(self):
+	def test_overallocation_validation_shouldnt_misfire(self) -> None:
 		"""
 		Overallocation validation shouldn't fire for Template without "Allocate Payment based on Payment Terms" enabled
 
@@ -1359,7 +1361,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		template.allocate_payment_based_on_payment_terms = 1
 		template.save()
 
-	def test_allocation_validation_for_sales_order(self):
+	def test_allocation_validation_for_sales_order(self) -> None:
 		so = make_sales_order(do_not_save=True)
 		so.items[0].rate = 99.55
 		so.save().submit()
@@ -1377,7 +1379,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		so.reload()
 		self.assertEqual(so.advance_paid, so.rounded_total)
 
-	def test_outstanding_invoices_api(self):
+	def test_outstanding_invoices_api(self) -> None:
 		"""
 		Test if `get_outstanding_reference_documents` fetches invoices in the right order.
 		"""
@@ -1414,7 +1416,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(references[1].payment_term, "Basic Amount Receivable")
 		self.assertEqual(references[2].payment_term, "Tax Receivable")
 
-	def test_receive_payment_from_payable_party_type(self):
+	def test_receive_payment_from_payable_party_type(self) -> None:
 		"""
 		Checks GL entries generated while receiving payments from a Payable Party Type.
 		"""
@@ -1434,7 +1436,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		]
 		self.check_gl_entries()
 
-	def test_payment_against_partial_return_invoice(self):
+	def test_payment_against_partial_return_invoice(self) -> None:
 		"""
 		Checks GL entries generated for partial return invoice payments.
 		"""
@@ -1483,7 +1485,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		]
 		self.check_gl_entries()
 
-	def test_ledger_entries_for_advance_as_liability(self):
+	def test_ledger_entries_for_advance_as_liability(self) -> None:
 		company = "_Test Company"
 
 		advance_account = create_account(
@@ -1605,7 +1607,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.check_gl_entries()
 		self.check_pl_entries()
 
-	def test_advance_as_liability_against_order(self):
+	def test_advance_as_liability_against_order(self) -> None:
 		from erpnext.buying.doctype.purchase_order.mapper import (
 			make_purchase_invoice as _make_purchase_invoice,
 		)
@@ -1667,7 +1669,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.voucher_no = pe.name
 		self.check_gl_entries()
 
-	def test_payment_entry_merges_gl_entries_with_same_account_head(self):
+	def test_payment_entry_merges_gl_entries_with_same_account_head(self) -> None:
 		"""
 		Test that Payment Entry merges GL entries with same account head
 		when 'Merge Similar Account Heads' setting is enabled.
@@ -1711,7 +1713,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(len(gl_entries), 1)
 		self.assertEqual(gl_entries[0].debit, 80)
 
-	def test_payment_entry_does_not_merge_gl_entries_when_setting_disabled(self):
+	def test_payment_entry_does_not_merge_gl_entries_when_setting_disabled(self) -> None:
 		"""
 		Test that Payment Entry does NOT merge GL entries
 		when 'Merge Similar Account Heads' is disabled.
@@ -1757,7 +1759,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 
 		frappe.db.set_single_value("Accounts Settings", "merge_similar_account_heads", 1)
 
-	def check_pl_entries(self):
+	def check_pl_entries(self) -> None:
 		ple = frappe.qb.DocType("Payment Ledger Entry")
 		pl_entries = (
 			frappe.qb.from_(ple)
@@ -1769,7 +1771,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			for field in ["account", "voucher_no", "against_voucher_no", "amount"]:
 				self.assertEqual(self.expected_ple[row][field], pl_entries[row][field])
 
-	def check_gl_entries(self):
+	def check_gl_entries(self) -> None:
 		gle = frappe.qb.DocType("GL Entry")
 		gl_entries = (
 			frappe.qb.from_(gle)
@@ -1794,7 +1796,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			for field in fields:
 				self.assertEqual(expected_gle[row][field], gl_entries[row][field])
 
-	def test_reverse_payment_reconciliation(self):
+	def test_reverse_payment_reconciliation(self) -> None:
 		customer = create_customer(frappe.generate_hash(length=10), "INR")
 		pe = create_payment_entry(
 			party_type="Customer",
@@ -1833,7 +1835,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(len(pr.invoices), 0)
 		self.assertEqual(len(pr.payments), 0)
 
-	def test_advance_reverse_payment_reconciliation(self):
+	def test_advance_reverse_payment_reconciliation(self) -> None:
 		company = "_Test Company"
 		customer = create_customer(frappe.generate_hash(length=10), "INR")
 		advance_account = create_account(
@@ -1956,7 +1958,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.check_gl_entries()
 		self.check_pl_entries()
 
-	def test_opening_flag_for_advance_as_liability(self):
+	def test_opening_flag_for_advance_as_liability(self) -> None:
 		company = "_Test Company"
 
 		advance_account = create_account(
@@ -2019,7 +2021,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(gl_with_opening_set, [])
 
 	@ERPNextTestSuite.change_settings("Accounts Settings", {"delete_linked_ledger_entries": 1})
-	def test_delete_linked_exchange_gain_loss_journal(self):
+	def test_delete_linked_exchange_gain_loss_journal(self) -> None:
 		from erpnext.accounts.doctype.account.test_account import create_account
 		from erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool import (
 			make_customer,
@@ -2091,7 +2093,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertRaises(frappe.DoesNotExistError, frappe.get_doc, pe.doctype, pe.name)
 		self.assertRaises(frappe.DoesNotExistError, frappe.get_doc, "Journal Entry", jv[0])
 
-	def test_outstanding_orders_split_by_payment_terms(self):
+	def test_outstanding_orders_split_by_payment_terms(self) -> None:
 		create_payment_terms_template()
 
 		so = make_sales_order(do_not_save=1, qty=1, rate=200)
@@ -2116,7 +2118,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		self.assertEqual(references[0].payment_term, "Basic Amount Receivable")
 		self.assertEqual(references[1].payment_term, "Tax Receivable")
 
-	def test_outstanding_orders_no_split_when_allocate_disabled(self):
+	def test_outstanding_orders_no_split_when_allocate_disabled(self) -> None:
 		create_payment_terms_template()
 
 		template = frappe.get_doc("Payment Terms Template", "Test Receivable Template")
@@ -2145,7 +2147,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 		template.allocate_payment_based_on_payment_terms = 1
 		template.save()
 
-	def test_outstanding_multicurrency_sales_order_split(self):
+	def test_outstanding_multicurrency_sales_order_split(self) -> None:
 		create_payment_terms_template()
 
 		so = make_sales_order(
@@ -2177,7 +2179,7 @@ class TestPaymentEntry(ERPNextTestSuite):
 			self.assertEqual(ref.voucher_no, so.name)
 			self.assertIsNotNone(ref.payment_term)
 
-	def test_project_name_in_exchange_gain_loss_entry(self):
+	def test_project_name_in_exchange_gain_loss_entry(self) -> None:
 		si = create_sales_invoice(
 			customer="_Test Customer USD",
 			debit_to="_Test Receivable USD - _TC",
@@ -2238,7 +2240,7 @@ def create_payment_entry(**args):
 	return payment_entry
 
 
-def create_payment_terms_template():
+def create_payment_terms_template() -> None:
 	create_payment_term("Basic Amount Receivable")
 	create_payment_term("Tax Receivable")
 
@@ -2270,7 +2272,7 @@ def create_payment_terms_template():
 
 def create_payment_terms_template_with_discount(
 	name=None, discount_type=None, discount=None, template_name=None
-):
+) -> None:
 	"""
 	Create a Payment Terms Template with %  or amount discount.
 	"""
@@ -2300,12 +2302,12 @@ def create_payment_terms_template_with_discount(
 		).insert()
 
 
-def create_payment_term(name):
+def create_payment_term(name) -> None:
 	if not frappe.db.exists("Payment Term", name):
 		frappe.get_doc({"doctype": "Payment Term", "payment_term_name": name}).insert()
 
 
-def create_customer(name="_Test Customer 2 USD", currency="USD"):
+def create_customer(name: str = "_Test Customer 2 USD", currency: str = "USD"):
 	customer = None
 	if frappe.db.exists("Customer", name):
 		customer = name

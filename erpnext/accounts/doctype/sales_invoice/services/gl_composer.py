@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cint, cstr, flt, get_link_to_form
@@ -55,7 +57,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 		doc.set_transaction_currency_and_rate_in_gl_map(gl_entries)
 		return gl_entries
 
-	def make_precision_loss_gl_entry(self, gl_entries):
+	def make_precision_loss_gl_entry(self, gl_entries) -> None:
 		doc = self.doc
 		(
 			round_off_account,
@@ -84,7 +86,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_discount_gl_entries(self, gl_entries):
+	def make_discount_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		enable_discount_accounting = cint(
 			frappe.get_single_value("Selling Settings", "enable_discount_accounting")
@@ -159,7 +161,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 			)
 		)
 
-	def stock_delivered_but_not_billed_gl_entries(self, gl_entries):
+	def stock_delivered_but_not_billed_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		if doc.update_stock or not cint(erpnext.is_perpetual_inventory_enabled(doc.company)):
 			return
@@ -250,7 +252,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 			)
 		)
 
-	def make_customer_gl_entry(self, gl_entries):
+	def make_customer_gl_entry(self, gl_entries) -> None:
 		doc = self.doc
 		# Checked both rounding_adjustment and rounded_total
 		# because rounded_total had value even before introduction of posting GLE based on rounded total
@@ -289,7 +291,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_tax_gl_entries(self, gl_entries):
+	def make_tax_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		tax_service = TaxService(doc)
 		enable_discount_accounting = cint(
@@ -322,7 +324,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 					)
 				)
 
-	def make_internal_transfer_gl_entries(self, gl_entries):
+	def make_internal_transfer_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		if doc.is_internal_transfer() and flt(doc.base_total_taxes_and_charges):
 			account_currency = get_account_currency(doc.unrealized_profit_loss_account)
@@ -341,7 +343,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_item_gl_entries(self, gl_entries):
+	def make_item_gl_entries(self, gl_entries) -> None:
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import SalesInvoice
 
 		doc = self.doc
@@ -403,7 +405,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 			)
 		)
 
-	def get_gl_entries_for_fixed_asset(self, item, gl_entries):
+	def get_gl_entries_for_fixed_asset(self, item, gl_entries) -> None:
 		doc = self.doc
 		asset = frappe.get_cached_doc("Asset", item.asset)
 
@@ -430,7 +432,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 			gle["against"] = doc.customer
 			gl_entries.append(self.get_gl_dict(gle, item=item))
 
-	def make_loyalty_point_redemption_gle(self, gl_entries):
+	def make_loyalty_point_redemption_gle(self, gl_entries) -> None:
 		doc = self.doc
 		if cint(doc.redeem_loyalty_points and doc.loyalty_points and not doc.is_consolidated):
 			gl_entries.append(
@@ -465,7 +467,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_pos_gl_entries(self, gl_entries):
+	def make_pos_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		if cint(doc.is_pos):
 			skip_change_gl_entries = not cint(
@@ -564,7 +566,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 			),
 		]
 
-	def make_write_off_gl_entry(self, gl_entries):
+	def make_write_off_gl_entry(self, gl_entries) -> None:
 		doc = self.doc
 		# write off entries, applicable if only pos
 		if (
@@ -621,7 +623,7 @@ class SalesInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_gle_for_rounding_adjustment(self, gl_entries):
+	def make_gle_for_rounding_adjustment(self, gl_entries) -> None:
 		doc = self.doc
 		if (
 			flt(doc.rounding_adjustment, doc.precision("rounding_adjustment"))

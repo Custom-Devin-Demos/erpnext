@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Wahni Green Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.ledger_merge.ledger_merge import start_merge
@@ -8,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestLedgerMerge(ERPNextTestSuite):
-	def test_merge_success(self):
+	def test_merge_success(self) -> None:
 		if not frappe.db.exists("Account", "Indirect Expenses - _TC"):
 			acc = frappe.new_doc("Account")
 			acc.account_name = "Indirect Expenses"
@@ -52,7 +54,7 @@ class TestLedgerMerge(ERPNextTestSuite):
 
 		self.assertFalse(frappe.db.exists("Account", "Indirect Test Expenses - _TC"))
 
-	def test_partial_merge_success(self):
+	def test_partial_merge_success(self) -> None:
 		if not frappe.db.exists("Account", "Indirect Income - _TC"):
 			acc = frappe.new_doc("Account")
 			acc.account_name = "Indirect Income"

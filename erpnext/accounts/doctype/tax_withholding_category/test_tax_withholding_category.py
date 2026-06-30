@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import datetime
 from unittest.mock import patch
 
@@ -14,12 +16,12 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestTaxWithholdingCategory(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		# create relevant supplier, etc
 		create_records()
 		create_tax_withholding_category_records()
 
-	def validate_tax_withholding_entries(self, doctype, docname, expected_entries):
+	def validate_tax_withholding_entries(self, doctype, docname, expected_entries) -> None:
 		"""Validate tax withholding entries for a document"""
 		entries = frappe.get_all(
 			"Tax Withholding Entry",
@@ -98,7 +100,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		}
 		return entry
 
-	def setup_party_with_category(self, party_type, party_name, category_name):
+	def setup_party_with_category(self, party_type, party_name, category_name) -> None:
 		"""Setup party with tax withholding category"""
 		frappe.db.set_value(
 			party_type,
@@ -107,21 +109,21 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 			category_name,
 		)
 
-	def validate_tax_deduction(self, invoice, expected_amount):
+	def validate_tax_deduction(self, invoice, expected_amount) -> None:
 		"""Validate invoice tax deduction and grand total"""
 		actual_amount = sum([d.base_tax_amount for d in invoice.taxes if d.is_tax_withholding_account])
 		self.assertEqual(
 			actual_amount, expected_amount, f"Expected TCS charged: {expected_amount}, got: {actual_amount}"
 		)
 
-	def cleanup_invoices(self, invoice_list):
+	def cleanup_invoices(self, invoice_list) -> None:
 		"""Clean up invoices in reverse order to avoid dependency issues"""
 		for invoice in reversed(invoice_list):
 			invoice.reload()
 			if invoice.docstatus == 1:
 				invoice.cancel()
 
-	def test_cumulative_threshold_tds(self):
+	def test_cumulative_threshold_tds(self) -> None:
 		"Tax withholding entries for cumulative threshold TDS with Tax on excess without single threshold"
 		self.setup_party_with_category("Supplier", "Test TDS Supplier", "Cumulative Threshold TDS")
 		invoices = []
@@ -250,7 +252,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.validate_tax_withholding_entries("Purchase Invoice", pi4.name, expected_entries)
 		invoices.append(pi4)
 
-	def test_cumulative_threshold_tds_with_account_change(self):
+	def test_cumulative_threshold_tds_with_account_change(self) -> None:
 		"Cumulative threshold TDS without tax_on_excess, with account change in the middle of the year"
 		self.setup_party_with_category("Supplier", "Test TDS Supplier", "Multi Account TDS Category")
 		invoices = []
@@ -290,7 +292,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		# Clean up invoices to avoid clashing
 		self.cleanup_invoices(invoices)
 
-	def test_single_threshold_tds(self):
+	def test_single_threshold_tds(self) -> None:
 		invoices = []
 		frappe.db.set_value(
 			"Supplier", "Test TDS Supplier1", "tax_withholding_category", "Single Threshold TDS"
@@ -330,7 +332,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_tax_withholding_category_checks(self):
+	def test_tax_withholding_category_checks(self) -> None:
 		invoices = []
 		self.setup_party_with_category("Supplier", "Test TDS Supplier3", "New TDS Category")
 
@@ -353,7 +355,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_cumulative_threshold_with_party_ledger_amount_on_net_total(self):
+	def test_cumulative_threshold_with_party_ledger_amount_on_net_total(self) -> None:
 		invoices = []
 		self.setup_party_with_category("Supplier", "Test TDS Supplier3", "Advance TDS Category")
 
@@ -390,7 +392,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_cumulative_threshold_with_tax_on_excess_amount(self):
+	def test_cumulative_threshold_with_tax_on_excess_amount(self) -> None:
 		invoices = []
 		self.setup_party_with_category("Supplier", "Test TDS Supplier3", "New TDS Category")
 
@@ -481,7 +483,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_cumulative_threshold_tcs_on_gross_amount(self):
+	def test_cumulative_threshold_tcs_on_gross_amount(self) -> None:
 		self.setup_party_with_category("Customer", "Test TCS Customer", "Cumulative Threshold TCS")
 		invoices = []
 
@@ -612,7 +614,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		# cancel invoices to avoid clashing
 		self.cleanup_invoices(invoices)
 
-	def test_tcs_on_allocated_advance_payments(self):
+	def test_tcs_on_allocated_advance_payments(self) -> None:
 		self.setup_party_with_category("Customer", "Test TCS Customer", "Cumulative Threshold TCS")
 
 		vouchers = []
@@ -703,7 +705,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(vouchers)
 
-	def test_tds_multiple_payments_adjust_only_linked(self):
+	def test_tds_multiple_payments_adjust_only_linked(self) -> None:
 		"""
 		Test that when multiple advance payment entries exist for the same supplier,
 		only the payment entry that is linked/allocated to the invoice is adjusted.
@@ -808,7 +810,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.validate_tax_withholding_entries("Purchase Invoice", pi.name, invoice_expected_entries)
 		self.cleanup_invoices(vouchers)
 
-	def test_tds_multiple_payments_with_unused_threshold(self):
+	def test_tds_multiple_payments_with_unused_threshold(self) -> None:
 		"""
 		Test multiple payment entries with unused threshold (tax_on_excess_amount enabled).
 		Only the linked payment entry should be adjusted, and threshold exemption should apply.
@@ -934,7 +936,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.validate_tax_withholding_entries("Purchase Invoice", pi.name, invoice_expected_entries)
 		self.cleanup_invoices(vouchers)
 
-	def test_tds_withholding_group_different_rates(self):
+	def test_tds_withholding_group_different_rates(self) -> None:
 		"""
 		Test that Tax Withholding Group applies different rates for different groups
 		within the same Tax Withholding Category.
@@ -999,7 +1001,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_null_and_empty_tax_withholding_group_are_equivalent(self):
+	def test_null_and_empty_tax_withholding_group_are_equivalent(self) -> None:
 		"""
 		NULL and empty-string `tax_withholding_group` must be treated as the
 		same value.
@@ -1040,7 +1042,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		with self.assertRaises(frappe.ValidationError):
 			category.get_applicable_tax_row(posting_date=posting_date, tax_withholding_group="194R")
 
-	def test_tds_calculation_on_net_total(self):
+	def test_tds_calculation_on_net_total(self) -> None:
 		self.setup_party_with_category("Supplier", "Test TDS Supplier4", "Cumulative Threshold TDS")
 		invoices = []
 
@@ -1070,7 +1072,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.cleanup_invoices(invoices)
 
 	@ERPNextTestSuite.change_settings("Buying Settings", {"allow_multiple_items": 1})
-	def test_tds_calculation_on_net_total_partial_tds(self):
+	def test_tds_calculation_on_net_total_partial_tds(self) -> None:
 		self.setup_party_with_category("Supplier", "Test TDS Supplier4", "Cumulative Threshold TDS")
 		invoices = []
 
@@ -1180,7 +1182,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_tds_deduction_for_po_via_payment_entry(self):
+	def test_tds_deduction_for_po_via_payment_entry(self) -> None:
 		self.setup_party_with_category("Supplier", "Test TDS Supplier8", "Cumulative Threshold TDS")
 		order = create_purchase_order(supplier="Test TDS Supplier8", rate=40000, do_not_save=True)
 		order.append(
@@ -1205,7 +1207,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		payment.save().submit()
 		self.assertEqual(payment.taxes[0].tax_amount, 4800)
 
-	def test_multi_category_single_supplier(self):
+	def test_multi_category_single_supplier(self) -> None:
 		self.setup_party_with_category("Supplier", "Test TDS Supplier5", "Test Service Category")
 		invoices = []
 
@@ -1228,7 +1230,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_tds_deductions_with_payment_entries(self):
+	def test_tds_deductions_with_payment_entries(self) -> None:
 		"""
 		Test tax withholding entries across different voucher types and statuses:
 		- Purchase Invoice: Regular invoice (Under Withheld - below threshold)
@@ -1473,7 +1475,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_tds_deduction_with_partial_payment_adjustment(self):
+	def test_tds_deduction_with_partial_payment_adjustment(self) -> None:
 		invoices = []
 		self.setup_party_with_category("Supplier", "Test TDS Supplier6", "Test Multi Invoice Category")
 
@@ -1585,7 +1587,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.validate_tax_withholding_entries("Payment Entry", pe.name, expected_entries)
 		self.cleanup_invoices(invoices)
 
-	def test_lower_deduction_certificate_application(self):
+	def test_lower_deduction_certificate_application(self) -> None:
 		frappe.db.set_value(
 			"Supplier",
 			"Test LDC Supplier",
@@ -1617,7 +1619,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices([pi1, pi2, pi3])
 
-	def test_ldc_at_0_rate(self):
+	def test_ldc_at_0_rate(self) -> None:
 		frappe.db.set_value(
 			"Supplier",
 			"Test LDC Supplier",
@@ -1658,7 +1660,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.assertEqual(pi2.taxes[0].tax_amount, 3500)
 		self.cleanup_invoices([pi1, pi2])
 
-	def test_payment_entry_with_ldc_and_invoice_adjustment(self):
+	def test_payment_entry_with_ldc_and_invoice_adjustment(self) -> None:
 		"""
 		Test: Payment Entry with LDC, then Invoice, with correct tax adjustment.
 		- Payment Entry (advance) is made and tax is deducted at LDC rate
@@ -1818,7 +1820,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_payment_entry_with_ldc_and_partial_invoice_adjustment(self):
+	def test_payment_entry_with_ldc_and_partial_invoice_adjustment(self) -> None:
 		"""
 		Test: Payment Entry with LDC, then Invoice, with correct tax adjustment.
 		- Payment Entry (advance) is made and tax is deducted at LDC rate
@@ -1960,10 +1962,10 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.validate_tax_withholding_entries("Payment Entry", pe.name, expected_entries)
 		self.cleanup_invoices(invoices)
 
-	def set_previous_fy_and_tax_category(self):
+	def set_previous_fy_and_tax_category(self) -> None:
 		test_company = "_Test Company"
 
-		def add_company_to_fy(fy, company):
+		def add_company_to_fy(fy, company) -> None:
 			if not [x.company for x in fy.companies if x.company == company]:
 				fy.append("companies", {"company": company})
 				fy.save()
@@ -1987,7 +1989,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 			)
 			self.prev_fy.save()
 
-	def test_tds_across_fiscal_year(self):
+	def test_tds_across_fiscal_year(self) -> None:
 		"""
 		Advance TDS on previous fiscal year should be properly allocated on Invoices in upcoming fiscal year
 		--||-----FY 2023-----||-----FY 2024-----||--
@@ -2076,7 +2078,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.assertEqual(pi2.taxes, [])
 		self.assertEqual(payment.taxes[0].tax_amount, 6000)
 
-	def test_threshold_resets_in_new_fiscal_year(self):
+	def test_threshold_resets_in_new_fiscal_year(self) -> None:
 		"""
 		Threshold entries from a previous FY must not carry over into the new FY.
 		"""
@@ -2132,7 +2134,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		)
 		self.cleanup_invoices(invoices)
 
-	def test_tax_on_excess_threshold_resets_in_new_fiscal_year(self):
+	def test_tax_on_excess_threshold_resets_in_new_fiscal_year(self) -> None:
 		"""
 		For tax-on-excess categories, unused threshold must reset each FY.
 		"""
@@ -2229,7 +2231,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.cleanup_invoices(invoices)
 
 	@ERPNextTestSuite.change_settings("Accounts Settings", {"delete_linked_ledger_entries": 1})
-	def test_tds_payment_entry_cancellation(self):
+	def test_tds_payment_entry_cancellation(self) -> None:
 		"""
 		Test payment entry cancellation clears withholding references from matched entries
 		"""
@@ -2407,7 +2409,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.cleanup_invoices(invoices)
 
 	@ERPNextTestSuite.change_settings("Accounts Settings", {"delete_linked_ledger_entries": 1})
-	def test_tds_purchase_invoice_cancellation(self):
+	def test_tds_purchase_invoice_cancellation(self) -> None:
 		"""
 		Test that after cancellation, new documents get automatically adjusted against remaining entries
 		"""
@@ -2602,7 +2604,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_tds_deduction_in_purchase_return(self):
+	def test_tds_deduction_in_purchase_return(self) -> None:
 		self.setup_party_with_category("Supplier", "Test TDS Supplier", "Cumulative Threshold TDS")
 
 		pi = create_purchase_invoice(supplier="Test TDS Supplier", rate=40000)
@@ -2618,7 +2620,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.assertEqual(pi_return.taxes_and_charges_deducted, -4000)
 		self.cleanup_invoices([pi, pi_return])
 
-	def test_tds_purchase_invoice_cancellation_and_adjustment(self):
+	def test_tds_purchase_invoice_cancellation_and_adjustment(self) -> None:
 		invoices = []
 		self.setup_party_with_category("Supplier", "Test TDS Supplier8", "Test Multi Invoice Category")
 
@@ -2666,7 +2668,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.validate_tax_withholding_entries("Purchase Invoice", pi3.name, expected_entries)
 		self.cleanup_invoices(invoices)
 
-	def test_tds_for_return_invoices(self):
+	def test_tds_for_return_invoices(self) -> None:
 		"""Test TDS handling for return invoices with 3-entry cancellation approach"""
 		invoices = []
 		self.setup_party_with_category("Supplier", "Test TDS Supplier8", "Test Multi Invoice Category")
@@ -2882,7 +2884,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_manual_tax_withholding_validation(self):
+	def test_manual_tax_withholding_validation(self) -> None:
 		"""Test validation when user manually overrides tax withholding entries with incorrect amounts"""
 		self.setup_party_with_category("Supplier", "Test TDS Supplier6", "Test Multi Invoice Category")
 
@@ -2904,7 +2906,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		pi.tax_withholding_entries[0].taxable_amount = 15000  # correct taxable amount
 		pi.save()
 
-	def test_manual_tax_adjustment_with_partial_adjustment_and_rate_change(self):
+	def test_manual_tax_adjustment_with_partial_adjustment_and_rate_change(self) -> None:
 		"""Test manual tax adjustment where tax rate is changed during adjustment between payment and invoice"""
 		self.setup_party_with_category("Supplier", "Test TDS Supplier8", "Test Multi Invoice Category")
 
@@ -3025,7 +3027,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.validate_tax_withholding_entries("Payment Entry", pe.name, expected_entries)
 
-	def test_manual_tax_adjustment_with_rate_change(self):
+	def test_manual_tax_adjustment_with_rate_change(self) -> None:
 		"""Test manual tax adjustment where tax rate is changed during adjustment between payment and invoice"""
 		self.setup_party_with_category("Supplier", "Test TDS Supplier8", "Test Multi Invoice Category")
 
@@ -3133,7 +3135,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.validate_tax_withholding_entries("Payment Entry", pe.name, expected_entries)
 
-	def test_manual_tax_adjustment_with_zero_rate(self):
+	def test_manual_tax_adjustment_with_zero_rate(self) -> None:
 		"""Test manual tax adjustment where tax rate is changed to zero during adjustment"""
 		self.setup_party_with_category("Supplier", "Test TDS Supplier8", "Test Multi Invoice Category")
 
@@ -3239,7 +3241,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices([pe, pi])
 
-	def test_tds_on_journal_entry_for_supplier(self):
+	def test_tds_on_journal_entry_for_supplier(self) -> None:
 		"""Test TDS deduction for Supplier in Debit Note"""
 		self.setup_party_with_category("Supplier", "Test TDS Supplier", "Cumulative Threshold TDS")
 
@@ -3299,7 +3301,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		]
 		self.validate_tax_withholding_entries("Journal Entry", jv.name, expected_entries)
 
-	def test_tcs_on_journal_entry_for_customer(self):
+	def test_tcs_on_journal_entry_for_customer(self) -> None:
 		"""Test TCS collection for Customer in Credit Note"""
 		self.setup_party_with_category("Customer", "Test TCS Customer", "Cumulative Threshold TCS")
 
@@ -3374,7 +3376,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		]
 		self.validate_tax_withholding_entries("Journal Entry", jv.name, expected_entries)
 
-	def test_tds_with_multi_currency_invoice(self):
+	def test_tds_with_multi_currency_invoice(self) -> None:
 		"""Test TDS calculation with multi-currency purchase invoice and payment"""
 		invoices = []
 
@@ -3478,7 +3480,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.cleanup_invoices(invoices)
 		frappe.db.set_value("Supplier", "_Test Supplier USD", "tax_withholding_category", "")
 
-	def test_journal_entry_with_adjustment_in_invoice(self):
+	def test_journal_entry_with_adjustment_in_invoice(self) -> None:
 		"""Test Journal Entry with amount below threshold creates Under Withheld entry
 		and gets settled when a new Purchase Invoice crosses the threshold"""
 		invoices = []
@@ -3554,7 +3556,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices(invoices)
 
-	def test_journal_entry_negative_amount_debit_note(self):
+	def test_journal_entry_negative_amount_debit_note(self) -> None:
 		"""Test Journal Entry with negative amount (reversal of Debit Note)"""
 		invoices = []
 		self.setup_party_with_category("Supplier", "Test TDS Supplier", "Cumulative Threshold TDS")
@@ -3645,7 +3647,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.validate_tax_withholding_entries("Journal Entry", jv2.name, jv2_expected)
 		self.cleanup_invoices(invoices)
 
-	def test_delete_draft_pi_with_tax_withholding_entries(self):
+	def test_delete_draft_pi_with_tax_withholding_entries(self) -> None:
 		"""
 		Test that draft Purchase Invoice with Tax Withholding Entries can be deleted.
 		"""
@@ -3657,7 +3659,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.assertGreater(len(pi.tax_withholding_entries), 0)
 		pi.delete()
 
-	def test_tds_rounding_with_decimal_amounts(self):
+	def test_tds_rounding_with_decimal_amounts(self) -> None:
 		"""Test TDS rounding when round_off_tax_amount is enabled in category"""
 		self.setup_party_with_category("Supplier", "Test TDS Supplier3", "New TDS Category")
 
@@ -3669,7 +3671,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 
 		self.cleanup_invoices([pi])
 
-	def test_tax_withholding_entry_status_determination(self):
+	def test_tax_withholding_entry_status_determination(self) -> None:
 		"""Test that Tax Withholding Entry status is correctly determined"""
 		from erpnext.accounts.doctype.tax_withholding_entry.tax_withholding_entry import (
 			TaxWithholdingEntry,
@@ -3715,7 +3717,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		entry = frappe._dict(docstatus=2, withholding_name="", under_withheld_reason="", taxable_name="")
 		self.assertEqual(TaxWithholdingEntry.get_status(entry), "Cancelled")
 
-	def test_invalid_withholding_amount_validation(self):
+	def test_invalid_withholding_amount_validation(self) -> None:
 		"""Test that mismatched withholding amounts throw validation error on save"""
 		self.setup_party_with_category("Supplier", "Test TDS Supplier", "Cumulative Threshold TDS")
 		pi = create_purchase_invoice(supplier="Test TDS Supplier", rate=50000)
@@ -3727,7 +3729,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		entry.withholding_amount = 5001  # Should be 5000 (10% of 50000)
 		self.assertRaisesRegex(frappe.ValidationError, "Withholding Amount.*does not match", pi.save)
 
-	def test_tax_id_is_set_in_all_generated_entries_from_party_doctype(self):
+	def test_tax_id_is_set_in_all_generated_entries_from_party_doctype(self) -> None:
 		self.setup_party_with_category("Supplier", "Test TDS Supplier3", "New TDS Category")
 		frappe.db.set_value("Supplier", "Test TDS Supplier3", "tax_id", "ABCTY1234D")
 
@@ -3743,7 +3745,7 @@ class TestTaxWithholdingCategory(ERPNextTestSuite):
 		self.assertTrue(entries)
 		self.assertTrue(all(entry.tax_id == "ABCTY1234D" for entry in entries))
 
-	def test_threshold_considers_two_parties_with_same_tax_id_with_overrided_hook(self):
+	def test_threshold_considers_two_parties_with_same_tax_id_with_overrided_hook(self) -> None:
 		self.setup_party_with_category("Supplier", "Test TDS Supplier1", "Cumulative Threshold TDS")
 		self.setup_party_with_category("Supplier", "Test TDS Supplier2", "Cumulative Threshold TDS")
 
@@ -3904,8 +3906,8 @@ def make_journal_entry_with_tax_withholding(
 	amount,
 	cost_center=None,
 	posting_date=None,
-	save=True,
-	submit=False,
+	save: bool = True,
+	submit: bool = False,
 ):
 	"""Helper function to create Journal Entry for tax withholding"""
 	if not cost_center:
@@ -3979,7 +3981,7 @@ def make_journal_entry_with_tax_withholding(
 	return jv
 
 
-def create_records():
+def create_records() -> None:
 	# create a new suppliers
 	for name in [
 		"Test TDS Supplier",
@@ -4062,7 +4064,7 @@ def create_records():
 		).insert()
 
 
-def create_tax_withholding_category_records():
+def create_tax_withholding_category_records() -> None:
 	fiscal_year = get_fiscal_year(today(), company="_Test Company")
 	from_date = fiscal_year[1]
 	to_date = fiscal_year[2]
@@ -4174,12 +4176,12 @@ def create_tax_withholding_category(
 	from_date,
 	to_date,
 	account,
-	single_threshold=0,
-	cumulative_threshold=0,
-	round_off_tax_amount=0,
-	tax_on_excess_amount=0,
-	disable_transaction_threshold=0,
-	tax_deduction_basis="Net Total",
+	single_threshold: int = 0,
+	cumulative_threshold: int = 0,
+	round_off_tax_amount: int = 0,
+	tax_on_excess_amount: int = 0,
+	disable_transaction_threshold: int = 0,
+	tax_deduction_basis: str = "Net Total",
 ):
 	if not frappe.db.exists("Tax Withholding Category", category_name):
 		doc = frappe.get_doc(
@@ -4223,7 +4225,7 @@ def create_tax_withholding_category(
 
 def create_lower_deduction_certificate(
 	supplier, tax_withholding_category, tax_rate, certificate_no, limit, valid_from=None, valid_upto=None
-):
+) -> None:
 	fiscal_year = get_fiscal_year(today(), company="_Test Company")
 	if not frappe.db.exists("Lower Deduction Certificate", certificate_no):
 		frappe.get_doc(

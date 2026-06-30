@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import nowdate, today
 
@@ -21,7 +23,7 @@ class TestAdvancePaymentLedgerEntry(ERPNextTestSuite, AccountsTestMixin):
 	Use this class for testing interactions between multiple components.
 	"""
 
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
 		self.supplier = "_Test Supplier"
@@ -30,7 +32,9 @@ class TestAdvancePaymentLedgerEntry(ERPNextTestSuite, AccountsTestMixin):
 		self.debtors_usd = "_Test Receivable USD - _TC"
 		self.creditors_usd = "_Test Payable USD - _TC"
 
-	def create_sales_order(self, qty=1, rate=100, currency="INR", do_not_submit=False):
+	def create_sales_order(
+		self, qty: int = 1, rate: int = 100, currency: str = "INR", do_not_submit: bool = False
+	):
 		"""
 		Helper method
 		"""
@@ -46,7 +50,9 @@ class TestAdvancePaymentLedgerEntry(ERPNextTestSuite, AccountsTestMixin):
 		)
 		return so
 
-	def create_purchase_order(self, qty=1, rate=100, currency="INR", do_not_submit=False):
+	def create_purchase_order(
+		self, qty: int = 1, rate: int = 100, currency: str = "INR", do_not_submit: bool = False
+	):
 		"""
 		Helper method
 		"""
@@ -62,7 +68,7 @@ class TestAdvancePaymentLedgerEntry(ERPNextTestSuite, AccountsTestMixin):
 		)
 		return po
 
-	def test_so_advance_paid_and_currency_with_payment(self):
+	def test_so_advance_paid_and_currency_with_payment(self) -> None:
 		self.create_customer("_Test USD Customer", "USD")
 
 		so = self.create_sales_order(currency="USD", do_not_submit=True)
@@ -95,7 +101,7 @@ class TestAdvancePaymentLedgerEntry(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(so.advance_paid, 0)
 		self.assertEqual(so.party_account_currency, "USD")
 
-	def test_so_advance_paid_and_currency_with_journal(self):
+	def test_so_advance_paid_and_currency_with_journal(self) -> None:
 		self.create_customer("_Test USD Customer", "USD")
 
 		so = self.create_sales_order(currency="USD", do_not_submit=True)
@@ -143,7 +149,7 @@ class TestAdvancePaymentLedgerEntry(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(so.advance_paid, 0)
 		self.assertEqual(so.party_account_currency, "USD")
 
-	def test_po_advance_paid_and_currency_with_payment(self):
+	def test_po_advance_paid_and_currency_with_payment(self) -> None:
 		self.create_supplier("_Test USD Supplier", "USD")
 
 		po = self.create_purchase_order(currency="USD", do_not_submit=True)
@@ -176,7 +182,7 @@ class TestAdvancePaymentLedgerEntry(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(po.advance_paid, 0)
 		self.assertEqual(po.party_account_currency, "USD")
 
-	def test_po_advance_paid_and_currency_with_journal(self):
+	def test_po_advance_paid_and_currency_with_journal(self) -> None:
 		self.create_supplier("_Test USD Supplier", "USD")
 
 		po = self.create_purchase_order(currency="USD", do_not_submit=True)

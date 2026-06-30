@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import nowdate
 
@@ -13,7 +15,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccountingPeriod(ERPNextTestSuite):
-	def test_overlap(self):
+	def test_overlap(self) -> None:
 		ap1 = create_accounting_period(
 			start_date="2018-04-01", end_date="2018-06-30", company="Wind Power LLC"
 		)
@@ -27,14 +29,14 @@ class TestAccountingPeriod(ERPNextTestSuite):
 		)
 		self.assertRaises(OverlapError, ap2.save)
 
-	def test_accounting_period(self):
+	def test_accounting_period(self) -> None:
 		ap1 = create_accounting_period(period_name="Test Accounting Period 2")
 		ap1.save()
 
 		doc = create_sales_invoice(do_not_save=1, cost_center="_Test Company - _TC", warehouse="Stores - _TC")
 		self.assertRaises(ClosedAccountingPeriod, doc.save)
 
-	def test_accounting_period_exempted_role(self):
+	def test_accounting_period_exempted_role(self) -> None:
 		# Create Accounting Period with exempted role
 		ap = create_accounting_period(
 			period_name="Test Accounting Period Exempted",

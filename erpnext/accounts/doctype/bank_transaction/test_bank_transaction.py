@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -22,7 +24,7 @@ from erpnext.tests.utils import ERPNextTestSuite, if_lending_app_installed
 
 
 class TestBankTransaction(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		make_pos_profile()
 
 		# generate and use a uniq hash identifier for 'Bank Account' and it's linked GL 'Account' to avoid validation error
@@ -36,7 +38,7 @@ class TestBankTransaction(ERPNextTestSuite):
 		add_vouchers(gl_account=gl_account)
 
 	# This test checks if ERPNext is able to provide a linked payment for a bank transaction based on the amount of the bank transaction.
-	def test_linked_payments(self):
+	def test_linked_payments(self) -> None:
 		bank_transaction = frappe.get_doc(
 			"Bank Transaction",
 			dict(description="Re 95282925234 FE/000002917 AT171513000281183046 Conrad Electronic"),
@@ -50,7 +52,7 @@ class TestBankTransaction(ERPNextTestSuite):
 		self.assertEqual(linked_payments[0]["party"], "Conrad Electronic")
 
 	# This test validates a simple reconciliation leading to the clearance of the bank transaction and the payment
-	def test_reconcile(self):
+	def test_reconcile(self) -> None:
 		bank_transaction = frappe.get_doc(
 			"Bank Transaction",
 			dict(description="1512567 BG/000003025 OPSKATTUZWXXX AT776000000098709849 Herr G"),
@@ -81,7 +83,7 @@ class TestBankTransaction(ERPNextTestSuite):
 		clearance_date = frappe.db.get_value("Payment Entry", payment.name, "clearance_date")
 		self.assertFalse(clearance_date)
 
-	def test_cancel_voucher(self):
+	def test_cancel_voucher(self) -> None:
 		bank_transaction = frappe.get_doc(
 			"Bank Transaction",
 			dict(description="1512567 BG/000003025 OPSKATTUZWXXX AT776000000098709849 Herr G"),
@@ -105,7 +107,7 @@ class TestBankTransaction(ERPNextTestSuite):
 		self.assertEqual(bank_transaction.payment_entries, [])
 
 	# Amending a reconciled payment entry must not carry over its clearance date
-	def test_clearance_date_cleared_on_amend(self):
+	def test_clearance_date_cleared_on_amend(self) -> None:
 		bank_transaction = frappe.get_doc(
 			"Bank Transaction",
 			dict(description="1512567 BG/000003025 OPSKATTUZWXXX AT776000000098709849 Herr G"),
@@ -135,7 +137,7 @@ class TestBankTransaction(ERPNextTestSuite):
 		self.assertFalse(amended.clearance_date)
 
 	# Check if ERPNext can correctly filter a linked payments based on the debit/credit amount
-	def test_debit_credit_output(self):
+	def test_debit_credit_output(self) -> None:
 		bank_transaction = frappe.get_doc(
 			"Bank Transaction",
 			dict(description="Auszahlung Karte MC/000002916 AUTOMAT 698769 K002 27.10. 14:07"),
@@ -149,7 +151,7 @@ class TestBankTransaction(ERPNextTestSuite):
 		self.assertTrue(linked_payments[0]["paid_amount"])
 
 	# Check error if already reconciled
-	def test_already_reconciled(self):
+	def test_already_reconciled(self) -> None:
 		bank_transaction = frappe.get_doc(
 			"Bank Transaction",
 			dict(description="1512567 BG/000002918 OPSKATTUZWXXX AT776000000098709837 Herr G"),
@@ -188,7 +190,7 @@ class TestBankTransaction(ERPNextTestSuite):
 		)
 
 	# Raise an error if debitor transaction vs debitor payment
-	def test_clear_sales_invoice(self):
+	def test_clear_sales_invoice(self) -> None:
 		bank_transaction = frappe.get_doc(
 			"Bank Transaction",
 			dict(description="I2015000011 VD/000002514 ATWWXXX AT4701345000003510057 Bio"),
@@ -213,7 +215,7 @@ class TestBankTransaction(ERPNextTestSuite):
 		)
 
 	@if_lending_app_installed
-	def test_matching_loan_repayment(self):
+	def test_matching_loan_repayment(self) -> None:
 		from lending.loan_management.doctype.loan.test_loan import create_loan_accounts
 
 		create_loan_accounts()
@@ -244,7 +246,9 @@ class TestBankTransaction(ERPNextTestSuite):
 
 
 def create_bank_account(
-	bank_name="Citi Bank", gl_account="_Test Bank - _TC", bank_account_name="Checking Account"
+	bank_name: str = "Citi Bank",
+	gl_account: str = "_Test Bank - _TC",
+	bank_account_name: str = "Checking Account",
 ):
 	try:
 		frappe.get_doc(
@@ -271,7 +275,7 @@ def create_bank_account(
 	return bank_account.name
 
 
-def create_gl_account(gl_account_name="_Test Bank - _TC"):
+def create_gl_account(gl_account_name: str = "_Test Bank - _TC"):
 	gl_account = frappe.get_doc(
 		{
 			"doctype": "Account",
@@ -285,7 +289,7 @@ def create_gl_account(gl_account_name="_Test Bank - _TC"):
 	return gl_account.name
 
 
-def add_transactions(bank_account="_Test Bank - _TC"):
+def add_transactions(bank_account: str = "_Test Bank - _TC") -> None:
 	doc = frappe.get_doc(
 		{
 			"doctype": "Bank Transaction",
@@ -347,7 +351,7 @@ def add_transactions(bank_account="_Test Bank - _TC"):
 	doc.submit()
 
 
-def add_vouchers(gl_account="_Test Bank - _TC"):
+def add_vouchers(gl_account: str = "_Test Bank - _TC") -> None:
 	try:
 		frappe.get_doc(
 			{

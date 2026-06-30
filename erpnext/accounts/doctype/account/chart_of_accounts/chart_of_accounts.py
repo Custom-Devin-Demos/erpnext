@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 import os
 
@@ -12,12 +14,12 @@ from unidecode import unidecode
 
 def create_charts(
 	company, chart_template=None, existing_company=None, custom_chart=None, from_coa_importer=None
-):
+) -> None:
 	chart = custom_chart or get_chart(chart_template, existing_company)
 	if chart:
 		accounts = []
 
-		def _import_accounts(children, parent, root_type, root_account=False):
+		def _import_accounts(children, parent, root_type, root_account: bool = False) -> None:
 			nonlocal custom_chart
 			for account_name, child in children.items():
 				if root_account:
@@ -135,7 +137,7 @@ def get_chart(chart_template: str | None, existing_company: str | None = None):
 def get_charts_for_country(country: str, with_standard: bool = False):
 	charts = []
 
-	def _get_chart_name(content):
+	def _get_chart_name(content) -> None:
 		if content:
 			content = frappe.parse_json(content)
 			if (
@@ -193,7 +195,7 @@ def get_account_tree_from_existing_company(existing_company):
 	return account_tree
 
 
-def build_account_tree(tree, parent, all_accounts):
+def build_account_tree(tree, parent, all_accounts) -> None:
 	# find children
 	parent_account = parent.name if parent else ""
 	children = [acc for acc in all_accounts if cstr(acc.parent_account) == parent_account]
@@ -231,7 +233,7 @@ def validate_bank_account(coa: str, bank_account: str):
 
 	if chart:
 
-		def _get_account_names(account_master):
+		def _get_account_names(account_master) -> None:
 			for account_name, child in account_master.items():
 				if account_name not in get_chart_metadata_fields():
 					accounts.append(account_name)
@@ -256,7 +258,7 @@ def build_tree_from_json(
 
 	accounts = []
 
-	def _import_accounts(children, parent):
+	def _import_accounts(children, parent) -> None:
 		"""recursively called to form a parent-child based list of dict from chart template"""
 		for account_name, child in children.items():
 			account = {}

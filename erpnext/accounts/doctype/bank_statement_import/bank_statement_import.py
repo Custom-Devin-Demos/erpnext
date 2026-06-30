@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import csv
 import io
 import json
@@ -51,10 +53,10 @@ class BankStatementImport(DataImport):
 		use_csv_sniffer: DF.Check
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 
-	def validate(self):
+	def validate(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if (
 			not (self.import_file or self.google_sheets_url)
@@ -223,7 +225,7 @@ def form_start_import(data_import: str):
 
 
 @frappe.whitelist()
-def download_errored_template(data_import_name: str):
+def download_errored_template(data_import_name: str) -> None:
 	data_import = frappe.get_doc("Bank Statement Import", data_import_name)
 	data_import.export_errored_rows()
 
@@ -252,7 +254,9 @@ def parse_data_from_template(raw_data):
 	return data
 
 
-def start_import(data_import, bank_account, import_file_path, google_sheets_url, bank, template_options):
+def start_import(
+	data_import, bank_account, import_file_path, google_sheets_url, bank, template_options
+) -> None:
 	"""This method runs in background job"""
 
 	update_mapping_db(bank, template_options)
@@ -284,7 +288,7 @@ def start_import(data_import, bank_account, import_file_path, google_sheets_url,
 	frappe.publish_realtime("data_import_refresh", {"data_import": data_import.name})
 
 
-def update_mapping_db(bank, template_options):
+def update_mapping_db(bank, template_options) -> None:
 	"""Update bank transaction mapping database with template options."""
 	bank = frappe.get_doc("Bank", bank)
 	for d in bank.bank_transaction_mapping:
@@ -296,7 +300,7 @@ def update_mapping_db(bank, template_options):
 	bank.save()
 
 
-def add_bank_account(data, bank_account):
+def add_bank_account(data, bank_account) -> None:
 	"""Add bank account information to data rows."""
 	bank_account_loc = None
 	if "Bank Account" not in data[0]:
@@ -313,7 +317,7 @@ def add_bank_account(data, bank_account):
 			row.append(bank_account)
 
 
-def write_files(import_file, data):
+def write_files(import_file, data) -> None:
 	"""Write processed data to CSV or Excel files."""
 	full_file_path = import_file.file_doc.get_full_path()
 	parts = import_file.file_doc.get_extension()

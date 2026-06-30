@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -36,11 +38,11 @@ class AccountingPeriod(Document):
 		start_date: DF.Date
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_dates()
 		self.validate_overlap()
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		if getdate(self.start_date) > getdate(self.end_date):
 			frappe.throw(_("Start Date cannot be after End Date"))
 
@@ -51,14 +53,14 @@ class AccountingPeriod(Document):
 				).format(frappe.bold(frappe.format(self.end_date, "Date")))
 			)
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		self.bootstrap_doctypes_for_closing()
 
-	def autoname(self):
+	def autoname(self) -> None:
 		company_abbr = frappe.get_cached_value("Company", self.company, "abbr")
 		self.name = " - ".join([self.period_name, company_abbr])
 
-	def validate_overlap(self):
+	def validate_overlap(self) -> None:
 		AccountingPeriod = frappe.qb.DocType("Accounting Period")
 
 		query = (
@@ -90,7 +92,7 @@ class AccountingPeriod(Document):
 
 		return docs_for_closing
 
-	def bootstrap_doctypes_for_closing(self):
+	def bootstrap_doctypes_for_closing(self) -> None:
 		if len(self.closed_documents) == 0:
 			for doctype_for_closing in self.get_doctypes_for_closing():
 				self.append(
@@ -102,7 +104,7 @@ class AccountingPeriod(Document):
 				)
 
 
-def validate_accounting_period_on_doc_save(doc, method=None):
+def validate_accounting_period_on_doc_save(doc, method=None) -> None:
 	if doc.doctype == "Bank Clearance":
 		return
 	elif doc.doctype == "Asset":

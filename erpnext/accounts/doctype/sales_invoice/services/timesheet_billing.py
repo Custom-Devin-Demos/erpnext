@@ -3,6 +3,8 @@
 
 """Timesheet billing helpers for Sales Invoice."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -11,7 +13,7 @@ from erpnext.projects.doctype.timesheet.timesheet import get_projectwise_timeshe
 
 
 class TimesheetBillingService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def validate_time_sheets_are_submitted(self) -> None:

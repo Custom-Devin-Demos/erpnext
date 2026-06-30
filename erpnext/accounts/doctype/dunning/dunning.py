@@ -12,6 +12,8 @@
 		-> Resolves dunning automatically
 """
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -69,14 +71,14 @@ class Dunning(AccountsController):
 		total_outstanding: DF.Currency
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_same_currency()
 		self.validate_overdue_payments()
 		self.validate_totals()
 		self.set_party_details()
 		self.set_dunning_level()
 
-	def validate_same_currency(self):
+	def validate_same_currency(self) -> None:
 		"""
 		Throw an error if invoice currency differs from dunning currency.
 		"""
@@ -96,21 +98,21 @@ class Dunning(AccountsController):
 					)
 				)
 
-	def validate_overdue_payments(self):
+	def validate_overdue_payments(self) -> None:
 		daily_interest = self.rate_of_interest / 100 / 365
 
 		for row in self.overdue_payments:
 			row.overdue_days = (getdate(self.posting_date) - getdate(row.due_date)).days or 0
 			row.interest = row.outstanding * daily_interest * row.overdue_days
 
-	def validate_totals(self):
+	def validate_totals(self) -> None:
 		self.total_outstanding = sum(row.outstanding for row in self.overdue_payments)
 		self.total_interest = sum(row.interest for row in self.overdue_payments)
 		self.dunning_amount = self.total_interest + self.dunning_fee
 		self.base_dunning_amount = self.dunning_amount * self.conversion_rate
 		self.grand_total = self.total_outstanding + self.dunning_amount
 
-	def set_party_details(self):
+	def set_party_details(self) -> None:
 		from erpnext.accounts.party import _get_party_details
 
 		party_details = _get_party_details(
@@ -135,7 +137,7 @@ class Dunning(AccountsController):
 
 		self.set("company_address_display", get_address_display(self.company_address))
 
-	def set_dunning_level(self):
+	def set_dunning_level(self) -> None:
 		for row in self.overdue_payments:
 			past_dunnings = frappe.get_all(
 				"Overdue Payment",
@@ -147,7 +149,7 @@ class Dunning(AccountsController):
 			)
 			row.dunning_level = len(past_dunnings) + 1
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		super().on_cancel()
 		self.ignore_linked_doctypes = [
 			"GL Entry",
@@ -164,7 +166,7 @@ class Dunning(AccountsController):
 		]
 
 
-def update_linked_dunnings(doc, previous_outstanding_amount):
+def update_linked_dunnings(doc, previous_outstanding_amount) -> None:
 	if (
 		doc.doctype != "Sales Invoice"
 		or doc.is_return
