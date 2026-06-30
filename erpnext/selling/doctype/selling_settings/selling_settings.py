@@ -4,6 +4,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
@@ -64,12 +66,12 @@ class SellingSettings(Document):
 		validate_selling_price: DF.Check
 	# end: auto-generated types
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.toggle_hide_tax_id()
 		self.toggle_editable_rate_for_bundle_items()
 		self.toggle_discount_accounting_fields()
 
-	def validate(self):
+	def validate(self) -> None:
 		old_doc = self.get_doc_before_save()
 
 		for key in [
@@ -99,7 +101,7 @@ class SellingSettings(Document):
 		if old_doc and old_doc.enable_utm != self.enable_utm:
 			toggle_utm_analytics_section(not self.enable_utm)
 
-	def validate_fallback_to_default_price_list(self):
+	def validate_fallback_to_default_price_list(self) -> None:
 		if (
 			self.fallback_to_default_price_list
 			and self.has_value_changed("fallback_to_default_price_list")
@@ -116,7 +118,7 @@ class SellingSettings(Document):
 				)
 			)
 
-	def toggle_hide_tax_id(self):
+	def toggle_hide_tax_id(self) -> None:
 		_hide_tax_id = cint(self.hide_tax_id)
 
 		# Make property setters to hide tax_id fields
@@ -128,7 +130,7 @@ class SellingSettings(Document):
 				doctype, "tax_id", "print_hide", _hide_tax_id, "Check", validate_fields_for_doctype=False
 			)
 
-	def toggle_editable_rate_for_bundle_items(self):
+	def toggle_editable_rate_for_bundle_items(self) -> None:
 		editable_bundle_item_rates = cint(self.editable_bundle_item_rates)
 
 		make_property_setter(
@@ -140,7 +142,7 @@ class SellingSettings(Document):
 			validate_fields_for_doctype=False,
 		)
 
-	def toggle_discount_accounting_fields(self):
+	def toggle_discount_accounting_fields(self) -> None:
 		enable_discount_accounting = cint(self.enable_discount_accounting)
 
 		make_property_setter(
@@ -198,7 +200,7 @@ class SellingSettings(Document):
 			)
 
 
-def toggle_tracking_sales_commissions_section(hide):
+def toggle_tracking_sales_commissions_section(hide: bool) -> None:
 	from erpnext.accounts.doctype.accounts_settings.accounts_settings import (
 		SELLING_DOCTYPES,
 		create_property_setter_for_hiding_field,
@@ -212,7 +214,7 @@ def toggle_tracking_sales_commissions_section(hide):
 			create_property_setter_for_hiding_field(doctype, "sales_team_section", hide)
 
 
-def toggle_utm_analytics_section(hide):
+def toggle_utm_analytics_section(hide: bool) -> None:
 	from erpnext.accounts.doctype.accounts_settings.accounts_settings import (
 		create_property_setter_for_hiding_field,
 	)

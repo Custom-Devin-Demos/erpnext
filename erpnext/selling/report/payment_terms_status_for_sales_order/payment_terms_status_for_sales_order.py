@@ -115,7 +115,7 @@ def get_customers_or_items(
 					)
 
 	if searchfield and txt:
-		filter_list.append([doctype, searchfield, "like", "%%%s%%" % txt])
+		filter_list.append([doctype, searchfield, "like", f"%{txt}%"])
 
 	return frappe.desk.reportview.execute(
 		doctype,

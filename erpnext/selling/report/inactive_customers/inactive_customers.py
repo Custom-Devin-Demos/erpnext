@@ -90,7 +90,7 @@ def get_last_sales_amt(customer, doctype):
 		.limit(1)
 	).run()
 
-	return res and res[0][0] or 0
+	return (res and res[0][0]) or 0
 
 
 def get_columns():

@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -21,7 +23,7 @@ class PartySpecificItem(Document):
 		restrict_based_on: DF.Literal["Item", "Item Group", "Brand"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		exists = frappe.db.exists(
 			"Party Specific Item",
 			{

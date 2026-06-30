@@ -65,8 +65,8 @@ def get_data_by_time(filters, common_columns):
 	customers_in = get_customer_stats(filters)
 
 	# time series
-	from_year, from_month, temp = filters.get("from_date").split("-")
-	to_year, to_month, temp = filters.get("to_date").split("-")
+	from_year, from_month, _temp = filters.get("from_date").split("-")
+	to_year, to_month, _temp = filters.get("to_date").split("-")
 
 	from_year, from_month, to_year, to_month = (
 		cint(from_year),

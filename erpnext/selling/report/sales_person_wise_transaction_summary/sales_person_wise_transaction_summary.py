@@ -236,7 +236,7 @@ def get_conditions(filters, date_field):
 
 	items = get_items(filters)
 	if items:
-		conditions.append("dt_item.item_code in (%s)" % ", ".join(["%s"] * len(items)))
+		conditions.append("dt_item.item_code in ({})".format(", ".join(["%s"] * len(items))))
 		values += items
 	else:
 		# return empty result, if no items are fetched after filtering on 'item group' and 'brand'
