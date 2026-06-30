@@ -1,12 +1,14 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns = get_columns()
 	proj_details = get_project_details()
 	pr_item_map = get_purchased_items_cost()
@@ -34,7 +36,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		_("Project Id") + ":Link/Project:140",
 		_("Cost of Purchased Items") + ":Currency:160",
@@ -50,7 +52,7 @@ def get_columns():
 	]
 
 
-def get_project_details():
+def get_project_details() -> list:
 	return frappe.get_all(
 		"Project",
 		filters={"docstatus": ["<", 2]},
@@ -67,7 +69,7 @@ def get_project_details():
 	)
 
 
-def get_purchased_items_cost():
+def get_purchased_items_cost() -> dict:
 	pr_items = frappe.get_all(
 		"Purchase Receipt Item",
 		filters={"project": ["is", "set"], "docstatus": 1},
@@ -82,7 +84,7 @@ def get_purchased_items_cost():
 	return pr_item_map
 
 
-def get_issued_items_cost():
+def get_issued_items_cost() -> dict:
 	se = frappe.qb.DocType("Stock Entry")
 	se_item = frappe.qb.DocType("Stock Entry Detail")
 	se_items = (
@@ -106,7 +108,7 @@ def get_issued_items_cost():
 	return se_item_map
 
 
-def get_delivered_items_cost():
+def get_delivered_items_cost() -> dict:
 	dn = frappe.qb.DocType("Delivery Note")
 	dn_item = frappe.qb.DocType("Delivery Note Item")
 	dn_items = (

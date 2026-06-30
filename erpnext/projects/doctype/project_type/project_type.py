@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -20,6 +22,6 @@ class ProjectType(Document):
 		project_type: DF.Data
 	# end: auto-generated types
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		if self.name == "External":
 			frappe.throw(_("You cannot delete Project Type 'External'"))

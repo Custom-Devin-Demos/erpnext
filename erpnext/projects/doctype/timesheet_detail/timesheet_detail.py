@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -43,7 +45,7 @@ class TimesheetDetail(Document):
 		to_time: DF.Datetime | None
 	# end: auto-generated types
 
-	def set_to_time(self):
+	def set_to_time(self) -> None:
 		"""Set to_time based on from_time and hours."""
 		if not (self.from_time and self.hours):
 			return
@@ -52,17 +54,17 @@ class TimesheetDetail(Document):
 		if abs(time_diff_in_seconds(_to_time, self.to_time)) >= 1:
 			self.to_time = _to_time
 
-	def set_project(self):
+	def set_project(self) -> None:
 		"""Set project based on task."""
 		if self.task and not self.project:
 			self.project = frappe.db.get_value("Task", self.task, "project")
 
-	def calculate_hours(self):
+	def calculate_hours(self) -> None:
 		"""Calculate hours based on from_time and to_time."""
 		if self.to_time and self.from_time:
 			self.hours = time_diff_in_hours(self.to_time, self.from_time)
 
-	def update_billing_hours(self):
+	def update_billing_hours(self) -> None:
 		"""Update billing hours based on hours."""
 		if not self.is_billable:
 			self.billing_hours = 0
@@ -71,7 +73,7 @@ class TimesheetDetail(Document):
 		if flt(self.billing_hours) == 0.0:
 			self.billing_hours = self.hours
 
-	def update_cost(self, employee: str):
+	def update_cost(self, employee: str) -> None:
 		"""Update costing and billing rates based on activity type."""
 		from erpnext.projects.doctype.timesheet.timesheet import get_activity_cost
 
@@ -102,12 +104,12 @@ class TimesheetDetail(Document):
 			self.costing_amount * exchange_rate, self.precision("base_costing_amount")
 		)
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		"""Validate that to_time is not before from_time."""
 		if self.from_time and self.to_time and time_diff_in_hours(self.to_time, self.from_time) < 0:
 			frappe.throw(_("To Time cannot be before From Time"))
 
-	def validate_parent_project(self, parent_project: str):
+	def validate_parent_project(self, parent_project: str) -> None:
 		"""Validate that project is same as Timesheet's parent project."""
 		if parent_project and parent_project != self.project:
 			frappe.throw(
@@ -116,7 +118,7 @@ class TimesheetDetail(Document):
 				)
 			)
 
-	def validate_task_project(self):
+	def validate_task_project(self) -> None:
 		"""Validate that the the task belongs to the project specified in the timesheet detail."""
 		if self.task and self.project:
 			task_project = frappe.db.get_value("Task", self.task, "project")
@@ -127,7 +129,7 @@ class TimesheetDetail(Document):
 					)
 				)
 
-	def validate_billing_hours(self):
+	def validate_billing_hours(self) -> None:
 		"""Warn if billing hours are more than actual hours."""
 		if flt(self.billing_hours) > flt(self.hours):
 			frappe.msgprint(

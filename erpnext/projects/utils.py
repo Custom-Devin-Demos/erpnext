@@ -4,13 +4,15 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import Case
 
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def query_task(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def query_task(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict) -> list:
 	search_str = f"%{txt}%"
 	prefix_str = f"{txt}%"
 
