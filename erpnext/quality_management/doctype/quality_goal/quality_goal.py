@@ -1,6 +1,7 @@
 # Copyright (c) 2018, Frappe and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 from frappe.model.document import Document
 
@@ -57,5 +58,5 @@ class QualityGoal(Document):
 		weekday: DF.Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		pass

@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _, session
@@ -50,7 +51,7 @@ class WarrantyClaim(TransactionBase):
 		warranty_expiry_date: DF.Date | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if session["user"] != "Guest" and not self.customer:
 			frappe.throw(_("Customer is required"))
 
@@ -61,7 +62,7 @@ class WarrantyClaim(TransactionBase):
 		):
 			self.resolution_date = now_datetime()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		mv = frappe.qb.DocType("Maintenance Visit")
 		mvp = frappe.qb.DocType("Maintenance Visit Purpose")
 		# filter the parent Maintenance Visit's docstatus (as the original SQL did), not the child row's
@@ -80,15 +81,15 @@ class WarrantyClaim(TransactionBase):
 		else:
 			self.db_set("status", "Cancelled")
 
-	def on_update(self):
+	def on_update(self) -> None:
 		pass
 
 
 @frappe.whitelist()
-def make_maintenance_visit(source_name: str, target_doc: str | Document | None = None):
+def make_maintenance_visit(source_name: str, target_doc: str | Document | None = None) -> Document | None:
 	from frappe.model.mapper import get_mapped_doc, map_child_doc
 
-	def _update_links(source_doc, target_doc, source_parent):
+	def _update_links(source_doc, target_doc, source_parent) -> None:
 		target_doc.prevdoc_doctype = source_parent.doctype
 		target_doc.prevdoc_docname = source_parent.name
 
