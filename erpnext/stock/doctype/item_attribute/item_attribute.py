@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -39,17 +41,17 @@ class ItemAttribute(Document):
 		to_range: DF.Float
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		frappe.flags.attribute_values = None
 		self.validate_numeric()
 		self.validate_duplication()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		update_variant_attribute_values(self)
 		self.validate_exising_items()
 		self.set_enabled_disabled_in_items()
 
-	def set_enabled_disabled_in_items(self):
+	def set_enabled_disabled_in_items(self) -> None:
 		db_value = self.get_doc_before_save()
 		if not db_value or db_value.disabled != self.disabled:
 			item_variant_table = frappe.qb.DocType("Item Variant Attribute")
@@ -61,7 +63,7 @@ class ItemAttribute(Document):
 
 			query.run()
 
-	def validate_exising_items(self):
+	def validate_exising_items(self) -> None:
 		"""Validate that if there are existing items with attributes, they are valid"""
 		attributes_list = [d.attribute_value for d in self.item_attribute_values]
 
@@ -85,7 +87,7 @@ class ItemAttribute(Document):
 					attributes_list, self.name, item.value, item.name, from_variant=False
 				)
 
-	def validate_numeric(self):
+	def validate_numeric(self) -> None:
 		if self.numeric_values:
 			self.set("item_attribute_values", [])
 			if self.from_range is None or self.to_range is None:
@@ -99,7 +101,7 @@ class ItemAttribute(Document):
 		else:
 			self.from_range = self.to_range = self.increment = 0
 
-	def validate_duplication(self):
+	def validate_duplication(self) -> None:
 		values, abbrs = [], []
 		for d in self.item_attribute_values:
 			if d.attribute_value.lower() in map(str.lower, values):

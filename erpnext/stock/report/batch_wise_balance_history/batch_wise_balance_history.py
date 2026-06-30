@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_to_date, cint, flt, get_datetime, getdate
@@ -14,7 +16,7 @@ from erpnext.stock.doctype.warehouse.warehouse import apply_warehouse_filter
 SLE_COUNT_LIMIT = 100_000
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	if not filters:
 		filters = {}
 

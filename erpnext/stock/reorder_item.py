@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from math import ceil
 
 import frappe
@@ -35,7 +37,7 @@ def _reorder_item():
 
 	item_warehouse_projected_qty = get_item_warehouse_projected_qty(items_to_consider)
 
-	def add_to_material_request(**kwargs):
+	def add_to_material_request(**kwargs) -> None:
 		if isinstance(kwargs, dict):
 			kwargs = frappe._dict(kwargs)
 
@@ -307,7 +309,7 @@ def create_material_request(material_requests):
 	return mr_list
 
 
-def send_email_notification(company_wise_mr):
+def send_email_notification(company_wise_mr) -> None:
 	"""Notify user about auto creation of indent"""
 
 	for company, mr_list in company_wise_mr.items():
@@ -321,7 +323,7 @@ def send_email_notification(company_wise_mr):
 		frappe.sendmail(recipients=email_list, subject=_("Auto Material Requests Generated"), message=msg)
 
 
-def get_email_list(company):
+def get_email_list(company) -> list:
 	users = get_comapny_wise_users(company)
 	user_table = frappe.qb.DocType("User")
 	role_table = frappe.qb.DocType("Has Role")
@@ -347,7 +349,7 @@ def get_email_list(company):
 	return list(set([email.email for email in emails]))
 
 
-def get_comapny_wise_users(company):
+def get_comapny_wise_users(company) -> list:
 	companies = [company]
 
 	if parent_company := frappe.db.get_value("Company", company, "parent_company"):
@@ -362,7 +364,7 @@ def get_comapny_wise_users(company):
 	return [user.user for user in users]
 
 
-def notify_errors(exceptions_list):
+def notify_errors(exceptions_list) -> None:
 	subject = _("[Important] [ERPNext] Auto Reorder Errors")
 	content = (
 		_("Dear System Manager,")

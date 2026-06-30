@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod, abstractproperty
 from collections.abc import Callable
 from typing import NewType
@@ -40,7 +42,7 @@ class BinWiseValuation(ABC):
 
 		return round_off_if_near_zero(total_qty), round_off_if_near_zero(total_value)
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return str(self.state)
 
 	def __iter__(self):
@@ -67,7 +69,7 @@ class FIFOValuation(BinWiseValuation):
 	# ref: https://docs.python.org/3/reference/datamodel.html#slots
 	__slots__ = ["queue"]
 
-	def __init__(self, state: list[StockBin] | None):
+	def __init__(self, state: list[StockBin] | None) -> None:
 		self.queue: list[StockBin] = state if state is not None else []
 
 	@property
@@ -175,7 +177,7 @@ class LIFOValuation(BinWiseValuation):
 	# ref: https://docs.python.org/3/reference/datamodel.html#slots
 	__slots__ = ["stack"]
 
-	def __init__(self, state: list[StockBin] | None):
+	def __init__(self, state: list[StockBin] | None) -> None:
 		self.stack: list[StockBin] = state if state is not None else []
 
 	@property

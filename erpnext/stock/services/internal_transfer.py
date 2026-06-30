@@ -9,6 +9,7 @@ stock-side counterpart to ``accounts/services/internal_transfer.py`` (which owns
 the party / rate / pricing / account side). The ``is_internal_transfer()``
 predicate lives on ``AccountsController`` (delegating to the accounts service).
 """
+from __future__ import annotations
 
 from collections import defaultdict
 
@@ -21,7 +22,7 @@ class StockInternalTransferService:
 	def __init__(self, doc) -> None:
 		self.doc = doc
 
-	def validate_internal_transfer(self):
+	def validate_internal_transfer(self) -> None:
 		if self.doc.doctype in ("Sales Invoice", "Delivery Note", "Purchase Invoice", "Purchase Receipt"):
 			if self.doc.is_internal_transfer():
 				self.validate_in_transit_warehouses()
@@ -33,7 +34,7 @@ class StockInternalTransferService:
 			else:
 				self.validate_internal_transfer_warehouse()
 
-	def validate_internal_transfer_warehouse(self):
+	def validate_internal_transfer_warehouse(self) -> None:
 		for row in self.doc.items:
 			if row.get("target_warehouse"):
 				row.target_warehouse = None
@@ -41,7 +42,7 @@ class StockInternalTransferService:
 			if row.get("from_warehouse"):
 				row.from_warehouse = None
 
-	def validate_in_transit_warehouses(self):
+	def validate_in_transit_warehouses(self) -> None:
 		if (
 			self.doc.doctype == "Sales Invoice" and self.doc.get("update_stock")
 		) or self.doc.doctype == "Delivery Note":
@@ -60,15 +61,15 @@ class StockInternalTransferService:
 						_("Row {0}: From Warehouse is mandatory for internal transfers").format(item.idx)
 					)
 
-	def validate_multi_currency(self):
+	def validate_multi_currency(self) -> None:
 		if self.doc.currency != self.doc.company_currency:
 			frappe.throw(_("Internal transfers can only be done in company's default currency"))
 
-	def validate_packed_items(self):
+	def validate_packed_items(self) -> None:
 		if self.doc.doctype in ("Sales Invoice", "Delivery Note Item") and self.doc.get("packed_items"):
 			frappe.throw(_("Packed Items cannot be transferred internally"))
 
-	def validate_internal_transfer_qty(self):
+	def validate_internal_transfer_qty(self) -> None:
 		if self.doc.doctype not in ["Purchase Invoice", "Purchase Receipt"]:
 			return
 

@@ -2,18 +2,20 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	validate_warehouse(filters)
 	columns = get_columns()
 	data = get_data(filters.warehouse, filters.show_disabled_items)
 	return columns, data
 
 
-def validate_warehouse(filters):
+def validate_warehouse(filters) -> None:
 	company = filters.company
 	warehouse = filters.warehouse
 	if not frappe.db.exists("Warehouse", {"name": warehouse, "company": company}):

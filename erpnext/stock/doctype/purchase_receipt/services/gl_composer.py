@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cint, flt
@@ -51,10 +53,10 @@ class PurchaseReceiptGLComposer(BaseStockGLComposer):
 		stock_items = doc.get_stock_items()
 		warehouse_with_no_account = []
 
-		def validate_account(account_type):
+		def validate_account(account_type) -> None:
 			frappe.throw(_("{0} account not found while submitting purchase receipt").format(account_type))
 
-		def make_item_asset_inward_gl_entry(item, stock_value_diff, stock_asset_account_name):
+		def make_item_asset_inward_gl_entry(item, stock_value_diff, stock_asset_account_name) -> None:
 			account_currency = get_account_currency(stock_asset_account_name)
 			if not stock_asset_account_name:
 				validate_account("Asset or warehouse account")
@@ -163,7 +165,7 @@ class PurchaseReceiptGLComposer(BaseStockGLComposer):
 
 			return outgoing_amount
 
-		def make_landed_cost_gl_entries(item):
+		def make_landed_cost_gl_entries(item) -> None:
 			if item.landed_cost_voucher_amount and landed_cost_entries:
 				if (item.item_code, item.name) in landed_cost_entries:
 					for account, amount in landed_cost_entries[(item.item_code, item.name)].items():
@@ -191,7 +193,7 @@ class PurchaseReceiptGLComposer(BaseStockGLComposer):
 							item=item,
 						)
 
-		def make_amount_difference_entry(item):
+		def make_amount_difference_entry(item) -> None:
 			if item.amount_difference_with_purchase_invoice and stock_asset_rbnb:
 				account_currency = get_account_currency(stock_asset_rbnb)
 				self.add_gl_entry(
@@ -207,7 +209,7 @@ class PurchaseReceiptGLComposer(BaseStockGLComposer):
 					item=item,
 				)
 
-		def make_sub_contracting_gl_entries(item):
+		def make_sub_contracting_gl_entries(item) -> None:
 			if flt(item.rm_supp_cost) and supplier_warehouse_account:
 				self.add_gl_entry(
 					gl_entries=gl_entries,
@@ -222,7 +224,7 @@ class PurchaseReceiptGLComposer(BaseStockGLComposer):
 					item=item,
 				)
 
-		def make_divisional_loss_gl_entry(item, outgoing_amount):
+		def make_divisional_loss_gl_entry(item, outgoing_amount) -> None:
 			if item.is_fixed_asset:
 				return
 

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from frappe.contacts.address_and_contact import load_address_and_contact
 from frappe.model.document import Document
 
@@ -23,6 +25,6 @@ class Manufacturer(Document):
 		website: DF.Data | None
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)

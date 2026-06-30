@@ -2,6 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 
 """Stock reservation on Purchase Receipt submission (Sales Order / Production Plan)."""
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -11,7 +12,7 @@ from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry impor
 
 
 class PurchaseReceiptStockReservation:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def reserve_stock(self) -> None:

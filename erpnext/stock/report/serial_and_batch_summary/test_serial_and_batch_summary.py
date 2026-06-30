@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
@@ -13,7 +15,7 @@ class TestSerialAndBatchSummary(ERPNextTestSuite):
 		return execute(frappe._dict(extra))[1]
 
 	@staticmethod
-	def _cancel_and_delete_stock_entry(name):
+	def _cancel_and_delete_stock_entry(name) -> None:
 		if not frappe.db.exists("Stock Entry", name):
 			return
 		doc = frappe.get_doc("Stock Entry", name)
@@ -21,7 +23,7 @@ class TestSerialAndBatchSummary(ERPNextTestSuite):
 			doc.cancel()
 		frappe.delete_doc("Stock Entry", name, force=1)
 
-	def test_serial_receipt_listed(self):
+	def test_serial_receipt_listed(self) -> None:
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 
 		item = "_Test Serialized Item With Series"
@@ -39,7 +41,7 @@ class TestSerialAndBatchSummary(ERPNextTestSuite):
 			self.assertEqual(row.warehouse, "Stores - _TC")
 			self.assertEqual(row.voucher_no, se.name)
 
-	def test_batch_receipt_listed(self):
+	def test_batch_receipt_listed(self) -> None:
 		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 			get_batch_from_bundle,

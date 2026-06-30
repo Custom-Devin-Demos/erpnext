@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
@@ -8,7 +10,7 @@ WHERE_USED_SECTION = "Where Used"
 REFERENCES_SECTION = "References"
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	filters = frappe._dict(filters or {})
 	data = []
 
@@ -226,7 +228,7 @@ def get_bom_secondary_item_rows(item, company=None):
 	return data
 
 
-def get_bom_output_rows(item, company=None):
+def get_bom_output_rows(item, company=None) -> list:
 	filters = {"item": item, "docstatus": 1}
 	if company:
 		filters["company"] = company
@@ -289,7 +291,7 @@ def get_product_bundle_component_rows(item):
 	return data
 
 
-def get_product_bundle_parent_rows(item):
+def get_product_bundle_parent_rows(item) -> list:
 	rows = frappe.get_all(
 		"Product Bundle",
 		filters={"new_item_code": item, "docstatus": 1},
@@ -371,7 +373,7 @@ def get_subcontracting_bom_rows(item):
 	return data
 
 
-def get_variant_rows(item):
+def get_variant_rows(item) -> list:
 	rows = frappe.get_all(
 		"Item",
 		filters={"variant_of": item},
@@ -433,7 +435,7 @@ def get_item_alternative_rows(item):
 	return data
 
 
-def get_bom_map(bom_names, company=None):
+def get_bom_map(bom_names, company=None) -> dict:
 	bom_names = get_unique_names(bom_names)
 	if not bom_names:
 		return {}
@@ -452,7 +454,7 @@ def get_bom_map(bom_names, company=None):
 	}
 
 
-def get_product_bundle_map(bundle_names):
+def get_product_bundle_map(bundle_names) -> dict:
 	bundle_names = get_unique_names(bundle_names)
 	if not bundle_names:
 		return {}
@@ -467,7 +469,7 @@ def get_product_bundle_map(bundle_names):
 	}
 
 
-def build_row(**kwargs):
+def build_row(**kwargs) -> dict:
 	return frappe._dict(kwargs)
 
 

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -24,14 +26,14 @@ class ItemManufacturer(Document):
 		manufacturer_part_no: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_duplicate_entry()
 		self.manage_default_item_manufacturer()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self.manage_default_item_manufacturer(delete=True)
 
-	def validate_duplicate_entry(self):
+	def validate_duplicate_entry(self) -> None:
 		if self.is_new():
 			filters = {
 				"item_code": self.item_code,
@@ -46,7 +48,7 @@ class ItemManufacturer(Document):
 					)
 				)
 
-	def manage_default_item_manufacturer(self, delete=False):
+	def manage_default_item_manufacturer(self, delete: bool = False) -> None:
 		from frappe.model.utils import set_default
 
 		item = frappe.get_doc("Item", self.item_code)

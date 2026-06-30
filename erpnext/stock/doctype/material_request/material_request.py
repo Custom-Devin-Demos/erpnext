@@ -5,6 +5,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
@@ -84,7 +86,7 @@ class MaterialRequest(BuyingController):
 		work_order: DF.Link | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.status_updater = [
 			{
@@ -108,10 +110,10 @@ class MaterialRequest(BuyingController):
 			},
 		]
 
-	def check_if_already_pulled(self):
+	def check_if_already_pulled(self) -> None:
 		pass
 
-	def validate_qty_against_so(self):
+	def validate_qty_against_so(self) -> None:
 		so_items = {}  # Format --> {'SO/00001': {'Item/001': 120, 'Item/002': 24}}
 		for d in self.get("items"):
 			if d.sales_order:
@@ -151,7 +153,7 @@ class MaterialRequest(BuyingController):
 						).format(actual_so_qty - already_indented, item, so_no)
 					)
 
-	def validate(self):
+	def validate(self) -> None:
 		super().validate()
 
 		self.validate_schedule_date()
@@ -195,7 +197,7 @@ class MaterialRequest(BuyingController):
 		if not self.buying_price_list:
 			self.buying_price_list = frappe.defaults.get_defaults().buying_price_list
 
-	def validate_pp_qty(self):
+	def validate_pp_qty(self) -> None:
 		items_from_pp = [item for item in self.items if item.material_request_plan_item]
 		if items_from_pp:
 			items_mr_plan_items = [item.material_request_plan_item for item in items_from_pp]
@@ -216,22 +218,22 @@ class MaterialRequest(BuyingController):
 						)
 					)
 
-	def before_update_after_submit(self):
+	def before_update_after_submit(self) -> None:
 		self.validate_schedule_date()
 
-	def validate_material_request_type(self):
+	def validate_material_request_type(self) -> None:
 		"""Validate fields in accordance with selected type"""
 
 		if self.material_request_type != "Customer Provided":
 			self.customer = None
 
-	def set_title(self):
+	def set_title(self) -> None:
 		"""Set title as comma separated list of items"""
 		if not self.title:
 			items = ", ".join([d.item_name for d in self.items][:3])
 			self.title = _("{0} Request for {1}").format(_(self.material_request_type), items)[:100]
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_requested_qty_in_production_plan()
 		self.update_requested_qty()
 		if self.material_request_type == "Purchase":
@@ -239,31 +241,31 @@ class MaterialRequest(BuyingController):
 			if frappe.db.exists("Budget", {"applicable_on_material_request": 1, "docstatus": 1}):
 				self.validate_budget()
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.set_status(update=True)
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.set_status(update=True)
 
-	def before_cancel(self):
+	def before_cancel(self) -> None:
 		# if MRQ is already closed, no point saving the document
 		check_on_hold_or_closed_status(self.doctype, self.name)
 
 		self.set_status(update=True, status="Cancelled")
 
-	def check_modified_date(self):
+	def check_modified_date(self) -> None:
 		mod_db = frappe.db.get_value("Material Request", self.name, "modified")
 
 		if mod_db and get_datetime(mod_db) != get_datetime(self.modified):
 			frappe.throw(_("{0} {1} has been modified. Please refresh.").format(_(self.doctype), self.name))
 
-	def update_status(self, status):
+	def update_status(self, status) -> None:
 		self.check_modified_date()
 		self.status_can_change(status)
 		self.set_status(update=True, status=status)
 		self.update_requested_qty()
 
-	def status_can_change(self, status):
+	def status_can_change(self, status) -> None:
 		"""
 		validates that `status` is acceptable for the present controller status
 		and throws an Exception if otherwise.
@@ -288,7 +290,7 @@ class MaterialRequest(BuyingController):
 					frappe.InvalidStatusError,
 				)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_requested_qty_in_production_plan(cancel=True)
 		self.update_requested_qty()
 		if self.material_request_type == "Purchase":
@@ -325,7 +327,7 @@ class MaterialRequest(BuyingController):
 
 		return mr_items_ordered_qty
 
-	def update_completed_qty(self, mr_items=None, update_modified=True):
+	def update_completed_qty(self, mr_items=None, update_modified: bool = True) -> None:
 		if self.material_request_type == "Purchase":
 			return
 
@@ -378,7 +380,7 @@ class MaterialRequest(BuyingController):
 			update_modified,
 		)
 
-	def update_requested_qty(self, mr_item_rows=None):
+	def update_requested_qty(self, mr_item_rows=None) -> None:
 		"""update requested qty (before ordered_qty is updated)"""
 		item_wh_list = []
 		for d in self.get("items"):
@@ -399,7 +401,7 @@ class MaterialRequest(BuyingController):
 				},
 			)
 
-	def update_requested_qty_in_production_plan(self, cancel=False):
+	def update_requested_qty_in_production_plan(self, cancel: bool = False) -> None:
 		production_plans = []
 		for d in self.get("items"):
 			if d.production_plan and d.material_request_plan_item:
@@ -420,7 +422,7 @@ class MaterialRequest(BuyingController):
 			doc.db_set("status", doc.status)
 
 
-def update_completed_and_requested_qty(stock_entry, method):
+def update_completed_and_requested_qty(stock_entry, method) -> None:
 	if stock_entry.doctype == "Stock Entry":
 		material_request_map = {}
 
@@ -460,7 +462,7 @@ def get_list_context(context=None):
 
 
 @frappe.whitelist()
-def update_status(name: str, status: str):
+def update_status(name: str, status: str) -> None:
 	material_request = frappe.get_doc("Material Request", name)
 	material_request.check_permission("write")
 	material_request.update_status(status)

@@ -1,13 +1,15 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Abs, Sum
 from frappe.utils import flt, getdate
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	if not filters:
 		filters = {}
 	float_precision = frappe.db.get_default("float_precision")
@@ -48,7 +50,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		_("Item") + ":Link/Item:120",
 		_("Item Name") + ":Data:120",

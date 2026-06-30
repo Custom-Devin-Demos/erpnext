@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
@@ -46,7 +48,7 @@ class InventoryDimension(Document):
 		validate_negative_stock: DF.Check
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		if not self.is_new() and frappe.db.has_column("Stock Ledger Entry", self.target_fieldname):
 			self.set_onload("has_stock_ledger", self.has_stock_ledger())
 
@@ -58,20 +60,20 @@ class InventoryDimension(Document):
 			"Stock Ledger Entry", filters={self.target_fieldname: ("is", "set"), "is_cancelled": 0}, limit=1
 		)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_reference_document()
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.do_not_update_document()
 		self.reset_value()
 		self.set_source_and_target_fieldname()
 		self.set_type_of_transaction()
 
-	def set_type_of_transaction(self):
+	def set_type_of_transaction(self) -> None:
 		if self.apply_to_all_doctypes:
 			self.type_of_transaction = "Both"
 
-	def do_not_update_document(self):
+	def do_not_update_document(self) -> None:
 		if self.is_new() or not self.has_stock_ledger():
 			return
 
@@ -92,10 +94,10 @@ class InventoryDimension(Document):
 
 				frappe.throw(_(msg), DoNotChangeError)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self.delete_custom_fields()
 
-	def delete_custom_fields(self):
+	def delete_custom_fields(self) -> None:
 		filters = {
 			"fieldname": (
 				"in",
@@ -117,7 +119,7 @@ class InventoryDimension(Document):
 		msg = f"Deleted custom fields related to the dimension {self.name}"
 		frappe.msgprint(_(msg))
 
-	def reset_value(self):
+	def reset_value(self) -> None:
 		if self.apply_to_all_doctypes:
 			self.type_of_transaction = ""
 			self.mandatory_depends_on = ""
@@ -126,7 +128,7 @@ class InventoryDimension(Document):
 			for field in ["document_type", "condition"]:
 				self.set(field, None)
 
-	def validate_reference_document(self):
+	def validate_reference_document(self) -> None:
 		if frappe.get_cached_value("DocType", self.reference_document, "istable") == 1:
 			msg = f"The reference document {self.reference_document} can not be child table."
 			frappe.throw(_(msg), CanNotBeChildDoc)
@@ -142,7 +144,7 @@ class InventoryDimension(Document):
 		if not self.target_fieldname:
 			self.target_fieldname = scrub(self.dimension_name)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.add_custom_fields()
 
 	@staticmethod
@@ -219,7 +221,7 @@ class InventoryDimension(Document):
 
 		return dimension_fields
 
-	def add_custom_fields(self):
+	def add_custom_fields(self) -> None:
 		custom_fields = {}
 
 		dimension_fields = []
@@ -268,7 +270,7 @@ class InventoryDimension(Document):
 
 		create_custom_fields(filter_custom_fields)
 
-	def add_transfer_field(self, doctype, dimension_fields):
+	def add_transfer_field(self, doctype, dimension_fields) -> None:
 		if doctype not in [
 			"Stock Entry Detail",
 			"Sales Invoice Item",
@@ -415,7 +417,7 @@ def get_inventory_dimensions():
 
 
 @frappe.whitelist()
-def delete_dimension(dimension: str):
+def delete_dimension(dimension: str) -> None:
 	doc = frappe.get_doc("Inventory Dimension", dimension)
 	doc.delete()
 

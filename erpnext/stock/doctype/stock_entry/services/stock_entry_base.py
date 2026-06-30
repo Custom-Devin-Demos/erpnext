@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -12,7 +14,7 @@ class BaseStockEntry:
 	and work order status validation used across multiple handler classes.
 	"""
 
-	def __init__(self, se_doc):
+	def __init__(self, se_doc) -> None:
 		self.doc = se_doc
 
 	@property
@@ -26,7 +28,7 @@ class BaseStockEntry:
 	def backflush_based_on(self):
 		return get_backflush_based_on(self.doc.bom_no)
 
-	def _validate_work_order(self):
+	def _validate_work_order(self) -> None:
 		if not self.wo_doc:
 			return
 

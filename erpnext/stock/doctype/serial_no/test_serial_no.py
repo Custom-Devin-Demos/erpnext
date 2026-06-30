@@ -5,6 +5,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _dict
 from frappe.utils import add_days, nowdate, random_string
@@ -25,10 +27,10 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestSerialNo(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.load_test_records("Stock Entry")
 
-	def test_cannot_create_direct(self):
+	def test_cannot_create_direct(self) -> None:
 		frappe.delete_doc_if_exists("Serial No", "_TCSER0001")
 
 		sr = frappe.new_doc("Serial No")
@@ -46,7 +48,7 @@ class TestSerialNo(ERPNextTestSuite):
 		sr.warehouse = "_Test Warehouse - _TC"
 		self.assertTrue(SerialNoCannotCannotChangeError, sr.save)
 
-	def test_inter_company_transfer(self):
+	def test_inter_company_transfer(self) -> None:
 		se = make_serialized_item(self, target_warehouse="_Test Warehouse - _TC")
 		serial_nos = get_serial_nos_from_bundle(se.get("items")[0].serial_and_batch_bundle)
 
@@ -71,7 +73,7 @@ class TestSerialNo(ERPNextTestSuite):
 		# check Serial No details after purchase in second company
 		self.assertEqual(serial_no.warehouse, wh)
 
-	def test_inter_company_transfer_intermediate_cancellation(self):
+	def test_inter_company_transfer_intermediate_cancellation(self) -> None:
 		"""
 		Receive into and Deliver Serial No from one company.
 		Then Receive into and Deliver from second company.
@@ -131,7 +133,7 @@ class TestSerialNo(ERPNextTestSuite):
 		self.assertRaises(frappe.ValidationError, dn.cancel)
 		self.assertRaises(frappe.ValidationError, pr.cancel)
 
-	def test_inter_company_transfer_fallback_on_cancel(self):
+	def test_inter_company_transfer_fallback_on_cancel(self) -> None:
 		"""
 		Test Serial No state changes on cancellation.
 		If Delivery cancelled, it should fall back on last Receipt in the same company.
@@ -187,7 +189,7 @@ class TestSerialNo(ERPNextTestSuite):
 		# Delivery from FIRST company is cancelled
 		self.assertEqual(sn_doc.warehouse, "_Test Warehouse - _TC")
 
-	def test_correct_serial_no_incoming_rate(self):
+	def test_correct_serial_no_incoming_rate(self) -> None:
 		"""Check correct consumption rate based on serial no record."""
 		item_code = "_Test Serialized Item"
 		warehouse = "_Test Warehouse - _TC"
@@ -228,7 +230,7 @@ class TestSerialNo(ERPNextTestSuite):
 		)
 		self.assertEqual(value_diff, -113)
 
-	def test_auto_fetch(self):
+	def test_auto_fetch(self) -> None:
 		item_code = make_item(
 			properties={
 				"has_serial_no": 1,
@@ -333,7 +335,7 @@ class TestSerialNo(ERPNextTestSuite):
 
 		self.assertEqual(non_expired_serials, [])
 
-	def test_update_maintenance_status_expires_past_warranty(self):
+	def test_update_maintenance_status_expires_past_warranty(self) -> None:
 		"""update_maintenance_status() must pick up the past-warranty Serial No via or_filters and flip it Out of Warranty."""
 		item_code = "_Test Serialized Item"
 		past_date = add_days(nowdate(), -10)
@@ -381,7 +383,7 @@ class TestSerialNo(ERPNextTestSuite):
 			frappe.db.get_value("Serial No", active_sr.name, "maintenance_status"), "Under Warranty"
 		)
 
-	def test_update_maintenance_status_excludes_out_of_amc(self):
+	def test_update_maintenance_status_excludes_out_of_amc(self) -> None:
 		"""The `not in [Out of Warranty, Out of AMC]` filter must skip rows already pinned to
 		those statuses, even when they match the expiry or_filters, while rows in any other
 		status ARE re-evaluated. The contrast makes the `not in` clause load-bearing."""
@@ -430,7 +432,7 @@ class TestSerialNo(ERPNextTestSuite):
 			frappe.db.get_value("Serial No", candidate_sr.name, "maintenance_status"), "Out of AMC"
 		)
 
-	def test_update_maintenance_status_includes_null_status(self):
+	def test_update_maintenance_status_includes_null_status(self) -> None:
 		"""Converting the raw `maintenance_status not in (...)` to a get_all filter changes NULL
 		handling: frappe wraps the clause as `ifnull(maintenance_status, '') not in (...)`, so a
 		NULL-status row that matches the expiry or_filters is now re-evaluated (consistently on

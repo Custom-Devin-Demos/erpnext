@@ -1,5 +1,7 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+from __future__ import annotations
+
 import gzip
 import json
 
@@ -30,13 +32,13 @@ class StockClosingEntry(Document):
 		to_date: DF.Date | None
 	# end: auto-generated types
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.set_status()
 
-	def set_status(self, save=False):
+	def set_status(self, save: bool = False) -> None:
 		self.status = "Queued"
 		if self.docstatus == 2:
 			self.status = "Cancelled"
@@ -47,10 +49,10 @@ class StockClosingEntry(Document):
 		if save:
 			self.db_set("status", self.status)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_duplicate()
 
-	def validate_duplicate(self):
+	def validate_duplicate(self) -> None:
 		table = frappe.qb.DocType("Stock Closing Entry")
 
 		query = (
@@ -80,20 +82,20 @@ class StockClosingEntry(Document):
 				title=_("Duplicate Stock Closing Entry"),
 			)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.set_status(save=True)
 		self.enqueue_job()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.set_status(save=True)
 		self.remove_stock_closing()
 
-	def remove_stock_closing(self):
+	def remove_stock_closing(self) -> None:
 		table = frappe.qb.DocType("Stock Closing Balance")
 		frappe.qb.from_(table).delete().where(table.stock_closing_entry == self.name).run()
 
 	@frappe.whitelist()
-	def enqueue_job(self):
+	def enqueue_job(self) -> None:
 		self.db_set("status", "In Progress")
 		enqueue(prepare_closing_stock_balance, name=self.name, queue="long", timeout=1500)
 		frappe.msgprint(
@@ -103,11 +105,11 @@ class StockClosingEntry(Document):
 		)
 
 	@frappe.whitelist()
-	def regenerate_closing_balance(self):
+	def regenerate_closing_balance(self) -> None:
 		self.remove_stock_closing()
 		self.enqueue_job()
 
-	def create_stock_closing_balance_entries(self):
+	def create_stock_closing_balance_entries(self) -> None:
 		from erpnext.stock.utils import get_combine_datetime
 
 		stk_cl_obj = StockClosing(self.company, self.from_date, self.to_date)
@@ -144,7 +146,7 @@ class StockClosingEntry(Document):
 		return frappe._dict({})
 
 
-def prepare_closing_stock_balance(name):
+def prepare_closing_stock_balance(name) -> None:
 	doc = frappe.get_doc("Stock Closing Entry", name)
 	doc.db_set("status", "In Progress")
 
@@ -158,7 +160,7 @@ def prepare_closing_stock_balance(name):
 
 
 class StockClosing:
-	def __init__(self, company, from_date, to_date, **kwargs):
+	def __init__(self, company, from_date, to_date, **kwargs) -> None:
 		self.company = company
 		self.from_date = from_date
 		self.to_date = to_date
@@ -196,7 +198,7 @@ class StockClosing:
 
 		return closing_stock
 
-	def update_fifo_queue(self, fifo_queue, actual_qty, posting_date):
+	def update_fifo_queue(self, fifo_queue, actual_qty, posting_date) -> None:
 		if actual_qty > 0:
 			fifo_queue.append([actual_qty, get_date_str(posting_date)])
 		else:
@@ -394,7 +396,7 @@ class StockClosing:
 
 		return keys
 
-	def get_stock_closing_balance(self, kwargs, for_batch=False):
+	def get_stock_closing_balance(self, kwargs, for_batch: bool = False):
 		if not self.last_closing_balance:
 			return []
 

@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -18,7 +20,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestSerialandBatchBundle(ERPNextTestSuite):
-	def test_naming_for_sabb(self):
+	def test_naming_for_sabb(self) -> None:
 		frappe.db.set_single_value(
 			"Stock Settings", "set_serial_and_batch_bundle_naming_based_on_naming_series", 1
 		)
@@ -80,7 +82,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 
 		self.assertFalse(bundle_doc.name.startswith("SABB-"))
 
-	def test_inward_outward_serial_valuation(self):
+	def test_inward_outward_serial_valuation(self) -> None:
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
@@ -138,7 +140,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 
 		self.assertEqual(flt(stock_value_difference, 2), -500)
 
-	def test_inward_outward_batch_valuation(self):
+	def test_inward_outward_batch_valuation(self) -> None:
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
@@ -197,7 +199,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 
 		self.assertEqual(flt(stock_value_difference, 2), -5000)
 
-	def test_old_batch_valuation(self):
+	def test_old_batch_valuation(self) -> None:
 		frappe.flags.ignore_serial_batch_bundle_validation = True
 		frappe.flags.use_serial_and_batch_fields = True
 		batch_item_code = "Old Batch Item Valuation 1"
@@ -360,7 +362,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		self.assertFalse(json.loads(sle.stock_queue or "[]"))
 		self.assertEqual(flt(sle.stock_value), 0.0)
 
-	def test_old_moving_avg_item_with_without_batchwise_valuation(self):
+	def test_old_moving_avg_item_with_without_batchwise_valuation(self) -> None:
 		frappe.flags.ignore_serial_batch_bundle_validation = True
 		frappe.flags.use_serial_and_batch_fields = True
 		batch_item_code = "Old Batch Item Valuation 2"
@@ -490,7 +492,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		self.assertEqual(flt(sle.stock_value), 0.0)
 		self.assertEqual(flt(sle.qty_after_transaction), 0.0)
 
-	def test_old_serial_no_valuation(self):
+	def test_old_serial_no_valuation(self) -> None:
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 		serial_no_item_code = "Old Serial No Item Valuation 1"
@@ -573,7 +575,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		frappe.flags.ignore_serial_batch_bundle_validation = False
 		frappe.flags.use_serial_and_batch_fields = False
 
-	def test_batch_not_belong_to_serial_no(self):
+	def test_batch_not_belong_to_serial_no(self) -> None:
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 		serial_and_batch_code = "New Serial No Valuation 1"
@@ -626,7 +628,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		# Batch does not belong to serial no
 		self.assertRaises(frappe.exceptions.ValidationError, doc.save)
 
-	def test_auto_delete_draft_serial_and_batch_bundle(self):
+	def test_auto_delete_draft_serial_and_batch_bundle(self) -> None:
 		serial_and_batch_code = "New Serial No Auto Delete 1"
 		make_item(
 			serial_and_batch_code,
@@ -678,7 +680,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		ste.delete()
 		self.assertFalse(frappe.db.exists("Serial and Batch Bundle", bundle_doc.name))
 
-	def test_serial_and_batch_bundle_company(self):
+	def test_serial_and_batch_bundle_company(self) -> None:
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 		item = make_item(
@@ -717,7 +719,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		sn_doc = add_serial_batch_ledgers(entries, item_row, pr, "_Test Warehouse - _TC")
 		self.assertEqual(sn_doc.company, "_Test Company")
 
-	def test_auto_cancel_serial_and_batch(self):
+	def test_auto_cancel_serial_and_batch(self) -> None:
 		item_code = make_item(
 			properties={"has_serial_no": 1, "serial_no_series": "ATC-TT-SER-VAL-.#####"}
 		).name
@@ -737,7 +739,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		docstatus = frappe.db.get_value("Serial and Batch Bundle", bundle, "docstatus")
 		self.assertEqual(docstatus, 2)
 
-	def test_submitted_bundle_entries_cannot_be_mutated(self):
+	def test_submitted_bundle_entries_cannot_be_mutated(self) -> None:
 		# A submitted Serial and Batch Bundle is the immutable source of truth for the stock
 		# ledger, live batch availability and repost/valuation replay. update_serial_batch_no_ledgers
 		# (which the whitelisted add_serial_batch_ledgers delegates to for an existing bundle) must
@@ -791,7 +793,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 			10,
 		)
 
-	def test_batch_duplicate_entry(self):
+	def test_batch_duplicate_entry(self) -> None:
 		item_code = make_item(properties={"has_batch_no": 1}).name
 
 		batch_id = "TEST-BATTCCH-VAL-00001"
@@ -809,7 +811,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		make_batch_nos(item_code, batch_nos)
 		self.assertTrue(frappe.db.exists("Batch", batch_id))
 
-	def test_serial_no_duplicate_entry(self):
+	def test_serial_no_duplicate_entry(self) -> None:
 		item_code = make_item(properties={"has_serial_no": 1}).name
 
 		serial_no_id = "TEST-SNID-VAL-00001"
@@ -828,7 +830,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 	@ERPNextTestSuite.change_settings(
 		"Stock Settings", {"auto_create_serial_and_batch_bundle_for_outward": 1}
 	)
-	def test_duplicate_serial_and_batch_bundle(self):
+	def test_duplicate_serial_and_batch_bundle(self) -> None:
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 		item_code = make_item(properties={"is_stock_item": 1, "has_serial_no": 1}).name
@@ -845,7 +847,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 
 		self.assertRaises(frappe.exceptions.ValidationError, pr2.save)
 
-	def test_serial_no_valuation_for_legacy_ledgers(self):
+	def test_serial_no_valuation_for_legacy_ledgers(self) -> None:
 		sn_item = make_item(
 			"Test Serial No Valuation for Legacy Ledgers",
 			properties={"has_serial_no": 1, "serial_no_series": "SNN-TSNVL-.#####"},
@@ -951,7 +953,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 
 		self.assertEqual(flt(stock_value_difference, 2), 353.0 * -1)
 
-	def test_pick_serial_nos_for_batch_item(self):
+	def test_pick_serial_nos_for_batch_item(self) -> None:
 		item_code = make_item(
 			"Test Pick Serial Nos for Batch Item 1",
 			properties={
@@ -1006,7 +1008,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		serial_nos = get_serial_nos_from_bundle(se.items[0].serial_and_batch_bundle)
 		self.assertEqual(serial_nos, serial_nos1)
 
-	def test_auto_create_serial_and_batch_bundle_for_outward_for_batch_item(self):
+	def test_auto_create_serial_and_batch_bundle_for_outward_for_batch_item(self) -> None:
 		item_code = make_item(
 			"Test Auto Create Batch Bundle for Outward 1",
 			properties={
@@ -1057,7 +1059,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 			"Stock Settings", "auto_create_serial_and_batch_bundle_for_outward", original_value
 		)
 
-	def test_voucher_detail_no(self):
+	def test_voucher_detail_no(self) -> None:
 		item_code = make_item(
 			"Test Voucher Detail No 1",
 			properties={
@@ -1131,7 +1133,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		self.assertEqual(bundle_doc.docstatus, 0)
 		self.assertRaises(frappe.ValidationError, bundle_doc.submit)
 
-	def test_reference_voucher_on_cancel(self):
+	def test_reference_voucher_on_cancel(self) -> None:
 		"""
 		When a source document is cancelled, the reference voucher field
 		in the respective serial or batch document should be nullified.
@@ -1163,7 +1165,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 
 		self.assertEqual(frappe.get_value("Serial No", serial_no, "reference_name"), se1.name)
 
-	def test_stock_queue_for_return_entry_with_non_batchwise_valuation(self):
+	def test_stock_queue_for_return_entry_with_non_batchwise_valuation(self) -> None:
 		from erpnext.controllers.sales_and_purchase_return import make_return_doc
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
@@ -1251,7 +1253,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		# FIFO removes from front: [10, 100] -> [5, 100], rest unchanged
 		self.assertEqual(json.loads(return_sle.stock_queue), [[5, 100], [20, 200], [5, 300]])
 
-	def test_stock_queue_for_return_entry_with_empty_fifo_queue(self):
+	def test_stock_queue_for_return_entry_with_empty_fifo_queue(self) -> None:
 		"""Credit note (sales return) against empty FIFO queue should still rebuild stock_queue."""
 		from erpnext.controllers.sales_and_purchase_return import make_return_doc
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
@@ -1330,7 +1332,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		# Stock queue should have the returned stock: [[5, 100]]
 		self.assertEqual(json.loads(return_sle.stock_queue), [[5, 100]])
 
-	def test_get_picked_batches_runs(self):
+	def test_get_picked_batches_runs(self) -> None:
 		from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle import get_picked_batches
 
 		# Sum(qty) is selected with bare batch_no/warehouse; without a GROUP BY this
@@ -1339,7 +1341,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		result = get_picked_batches(frappe._dict())
 		self.assertIsInstance(result, dict)
 
-	def _assert_legacy_return_valuation(self, item_code, props, batch_no=None):
+	def _assert_legacy_return_valuation(self, item_code, props, batch_no=None) -> None:
 		"""Return against a legacy serial/batch receipt (no Serial and Batch Bundle) must value outgoing stock from the original ledger rate."""
 		from erpnext.controllers.sales_and_purchase_return import make_return_doc
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
@@ -1392,7 +1394,7 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 		# 4 units returned at the original ledger rate of 100 -> -400 (must not be zero)
 		self.assertEqual(flt(difference_in_stock_value, 2), -400.0)
 
-	def test_return_valuation_for_legacy_batch_without_bundle(self):
+	def test_return_valuation_for_legacy_batch_without_bundle(self) -> None:
 		self._assert_legacy_return_valuation(
 			"Test Legacy Batch Return Valuation",
 			{
@@ -1404,13 +1406,13 @@ class TestSerialandBatchBundle(ERPNextTestSuite):
 			batch_no="LBRV-BATCH-0001",
 		)
 
-	def test_return_valuation_for_legacy_serial_without_bundle(self):
+	def test_return_valuation_for_legacy_serial_without_bundle(self) -> None:
 		self._assert_legacy_return_valuation(
 			"Test Legacy Serial Return Valuation",
 			{"has_serial_no": 1, "serial_no_series": "LSRV-.#####", "is_stock_item": 1},
 		)
 
-	def test_return_valuation_for_legacy_serial_and_batch_without_bundle(self):
+	def test_return_valuation_for_legacy_serial_and_batch_without_bundle(self) -> None:
 		self._assert_legacy_return_valuation(
 			"Test Legacy Serial Batch Return Valuation",
 			{

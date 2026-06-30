@@ -1,12 +1,14 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Date
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns, data = [], []
 
 	validate_filters(filters)
@@ -17,7 +19,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	if not filters:
 		frappe.throw(_("Please set filters"))
 

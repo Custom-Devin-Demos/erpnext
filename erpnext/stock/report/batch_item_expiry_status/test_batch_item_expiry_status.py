@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.item.test_item import make_item
@@ -21,7 +23,7 @@ class TestBatchItemExpiryStatus(ERPNextTestSuite):
 		filters.update(extra)
 		return execute(filters)[1]
 
-	def test_batch_listed_with_balance(self):
+	def test_batch_listed_with_balance(self) -> None:
 		item = make_item(
 			properties={
 				"is_stock_item": 1,

@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -74,7 +76,7 @@ def make_sales_invoice(
 	returned_qty_map = get_returned_qty_map(source_name)
 	invoiced_qty_map = get_invoiced_qty_map(source_name)
 
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		target.run_method("set_missing_values")
 		target.run_method("set_po_nos")
 
@@ -96,7 +98,7 @@ def make_sales_invoice(
 		if target.company_address:
 			target.update(get_fetch_values("Sales Invoice", "company_address", target.company_address))
 
-	def update_item(source_doc, target_doc, source_parent):
+	def update_item(source_doc, target_doc, source_parent) -> None:
 		target_doc.qty = to_make_invoice_qty_map[source_doc.name]
 		target_doc._old_name = source_doc.name
 
@@ -208,7 +210,7 @@ def make_delivery_trip(
 	if not target_doc:
 		target_doc = frappe.new_doc("Delivery Trip")
 
-	def update_address(source_doc, target_doc, source_parent):
+	def update_address(source_doc, target_doc, source_parent) -> None:
 		target_doc.address = source_doc.shipping_address_name or source_doc.customer_address
 		target_doc.customer_address = source_doc.shipping_address or source_doc.address_display
 
@@ -237,7 +239,7 @@ def make_delivery_trip(
 def make_installation_note(
 	source_name: str, target_doc: str | Document | None = None, kwargs: dict | None = None
 ):
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		target.qty = flt(obj.qty) - flt(obj.installed_qty)
 		target.serial_no = obj.serial_no
 
@@ -265,10 +267,10 @@ def make_installation_note(
 
 @frappe.whitelist()
 def make_packing_slip(source_name: str, target_doc: str | Document | None = None):
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		target.run_method("set_missing_values")
 
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		target.qty = flt(obj.qty) - flt(obj.packed_qty)
 
 	doclist = get_mapped_doc(
@@ -319,7 +321,7 @@ def make_packing_slip(source_name: str, target_doc: str | Document | None = None
 
 @frappe.whitelist()
 def make_shipment(source_name: str, target_doc: str | Document | None = None):
-	def postprocess(source, target):
+	def postprocess(source, target) -> None:
 		user = frappe.db.get_value(
 			"User", frappe.session.user, ["email", "full_name", "phone", "mobile_no"], as_dict=1
 		)
@@ -433,7 +435,7 @@ def make_inter_company_transaction(doctype: str, source_name: str, target_doc=No
 	validate_inter_company_transaction(source_doc, doctype)
 	details = get_inter_company_details(source_doc, doctype)
 
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		target.run_method("set_missing_values")
 		set_purchase_references(target)
 
@@ -546,7 +548,7 @@ def make_inter_company_transaction(doctype: str, source_name: str, target_doc=No
 				shipping_address_name=target_doc.shipping_address_name,
 			)
 
-	def update_item(source, target, source_parent):
+	def update_item(source, target, source_parent) -> None:
 		if source_parent.doctype == "Delivery Note" and source.received_qty:
 			target.qty = flt(source.qty) + flt(source.returned_qty) - flt(source.received_qty)
 

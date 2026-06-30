@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
@@ -12,7 +14,7 @@ from .stock_entry_base import BaseStockEntry
 
 
 class StockEntrySABB(BaseStockEntry):
-	def make_serial_and_batch_bundle_for_outward(self):
+	def make_serial_and_batch_bundle_for_outward(self) -> None:
 		serial_or_batch_items = get_serial_or_batch_items(self.doc.items)
 		if not serial_or_batch_items:
 			return
@@ -77,7 +79,7 @@ class StockEntrySABB(BaseStockEntry):
 
 		return None
 
-	def get_serial_nos_and_batches_from_sres(self, scio_detail, only_pending=True):
+	def get_serial_nos_and_batches_from_sres(self, scio_detail, only_pending: bool = True) -> tuple:
 		serial_nos, batch_nos = [], frappe._dict()
 
 		table = frappe.qb.DocType("Stock Reservation Entry")
@@ -103,7 +105,7 @@ class StockEntrySABB(BaseStockEntry):
 
 		return serial_nos, batch_nos
 
-	def get_serial_batch_fields_for_subcontracting_inward(self):
+	def get_serial_batch_fields_for_subcontracting_inward(self) -> tuple:
 		serial_nos, batch_nos = frappe._dict(), frappe._dict()
 		for row in self.doc.items:
 			if self.doc.purpose in [
@@ -162,7 +164,7 @@ class StockEntrySABB(BaseStockEntry):
 
 		return itemwise_serial_batch_qty
 
-	def set_serial_batch_based_on_reservation(self):
+	def set_serial_batch_based_on_reservation(self) -> None:
 		if self.doc.work_order and frappe.get_cached_value(
 			"Work Order", self.doc.work_order, "reserve_stock"
 		):
@@ -195,7 +197,7 @@ class StockEntrySABB(BaseStockEntry):
 
 		self._sort_and_reindex_items()
 
-	def _apply_batch_reservation_to_item(self, d, details, new_items_to_add):
+	def _apply_batch_reservation_to_item(self, d, details, new_items_to_add) -> None:
 		original_qty = d.qty
 		if batches := details.get("batch_no"):
 			original_qty = self._distribute_batches_to_item(
@@ -218,7 +220,9 @@ class StockEntrySABB(BaseStockEntry):
 				self._assign_batch_to_item(d, batches, details, batch_no, qty)
 		return original_qty
 
-	def _make_overflow_batch_row(self, d, batches, details, new_items_to_add, batch_no, qty, original_qty):
+	def _make_overflow_batch_row(
+		self, d, batches, details, new_items_to_add, batch_no, qty, original_qty
+	) -> tuple:
 		new_row = frappe.copy_doc(d)
 		new_row.name = None
 		new_row.batch_no = batch_no
@@ -230,7 +234,7 @@ class StockEntrySABB(BaseStockEntry):
 		batches[batch_no] -= qty
 		return original_qty - qty, new_row
 
-	def _assign_batch_to_item(self, d, batches, details, batch_no, qty):
+	def _assign_batch_to_item(self, d, batches, details, batch_no, qty) -> None:
 		if qty >= d.qty:
 			d.batch_no = batch_no
 			batches[batch_no] -= d.qty
@@ -241,7 +245,7 @@ class StockEntrySABB(BaseStockEntry):
 		if d.batch_no and details.get("batchwise_sn"):
 			d.serial_no = "\n".join(details.get("batchwise_sn")[d.batch_no][: cint(d.qty)])
 
-	def _sort_and_reindex_items(self):
+	def _sort_and_reindex_items(self) -> None:
 		sorted_items = sorted(self.doc.items, key=lambda x: x.item_code)
 		if self.doc.purpose == "Manufacture":
 			# ensure finished item at last
@@ -280,7 +284,7 @@ def _make_bundle_doc(parent_doc, child, type_of_transaction):
 	)
 
 
-def _populate_bundle_entries(doc, row, child):
+def _populate_bundle_entries(doc, row, child) -> None:
 	precision = frappe.get_precision("Stock Entry Detail", "qty")
 	if row.serial_nos and row.batches_to_be_consume:
 		_append_serial_batch_entries(doc, row, child, precision)
@@ -292,7 +296,7 @@ def _populate_bundle_entries(doc, row, child):
 		_append_batch_entries(doc, row)
 
 
-def _append_serial_batch_entries(doc, row, child, precision):
+def _append_serial_batch_entries(doc, row, child, precision) -> None:
 	doc.has_serial_no = 1
 	doc.has_batch_no = 1
 	batchwise_serial_nos = get_batchwise_serial_nos(child.item_code, row)
@@ -310,7 +314,7 @@ def _append_serial_batch_entries(doc, row, child, precision):
 			)
 
 
-def _append_batch_entries(doc, row):
+def _append_batch_entries(doc, row) -> None:
 	precision = frappe.get_precision("Serial and Batch Entry", "qty")
 	doc.has_batch_no = 1
 	for batch_no, qty in row.batches_to_be_consume.items():

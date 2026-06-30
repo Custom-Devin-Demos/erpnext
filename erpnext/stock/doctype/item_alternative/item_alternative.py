@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
@@ -26,16 +28,16 @@ class ItemAlternative(Document):
 		two_way: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.has_alternative_item()
 		self.validate_alternative_item()
 		self.validate_duplicate()
 
-	def has_alternative_item(self):
+	def has_alternative_item(self) -> None:
 		if self.item_code and not frappe.db.get_value("Item", self.item_code, "allow_alternative_item"):
 			frappe.throw(_("Cannot set alternative item for the item {0}").format(self.item_code))
 
-	def validate_alternative_item(self):
+	def validate_alternative_item(self) -> None:
 		if self.item_code == self.alternative_item_code:
 			frappe.throw(_("Alternative item must not be same as item code"))
 
@@ -72,7 +74,7 @@ class ItemAlternative(Document):
 		if self.two_way and not alternative_item_data.allow_alternative_item:
 			frappe.throw(alternate_item_check_msg.format(self.alternative_item_code))
 
-	def validate_duplicate(self):
+	def validate_duplicate(self) -> None:
 		if frappe.db.get_value(
 			"Item Alternative",
 			{
@@ -86,7 +88,9 @@ class ItemAlternative(Document):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_alternative_items(doctype: Any, txt: str, searchfield: Any, start: int, page_len: int, filters: dict):
+def get_alternative_items(
+	doctype: Any, txt: str, searchfield: Any, start: int, page_len: int, filters: dict
+) -> list:
 	item_code = filters.get("item_code")
 	search = f"%{txt}%"
 	# each leg has distinct values (validate_duplicate), so start+page_len rows per leg suffice

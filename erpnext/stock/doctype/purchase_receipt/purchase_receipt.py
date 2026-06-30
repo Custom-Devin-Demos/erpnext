@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, throw
 from frappe.desk.notifications import clear_doctype_notifications
@@ -148,7 +150,7 @@ class PurchaseReceipt(BuyingController):
 		transporter_name: DF.Data | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.status_updater = [
 			{
@@ -235,14 +237,14 @@ class PurchaseReceipt(BuyingController):
 				]
 			)
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		from erpnext.stock.doctype.putaway_rule.putaway_rule import apply_putaway_rule
 
 		if self.get("items") and self.apply_putaway_rule and not self.get("is_return"):
 			if items := apply_putaway_rule(self.doctype, self.get("items"), self.company):
 				self.items = items
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_posting_time()
 		self.validate_posting_date_with_po()
 		super().validate()
@@ -267,11 +269,11 @@ class PurchaseReceipt(BuyingController):
 		self.reset_default_field_value("rejected_warehouse", "items", "rejected_warehouse")
 		self.reset_default_field_value("set_from_warehouse", "items", "from_warehouse")
 
-	def validate_uom_is_integer(self):
+	def validate_uom_is_integer(self) -> None:
 		super().validate_uom_is_integer("uom", ["qty", "received_qty"], "Purchase Receipt Item")
 		super().validate_uom_is_integer("stock_uom", "stock_qty", "Purchase Receipt Item")
 
-	def validate_cwip_accounts(self):
+	def validate_cwip_accounts(self) -> None:
 		for item in self.get("items"):
 			if item.is_fixed_asset and is_cwip_accounting_enabled(item.asset_category):
 				# check cwip accounts before making auto assets
@@ -284,7 +286,7 @@ class PurchaseReceipt(BuyingController):
 				)
 				break
 
-	def validate_with_previous_doc(self):
+	def validate_with_previous_doc(self) -> None:
 		super().validate_with_previous_doc(
 			{
 				"Purchase Order": {
@@ -309,7 +311,7 @@ class PurchaseReceipt(BuyingController):
 				[["Purchase Order", "purchase_order", "purchase_order_item"]]
 			)
 
-	def po_required(self):
+	def po_required(self) -> None:
 		if (
 			frappe.db.get_single_value("Buying Settings", "po_required") == "Yes"
 			and not self.is_internal_transfer()
@@ -318,7 +320,7 @@ class PurchaseReceipt(BuyingController):
 				if not d.purchase_order:
 					frappe.throw(_("Purchase Order number required for Item {0}").format(d.item_code))
 
-	def validate_items_quality_inspection(self):
+	def validate_items_quality_inspection(self) -> None:
 		for item in self.get("items"):
 			if item.quality_inspection:
 				qi = frappe.db.get_value(
@@ -355,12 +357,12 @@ class PurchaseReceipt(BuyingController):
 		)
 		return flt(qty[0].qty) if qty and qty[0].qty else 0.0
 
-	def get_po_qty_and_warehouse(self, po_detail):
+	def get_po_qty_and_warehouse(self, po_detail) -> tuple:
 		po_qty, po_warehouse = frappe.db.get_value("Purchase Order Item", po_detail, ["qty", "warehouse"])
 		return po_qty, po_warehouse
 
 	# on submit
-	def on_submit(self):
+	def on_submit(self) -> None:
 		super().on_submit()
 
 		# Check for Approving Authority
@@ -386,7 +388,7 @@ class PurchaseReceipt(BuyingController):
 		PurchaseReceiptStockReservation(self).reserve_stock()
 		self.update_received_qty_if_from_pp()
 
-	def update_received_qty_if_from_pp(self):
+	def update_received_qty_if_from_pp(self) -> None:
 		from frappe.query_builder.functions import Coalesce, NullIf, Sum
 
 		items_from_po = [item.purchase_order_item for item in self.items if item.purchase_order_item]
@@ -423,7 +425,7 @@ class PurchaseReceipt(BuyingController):
 						row.received_qty,
 					)
 
-	def check_next_docstatus(self):
+	def check_next_docstatus(self) -> None:
 		submit_rv = frappe.get_all(
 			"Purchase Invoice Item",
 			filters={"purchase_receipt": self.name, "docstatus": 1},
@@ -434,7 +436,7 @@ class PurchaseReceipt(BuyingController):
 		if submit_rv:
 			frappe.throw(_("Purchase Invoice {0} is already submitted").format(submit_rv[0][0]))
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		super().on_cancel()
 
 		self.check_for_on_hold_or_closed_status("Purchase Order", "purchase_order")
@@ -467,15 +469,15 @@ class PurchaseReceipt(BuyingController):
 		self.set_consumed_qty_in_subcontract_order()
 		self.update_received_qty_if_from_pp()
 
-	def before_cancel(self):
+	def before_cancel(self) -> None:
 		super().before_cancel()
 		self.remove_amount_difference_with_purchase_invoice()
 
-	def remove_amount_difference_with_purchase_invoice(self):
+	def remove_amount_difference_with_purchase_invoice(self) -> None:
 		for item in self.items:
 			item.amount_difference_with_purchase_invoice = 0
 
-	def get_gl_entries(self, inventory_account_map=None, via_landed_cost_voucher=False):
+	def get_gl_entries(self, inventory_account_map=None, via_landed_cost_voucher: bool = False):
 		from erpnext.stock.doctype.purchase_receipt.services.gl_composer import (
 			PurchaseReceiptGLComposer,
 		)
@@ -484,7 +486,7 @@ class PurchaseReceipt(BuyingController):
 
 	def add_provisional_gl_entry(
 		self, item, gl_entries, posting_date, provisional_account, reverse=0, item_amount=None
-	):
+	) -> None:
 		ProvisionalAccountingService(self).add_provisional_gl_entry(
 			item, gl_entries, posting_date, provisional_account, reverse, item_amount
 		)
@@ -496,7 +498,7 @@ class PurchaseReceipt(BuyingController):
 
 		return False
 
-	def update_assets(self, item, valuation_rate):
+	def update_assets(self, item, valuation_rate) -> None:
 		assets = frappe.db.get_all(
 			"Asset",
 			filters={
@@ -518,15 +520,15 @@ class PurchaseReceipt(BuyingController):
 				},
 			)
 
-	def update_status(self, status):
+	def update_status(self, status) -> None:
 		self.set_status(update=True, status=status)
 		self.notify_update()
 		clear_doctype_notifications(self)
 
-	def update_billing_status(self, update_modified=True):
+	def update_billing_status(self, update_modified: bool = True) -> None:
 		BillingStatusService(self).update_billing_status(update_modified)
 
-	def enable_recalculate_rate_in_sles(self):
+	def enable_recalculate_rate_in_sles(self) -> None:
 		rejected_warehouses = frappe.get_all(
 			"Purchase Receipt Item", filters={"parent": self.name}, pluck="rejected_warehouse"
 		)
@@ -556,13 +558,13 @@ def get_stock_value_difference(voucher_no, voucher_detail_no, warehouse):
 
 
 @frappe.whitelist()
-def update_purchase_receipt_status(docname: str, status: str):
+def update_purchase_receipt_status(docname: str, status: str) -> None:
 	pr = frappe.get_lazy_doc("Purchase Receipt", docname, check_permission="submit")
 	pr.update_status(status)
 
 
 @erpnext.allow_regional
-def update_regional_gl_entries(gl_list, doc):
+def update_regional_gl_entries(gl_list, doc) -> None:
 	return
 
 

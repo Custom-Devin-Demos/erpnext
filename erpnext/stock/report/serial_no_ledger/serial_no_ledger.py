@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import copy
 
 import frappe
@@ -14,7 +16,7 @@ BUYING_VOUCHER_TYPES = ["Purchase Invoice", "Purchase Receipt", "Subcontracting 
 SELLING_VOUCHER_TYPES = ["Sales Invoice", "Delivery Note"]
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns = get_columns(filters)
 	data = get_data(filters)
 	return columns, data

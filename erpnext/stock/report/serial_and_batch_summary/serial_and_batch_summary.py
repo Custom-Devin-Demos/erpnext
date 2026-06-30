@@ -1,13 +1,15 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	data = get_data(filters)
 	columns = get_columns(filters, data)
 

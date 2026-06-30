@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.repost_item_valuation.repost_item_valuation import get_recipients
@@ -8,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestStockRepostingSettings(ERPNextTestSuite):
-	def test_notify_reposting_error_to_role(self):
+	def test_notify_reposting_error_to_role(self) -> None:
 		role = "Notify Reposting Role"
 
 		if not frappe.db.exists("Role", role):

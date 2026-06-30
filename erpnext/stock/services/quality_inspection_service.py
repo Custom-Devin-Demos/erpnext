@@ -6,6 +6,7 @@
 Extracted from ``StockController``. Validates that items requiring quality
 inspection have a present / submitted / non-rejected Quality Inspection.
 """
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -31,7 +32,7 @@ class QualityInspectionService:
 	def __init__(self, doc) -> None:
 		self.doc = doc
 
-	def validate_inspection(self):
+	def validate_inspection(self) -> None:
 		"""Checks if quality inspection is set/ is valid for Items that require inspection."""
 		inspection_required_fieldname = INSPECTION_FIELDNAME_MAP.get(self.doc.doctype)
 
@@ -71,7 +72,7 @@ class QualityInspectionService:
 					self.validate_qi_submission(row)
 					self.validate_qi_rejection(row)
 
-	def validate_qi_presence(self, row):
+	def validate_qi_presence(self, row) -> None:
 		"""Check if QI is present on row level. Warn on save and stop on submit if missing."""
 		if not row.quality_inspection:
 			msg = _("Row #{0}: Quality Inspection is required for Item {1}").format(
@@ -82,7 +83,7 @@ class QualityInspectionService:
 			else:
 				frappe.msgprint(msg, title=_("Inspection Required"), indicator="blue")
 
-	def validate_qi_submission(self, row):
+	def validate_qi_submission(self, row) -> None:
 		"""Check if QI is submitted on row level, during submission"""
 		action = frappe.get_single_value("Stock Settings", "action_if_quality_inspection_is_not_submitted")
 		qa_docstatus = frappe.db.get_value("Quality Inspection", row.quality_inspection, "docstatus")
@@ -97,7 +98,7 @@ class QualityInspectionService:
 			else:
 				frappe.msgprint(msg, alert=True, indicator="orange")
 
-	def validate_qi_rejection(self, row):
+	def validate_qi_rejection(self, row) -> None:
 		"""Check if QI is rejected on row level, during submission"""
 		action = frappe.get_single_value("Stock Settings", "action_if_quality_inspection_is_rejected")
 		qa_status = frappe.db.get_value("Quality Inspection", row.quality_inspection, "status")

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 from frappe.query_builder import Case, Order
@@ -37,7 +39,7 @@ class Bin(Document):
 	# end: auto-generated types
 
 	@frappe.whitelist()
-	def recalculate_qty(self):
+	def recalculate_qty(self) -> None:
 		from erpnext.manufacturing.doctype.work_order.work_order import get_reserved_qty_for_production
 		from erpnext.stock.stock_balance import (
 			get_indented_qty,
@@ -58,12 +60,12 @@ class Bin(Document):
 		self.set_projected_qty()
 		self.save()
 
-	def before_save(self):
+	def before_save(self) -> None:
 		if self.get("__islocal") or not self.stock_uom:
 			self.stock_uom = frappe.get_cached_value("Item", self.item_code, "stock_uom")
 		self.set_projected_qty()
 
-	def set_projected_qty(self):
+	def set_projected_qty(self) -> None:
 		self.projected_qty = (
 			flt(self.actual_qty)
 			+ flt(self.ordered_qty)
@@ -75,7 +77,9 @@ class Bin(Document):
 			- flt(self.reserved_qty_for_production_plan)
 		)
 
-	def update_reserved_qty_for_production_plan(self, skip_project_qty_update=False, update_qty=True):
+	def update_reserved_qty_for_production_plan(
+		self, skip_project_qty_update: bool = False, update_qty: bool = True
+	) -> None:
 		"""Update qty reserved for production from Production Plan tables
 		in open production plan"""
 		from erpnext.manufacturing.doctype.production_plan.production_plan import (
@@ -102,7 +106,7 @@ class Bin(Document):
 			self.set_projected_qty()
 			self.db_set("projected_qty", self.projected_qty, update_modified=True)
 
-	def update_reserved_qty_for_for_sub_assembly(self):
+	def update_reserved_qty_for_for_sub_assembly(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.production_plan import (
 			get_reserved_qty_for_sub_assembly,
 		)
@@ -123,7 +127,7 @@ class Bin(Document):
 			update_modified=True,
 		)
 
-	def update_reserved_qty_for_production(self):
+	def update_reserved_qty_for_production(self) -> None:
 		"""Update qty reserved for production from Production Item tables
 		in open work orders"""
 		from erpnext.manufacturing.doctype.work_order.work_order import get_reserved_qty_for_production
@@ -140,8 +144,8 @@ class Bin(Document):
 		self.db_set("projected_qty", self.projected_qty, update_modified=True)
 
 	def update_reserved_qty_for_sub_contracting(
-		self, subcontract_doctype="Subcontracting Order", update_qty=True
-	):
+		self, subcontract_doctype: str = "Subcontracting Order", update_qty: bool = True
+	) -> None:
 		# reserved qty
 
 		subcontract_order = frappe.qb.DocType(subcontract_doctype)
@@ -214,7 +218,7 @@ class Bin(Document):
 			self.set_projected_qty()
 			self.db_set("projected_qty", self.projected_qty, update_modified=True)
 
-	def update_reserved_stock(self):
+	def update_reserved_stock(self) -> None:
 		"""Update `Reserved Stock` on change in Reserved Qty of Stock Reservation Entry"""
 
 		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import (
@@ -226,7 +230,7 @@ class Bin(Document):
 		self.db_set("reserved_stock", flt(reserved_stock), update_modified=True)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_unique("Bin", ["item_code", "warehouse"], constraint_name="unique_item_warehouse")
 
 
@@ -248,7 +252,7 @@ def get_bin_details(bin_name):
 	)
 
 
-def update_qty(bin_name, args):
+def update_qty(bin_name, args) -> None:
 	from erpnext.controllers.stock_controller import future_sle_exists
 
 	bin_details = get_bin_details(bin_name)

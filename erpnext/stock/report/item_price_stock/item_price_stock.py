@@ -1,18 +1,20 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns, data = [], []
 	columns = get_columns()
 	data = get_data(filters, columns)
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"label": _("Item Code"),

@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 from datetime import date, timedelta
 
 import frappe
@@ -10,7 +12,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestShipment(ERPNextTestSuite):
-	def test_shipment_from_delivery_note(self):
+	def test_shipment_from_delivery_note(self) -> None:
 		delivery_note = create_test_delivery_note()
 		delivery_note.submit()
 		shipment = create_test_shipment([delivery_note])
@@ -20,7 +22,7 @@ class TestShipment(ERPNextTestSuite):
 		self.assertEqual(len(second_shipment.shipment_delivery_note), 1)
 		self.assertEqual(second_shipment.shipment_delivery_note[0].delivery_note, delivery_note.name)
 
-	def test_get_total_weight(self):
+	def test_get_total_weight(self) -> None:
 		shipment = frappe.new_doc("Shipment")
 		shipment.extend(
 			"shipment_parcel",
@@ -183,7 +185,7 @@ def create_shipment_customer(customer_name):
 	return customer
 
 
-def create_material_receipt(item, company):
+def create_material_receipt(item, company) -> None:
 	posting_date = date.today()
 	stock = frappe.new_doc("Stock Entry")
 	stock.company = company

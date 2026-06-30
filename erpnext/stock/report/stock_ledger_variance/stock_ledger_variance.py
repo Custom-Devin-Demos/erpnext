@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -12,7 +14,7 @@ from erpnext.stock.report.stock_ledger_invariant_check.stock_ledger_invariant_ch
 )
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns, data = [], []
 
 	filters = frappe._dict(filters or {})
@@ -22,7 +24,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"fieldname": "name",
@@ -261,7 +263,7 @@ def get_item_warehouse_combinations(filters: dict | None = None) -> dict:
 	return query.run(as_dict=1)
 
 
-def has_difference(row, precision, difference_in, valuation_method):
+def has_difference(row, precision, difference_in, valuation_method) -> bool:
 	if valuation_method == "Moving Average":
 		qty_diff = flt(row.difference_in_qty, precision)
 		value_diff = flt(row.diff_value_diff, precision)

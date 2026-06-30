@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import nowdate
 
@@ -17,12 +19,12 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestQualityInspection(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		super().setUp()
 		create_item("_Test Item with QA")
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_delivery", 1)
 
-	def test_qa_for_delivery(self):
+	def test_qa_for_delivery(self) -> None:
 		make_stock_entry(
 			item_code="_Test Item with QA", target="_Test Warehouse - _TC", qty=1, basic_rate=100
 		)
@@ -45,7 +47,7 @@ class TestQualityInspection(ERPNextTestSuite):
 		dn.reload()
 		dn.cancel()
 
-	def test_qa_not_submit(self):
+	def test_qa_not_submit(self) -> None:
 		dn = create_delivery_note(item_code="_Test Item with QA", do_not_submit=True)
 		qa = create_quality_inspection(
 			reference_type="Delivery Note", reference_name=dn.name, do_not_submit=True
@@ -56,7 +58,7 @@ class TestQualityInspection(ERPNextTestSuite):
 		qa.delete()
 		dn.delete()
 
-	def test_value_based_qi_readings(self):
+	def test_value_based_qi_readings(self) -> None:
 		# Test QI based on acceptance values (Non formula)
 		dn = create_delivery_note(item_code="_Test Item with QA", do_not_submit=True)
 		readings = [
@@ -87,7 +89,7 @@ class TestQualityInspection(ERPNextTestSuite):
 		qa.delete()
 		dn.delete()
 
-	def test_formula_based_qi_readings(self):
+	def test_formula_based_qi_readings(self) -> None:
 		dn = create_delivery_note(item_code="_Test Item with QA", do_not_submit=True)
 		readings = [
 			{
@@ -134,7 +136,7 @@ class TestQualityInspection(ERPNextTestSuite):
 		qa.delete()
 		dn.delete()
 
-	def test_make_quality_inspections_from_linked_document(self):
+	def test_make_quality_inspections_from_linked_document(self) -> None:
 		dn = create_delivery_note(item_code="_Test Item with QA", do_not_submit=True)
 		if dn.doctype in ["Purchase Receipt", "Purchase Invoice", "Subcontracting Receipt"]:
 			inspection_type = "Incoming"
@@ -152,7 +154,7 @@ class TestQualityInspection(ERPNextTestSuite):
 			frappe.delete_doc("Quality Inspection", qi)
 		dn.delete()
 
-	def test_rejected_qi_validation(self):
+	def test_rejected_qi_validation(self) -> None:
 		"""Test if rejected QI blocks Stock Entry as per Stock Settings."""
 		se = make_stock_entry(
 			item_code="_Test Item with QA",
@@ -186,7 +188,7 @@ class TestQualityInspection(ERPNextTestSuite):
 		se.cancel()
 		frappe.db.set_single_value("Stock Settings", "action_if_quality_inspection_is_rejected", "Stop")
 
-	def test_qi_status(self):
+	def test_qi_status(self) -> None:
 		make_stock_entry(
 			item_code="_Test Item with QA", target="_Test Warehouse - _TC", qty=1, basic_rate=100
 		)
@@ -219,7 +221,7 @@ class TestQualityInspection(ERPNextTestSuite):
 		self.assertEqual(qa.status, "Accepted")
 
 	@ERPNextTestSuite.change_settings("System Settings", {"number_format": "#.###,##"})
-	def test_diff_number_format(self):
+	def test_diff_number_format(self) -> None:
 		self.assertEqual(frappe.db.get_default("number_format"), "#.###,##")  # sanity check
 
 		# Test QI based on acceptance values (Non formula)
@@ -252,7 +254,7 @@ class TestQualityInspection(ERPNextTestSuite):
 		qa.delete()
 		dn.delete()
 
-	def test_delete_quality_inspection_linked_with_stock_entry(self):
+	def test_delete_quality_inspection_linked_with_stock_entry(self) -> None:
 		item_code = create_item("_Test Cicuular Dependecy Item with QA").name
 
 		se = make_stock_entry(
@@ -279,7 +281,7 @@ class TestQualityInspection(ERPNextTestSuite):
 
 		se.delete()
 
-	def test_qi_updates_job_card_reference(self):
+	def test_qi_updates_job_card_reference(self) -> None:
 		"""Submitting a QI with reference_type 'Job Card' writes its name onto the
 		Job Card's quality_inspection field (the Job Card branch of
 		QualityInspection.update_qc_reference)."""
@@ -306,7 +308,7 @@ class TestQualityInspection(ERPNextTestSuite):
 		# The production_item filter excluded the Job Card with a different item.
 		self.assertFalse(frappe.db.get_value("Job Card", non_matching_jc, "quality_inspection"))
 
-	def test_qi_job_card_reference_respects_production_item(self):
+	def test_qi_job_card_reference_respects_production_item(self) -> None:
 		"""A QI referencing a Job Card by name but whose item_code does not match the
 		Job Card's production_item must NOT update that Job Card."""
 		create_item("_Test Item")
@@ -374,7 +376,7 @@ def create_quality_inspection(**args):
 	return qa
 
 
-def create_quality_inspection_parameter(parameter):
+def create_quality_inspection_parameter(parameter) -> None:
 	if not frappe.db.exists("Quality Inspection Parameter", parameter):
 		frappe.get_doc(
 			{"doctype": "Quality Inspection Parameter", "parameter": parameter, "description": parameter}

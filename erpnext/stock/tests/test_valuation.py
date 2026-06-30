@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -15,40 +17,40 @@ stock_queue_generator = st.lists(st.tuples(qty_gen, value_gen), min_size=10)
 
 
 class TestFIFOValuation(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.queue = FIFOValuation([])
 
-	def assertTotalQty(self, qty):
+	def assertTotalQty(self, qty) -> None:
 		self.assertAlmostEqual(sum(q for q, _ in self.queue), qty, msg=f"queue: {self.queue}", places=4)
 
-	def assertTotalValue(self, value):
+	def assertTotalValue(self, value) -> None:
 		self.assertAlmostEqual(sum(q * r for q, r in self.queue), value, msg=f"queue: {self.queue}", places=2)
 
-	def test_simple_addition(self):
+	def test_simple_addition(self) -> None:
 		self.queue.add_stock(1, 10)
 		self.assertTotalQty(1)
 
-	def test_simple_removal(self):
+	def test_simple_removal(self) -> None:
 		self.queue.add_stock(1, 10)
 		self.queue.remove_stock(1)
 		self.assertTotalQty(0)
 
-	def test_merge_new_stock(self):
+	def test_merge_new_stock(self) -> None:
 		self.queue.add_stock(1, 10)
 		self.queue.add_stock(1, 10)
 		self.assertEqual(self.queue, [[2, 10]])
 
-	def test_adding_negative_stock_keeps_rate(self):
+	def test_adding_negative_stock_keeps_rate(self) -> None:
 		self.queue = FIFOValuation([[-5.0, 100]])
 		self.queue.add_stock(1, 10)
 		self.assertEqual(self.queue, [[-4, 100]])
 
-	def test_adding_negative_stock_updates_rate(self):
+	def test_adding_negative_stock_updates_rate(self) -> None:
 		self.queue = FIFOValuation([[-5.0, 100]])
 		self.queue.add_stock(6, 10)
 		self.assertEqual(self.queue, [[1, 10]])
 
-	def test_negative_stock(self):
+	def test_negative_stock(self) -> None:
 		self.queue.remove_stock(1, 5)
 		self.assertEqual(self.queue, [[-1, 5]])
 
@@ -60,14 +62,14 @@ class TestFIFOValuation(ERPNextTestSuite):
 		self.assertTotalQty(0)
 		self.assertTotalValue(0)
 
-	def test_removing_specified_rate(self):
+	def test_removing_specified_rate(self) -> None:
 		self.queue.add_stock(1, 10)
 		self.queue.add_stock(1, 20)
 
 		self.queue.remove_stock(1, 20)
 		self.assertEqual(self.queue, [[1, 10]])
 
-	def test_remove_multiple_bins(self):
+	def test_remove_multiple_bins(self) -> None:
 		self.queue.add_stock(1, 10)
 		self.queue.add_stock(2, 20)
 		self.queue.add_stock(1, 20)
@@ -76,7 +78,7 @@ class TestFIFOValuation(ERPNextTestSuite):
 		self.queue.remove_stock(4)
 		self.assertEqual(self.queue, [[5, 20]])
 
-	def test_remove_multiple_bins_with_rate(self):
+	def test_remove_multiple_bins_with_rate(self) -> None:
 		self.queue.add_stock(1, 10)
 		self.queue.add_stock(2, 20)
 		self.queue.add_stock(1, 20)
@@ -85,7 +87,7 @@ class TestFIFOValuation(ERPNextTestSuite):
 		self.queue.remove_stock(3, 20)
 		self.assertEqual(self.queue, [[1, 10], [5, 20]])
 
-	def test_queue_with_unknown_rate(self):
+	def test_queue_with_unknown_rate(self) -> None:
 		self.queue.add_stock(1, 1)
 		self.queue.add_stock(1, 2)
 		self.queue.add_stock(1, 3)
@@ -96,19 +98,19 @@ class TestFIFOValuation(ERPNextTestSuite):
 		self.queue.remove_stock(3, 1)
 		self.assertEqual(self.queue, [[1, 4]])
 
-	def test_rounding_off(self):
+	def test_rounding_off(self) -> None:
 		self.queue.add_stock(1.0, 1.0)
 		self.queue.remove_stock(1.0 - 1e-9)
 		self.assertTotalQty(0)
 
-	def test_rounding_off_near_zero(self):
+	def test_rounding_off_near_zero(self) -> None:
 		self.assertEqual(round_off_if_near_zero(0), 0)
 		self.assertEqual(round_off_if_near_zero(1), 1)
 		self.assertEqual(round_off_if_near_zero(-1), -1)
 		self.assertEqual(round_off_if_near_zero(-1e-8), 0)
 		self.assertEqual(round_off_if_near_zero(1e-8), 0)
 
-	def test_totals(self):
+	def test_totals(self) -> None:
 		self.queue.add_stock(1, 10)
 		self.queue.add_stock(2, 13)
 		self.queue.add_stock(1, 17)
@@ -119,7 +121,7 @@ class TestFIFOValuation(ERPNextTestSuite):
 		self.queue.add_stock(8, 11)
 
 	@given(stock_queue_generator)
-	def test_fifo_qty_hypothesis(self, stock_queue):
+	def test_fifo_qty_hypothesis(self, stock_queue) -> None:
 		self.queue = FIFOValuation([])
 		total_qty = 0
 
@@ -139,7 +141,7 @@ class TestFIFOValuation(ERPNextTestSuite):
 			self.assertTotalQty(total_qty)
 
 	@given(stock_queue_generator)
-	def test_fifo_qty_value_nonneg_hypothesis(self, stock_queue):
+	def test_fifo_qty_value_nonneg_hypothesis(self, stock_queue) -> None:
 		self.queue = FIFOValuation([])
 		total_qty = 0.0
 		total_value = 0.0
@@ -164,7 +166,7 @@ class TestFIFOValuation(ERPNextTestSuite):
 			self.assertTotalValue(total_value)
 
 	@given(stock_queue_generator, st.floats(min_value=0.1, max_value=1e6))
-	def test_fifo_qty_value_nonneg_hypothesis_with_outgoing_rate(self, stock_queue, outgoing_rate):
+	def test_fifo_qty_value_nonneg_hypothesis_with_outgoing_rate(self, stock_queue, outgoing_rate) -> None:
 		self.queue = FIFOValuation([])
 		total_qty = 0.0
 		total_value = 0.0
@@ -190,59 +192,59 @@ class TestFIFOValuation(ERPNextTestSuite):
 
 
 class TestLIFOValuation(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.stack = LIFOValuation([])
 
-	def assertTotalQty(self, qty):
+	def assertTotalQty(self, qty) -> None:
 		self.assertAlmostEqual(sum(q for q, _ in self.stack), qty, msg=f"stack: {self.stack}", places=4)
 
-	def assertTotalValue(self, value):
+	def assertTotalValue(self, value) -> None:
 		self.assertAlmostEqual(sum(q * r for q, r in self.stack), value, msg=f"stack: {self.stack}", places=2)
 
-	def test_simple_addition(self):
+	def test_simple_addition(self) -> None:
 		self.stack.add_stock(1, 10)
 		self.assertTotalQty(1)
 
-	def test_merge_new_stock(self):
+	def test_merge_new_stock(self) -> None:
 		self.stack.add_stock(1, 10)
 		self.stack.add_stock(1, 10)
 		self.assertEqual(self.stack, [[2, 10]])
 
-	def test_simple_removal(self):
+	def test_simple_removal(self) -> None:
 		self.stack.add_stock(1, 10)
 		self.stack.remove_stock(1)
 		self.assertTotalQty(0)
 
-	def test_adding_negative_stock_keeps_rate(self):
+	def test_adding_negative_stock_keeps_rate(self) -> None:
 		self.stack = LIFOValuation([[-5.0, 100]])
 		self.stack.add_stock(1, 10)
 		self.assertEqual(self.stack, [[-4, 100]])
 
-	def test_adding_negative_stock_updates_rate(self):
+	def test_adding_negative_stock_updates_rate(self) -> None:
 		self.stack = LIFOValuation([[-5.0, 100]])
 		self.stack.add_stock(6, 10)
 		self.assertEqual(self.stack, [[1, 10]])
 
-	def test_rounding_off(self):
+	def test_rounding_off(self) -> None:
 		self.stack.add_stock(1.0, 1.0)
 		self.stack.remove_stock(1.0 - 1e-9)
 		self.assertTotalQty(0)
 
-	def test_lifo_consumption(self):
+	def test_lifo_consumption(self) -> None:
 		self.stack.add_stock(10, 10)
 		self.stack.add_stock(10, 20)
 		consumed = self.stack.remove_stock(15)
 		self.assertEqual(consumed, [[10, 20], [5, 10]])
 		self.assertTotalQty(5)
 
-	def test_lifo_consumption_going_negative(self):
+	def test_lifo_consumption_going_negative(self) -> None:
 		self.stack.add_stock(10, 10)
 		self.stack.add_stock(10, 20)
 		consumed = self.stack.remove_stock(25)
 		self.assertEqual(consumed, [[10, 20], [10, 10], [5, 10]])
 		self.assertTotalQty(-5)
 
-	def test_lifo_consumption_multiple(self):
+	def test_lifo_consumption_multiple(self) -> None:
 		self.stack.add_stock(1, 1)
 		self.stack.add_stock(2, 2)
 		consumed = self.stack.remove_stock(1)
@@ -261,7 +263,7 @@ class TestLIFOValuation(ERPNextTestSuite):
 		self.assertEqual(consumed, [[5, 5]])
 
 	@given(stock_queue_generator)
-	def test_lifo_qty_hypothesis(self, stock_stack):
+	def test_lifo_qty_hypothesis(self, stock_stack) -> None:
 		self.stack = LIFOValuation([])
 		total_qty = 0
 
@@ -281,7 +283,7 @@ class TestLIFOValuation(ERPNextTestSuite):
 			self.assertTotalQty(total_qty)
 
 	@given(stock_queue_generator)
-	def test_lifo_qty_value_nonneg_hypothesis(self, stock_stack):
+	def test_lifo_qty_value_nonneg_hypothesis(self, stock_stack) -> None:
 		self.stack = LIFOValuation([])
 		total_qty = 0.0
 		total_value = 0.0
@@ -322,7 +324,7 @@ class TestLIFOValuationSLE(ERPNextTestSuite):
 		}
 		return make_stock_entry(**kwargs)
 
-	def assertStockQueue(self, se, expected_queue):
+	def assertStockQueue(self, se, expected_queue) -> None:
 		sle_name = frappe.db.get_value(
 			"Stock Ledger Entry", {"voucher_no": se.name, "is_cancelled": 0, "voucher_type": "Stock Entry"}
 		)
@@ -337,7 +339,7 @@ class TestLIFOValuationSLE(ERPNextTestSuite):
 		if total_qty > 0:
 			self.assertEqual(stock_queue, expected_queue)
 
-	def test_lifo_values(self):
+	def test_lifo_values(self) -> None:
 		in1 = self._make_stock_entry(1, 1)
 		self.assertStockQueue(in1, [[1, 1]])
 

@@ -2,13 +2,15 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import IfNull
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns = get_columns(filters)
 	consumed_details = get_consumed_details(filters)
 	supplier_details = get_suppliers_details(filters)
@@ -169,7 +171,7 @@ def get_suppliers_details(filters):
 	return item_supplier_map
 
 
-def get_material_transfer_vouchers():
+def get_material_transfer_vouchers() -> list:
 	se = frappe.qb.DocType("Stock Entry")
 	query = (
 		frappe.qb.from_(se).select(se.name).where((se.purpose == "Material Transfer") & (se.docstatus == 1))

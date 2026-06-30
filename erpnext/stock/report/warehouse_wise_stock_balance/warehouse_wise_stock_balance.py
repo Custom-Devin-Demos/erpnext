@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from typing import Any, TypedDict
 
 import frappe
@@ -17,7 +19,7 @@ class StockBalanceFilter(TypedDict):
 SLEntry = dict[str, Any]
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns, data = [], []
 	columns = get_columns(filters)
 	data = get_data(filters)
@@ -68,10 +70,10 @@ def get_data(filters: StockBalanceFilter):
 	return warehouses
 
 
-def update_indent(warehouses):
+def update_indent(warehouses) -> None:
 	for warehouse in warehouses:
 
-		def add_indent(warehouse, indent):
+		def add_indent(warehouse, indent) -> None:
 			warehouse.indent = indent
 			for child in warehouses:
 				if child.parent_warehouse == warehouse.name:
@@ -81,13 +83,13 @@ def update_indent(warehouses):
 			add_indent(warehouse, warehouse.indent or 0)
 
 
-def set_balance_in_parent(warehouses):
+def set_balance_in_parent(warehouses) -> None:
 	# sort warehouses by indent in descending order
 	warehouses = sorted(warehouses, key=lambda x: x.get("indent", 0), reverse=1)
 
 	for warehouse in warehouses:
 
-		def update_balance(warehouse, balance):
+		def update_balance(warehouse, balance) -> None:
 			for parent in warehouses:
 				if warehouse.parent_warehouse == parent.name:
 					parent.stock_balance += balance

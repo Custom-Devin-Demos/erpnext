@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.selling.doctype.sales_order.mapper import make_delivery_note
@@ -23,7 +25,7 @@ class TestDelayedOrderReport(ERPNextTestSuite):
 		filters.update(extra)
 		return execute(filters)[1]
 
-	def test_late_order_shows_delay(self):
+	def test_late_order_shows_delay(self) -> None:
 		item_code = "_Test Item"
 
 		make_stock_entry(

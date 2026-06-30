@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -12,7 +14,7 @@ class TestItemPriceStock(ERPNextTestSuite):
 	def run_report(self, **extra):
 		return execute(frappe._dict(extra))[1]
 
-	def test_price_and_stock_shown(self):
+	def test_price_and_stock_shown(self) -> None:
 		item = "_Test Item"
 
 		frappe.get_doc(

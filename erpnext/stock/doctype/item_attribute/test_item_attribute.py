@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.item_attribute.item_attribute import ItemAttributeIncrementError
@@ -9,12 +11,12 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestItemAttribute(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		super().setUp()
 		if frappe.db.exists("Item Attribute", "_Test_Length"):
 			frappe.delete_doc("Item Attribute", "_Test_Length")
 
-	def test_numeric_item_attribute(self):
+	def test_numeric_item_attribute(self) -> None:
 		item_attribute = frappe.get_doc(
 			{
 				"doctype": "Item Attribute",
@@ -31,7 +33,7 @@ class TestItemAttribute(ERPNextTestSuite):
 		item_attribute.increment = 0.5
 		item_attribute.save()
 
-	def test_validate_existing_items_finds_variants(self):
+	def test_validate_existing_items_finds_variants(self) -> None:
 		# validate_exising_items() joins Item Variant Attribute to Item to find variants using this
 		# attribute. Exercises the converted query builder version on both engines and asserts it
 		# finds the variant (the raise only fires if the query returned the variant row).

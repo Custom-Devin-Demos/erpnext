@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -26,7 +28,7 @@ SLE_FIELDS = (
 )
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns = get_columns()
 	data = get_data(filters)
 	return columns, data
@@ -105,7 +107,7 @@ def find_first_bad_queue(sles):
 	return data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"fieldname": "name",

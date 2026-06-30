@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.item.test_item import make_item
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestBin(ERPNextTestSuite):
-	def test_concurrent_inserts(self):
+	def test_concurrent_inserts(self) -> None:
 		"""Ensure no duplicates are possible in case of concurrent inserts"""
 		item_code = "_TestConcurrentBin"
 		make_item(item_code)
@@ -28,7 +30,7 @@ class TestBin(ERPNextTestSuite):
 		bin = _create_bin(item_code, warehouse)
 		self.assertEqual(bin.item_code, item_code)
 
-	def test_index_exists(self):
+	def test_index_exists(self) -> None:
 		# has_index is db-agnostic; raw "SHOW INDEX" is MySQL-only and errors on Postgres
 		if not frappe.db.has_index("tabBin", "unique_item_warehouse"):
 			self.fail("Expected unique index on item-warehouse")

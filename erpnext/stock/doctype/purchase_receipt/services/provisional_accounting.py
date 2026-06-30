@@ -2,6 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 
 """Provisional accounting for non-stock items received via Purchase Receipt."""
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -11,7 +12,7 @@ from erpnext.accounts.utils import get_account_currency
 
 
 class ProvisionalAccountingService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def validate_provisional_expense_account(self) -> None:

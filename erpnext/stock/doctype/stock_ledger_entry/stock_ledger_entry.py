@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from datetime import date
 
 import frappe
@@ -74,7 +76,7 @@ class StockLedgerEntry(Document):
 		warehouse: DF.Link | None
 	# end: auto-generated types
 
-	def autoname(self):
+	def autoname(self) -> None:
 		"""
 		Temporarily name doc for fast insertion
 		name will be changed using autoname options (in a scheduled job)
@@ -83,7 +85,7 @@ class StockLedgerEntry(Document):
 		if self.meta.autoname == "hash":
 			self.to_rename = 0
 
-	def validate(self):
+	def validate(self) -> None:
 		self.flags.ignore_submit_comment = True
 		from erpnext.stock.utils import validate_disabled_warehouse, validate_warehouse_company
 
@@ -98,12 +100,12 @@ class StockLedgerEntry(Document):
 		self.validate_with_last_transaction_posting_time()
 		self.validate_inventory_dimension_negative_stock()
 
-	def set_posting_datetime(self):
+	def set_posting_datetime(self) -> None:
 		from erpnext.stock.utils import get_combine_datetime
 
 		self.posting_datetime = get_combine_datetime(self.posting_date, self.posting_time)
 
-	def validate_inventory_dimension_negative_stock(self):
+	def validate_inventory_dimension_negative_stock(self) -> None:
 		if self.is_cancelled or self.actual_qty >= 0:
 			return
 
@@ -140,7 +142,7 @@ class StockLedgerEntry(Document):
 
 		return available_qty[0][0] or 0
 
-	def throw_validation_error(self, diff, dimensions):
+	def throw_validation_error(self, diff, dimensions) -> None:
 		msg = _(
 			"{0} units of {1} are required in {2} with the inventory dimension: {3} on {4} {5} for {6} to complete the transaction."
 		).format(
@@ -171,7 +173,7 @@ class StockLedgerEntry(Document):
 
 		return inv_dimension_dict
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.check_stock_frozen_date()
 
 		# Added to handle few test cases where serial_and_batch_bundles are not required
@@ -191,7 +193,7 @@ class StockLedgerEntry(Document):
 
 		self.validate_serial_batch_no_bundle()
 
-	def validate_mandatory(self):
+	def validate_mandatory(self) -> None:
 		mandatory = ["warehouse", "posting_date", "voucher_type", "voucher_no", "company"]
 		for k in mandatory:
 			if not self.get(k):
@@ -200,7 +202,7 @@ class StockLedgerEntry(Document):
 		if self.voucher_type != "Stock Reconciliation" and not self.actual_qty:
 			frappe.throw(_("Actual Qty is mandatory"))
 
-	def validate_serial_batch_no_bundle(self):
+	def validate_serial_batch_no_bundle(self) -> None:
 		if self.is_cancelled == 1:
 			return
 
@@ -249,10 +251,10 @@ class StockLedgerEntry(Document):
 			self.item_code, self.company
 		)
 
-	def throw_error_message(self, message, exception=frappe.ValidationError):
+	def throw_error_message(self, message, exception=frappe.ValidationError) -> None:
 		frappe.throw(_(message), exception)
 
-	def check_stock_frozen_date(self):
+	def check_stock_frozen_date(self) -> None:
 		stock_settings = frappe.get_cached_doc("Stock Settings")
 
 		if stock_settings.stock_frozen_upto:
@@ -280,11 +282,11 @@ class StockLedgerEntry(Document):
 					StockFreezeError,
 				)
 
-	def scrub_posting_time(self):
+	def scrub_posting_time(self) -> None:
 		if not self.posting_time or self.posting_time == "00:0":
 			self.posting_time = "00:00"
 
-	def validate_batch(self):
+	def validate_batch(self) -> None:
 		if self.batch_no and self.voucher_type != "Stock Entry":
 			if (self.voucher_type in ["Purchase Receipt", "Purchase Invoice"] and self.actual_qty < 0) or (
 				self.voucher_type in ["Delivery Note", "Sales Invoice"] and self.actual_qty > 0
@@ -298,7 +300,7 @@ class StockLedgerEntry(Document):
 						_("Batch {0} of Item {1} has expired.").format(self.batch_no, self.item_code)
 					)
 
-	def validate_and_set_fiscal_year(self):
+	def validate_and_set_fiscal_year(self) -> None:
 		if not self.fiscal_year:
 			self.fiscal_year = get_fiscal_year(self.posting_date, company=self.company)[0]
 		else:
@@ -308,12 +310,12 @@ class StockLedgerEntry(Document):
 				self.posting_date, self.fiscal_year, self.company, self.meta.get_label("posting_date"), self
 			)
 
-	def block_transactions_against_group_warehouse(self):
+	def block_transactions_against_group_warehouse(self) -> None:
 		from erpnext.stock.utils import is_group_warehouse
 
 		is_group_warehouse(self.warehouse)
 
-	def validate_with_last_transaction_posting_time(self):
+	def validate_with_last_transaction_posting_time(self) -> None:
 		authorized_role = frappe.get_single_value(
 			"Stock Settings", "role_allowed_to_create_edit_back_dated_transactions"
 		)
@@ -355,12 +357,12 @@ class StockLedgerEntry(Document):
 					msg += "<br>" + "<br>".join(authorized_users)
 					frappe.throw(msg, BackDatedStockTransaction, title=_("Backdated Stock Entry"))
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		msg = _("Individual Stock Ledger Entry cannot be cancelled.")
 		msg += "<br>" + _("Please cancel related transaction.")
 		frappe.throw(msg)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Stock Ledger Entry", ["voucher_no", "voucher_type"])
 	frappe.db.add_index("Stock Ledger Entry", ["item_code", "warehouse", "posting_datetime", "creation"])

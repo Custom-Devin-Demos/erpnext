@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.report.item_where_used.item_where_used import execute
@@ -14,7 +16,7 @@ class TestItemWhereUsed(ERPNextTestSuite):
 		filters = frappe._dict(company="_Test Company", **extra)
 		return execute(filters)[1]
 
-	def test_item_used_in_bom_listed(self):
+	def test_item_used_in_bom_listed(self) -> None:
 		raw_material = "_Test Item"
 		finished_good = "_Test FG Item"
 

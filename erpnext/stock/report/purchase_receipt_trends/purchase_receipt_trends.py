@@ -2,12 +2,14 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from frappe import _
 
 from erpnext.controllers.trends import get_columns, get_data
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	if not filters:
 		filters = {}
 	data = []
@@ -20,7 +22,7 @@ def execute(filters=None):
 
 
 def get_chart_data(data, filters):
-	def wrap_in_quotes(label):
+	def wrap_in_quotes(label) -> str:
 		return f"'{label}'"
 
 	if not data:

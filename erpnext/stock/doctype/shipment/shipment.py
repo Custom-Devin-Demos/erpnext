@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.contacts.doctype.contact.contact import get_default_contact
@@ -70,10 +72,10 @@ class Shipment(Document):
 		value_of_goods: DF.Currency
 	# end: auto-generated types
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_weight()
 		self.validate_pickup_time()
 		self.set_value_of_goods()
@@ -81,32 +83,32 @@ class Shipment(Document):
 		if self.docstatus == 0:
 			self.status = "Draft"
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		if not self.shipment_parcel:
 			frappe.throw(_("Please enter Shipment Parcel information"))
 		if self.value_of_goods == 0:
 			frappe.throw(_("Value of goods cannot be 0"))
 		self.db_set("status", "Submitted")
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate_weight(self):
+	def validate_weight(self) -> None:
 		for parcel in self.shipment_parcel:
 			if flt(parcel.weight) <= 0:
 				frappe.throw(_("Parcel weight cannot be 0"))
 
-	def set_total_weight(self):
+	def set_total_weight(self) -> None:
 		self.total_weight = self.get_total_weight()
 
 	def get_total_weight(self):
 		return sum(flt(parcel.weight) * parcel.count for parcel in self.shipment_parcel if parcel.count > 0)
 
-	def validate_pickup_time(self):
+	def validate_pickup_time(self) -> None:
 		if self.pickup_from and self.pickup_to and get_time(self.pickup_to) < get_time(self.pickup_from):
 			frappe.throw(_("Pickup To time should be greater than Pickup From time"))
 
-	def set_value_of_goods(self):
+	def set_value_of_goods(self) -> None:
 		value_of_goods = 0
 		for entry in self.get("shipment_delivery_note"):
 			value_of_goods += flt(entry.get("grand_total"))

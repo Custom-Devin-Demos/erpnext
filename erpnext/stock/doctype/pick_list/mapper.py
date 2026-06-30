@@ -1,6 +1,8 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 from itertools import groupby
 
@@ -18,7 +20,7 @@ from erpnext.selling.doctype.sales_order.mapper import (
 )
 
 
-def validate_item_locations(pick_list):
+def validate_item_locations(pick_list) -> None:
 	if not pick_list.locations:
 		frappe.throw(_("Add items in the Item Locations table"))
 
@@ -215,7 +217,7 @@ def create_delivery_from_so(pick_list, sales_order_list, target, target_doc=None
 	return target_doc
 
 
-def map_pl_locations(pick_list, item_mapper, target_doc, sales_order=None):
+def map_pl_locations(pick_list, item_mapper, target_doc, sales_order=None) -> None:
 	for location in pick_list.locations:
 		if location.sales_order != sales_order or location.product_bundle_item:
 			continue
@@ -310,7 +312,7 @@ def update_delivery_note_item(source, target, delivery_note):
 	return update_child_item(source, target, delivery_note)
 
 
-def update_child_item(source, target, target_doc):
+def update_child_item(source, target, target_doc) -> None:
 	cost_center = frappe.db.get_value("Project", target_doc.project, "cost_center")
 	if not cost_center:
 		cost_center = get_cost_center(source.item_code, "Item", target_doc.company)
@@ -334,7 +336,7 @@ def set_delivery_note_missing_values(target):
 	return set_target_missing_values(target)
 
 
-def set_target_missing_values(target):
+def set_target_missing_values(target) -> None:
 	target.run_method("set_missing_values")
 	target.run_method("set_po_nos")
 	target.run_method("calculate_taxes_and_totals")
@@ -400,7 +402,7 @@ def update_stock_entry_items_with_no_reference(pick_list, stock_entry):
 	return stock_entry
 
 
-def update_common_item_properties(item, location):
+def update_common_item_properties(item, location) -> None:
 	item.item_code = location.item_code
 	item.s_warehouse = location.warehouse
 	item.transfer_qty = location.picked_qty

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import random_string
 
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPriceList(ERPNextTestSuite):
-	def make_price_list(self, currency="INR", buying=1, selling=1):
+	def make_price_list(self, currency: str = "INR", buying=1, selling=1):
 		price_list = frappe.get_doc(
 			{
 				"doctype": "Price List",
@@ -22,7 +24,7 @@ class TestPriceList(ERPNextTestSuite):
 		).insert()
 		return price_list
 
-	def make_item_price(self, price_list, item_code="_Test Item", rate=100):
+	def make_item_price(self, price_list, item_code: str = "_Test Item", rate=100):
 		return frappe.get_doc(
 			{
 				"doctype": "Item Price",
@@ -32,7 +34,7 @@ class TestPriceList(ERPNextTestSuite):
 			}
 		).insert()
 
-	def test_update_item_price_propagates_currency_and_flags(self):
+	def test_update_item_price_propagates_currency_and_flags(self) -> None:
 		# Price List starts in INR, applicable for both buying and selling.
 		price_list = self.make_price_list(currency="INR", buying=1, selling=1)
 
@@ -60,7 +62,7 @@ class TestPriceList(ERPNextTestSuite):
 			self.assertEqual(row.buying, 0)
 			self.assertEqual(row.selling, 1)
 
-	def test_update_item_price_scoped_to_own_price_list(self):
+	def test_update_item_price_scoped_to_own_price_list(self) -> None:
 		# Two independent Price Lists; updating one must not touch the other's
 		# Item Price rows (the WHERE price_list == self.name clause).
 		pl_a = self.make_price_list(currency="INR", buying=1, selling=1)

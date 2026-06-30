@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import copy
 import json
 from collections import defaultdict
@@ -37,14 +39,14 @@ class PutawayRule(Document):
 		warehouse: DF.Link
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_duplicate_rule()
 		self.validate_warehouse_and_company()
 		self.validate_capacity()
 		self.validate_priority()
 		self.set_stock_capacity()
 
-	def validate_duplicate_rule(self):
+	def validate_duplicate_rule(self) -> None:
 		existing_rule = frappe.db.exists(
 			"Putaway Rule", {"item_code": self.item_code, "warehouse": self.warehouse}
 		)
@@ -56,11 +58,11 @@ class PutawayRule(Document):
 				title=_("Duplicate"),
 			)
 
-	def validate_priority(self):
+	def validate_priority(self) -> None:
 		if self.priority < 1:
 			frappe.throw(_("Priority cannot be less than 1."), title=_("Invalid Priority"))
 
-	def validate_warehouse_and_company(self):
+	def validate_warehouse_and_company(self) -> None:
 		company = frappe.db.get_value("Warehouse", self.warehouse, "company")
 		if company != self.company:
 			frappe.throw(
@@ -70,7 +72,7 @@ class PutawayRule(Document):
 				title=_("Invalid Warehouse"),
 			)
 
-	def validate_capacity(self):
+	def validate_capacity(self) -> None:
 		stock_uom = frappe.db.get_value("Item", self.item_code, "stock_uom")
 		balance_qty = get_stock_balance(self.item_code, self.warehouse, nowdate())
 
@@ -85,7 +87,7 @@ class PutawayRule(Document):
 		if not self.capacity:
 			frappe.throw(_("Capacity must be greater than 0"), title=_("Invalid"))
 
-	def set_stock_capacity(self):
+	def set_stock_capacity(self) -> None:
 		self.stock_capacity = (flt(self.conversion_factor) or 1) * flt(self.capacity)
 
 
@@ -241,7 +243,7 @@ def _items_changed(old, new, doctype: str) -> bool:
 	return False
 
 
-def get_ordered_putaway_rules(item_code, company, source_warehouse=None):
+def get_ordered_putaway_rules(item_code, company, source_warehouse=None) -> tuple:
 	"""Returns an ordered list of putaway rules to apply on an item."""
 	filters = {"item_code": item_code, "company": company, "disable": 0}
 	if source_warehouse:
@@ -302,7 +304,7 @@ def add_row(item, to_allocate, warehouse, updated_table, rule=None, serial_nos=N
 	return updated_table
 
 
-def show_unassigned_items_message(items_not_accomodated):
+def show_unassigned_items_message(items_not_accomodated) -> None:
 	msg = _("The following Items, having Putaway Rules, could not be accommodated:") + "<br><br>"
 	formatted_item_rows = ""
 
@@ -335,7 +337,7 @@ def get_serial_nos_to_allocate(serial_nos, to_allocate):
 		return ""
 
 
-def validate_putaway_capacity(doc):
+def validate_putaway_capacity(doc) -> None:
 	# if over receipt is attempted while 'apply putaway rule' is disabled
 	# and if rule was applied on the transaction, validate it.
 	valid_doctype = doc.doctype in (

@@ -4,6 +4,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -56,7 +58,7 @@ class PackedItem(Document):
 		warehouse: DF.Link | None
 	# end: auto-generated types
 
-	def set_actual_and_projected_qty(self):
+	def set_actual_and_projected_qty(self) -> None:
 		"Set actual and projected qty based on warehouse and item_code"
 		_bin = frappe.db.get_value(
 			"Bin",
@@ -68,7 +70,7 @@ class PackedItem(Document):
 		self.projected_qty = _bin.projected_qty if _bin else 0
 
 
-def make_packing_list(doc):
+def make_packing_list(doc) -> None:
 	"Make/Update packing list for Product Bundle Item."
 
 	if doc.get("is_subcontracted"):
@@ -271,7 +273,7 @@ def get_packed_item_details(item_code, company):
 	return query.run(as_dict=True)[0]
 
 
-def update_packed_item_basic_data(main_item_row, pi_row, packing_item, item_data):
+def update_packed_item_basic_data(main_item_row, pi_row, packing_item, item_data) -> None:
 	pi_row.parent_item = main_item_row.item_code
 	pi_row.parent_detail_docname = main_item_row.name or main_item_row.idx
 	pi_row.item_code = packing_item.item_code
@@ -285,7 +287,7 @@ def update_packed_item_basic_data(main_item_row, pi_row, packing_item, item_data
 		pi_row.description = packing_item.get("description")
 
 
-def update_packed_item_stock_data(main_item_row, pi_row, packing_item, item_data, doc):
+def update_packed_item_stock_data(main_item_row, pi_row, packing_item, item_data, doc) -> None:
 	# TODO batch_no, actual_batch_qty, incoming_rate
 	if main_item_row.get("so_detail"):
 		pi_row.warehouse = frappe.get_value(
@@ -315,7 +317,7 @@ def update_packed_item_stock_data(main_item_row, pi_row, packing_item, item_data
 	pi_row.use_serial_batch_fields = frappe.get_single_value("Stock Settings", "use_serial_batch_fields")
 
 
-def update_packed_item_with_pick_list_info(main_item_row, pi_row):
+def update_packed_item_with_pick_list_info(main_item_row, pi_row) -> None:
 	pl_row = frappe.db.get_value(
 		"Pick List Item",
 		{
@@ -337,7 +339,7 @@ def update_packed_item_with_pick_list_info(main_item_row, pi_row):
 	pi_row.serial_no = pl_row.serial_no
 
 
-def update_packed_item_price_data(pi_row, item_data, doc):
+def update_packed_item_price_data(pi_row, item_data, doc) -> None:
 	"Set price as per price list or from the Item master."
 	if pi_row.rate:
 		return
@@ -360,7 +362,7 @@ def update_packed_item_price_data(pi_row, item_data, doc):
 	pi_row.rate = rate or item_data.get("valuation_rate") or 0.0
 
 
-def update_packed_item_from_cancelled_doc(main_item_row, packing_item, pi_row, doc):
+def update_packed_item_from_cancelled_doc(main_item_row, packing_item, pi_row, doc) -> None:
 	"Update packed item row details from cancelled doc into amended doc."
 	prev_doc_packed_items_map = None
 	if doc.amended_from:
@@ -395,7 +397,7 @@ def get_cancelled_doc_packed_item_details(old_packed_items):
 	return prev_doc_packed_items_map
 
 
-def update_product_bundle_rate(parent_items_price, pi_row, item_row):
+def update_product_bundle_rate(parent_items_price, pi_row, item_row) -> None:
 	"""
 	Update the price dict of Product Bundles based on the rates of the Items in the bundle.
 
@@ -410,7 +412,7 @@ def update_product_bundle_rate(parent_items_price, pi_row, item_row):
 	parent_items_price[key] += flt((pi_row.rate * pi_row.qty) / item_row.stock_qty)
 
 
-def set_product_bundle_rate_amount(doc, parent_items_price):
+def set_product_bundle_rate_amount(doc, parent_items_price) -> None:
 	"Set cumulative rate and amount in bundle item."
 	rate_updated = False
 	for item in doc.get("items"):
@@ -427,7 +429,7 @@ def set_product_bundle_rate_amount(doc, parent_items_price):
 		doc.set_total_in_words()
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Packed Item", ["item_code", "warehouse"])
 
 
