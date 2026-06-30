@@ -11,10 +11,12 @@ services it orchestrates. The whitelisted ``show_*_preview`` entry points stay o
 ``stock_controller`` (their dotted path is referenced from client JS).
 """
 
+from __future__ import annotations
+
 import frappe
 
 
-def get_accounting_ledger_preview(doc, filters):
+def get_accounting_ledger_preview(doc, filters) -> tuple:
 	from erpnext.accounts.report.general_ledger.general_ledger import get_columns as get_gl_columns
 
 	gl_columns, gl_data = [], []
@@ -52,7 +54,7 @@ def get_accounting_ledger_preview(doc, filters):
 	return gl_columns, gl_data
 
 
-def get_stock_ledger_preview(doc, filters):
+def get_stock_ledger_preview(doc, filters) -> tuple:
 	from erpnext.stock.report.stock_ledger.stock_ledger import get_columns as get_sl_columns
 
 	sl_columns, sl_data = [], []
@@ -100,7 +102,7 @@ def get_stock_ledger_preview(doc, filters):
 	return sl_columns, sl_data
 
 
-def get_sl_entries_for_preview(doctype, docname, fields):
+def get_sl_entries_for_preview(doctype: str, docname: str, fields: list) -> list:
 	sl_entries = frappe.get_all(
 		"Stock Ledger Entry", filters={"voucher_type": doctype, "voucher_no": docname}, fields=fields
 	)
@@ -118,11 +120,11 @@ def get_sl_entries_for_preview(doctype, docname, fields):
 	return sl_entries
 
 
-def get_gl_entries_for_preview(doctype, docname, fields):
+def get_gl_entries_for_preview(doctype: str, docname: str, fields: list) -> list:
 	return frappe.get_all("GL Entry", filters={"voucher_type": doctype, "voucher_no": docname}, fields=fields)
 
 
-def get_columns(raw_columns, fields):
+def get_columns(raw_columns: list, fields: list) -> list:
 	return [
 		{"name": d.get("label"), "editable": False, "width": 110, "fieldtype": d.get("fieldtype")}
 		for d in raw_columns
@@ -130,7 +132,7 @@ def get_columns(raw_columns, fields):
 	]
 
 
-def get_data(raw_columns, raw_data):
+def get_data(raw_columns: list, raw_data: list) -> list:
 	datatable_data = []
 	for row in raw_data:
 		data_row = []

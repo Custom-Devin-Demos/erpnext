@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -61,7 +63,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 
 	pass
 
-	def validate(self):
+	def validate(self) -> None:
 		super().validate()
 		self.set_is_customer_provided_item()
 		self.validate_customer_provided_items()
@@ -69,15 +71,15 @@ class SubcontractingInwardOrder(SubcontractingController):
 		self.validate_service_items()
 		self.set_missing_values()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_status()
 		self.update_subcontracted_quantity_in_so()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_status()
 		self.update_subcontracted_quantity_in_so()
 
-	def update_status(self, status=None, update_modified=True):
+	def update_status(self, status: str | None = None, update_modified: bool = True) -> None:
 		if self.status == "Closed" and self.status != status:
 			check_on_hold_or_closed_status("Sales Order", self.sales_order)
 
@@ -130,7 +132,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 		if status and self.status != status:
 			self.db_set("status", status, update_modified=update_modified)
 
-	def update_subcontracted_quantity_in_so(self):
+	def update_subcontracted_quantity_in_so(self) -> None:
 		for service_item in self.service_items:
 			doc = frappe.get_doc("Sales Order Item", service_item.sales_order_item)
 			doc.subcontracted_qty = (
@@ -140,7 +142,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 			)
 			doc.save()
 
-	def validate_customer_warehouse(self):
+	def validate_customer_warehouse(self) -> None:
 		if frappe.get_cached_value("Warehouse", self.customer_warehouse, "customer") != self.customer:
 			frappe.throw(
 				_("Customer Warehouse {0} does not belong to Customer {1}.").format(
@@ -148,7 +150,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 				)
 			)
 
-	def validate_service_items(self):
+	def validate_service_items(self) -> None:
 		sales_order_items = [item.sales_order_item for item in self.items]
 		self.service_items = [
 			service_item
@@ -162,7 +164,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 			service_item.fg_item_qty = item.qty
 			service_item.amount = service_item.qty * service_item.rate
 
-	def populate_items_table(self):
+	def populate_items_table(self) -> None:
 		items = []
 
 		for si in self.service_items:
@@ -217,7 +219,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 			for item in items:
 				self.append("items", item)
 
-	def validate_customer_provided_items(self):
+	def validate_customer_provided_items(self) -> None:
 		"""Check if atleast one raw material is customer provided"""
 		for item in self.get("items"):
 			raw_materials = [rm for rm in self.get("received_items") if rm.main_item_code == item.item_code]
@@ -228,14 +230,14 @@ class SubcontractingInwardOrder(SubcontractingController):
 					).format(frappe.bold(item.item_code))
 				)
 
-	def set_is_customer_provided_item(self):
+	def set_is_customer_provided_item(self) -> None:
 		for item in self.get("received_items"):
 			item.is_customer_provided_item = frappe.get_cached_value(
 				"Item", item.rm_item_code, "is_customer_provided_item"
 			)
 
 	@frappe.whitelist()
-	def make_work_order(self):
+	def make_work_order(self) -> list:
 		"""Create Work Order from Subcontracting Inward Order."""
 		wo_list = []
 
@@ -251,7 +253,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 
 		return wo_list
 
-	def get_production_items(self):
+	def get_production_items(self) -> list:
 		item_list = []
 
 		for d in self.items:
@@ -293,7 +295,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 
 		return item_list
 
-	def create_work_order(self, item):
+	def create_work_order(self, item) -> str | None:
 		from erpnext.manufacturing.doctype.work_order.work_order import OverProductionError
 
 		if flt(item.get("qty")) <= 0:
@@ -313,7 +315,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 		except OverProductionError:
 			pass
 
-	def show_list_created_message(self, doctype, doc_list=None):
+	def show_list_created_message(self, doctype: str, doc_list: list | None = None) -> None:
 		if not doc_list:
 			return
 
@@ -323,8 +325,8 @@ class SubcontractingInwardOrder(SubcontractingController):
 			frappe.msgprint(_("{0} created").format(comma_and(doc_list)))
 
 	@frappe.whitelist()
-	def make_rm_stock_entry_inward(self, target_doc: Document | str | None = None):
-		def calculate_qty_as_per_bom(rm_item):
+	def make_rm_stock_entry_inward(self, target_doc: Document | str | None = None) -> Document | dict:
+		def calculate_qty_as_per_bom(rm_item) -> float:
 			data = frappe.get_value(
 				"Subcontracting Inward Order Item",
 				{"name": rm_item.reference_name},
@@ -387,7 +389,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 			return stock_entry.as_dict()
 
 	@frappe.whitelist()
-	def make_rm_return(self, target_doc: Document | str | None = None):
+	def make_rm_return(self, target_doc: Document | str | None = None) -> Document | dict:
 		if target_doc and target_doc.get("items"):
 			target_doc.items = []
 
@@ -431,7 +433,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 			return stock_entry.as_dict()
 
 	@frappe.whitelist()
-	def make_subcontracting_delivery(self, target_doc: Document | str | None = None):
+	def make_subcontracting_delivery(self, target_doc: Document | str | None = None) -> Document | dict:
 		if target_doc and target_doc.get("items"):
 			target_doc.items = []
 
@@ -511,7 +513,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 			return stock_entry.as_dict()
 
 	@frappe.whitelist()
-	def make_subcontracting_return(self, target_doc: Document | str | None = None):
+	def make_subcontracting_return(self, target_doc: Document | str | None = None) -> Document | dict:
 		if target_doc and target_doc.get("items"):
 			target_doc.items = []
 
@@ -557,7 +559,7 @@ class SubcontractingInwardOrder(SubcontractingController):
 			return stock_entry.as_dict()
 
 
-def set_subcontracting_inward_order_status(scio: str | Document, status: str | None = None):
+def set_subcontracting_inward_order_status(scio: str | Document, status: str | None = None) -> None:
 	if isinstance(scio, str):
 		scio = frappe.get_doc("Subcontracting Inward Order", scio)
 
@@ -565,7 +567,7 @@ def set_subcontracting_inward_order_status(scio: str | Document, status: str | N
 
 
 @frappe.whitelist()
-def update_subcontracting_inward_order_status(scio: str | Document, status: str | None = None):
+def update_subcontracting_inward_order_status(scio: str | Document, status: str | None = None) -> None:
 	"""Whitelisted boundary for direct API/UI calls — enforces write permission, then delegates."""
 	if isinstance(scio, str):
 		scio = frappe.get_doc("Subcontracting Inward Order", scio)

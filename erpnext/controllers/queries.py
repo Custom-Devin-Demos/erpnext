@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import json
 from collections import OrderedDict, defaultdict
 
@@ -42,7 +44,7 @@ def employee_query(
 	filters: dict | str | None = None,
 	reference_doctype: str | None = None,
 	ignore_user_permissions: bool = False,
-):
+) -> list:
 	doctype = "Employee"
 	fields = get_fields(doctype, ["name", "employee_name"])
 	ignore_permissions = False
@@ -93,7 +95,7 @@ def employee_query(
 	return query.run()
 
 
-def has_ignored_field(reference_doctype, doctype):
+def has_ignored_field(reference_doctype: str, doctype: str) -> bool:
 	meta = frappe.get_meta(reference_doctype)
 	for field in meta.fields:
 		if not field.ignore_user_permissions:
@@ -117,7 +119,7 @@ def has_ignored_field(reference_doctype, doctype):
 @frappe.validate_and_sanitize_search_inputs
 def lead_query(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict | None = None
-):
+) -> list:
 	doctype = "Lead"
 	fields = get_fields(doctype, ["name", "lead_name", "company_name"])
 
@@ -160,12 +162,14 @@ def lead_query(
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def tax_account_query(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def tax_account_query(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	company_currency = erpnext.get_company_currency(filters.get("company"))
 
 	Account = frappe.qb.DocType("Account")
 
-	def get_accounts(with_account_type_filter):
+	def get_accounts(with_account_type_filter: bool) -> list:
 		query = frappe.qb.get_query("Account", fields=["name", "parent_account"], ignore_permissions=False)
 		query = (
 			query.where(Account.docstatus != 2)
@@ -207,7 +211,7 @@ def item_query(
 	page_len: int,
 	filters: dict | str | None = None,
 	as_dict: bool = False,
-):
+) -> list:
 	"""
 	Fetch items for link fields
 	"""
@@ -368,7 +372,7 @@ def item_query(
 @frappe.validate_and_sanitize_search_inputs
 def bom(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict | str | None = None
-):
+) -> list:
 	doctype = "BOM"
 	fields = get_fields(doctype, ["name", "item"])
 
@@ -397,7 +401,7 @@ def bom(
 @frappe.validate_and_sanitize_search_inputs
 def get_project_name(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict | None = None
-):
+) -> list:
 	proj = qb.DocType("Project")
 	qb_filter_and_conditions = []
 	qb_filter_or_conditions = []
@@ -456,7 +460,7 @@ def get_project_name(
 @frappe.validate_and_sanitize_search_inputs
 def get_delivery_notes_to_be_billed(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict, as_dict: bool = False
-):
+) -> list:
 	DeliveryNote = frappe.qb.DocType("Delivery Note")
 
 	fields = get_fields(doctype, ["name", "customer", "posting_date"])
@@ -499,7 +503,7 @@ def get_delivery_notes_to_be_billed(
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_batch_no(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_batch_no(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict) -> list:
 	doctype = "Batch"
 	meta = frappe.get_meta(doctype, cached=True)
 	searchfields = meta.get_search_fields()
@@ -516,7 +520,9 @@ def get_batch_no(doctype: str, txt: str, searchfield: str, start: int, page_len:
 	return filtered_batches
 
 
-def get_empty_batches(filters, start, page_len, filtered_batches=None, txt=None):
+def get_empty_batches(
+	filters, start: int, page_len: int, filtered_batches: list | None = None, txt: str | None = None
+) -> list:
 	query_filter = {"item": filters.get("item_code"), "disabled": 0}
 	if txt:
 		query_filter["name"] = ("like", f"%{txt}%")
@@ -535,7 +541,7 @@ def get_empty_batches(filters, start, page_len, filtered_batches=None, txt=None)
 	)
 
 
-def get_filterd_batches(data):
+def get_filterd_batches(data: list) -> list:
 	batches = OrderedDict()
 
 	for batch_data in data:
@@ -552,7 +558,9 @@ def get_filterd_batches(data):
 	return filterd_batch
 
 
-def get_batches_from_stock_ledger_entries(searchfields, txt, filters, start=0, page_len=100):
+def get_batches_from_stock_ledger_entries(
+	searchfields: list, txt: str, filters, start: int = 0, page_len: int = 100
+) -> list:
 	stock_ledger_entry = frappe.qb.DocType("Stock Ledger Entry")
 	batch_table = frappe.qb.DocType("Batch")
 
@@ -613,7 +621,9 @@ def get_batches_from_stock_ledger_entries(searchfields, txt, filters, start=0, p
 	return query.run(as_list=1) or []
 
 
-def get_batches_from_serial_and_batch_bundle(searchfields, txt, filters, start=0, page_len=100):
+def get_batches_from_serial_and_batch_bundle(
+	searchfields: list, txt: str, filters, start: int = 0, page_len: int = 100
+) -> list:
 	bundle = frappe.qb.DocType("Serial and Batch Entry")
 	stock_ledger_entry = frappe.qb.DocType("Stock Ledger Entry")
 	batch_table = frappe.qb.DocType("Batch")
@@ -683,7 +693,7 @@ def get_batches_from_serial_and_batch_bundle(searchfields, txt, filters, start=0
 @frappe.validate_and_sanitize_search_inputs
 def get_account_list(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict | list
-):
+) -> list:
 	doctype = "Account"
 	filter_list = []
 
@@ -714,7 +724,9 @@ def get_account_list(
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_blanket_orders(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_blanket_orders(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	bo = frappe.qb.DocType("Blanket Order")
 	bo_item = frappe.qb.DocType("Blanket Order Item")
 
@@ -739,7 +751,9 @@ def get_blanket_orders(doctype: str, txt: str, searchfield: str, start: int, pag
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_income_account(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_income_account(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	# income account can be any Credit account,
 	# but can also be a Asset account with account_type='Income Account' in special circumstances.
 	# Hence the first condition is an "OR"
@@ -784,7 +798,7 @@ def get_filtered_dimensions(
 	page_len: int,
 	filters: dict,
 	reference_doctype: str | None = None,
-):
+) -> list:
 	from erpnext.accounts.doctype.accounting_dimension_filter.accounting_dimension_filter import (
 		get_dimension_filter_map,
 	)
@@ -838,7 +852,9 @@ def get_filtered_dimensions(
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_expense_account(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_expense_account(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	if not filters:
 		filters = {}
 
@@ -875,7 +891,9 @@ def get_expense_account(doctype: str, txt: str, searchfield: str, start: int, pa
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def warehouse_query(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: list):
+def warehouse_query(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: list
+) -> list:
 	# Should be used when item code is passed in filters.
 	filter_dict = get_doctype_wise_filters(filters)
 
@@ -917,7 +935,7 @@ def warehouse_query(doctype: str, txt: str, searchfield: str, start: int, page_l
 	)
 
 
-def get_doctype_wise_filters(filters):
+def get_doctype_wise_filters(filters: list) -> dict:
 	# Helper function to seperate filters doctype_wise
 	filter_dict = defaultdict(list)
 	for row in filters:
@@ -927,7 +945,9 @@ def get_doctype_wise_filters(filters):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_batch_numbers(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_batch_numbers(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	batch = frappe.qb.DocType("Batch")
 	query = (
 		frappe.qb.from_(batch)
@@ -949,7 +969,7 @@ def get_batch_numbers(doctype: str, txt: str, searchfield: str, start: int, page
 @frappe.validate_and_sanitize_search_inputs
 def item_manufacturer_query(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
-):
+) -> list:
 	item_filters = [
 		["manufacturer", "like", "%" + txt + "%"],
 		["item_code", "=", filters.get("item_code")],
@@ -968,7 +988,9 @@ def item_manufacturer_query(
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_purchase_receipts(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_purchase_receipts(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
 	query = (
@@ -988,7 +1010,9 @@ def get_purchase_receipts(doctype: str, txt: str, searchfield: str, start: int, 
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_purchase_invoices(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_purchase_invoices(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	pi = frappe.qb.DocType("Purchase Invoice")
 	pi_item = frappe.qb.DocType("Purchase Invoice Item")
 	query = (
@@ -1010,7 +1034,7 @@ def get_purchase_invoices(doctype: str, txt: str, searchfield: str, start: int, 
 @frappe.validate_and_sanitize_search_inputs
 def get_doctypes_for_closing(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
-):
+) -> list:
 	doctypes = frappe.get_hooks("period_closing_doctypes")
 	if txt:
 		doctypes = [d for d in doctypes if txt.lower() in d.lower()]
@@ -1019,7 +1043,9 @@ def get_doctypes_for_closing(
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_tax_template(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_tax_template(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	item_doc = frappe.get_cached_doc("Item", filters.get("item_code"))
 	item_group = filters.get("item_group")
 	company = filters.get("company")
@@ -1071,7 +1097,7 @@ def get_tax_template(doctype: str, txt: str, searchfield: str, start: int, page_
 		return [(d,) for d in set(taxes) if not txt or txt in d.lower()]
 
 
-def get_fields(doctype, fields=None):
+def get_fields(doctype: str, fields: list | None = None) -> list:
 	if fields is None:
 		fields = []
 	meta = frappe.get_meta(doctype)
@@ -1087,7 +1113,7 @@ def get_fields(doctype, fields=None):
 @frappe.validate_and_sanitize_search_inputs
 def get_payment_terms_for_references(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
-):
+) -> list:
 	terms = []
 	if filters:
 		terms = frappe.db.get_all(
@@ -1104,7 +1130,7 @@ def get_payment_terms_for_references(
 @frappe.validate_and_sanitize_search_inputs
 def get_filtered_child_rows(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
-):
+) -> list:
 	table = frappe.qb.DocType(doctype)
 	query = (
 		frappe.qb.from_(table)
@@ -1133,7 +1159,9 @@ def get_filtered_child_rows(
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_item_uom_query(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_item_uom_query(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	if frappe.get_single_value("Stock Settings", "allow_uom_with_conversion_rate_defined_in_item"):
 		query_filters = {"parent": filters.get("item_code")}
 
@@ -1162,7 +1190,9 @@ def get_item_uom_query(doctype: str, txt: str, searchfield: str, start: int, pag
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_warehouse_address(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_warehouse_address(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	table = frappe.qb.DocType(doctype)
 	child_table = frappe.qb.DocType("Dynamic Link")
 

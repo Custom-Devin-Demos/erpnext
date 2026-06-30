@@ -2,8 +2,11 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import json
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe import _, bold, qb, throw
@@ -53,6 +56,9 @@ from erpnext.stock.get_item_details import (
 from erpnext.utilities.regional import temporary_flag
 from erpnext.utilities.transaction_base import TransactionBase
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class AccountMissingError(frappe.ValidationError):
 	pass
@@ -76,7 +82,7 @@ force_item_fields = (
 
 
 class AccountsController(TransactionBase):
-	def get_print_settings(self):
+	def get_print_settings(self) -> list:
 		print_setting_fields = []
 		items_field = self.meta.get_field("items")
 
@@ -90,13 +96,13 @@ class AccountsController(TransactionBase):
 		return print_setting_fields
 
 	@property
-	def company_currency(self):
+	def company_currency(self) -> str:
 		if not hasattr(self, "__company_currency"):
 			self.__company_currency = erpnext.get_company_currency(self.company)
 
 		return self.__company_currency
 
-	def onload(self):
+	def onload(self) -> None:
 		self.set_onload(
 			"make_payment_via_journal_entry",
 			frappe.client_cache.get_doc("Accounts Settings").make_payment_via_journal_entry,
@@ -115,10 +121,10 @@ class AccountsController(TransactionBase):
 
 				PaymentScheduleService(self).set_payment_schedule()
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		self.clear_clearance_date_on_amend()
 
-	def clear_clearance_date_on_amend(self):
+	def clear_clearance_date_on_amend(self) -> None:
 		"""Drop the bank reconciliation clearance date copied over while amending.
 
 		The framework copies `no_copy` fields when amending, so a reconciled
@@ -135,12 +141,12 @@ class AccountsController(TransactionBase):
 			if payment.meta.has_field("clearance_date"):
 				payment.clearance_date = None
 
-	def on_update(self):
+	def on_update(self) -> None:
 		from erpnext.controllers.taxes_and_totals import process_item_wise_tax_details
 
 		process_item_wise_tax_details(self)
 
-	def remove_bundle_for_non_stock_invoices(self):
+	def remove_bundle_for_non_stock_invoices(self) -> None:
 		has_sabb = False
 		if self.doctype in ("Sales Invoice", "Purchase Invoice") and not self.update_stock:
 			for item in self.get("items"):
@@ -151,7 +157,7 @@ class AccountsController(TransactionBase):
 		if has_sabb:
 			self.remove_serial_and_batch_bundle()
 
-	def ensure_supplier_is_not_blocked(self):
+	def ensure_supplier_is_not_blocked(self) -> None:
 		is_supplier_payment = self.doctype == "Payment Entry" and self.party_type == "Supplier"
 		is_buying_invoice = self.doctype in ["Purchase Invoice", "Purchase Order"]
 		supplier_name = self.supplier if is_buying_invoice else self.party if is_supplier_payment else None
@@ -170,7 +176,7 @@ class AccountsController(TransactionBase):
 						raise_exception=1,
 					)
 
-	def validate_against_voucher_outstanding(self):
+	def validate_against_voucher_outstanding(self) -> None:
 		from frappe.model.meta import get_meta
 
 		if not get_meta(self.doctype).has_field("outstanding_amount"):
@@ -211,7 +217,7 @@ class AccountsController(TransactionBase):
 				)
 				frappe.msgprint(msg)
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.get("is_return") and not self.get("is_debit_note"):
 			self.validate_qty_is_not_zero()
 
@@ -304,11 +310,11 @@ class AccountsController(TransactionBase):
 		self.set_default_letter_head()
 		self.validate_company_in_accounting_dimension()
 
-	def set_default_letter_head(self):
+	def set_default_letter_head(self) -> None:
 		if hasattr(self, "letter_head") and not self.letter_head:
 			self.letter_head = frappe.db.get_value("Company", self.company, "default_letter_head")
 
-	def init_internal_values(self):
+	def init_internal_values(self) -> None:
 		# init all the internal values as 0 on sa
 		if self.docstatus.is_draft():
 			# TODO: Add all such pending values here
@@ -318,10 +324,10 @@ class AccountsController(TransactionBase):
 					if hasattr(item, field):
 						item.set(field, 0)
 
-	def before_cancel(self):
+	def before_cancel(self) -> None:
 		validate_einvoice_fields(self)
 
-	def _remove_references_in_unreconcile(self):
+	def _remove_references_in_unreconcile(self) -> None:
 		upe = frappe.qb.DocType("Unreconcile Payment Entries")
 		rows = (
 			frappe.qb.from_(upe)
@@ -352,7 +358,7 @@ class AccountsController(TransactionBase):
 				_doc.cancel()
 			_doc.delete()
 
-	def _remove_references_in_repost_doctypes(self):
+	def _remove_references_in_repost_doctypes(self) -> None:
 		repost_doctypes = ["Repost Payment Ledger Items", "Repost Accounting Ledger Items"]
 
 		for _doctype in repost_doctypes:
@@ -400,7 +406,7 @@ class AccountsController(TransactionBase):
 					repost_doc.flags.ignore_links = True
 					repost_doc.save(ignore_permissions=True)
 
-	def _remove_advance_payment_ledger_entries(self):
+	def _remove_advance_payment_ledger_entries(self) -> None:
 		adv = qb.DocType("Advance Payment Ledger Entry")
 		qb.from_(adv).delete().where(adv.voucher_type.eq(self.doctype) & adv.voucher_no.eq(self.name)).run()
 
@@ -409,7 +415,7 @@ class AccountsController(TransactionBase):
 				adv.against_voucher_type.eq(self.doctype) & adv.against_voucher_no.eq(self.name)
 			).run()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		from erpnext.accounts.utils import delete_exchange_gain_loss_journal
 
 		self._remove_references_in_repost_doctypes()
@@ -442,7 +448,7 @@ class AccountsController(TransactionBase):
 
 			self._remove_advance_payment_ledger_entries()
 
-	def remove_serial_and_batch_bundle(self):
+	def remove_serial_and_batch_bundle(self) -> None:
 		bundles = frappe.get_all(
 			"Serial and Batch Bundle",
 			filters={"voucher_type": self.doctype, "voucher_no": self.name, "docstatus": ("!=", 1)},
@@ -457,7 +463,7 @@ class AccountsController(TransactionBase):
 		for row in batches:
 			frappe.delete_doc("Batch", row.name)
 
-	def validate_company_in_accounting_dimension(self):
+	def validate_company_in_accounting_dimension(self) -> None:
 		doc_field = DocType("DocField")
 		accounting_dimension = DocType("Accounting Dimension")
 		dimension_list = (
@@ -474,7 +480,7 @@ class AccountsController(TransactionBase):
 		for child in self.get_all_children() or []:
 			self.validate_company(dimension_list, child)
 
-	def validate_company(self, dimension_list, child=None):
+	def validate_company(self, dimension_list: list, child=None) -> None:
 		for dimension in dimension_list:
 			if not child:
 				dimension_value = self.get(frappe.scrub(dimension))
@@ -490,7 +496,7 @@ class AccountsController(TransactionBase):
 						)
 					)
 
-	def validate_return_against_account(self):
+	def validate_return_against_account(self) -> None:
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
 			cr_dr_account_field = "debit_to" if self.doctype == "Sales Invoice" else "credit_to"
 			original_account = frappe.get_value(self.doctype, self.return_against, cr_dr_account_field)
@@ -505,7 +511,7 @@ class AccountsController(TransactionBase):
 					)
 				)
 
-	def validate_deferred_income_expense_account(self):
+	def validate_deferred_income_expense_account(self) -> None:
 		field_map = {
 			"Sales Invoice": "deferred_revenue_account",
 			"Purchase Invoice": "deferred_expense_account",
@@ -526,11 +532,11 @@ class AccountsController(TransactionBase):
 					else:
 						item.set(field_map.get(self.doctype), default_deferred_account)
 
-	def validate_auto_repeat_subscription_dates(self):
+	def validate_auto_repeat_subscription_dates(self) -> None:
 		if self.get("from_date") and self.get("to_date") and getdate(self.from_date) > getdate(self.to_date):
 			frappe.throw(_("To Date cannot be before From Date"), title=_("Invalid Auto Repeat Date"))
 
-	def validate_deferred_start_and_end_date(self):
+	def validate_deferred_start_and_end_date(self) -> None:
 		for d in self.items:
 			if d.get("enable_deferred_revenue") or d.get("enable_deferred_expense"):
 				if not (d.service_start_date and d.service_end_date):
@@ -550,7 +556,7 @@ class AccountsController(TransactionBase):
 						_("Row #{0}: Service End Date cannot be before Invoice Posting Date").format(d.idx)
 					)
 
-	def validate_invoice_documents_schedule(self):
+	def validate_invoice_documents_schedule(self) -> None:
 		if (
 			self.is_return
 			or (self.doctype == "Purchase Invoice" and self.is_paid)
@@ -574,7 +580,7 @@ class AccountsController(TransactionBase):
 			self.validate_due_date()
 		self.validate_advance_entries()
 
-	def validate_non_invoice_documents_schedule(self):
+	def validate_non_invoice_documents_schedule(self) -> None:
 		from erpnext.accounts.services.payment_schedule import PaymentScheduleService
 
 		ps = PaymentScheduleService(self)
@@ -582,13 +588,13 @@ class AccountsController(TransactionBase):
 		ps.validate_payment_schedule_dates()
 		ps.validate_payment_schedule_amount()
 
-	def validate_all_documents_schedule(self):
+	def validate_all_documents_schedule(self) -> None:
 		if self.doctype in ("Sales Invoice", "Purchase Invoice"):
 			self.validate_invoice_documents_schedule()
 		elif self.doctype in ("Quotation", "Purchase Order", "Sales Order"):
 			self.validate_non_invoice_documents_schedule()
 
-	def before_print(self, settings=None):
+	def before_print(self, settings=None) -> None:
 		if self.doctype in [
 			"Purchase Order",
 			"Sales Order",
@@ -612,7 +618,7 @@ class AccountsController(TransactionBase):
 		set_print_templates_for_item_table(self, settings)
 		set_print_templates_for_taxes(self, settings)
 
-	def calculate_paid_amount(self):
+	def calculate_paid_amount(self) -> None:
 		if hasattr(self, "is_pos") or hasattr(self, "is_paid"):
 			is_paid = self.get("is_pos") or self.get("is_paid")
 
@@ -638,14 +644,14 @@ class AccountsController(TransactionBase):
 				self.paid_amount = 0
 				self.base_paid_amount = 0
 
-	def set_missing_values(self, for_validate=False):
+	def set_missing_values(self, for_validate: bool = False) -> None:
 		if frappe.in_test:
 			for fieldname in ["posting_date", "transaction_date"]:
 				if self.meta.get_field(fieldname) and not self.get(fieldname):
 					self.set(fieldname, today())
 					break
 
-	def calculate_taxes_and_totals(self):
+	def calculate_taxes_and_totals(self) -> None:
 		from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 
 		calculate_taxes_and_totals(self)
@@ -659,7 +665,7 @@ class AccountsController(TransactionBase):
 			self.calculate_commission()
 			self.calculate_contribution()
 
-	def validate_date_with_fiscal_year(self):
+	def validate_date_with_fiscal_year(self) -> None:
 		date_field = None
 		if self.meta.get_field("posting_date"):
 			date_field = "posting_date"
@@ -684,7 +690,7 @@ class AccountsController(TransactionBase):
 				label=self.meta.get_label(date_field),
 			)
 
-	def validate_due_date(self):
+	def validate_due_date(self) -> None:
 		if self.get("is_pos") or self.doctype not in ["Sales Invoice", "Purchase Invoice"]:
 			return
 
@@ -709,7 +715,7 @@ class AccountsController(TransactionBase):
 				doctype=self.doctype,
 			)
 
-	def set_price_list_currency(self, buying_or_selling):
+	def set_price_list_currency(self, buying_or_selling: str) -> None:
 		if self.meta.get_field("posting_date"):
 			transaction_date = self.posting_date
 		else:
@@ -757,7 +763,7 @@ class AccountsController(TransactionBase):
 					self.currency, self.company_currency, transaction_date, args
 				)
 
-	def set_missing_item_details(self, for_validate=False):
+	def set_missing_item_details(self, for_validate: bool = False) -> None:
 		"""set missing item values"""
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
@@ -898,7 +904,7 @@ class AccountsController(TransactionBase):
 			if self.doctype == "Purchase Invoice":
 				self.set_expense_account(for_validate)
 
-	def apply_pricing_rule_on_items(self, item, pricing_rule_args):
+	def apply_pricing_rule_on_items(self, item, pricing_rule_args: dict) -> None:
 		if not pricing_rule_args.get("validate_applied_rule", 0):
 			# if user changed the discount percentage then set user's discount percentage ?
 			if pricing_rule_args.get("price_or_product_discount") == "Price":
@@ -941,7 +947,7 @@ class AccountsController(TransactionBase):
 							)
 						)
 
-	def set_pricing_rule_details(self, item_row, args):
+	def set_pricing_rule_details(self, item_row, args: dict) -> None:
 		pricing_rules = get_applied_pricing_rules(args.get("pricing_rules"))
 		if not pricing_rules:
 			return
@@ -957,22 +963,22 @@ class AccountsController(TransactionBase):
 				},
 			)
 
-	def get_gl_dict(self, args, account_currency=None, item=None):
+	def get_gl_dict(self, args: dict, account_currency: str | None = None, item=None) -> dict:
 		from erpnext.accounts.services.base_gl_composer import get_gl_dict
 
 		return get_gl_dict(self, args, account_currency, item)
 
-	def get_voucher_subtype(self):
+	def get_voucher_subtype(self) -> str:
 		from erpnext.accounts.services.base_gl_composer import get_voucher_subtype
 
 		return get_voucher_subtype(self)
 
-	def get_value_in_transaction_currency(self, account_currency, gl_dict, field):
+	def get_value_in_transaction_currency(self, account_currency: str, gl_dict: dict, field: str) -> float:
 		from erpnext.accounts.services.base_gl_composer import get_value_in_transaction_currency
 
 		return get_value_in_transaction_currency(self, account_currency, gl_dict, field)
 
-	def validate_zero_qty_for_return_invoices_with_stock(self):
+	def validate_zero_qty_for_return_invoices_with_stock(self) -> None:
 		rows = []
 		for item in self.items:
 			if not flt(item.qty):
@@ -984,7 +990,7 @@ class AccountsController(TransactionBase):
 				).format(frappe.bold(comma_and(["#" + str(x.idx) for x in rows])))
 			)
 
-	def validate_qty_is_not_zero(self):
+	def validate_qty_is_not_zero(self) -> None:
 		if self.flags.allow_zero_qty:
 			return
 
@@ -1001,12 +1007,12 @@ class AccountsController(TransactionBase):
 					exc=InvalidQtyError,
 				)
 
-	def validate_account_currency(self, account, account_currency=None):
+	def validate_account_currency(self, account: str, account_currency: str | None = None) -> None:
 		from erpnext.accounts.services.base_gl_composer import validate_account_currency
 
 		return validate_account_currency(self, account, account_currency)
 
-	def clear_unallocated_advances(self, childtype, parentfield):
+	def clear_unallocated_advances(self, childtype: str, parentfield: str) -> None:
 		self.set(parentfield, self.get(parentfield, {"allocated_amount": ["not in", [0, None, ""]]}))
 
 		doctype = frappe.qb.DocType(childtype)
@@ -1017,13 +1023,13 @@ class AccountsController(TransactionBase):
 		).run()
 
 	@frappe.whitelist()
-	def apply_shipping_rule(self):
+	def apply_shipping_rule(self) -> None:
 		if self.shipping_rule:
 			shipping_rule = frappe.get_doc("Shipping Rule", self.shipping_rule)
 			shipping_rule.apply(self)
 			self.calculate_taxes_and_totals()
 
-	def get_shipping_address(self):
+	def get_shipping_address(self) -> Document | dict:
 		"""Returns Address object from shipping address fields if present"""
 
 		# shipping address fields can be `shipping_address_name` or `shipping_address`
@@ -1038,17 +1044,17 @@ class AccountsController(TransactionBase):
 		return {}
 
 	@frappe.whitelist()
-	def set_advances(self):
+	def set_advances(self) -> None:
 		from erpnext.accounts.services.advances import set_advances
 
 		set_advances(self)
 
-	def get_advance_entries(self, include_unallocated=True):
+	def get_advance_entries(self, include_unallocated: bool = True) -> list:
 		from erpnext.accounts.services.advances import get_advance_entries
 
 		return get_advance_entries(self, include_unallocated)
 
-	def is_inclusive_tax(self):
+	def is_inclusive_tax(self) -> int:
 		is_inclusive = cint(frappe.get_single_value("Accounts Settings", "show_inclusive_tax_in_print"))
 
 		if is_inclusive:
@@ -1058,15 +1064,15 @@ class AccountsController(TransactionBase):
 
 		return is_inclusive
 
-	def should_show_taxes_as_table_in_print(self):
+	def should_show_taxes_as_table_in_print(self) -> int:
 		return cint(frappe.get_single_value("Accounts Settings", "show_taxes_as_table_in_print"))
 
-	def validate_advance_entries(self):
+	def validate_advance_entries(self) -> None:
 		from erpnext.accounts.services.advances import validate_advance_entries
 
 		validate_advance_entries(self)
 
-	def set_advance_gain_or_loss(self):
+	def set_advance_gain_or_loss(self) -> None:
 		from erpnext.accounts.services.advances import set_advance_gain_or_loss
 
 		set_advance_gain_or_loss(self)
@@ -1087,12 +1093,12 @@ class AccountsController(TransactionBase):
 
 		make_exchange_gain_loss_journal(self, args, dimensions_dict)
 
-	def is_payable_account(self, reference_doctype, account):
+	def is_payable_account(self, reference_doctype: str, account: str) -> bool:
 		from erpnext.accounts.services.exchange_gain_loss import is_payable_account
 
 		return is_payable_account(reference_doctype, account)
 
-	def update_against_document_in_jv(self):
+	def update_against_document_in_jv(self) -> None:
 		"""
 		Links invoice and advance voucher:
 		        1. cancel advance voucher
@@ -1160,7 +1166,7 @@ class AccountsController(TransactionBase):
 						x.update({dim.fieldname: self.get(dim.fieldname)})
 			reconcile_against_document(lst, active_dimensions=active_dimensions)
 
-	def cancel_system_generated_credit_debit_notes(self):
+	def cancel_system_generated_credit_debit_notes(self) -> None:
 		# Cancel 'Credit/Debit' Note Journal Entries, if found.
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"]:
 			voucher_type = "Credit Note" if self.doctype == "Sales Invoice" else "Debit Note"
@@ -1178,7 +1184,7 @@ class AccountsController(TransactionBase):
 			for x in journals:
 				frappe.get_doc("Journal Entry", x).cancel()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		from erpnext.accounts.doctype.bank_transaction.bank_transaction import (
 			remove_from_bank_transaction,
 		)
@@ -1207,7 +1213,7 @@ class AccountsController(TransactionBase):
 			if self.doctype == "Sales Order":
 				self.unlink_ref_doc_from_po()
 
-	def unlink_ref_doc_from_po(self):
+	def unlink_ref_doc_from_po(self) -> None:
 		so_items = []
 		for item in self.items:
 			so_items.append(item.name)
@@ -1235,12 +1241,12 @@ class AccountsController(TransactionBase):
 
 			frappe.msgprint(_("Purchase Orders {0} are unlinked").format("\n".join(linked_po)))
 
-	def get_company_default(self, fieldname, ignore_validation=False):
+	def get_company_default(self, fieldname: str, ignore_validation: bool = False):
 		from erpnext.accounts.utils import get_company_default
 
 		return get_company_default(self.company, fieldname, ignore_validation=ignore_validation)
 
-	def get_stock_items(self):
+	def get_stock_items(self) -> list:
 		stock_items = []
 		item_codes = list(set(item.item_code for item in self.get("items")))
 		if item_codes:
@@ -1250,7 +1256,7 @@ class AccountsController(TransactionBase):
 
 		return stock_items
 
-	def get_asset_items(self):
+	def get_asset_items(self) -> list:
 		asset_items = []
 		item_codes = list(set(item.item_code for item in self.get("items")))
 		if item_codes:
@@ -1260,29 +1266,29 @@ class AccountsController(TransactionBase):
 
 		return asset_items
 
-	def calculate_total_advance_from_ledger(self):
+	def calculate_total_advance_from_ledger(self) -> list:
 		from erpnext.accounts.services.advances import calculate_total_advance_from_ledger
 
 		return calculate_total_advance_from_ledger(self)
 
-	def set_total_advance_paid(self):
+	def set_total_advance_paid(self) -> None:
 		from erpnext.accounts.services.advances import set_total_advance_paid
 
 		set_total_advance_paid(self)
 
-	def set_advance_payment_status(self):
+	def set_advance_payment_status(self) -> None:
 		from erpnext.accounts.services.advances import set_advance_payment_status
 
 		set_advance_payment_status(self)
 
 	@property
-	def company_abbr(self):
+	def company_abbr(self) -> str:
 		if not hasattr(self, "_abbr"):
 			self._abbr = frappe.get_cached_value("Company", self.company, "abbr")
 
 		return self._abbr
 
-	def raise_missing_debit_credit_account_error(self, party_type, party):
+	def raise_missing_debit_credit_account_error(self, party_type: str, party: str) -> None:
 		"""Raise an error if debit to/credit to account does not exist."""
 		db_or_cr = (
 			frappe.bold(_("Debit To")) if self.doctype == "Sales Invoice" else frappe.bold(_("Credit To"))
@@ -1312,12 +1318,12 @@ class AccountsController(TransactionBase):
 
 		return PartyValidator(self).get_party()
 
-	def delink_advance_entries(self, linked_doc_name):
+	def delink_advance_entries(self, linked_doc_name: str) -> None:
 		from erpnext.accounts.services.advances import delink_advance_entries
 
 		delink_advance_entries(self, linked_doc_name)
 
-	def group_similar_items(self):
+	def group_similar_items(self) -> None:
 		grouped_items = {}
 		# to update serial number in print
 		count = 0
@@ -1372,12 +1378,12 @@ class AccountsController(TransactionBase):
 
 		return InternalTransferService(self).get_common_party_link()
 
-	def create_advance_and_reconcile(self, party_link):
+	def create_advance_and_reconcile(self, party_link) -> None:
 		from erpnext.accounts.services.advances import create_advance_and_reconcile
 
 		create_advance_and_reconcile(self, party_link)
 
-	def check_conversion_rate(self):
+	def check_conversion_rate(self) -> None:
 		default_currency = erpnext.get_company_currency(self.company)
 		if not default_currency:
 			throw(_("Please enter default currency in Company Master"))
@@ -1393,7 +1399,7 @@ class AccountsController(TransactionBase):
 				_("Conversion rate is 1.00, but document currency is different from company currency")
 			)
 
-	def check_finance_books(self, item, asset):
+	def check_finance_books(self, item, asset) -> None:
 		if (
 			len(asset.finance_books) > 1
 			and not item.get("finance_book")
@@ -1404,7 +1410,7 @@ class AccountsController(TransactionBase):
 				_("Select finance book for the item {0} at row {1}").format(item.item_code, item.idx)
 			)
 
-	def check_if_fields_updated(self, fields_to_check, child_tables):
+	def check_if_fields_updated(self, fields_to_check: list, child_tables: dict) -> bool:
 		from erpnext.accounts.services.child_item_update import check_if_child_table_updated
 
 		doc_before_update = self.get_doc_before_save()
@@ -1424,7 +1430,7 @@ class AccountsController(TransactionBase):
 		return False
 
 	@frappe.whitelist()
-	def repost_accounting_entries(self):
+	def repost_accounting_entries(self) -> None:
 		repost_ledger = frappe.new_doc("Repost Accounting Ledger")
 		repost_ledger.company = self.company
 		repost_ledger.append("vouchers", {"voucher_type": self.doctype, "voucher_no": self.name})
@@ -1432,7 +1438,7 @@ class AccountsController(TransactionBase):
 		repost_ledger.insert()
 		repost_ledger.submit()
 
-	def get_advance_payment_doctypes(self, payment_type=None) -> list:
+	def get_advance_payment_doctypes(self, payment_type: str | None = None) -> list:
 		return _get_advance_payment_doctypes(payment_type=payment_type)
 
 	def set_transaction_currency_and_rate_in_gl_map(self, gl_entries: list) -> None:
@@ -1440,10 +1446,10 @@ class AccountsController(TransactionBase):
 
 		set_transaction_currency_and_rate_in_gl_map(self, gl_entries)
 
-	def after_mapping(self, source_doc):
+	def after_mapping(self, source_doc) -> None:
 		self.set_discount_amount_after_mapping(source_doc)
 
-	def set_discount_amount_after_mapping(self, source_doc):
+	def set_discount_amount_after_mapping(self, source_doc) -> None:
 		"""
 		Ensures that Additional Discount Amount is not copied repeatedly
 		for multiple mappings of a single source transaction.
@@ -1561,7 +1567,7 @@ from erpnext.accounts.services.taxes import (
 )
 
 
-def update_invoice_status():
+def update_invoice_status() -> None:
 	"""Updates status as Overdue for applicable invoices. Runs daily."""
 	today = getdate()
 	payment_schedule = frappe.qb.DocType("Payment Schedule")
@@ -1625,7 +1631,7 @@ from erpnext.accounts.services.payment_schedule import (
 )
 
 
-def get_supplier_block_status(party_name):
+def get_supplier_block_status(party_name: str) -> dict:
 	"""
 	Returns a dict containing the values of `on_hold`, `release_date` and `hold_type` of
 	a `Supplier`
@@ -1643,12 +1649,12 @@ from erpnext.accounts.services.child_item_update import update_child_qty_rate
 
 
 @erpnext.allow_regional
-def validate_regional(doc):
+def validate_regional(doc) -> None:
 	pass
 
 
 @erpnext.allow_regional
-def validate_einvoice_fields(doc):
+def validate_einvoice_fields(doc) -> None:
 	pass
 
 
@@ -1659,7 +1665,7 @@ from erpnext.accounts.services.base_gl_composer import (
 
 
 @frappe.whitelist()
-def get_missing_company_details(doctype: str, docname: str):
+def get_missing_company_details(doctype: str, docname: str) -> dict | bool | None:
 	from frappe.contacts.doctype.address.address import get_address_display_list
 
 	company = frappe.db.get_value(doctype, docname, "company")
@@ -1726,7 +1732,9 @@ def get_missing_company_details(doctype: str, docname: str):
 
 
 @frappe.whitelist()
-def update_company_master_and_address(current_doctype: str, name: str, company: str, details: dict | str):
+def update_company_master_and_address(
+	current_doctype: str, name: str, company: str, details: dict | str
+) -> None:
 	from frappe.utils import validate_email_address
 
 	if not frappe.has_permission(current_doctype, "write", doc=name, throw=False):
@@ -1783,7 +1791,9 @@ def update_company_master_and_address(current_doctype: str, name: str, company: 
 	update_doc_company_address(current_doctype, name, company_address, details)
 
 
-def update_doc_company_address(current_doctype, docname, company_address, details):
+def update_doc_company_address(
+	current_doctype: str, docname: str, company_address: str, details: dict
+) -> None:
 	if not company_address:
 		return
 

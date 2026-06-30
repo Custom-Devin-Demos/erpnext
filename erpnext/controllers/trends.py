@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import DateTimeLikeObject, getdate, today
@@ -9,7 +11,7 @@ from frappe.utils import DateTimeLikeObject, getdate, today
 from erpnext.accounts.utils import get_fiscal_year
 
 
-def get_columns(filters, trans):
+def get_columns(filters, trans: str) -> dict:
 	validate_filters(filters)
 
 	# get conditions for based_on filter cond
@@ -46,7 +48,7 @@ def get_columns(filters, trans):
 	return conditions
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	if not filters.get("fiscal_year"):
 		filters["fiscal_year"] = get_fiscal_year(today())[0]
 	if not filters.get("company"):
@@ -70,7 +72,7 @@ def validate_filters(filters):
 		)
 
 
-def get_data(filters, conditions):
+def get_data(filters, conditions: dict) -> list:
 	data = []
 	inc, cond = "", ""
 	query_details = conditions["based_on_select"] + conditions["period_wise_select"]
@@ -242,8 +244,8 @@ def get_data(filters, conditions):
 	return data
 
 
-def calculate_total_row(data, columns):
-	def wrap_in_quotes(label):
+def calculate_total_row(data: list, columns: list) -> list:
+	def wrap_in_quotes(label) -> str:
 		return f"'{label}'"
 
 	total_values = {}
@@ -262,11 +264,11 @@ def calculate_total_row(data, columns):
 	return total_row
 
 
-def get_mon(dt):
+def get_mon(dt) -> str:
 	return getdate(dt).strftime("%b")
 
 
-def period_wise_columns_query(filters, trans):
+def period_wise_columns_query(filters, trans: str) -> tuple:
 	query_details = ""
 	pwc = []
 	bet_dates = get_period_date_ranges(filters.get("period"), filters.get("fiscal_year"))
@@ -293,7 +295,7 @@ def period_wise_columns_query(filters, trans):
 	return pwc, query_details
 
 
-def get_period_wise_columns(bet_dates, period, pwc):
+def get_period_wise_columns(bet_dates, period: str, pwc: list) -> None:
 	if period == "Monthly":
 		pwc += [
 			_(get_mon(bet_dates[0])) + " (" + _("Qty") + "):Float:120",
@@ -311,7 +313,7 @@ def get_period_wise_columns(bet_dates, period, pwc):
 		]
 
 
-def get_period_wise_query(bet_dates, trans_date, query_details):
+def get_period_wise_query(bet_dates, trans_date: str, query_details: str) -> str:
 	query_details += """SUM(CASE WHEN t1.{trans_date} BETWEEN '{sd}' AND '{ed}' THEN t2.stock_qty ELSE NULL END),
 					SUM(CASE WHEN t1.{trans_date} BETWEEN '{sd}' AND '{ed}' THEN t2.base_net_amount ELSE NULL END),
 				""".format(
@@ -325,7 +327,7 @@ def get_period_wise_query(bet_dates, trans_date, query_details):
 @frappe.whitelist()
 def get_period_date_ranges(
 	period: str, fiscal_year: str | None = None, year_start_date: DateTimeLikeObject | None = None
-):
+) -> list:
 	from dateutil.relativedelta import relativedelta
 
 	if not year_start_date:
@@ -348,7 +350,7 @@ def get_period_date_ranges(
 	return period_date_ranges
 
 
-def get_period_month_ranges(period, fiscal_year):
+def get_period_month_ranges(period: str, fiscal_year: str) -> list:
 	from dateutil.relativedelta import relativedelta
 
 	period_month_ranges = []
@@ -363,7 +365,7 @@ def get_period_month_ranges(period, fiscal_year):
 	return period_month_ranges
 
 
-def based_wise_columns_query(based_on, trans):
+def based_wise_columns_query(based_on: str, trans: str) -> dict:
 	based_on_details = {}
 
 	# based_on_cols, based_on_select, based_on_group_by, addl_tables
@@ -467,7 +469,7 @@ def based_wise_columns_query(based_on, trans):
 	return based_on_details
 
 
-def group_wise_column(group_by):
+def group_wise_column(group_by: str | None) -> list:
 	if group_by:
 		return [group_by + ":Link/" + group_by + ":120"]
 	else:

@@ -2,8 +2,11 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import copy
 import json
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe import _
@@ -11,6 +14,9 @@ from frappe.query_builder import Case
 from frappe.utils import cstr, flt
 
 from erpnext.utilities.product import get_item_codes_by_attributes
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 
 class ItemVariantExistsError(frappe.ValidationError):
@@ -32,7 +38,7 @@ def get_variant(
 	variant: str | None = None,
 	manufacturer: str | None = None,
 	manufacturer_part_no: str | None = None,
-):
+) -> str | Document | None:
 	"""
 	Validates Attributes and their Values, then looks for an exactly
 	matching Item Variant
@@ -54,7 +60,9 @@ def get_variant(
 	return find_variant(template, args, variant)
 
 
-def make_variant_based_on_manufacturer(template, manufacturer, manufacturer_part_no):
+def make_variant_based_on_manufacturer(
+	template: Document, manufacturer: str, manufacturer_part_no: str | None
+) -> Document:
 	"""Make and return a new variant based on manufacturer and
 	manufacturer part no"""
 	from frappe.model.naming import append_number_if_name_exists
@@ -87,7 +95,7 @@ def make_variant_based_on_manufacturer(template, manufacturer, manufacturer_part
 	return variant
 
 
-def validate_item_variant_attributes(item, args=None):
+def validate_item_variant_attributes(item: Document | str, args: dict | None = None) -> None:
 	if isinstance(item, str):
 		item = frappe.get_doc("Item", item)
 
@@ -109,7 +117,7 @@ def validate_item_variant_attributes(item, args=None):
 			validate_item_attribute_value(attributes_list, attribute, value, item.name, from_variant=True)
 
 
-def validate_is_incremental(numeric_attribute, attribute, value, item):
+def validate_is_incremental(numeric_attribute, attribute: str, value, item: str) -> None:
 	from_range = numeric_attribute.from_range
 	to_range = numeric_attribute.to_range
 	increment = numeric_attribute.increment
@@ -135,7 +143,7 @@ def validate_is_incremental(numeric_attribute, attribute, value, item):
 		)
 
 
-def get_attribute_value_renames(item_attribute):
+def get_attribute_value_renames(item_attribute) -> dict:
 	"""Return old to new attribute value mappings for renamed Item Attribute Value rows."""
 	if item_attribute.numeric_values:
 		return {}
@@ -154,7 +162,7 @@ def get_attribute_value_renames(item_attribute):
 	return renames
 
 
-def update_variant_attribute_values(item_attribute):
+def update_variant_attribute_values(item_attribute) -> None:
 	"""Propagate renamed Item Attribute Values to Item Variant Attribute on variant items."""
 	value_map = get_attribute_value_renames(item_attribute)
 	if not value_map:
@@ -186,7 +194,9 @@ def update_variant_attribute_values(item_attribute):
 	frappe.flags.attribute_values = None
 
 
-def validate_item_attribute_value(attributes_list, attribute, attribute_value, item, from_variant=True):
+def validate_item_attribute_value(
+	attributes_list: list, attribute: str, attribute_value, item: str, from_variant: bool = True
+) -> None:
 	allow_rename_attribute_value = frappe.db.get_single_value(
 		"Item Variant Settings", "allow_rename_attribute_value"
 	)
@@ -212,7 +222,7 @@ def validate_item_attribute_value(attributes_list, attribute, attribute_value, i
 			frappe.throw(msg, InvalidItemAttributeValueError, title=_("Edit Not Allowed"))
 
 
-def get_attribute_values(item):
+def get_attribute_values(item) -> tuple:
 	if not frappe.flags.attribute_values:
 		attribute_values = {}
 		numeric_values = {}
@@ -232,7 +242,7 @@ def get_attribute_values(item):
 	return frappe.flags.attribute_values, frappe.flags.numeric_values
 
 
-def find_variant(template, args, variant_item_code=None):
+def find_variant(template: str, args: dict, variant_item_code: str | None = None) -> str | None:
 	possible_variants = [i for i in get_item_codes_by_attributes(args, template) if i != variant_item_code]
 
 	for variant in possible_variants:
@@ -255,7 +265,7 @@ def find_variant(template, args, variant_item_code=None):
 
 
 @frappe.whitelist()
-def create_variant(item: str, args: dict | str, use_template_image: bool = False):
+def create_variant(item: str, args: dict | str, use_template_image: bool = False) -> Document:
 	use_template_image = frappe.parse_json(use_template_image)
 	args = frappe.parse_json(args)
 
@@ -281,7 +291,9 @@ def create_variant(item: str, args: dict | str, use_template_image: bool = False
 
 
 @frappe.whitelist()
-def enqueue_multiple_variant_creation(item: str, args: dict | str, use_template_image: bool = False):
+def enqueue_multiple_variant_creation(
+	item: str, args: dict | str, use_template_image: bool = False
+) -> int | str | None:
 	use_template_image = frappe.parse_json(use_template_image)
 	# There can be innumerable attribute combinations, enqueue
 	variants = frappe.parse_json(args)
@@ -308,7 +320,7 @@ def enqueue_multiple_variant_creation(item: str, args: dict | str, use_template_
 		return "queued"
 
 
-def create_multiple_variants(item, args, use_template_image=False):
+def create_multiple_variants(item: str, args, use_template_image: bool = False) -> int:
 	count = 0
 	args = frappe.parse_json(args)
 	args = {key: values for key, values in args.items() if values}
@@ -327,7 +339,7 @@ def create_multiple_variants(item, args, use_template_image=False):
 	return count
 
 
-def generate_keyed_value_combinations(args):
+def generate_keyed_value_combinations(args: dict) -> list:
 	"""
 	From this:
 
@@ -382,7 +394,7 @@ def generate_keyed_value_combinations(args):
 	return results
 
 
-def copy_attributes_to_variant(item, variant):
+def copy_attributes_to_variant(item, variant) -> None:
 	# copy non no-copy fields
 
 	exclude_fields = [
@@ -434,7 +446,7 @@ def copy_attributes_to_variant(item, variant):
 					variant.description = attributes_description
 
 
-def make_variant_item_code(template_item_code, template_item_name, variant):
+def make_variant_item_code(template_item_code: str, template_item_name: str, variant) -> None:
 	"""Uses template's item code and abbreviations to make variant's item code"""
 	if variant.item_code:
 		return
@@ -475,7 +487,7 @@ def make_variant_item_code(template_item_code, template_item_name, variant):
 
 
 @frappe.whitelist()
-def create_variant_doc_for_quick_entry(template: str, args: dict | str):
+def create_variant_doc_for_quick_entry(template: str, args: dict | str) -> dict:
 	variant_based_on = frappe.db.get_value("Item", template, "variant_based_on")
 	args = frappe.parse_json(args)
 	if variant_based_on == "Manufacturer":

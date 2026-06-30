@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
@@ -10,7 +12,7 @@ from erpnext.stock.serial_batch_bundle import get_serial_batch_list_from_item
 
 
 class SubcontractingInwardController:
-	def validate_subcontracting_inward(self):
+	def validate_subcontracting_inward(self) -> None:
 		self.validate_inward_order()
 		self.set_allow_zero_valuation_rate()
 		self.validate_warehouse_()
@@ -18,14 +20,14 @@ class SubcontractingInwardController:
 		self.validate_delivery()
 		self.update_customer_provided_item_cost()
 
-	def on_submit_subcontracting_inward(self):
+	def on_submit_subcontracting_inward(self) -> None:
 		self.update_inward_order_item()
 		self.update_inward_order_received_items()
 		self.update_inward_order_secondary_items()
 		self.create_stock_reservation_entries_for_inward()
 		self.update_inward_order_status()
 
-	def on_cancel_subcontracting_inward(self):
+	def on_cancel_subcontracting_inward(self) -> None:
 		self.update_inward_order_item()
 		self.validate_manufacture_entry_cancel()
 		self.validate_delivery()
@@ -35,7 +37,7 @@ class SubcontractingInwardController:
 		self.remove_reference_for_additional_items()
 		self.update_inward_order_status()
 
-	def validate_purpose(self):
+	def validate_purpose(self) -> None:
 		if self.subcontracting_inward_order and self.purpose not in [
 			"Receive from Customer",
 			"Return Raw Material to Customer",
@@ -46,7 +48,7 @@ class SubcontractingInwardController:
 		]:
 			self.subcontracting_inward_order = None
 
-	def validate_inward_order(self):
+	def validate_inward_order(self) -> None:
 		if self.subcontracting_inward_order:
 			match self.purpose:
 				case "Receive from Customer":
@@ -58,7 +60,7 @@ class SubcontractingInwardController:
 				case "Manufacture":
 					self.validate_manufacture()
 
-	def validate_material_receipt(self):
+	def validate_material_receipt(self) -> None:
 		rm_item_fg_combo = []
 		for item in self.items:
 			if not frappe.get_cached_value("Item", item.item_code, "is_customer_provided_item"):
@@ -109,7 +111,7 @@ class SubcontractingInwardController:
 						).format(item.idx)
 					)
 
-	def validate_returns(self):
+	def validate_returns(self) -> None:
 		for item in self.items:
 			if not item.scio_detail:
 				frappe.throw(
@@ -158,7 +160,7 @@ class SubcontractingInwardController:
 						).format(item.idx, get_link_to_form("Item", item.item_code))
 					)
 
-	def validate_material_transfer(self):
+	def validate_material_transfer(self) -> None:
 		customer_warehouse = frappe.get_cached_value(
 			"Subcontracting Inward Order", self.subcontracting_inward_order, "customer_warehouse"
 		)
@@ -225,7 +227,7 @@ class SubcontractingInwardController:
 						)
 					)
 
-	def validate_manufacture(self):
+	def validate_manufacture(self) -> None:
 		if next(item for item in self.items if item.is_finished_item).t_warehouse != (
 			fg_warehouse := frappe.get_cached_value("Work Order", self.work_order, "fg_warehouse")
 		):
@@ -252,7 +254,7 @@ class SubcontractingInwardController:
 		else:
 			self._validate_manufacture_consumption_against_work_order(items)
 
-	def _validate_manufacture_consumption_against_scio(self, items):
+	def _validate_manufacture_consumption_against_scio(self, items: list) -> None:
 		customer_warehouse = frappe.get_cached_value(
 			"Subcontracting Inward Order", self.subcontracting_inward_order, "customer_warehouse"
 		)
@@ -281,7 +283,7 @@ class SubcontractingInwardController:
 			for d in query.run(as_dict=True)
 		}
 
-		def on_missing(item):
+		def on_missing(item) -> None:
 			frappe.throw(
 				_(
 					"Row #{0}: Customer Provided Item {1} is not a part of Subcontracting Inward Order {2}"
@@ -292,14 +294,14 @@ class SubcontractingInwardController:
 				)
 			)
 
-		def on_overconsumption(item):
+		def on_overconsumption(item) -> None:
 			frappe.throw(
 				_(
 					"Row #{0}: Customer Provided Item {1} exceeds quantity available through Subcontracting Inward Order"
 				).format(item.idx, get_link_to_form("Item", item.item_code))
 			)
 
-		def check_source_warehouse(item):
+		def check_source_warehouse(item) -> None:
 			if item.s_warehouse != customer_warehouse:
 				frappe.throw(
 					_("Row #{0}: For Customer Provided Item {1}, Source Warehouse must be {2}").format(
@@ -313,7 +315,7 @@ class SubcontractingInwardController:
 			items, lookup, on_missing, on_overconsumption, check_source_warehouse
 		)
 
-	def _validate_manufacture_consumption_against_work_order(self, items):
+	def _validate_manufacture_consumption_against_work_order(self, items: list) -> None:
 		work_order_items = frappe.get_all(
 			"Work Order Item",
 			{"parent": self.work_order, "docstatus": 1, "is_customer_provided_item": 1},
@@ -326,7 +328,7 @@ class SubcontractingInwardController:
 			for wo_item in work_order_items
 		}
 
-		def on_missing(item):
+		def on_missing(item) -> None:
 			frappe.throw(
 				_("Row #{0}: Customer Provided Item {1} is not a part of Work Order {2}").format(
 					item.idx,
@@ -335,7 +337,7 @@ class SubcontractingInwardController:
 				)
 			)
 
-		def on_overconsumption(item):
+		def on_overconsumption(item) -> None:
 			frappe.throw(
 				_(
 					"Row #{0}: Overconsumption of Customer Provided Item {1} against Work Order {2} is not allowed in the Subcontracting Inward process."
@@ -349,8 +351,8 @@ class SubcontractingInwardController:
 		self._validate_customer_provided_consumption(items, lookup, on_missing, on_overconsumption)
 
 	def _validate_customer_provided_consumption(
-		self, items, lookup, on_missing, on_overconsumption, extra_check=None
-	):
+		self, items: list, lookup: dict, on_missing, on_overconsumption, extra_check=None
+	) -> None:
 		"""Shared per-item guard for the skip-transfer and transfer manufacture paths.
 
 		`lookup` maps item_code -> {consumed_qty, available_qty}; the branch-specific
@@ -375,7 +377,7 @@ class SubcontractingInwardController:
 					)
 				seen.append(item.item_code)
 
-	def set_allow_zero_valuation_rate(self):
+	def set_allow_zero_valuation_rate(self) -> None:
 		if self.subcontracting_inward_order:
 			if self.purpose in ["Subcontracting Delivery", "Subcontracting Return", "Manufacture"]:
 				for item in self.items:
@@ -384,7 +386,7 @@ class SubcontractingInwardController:
 					) and item.valuation_rate == 0:
 						item.allow_zero_valuation_rate = 1
 
-	def validate_warehouse_(self):
+	def validate_warehouse_(self) -> None:
 		if self.subcontracting_inward_order and self.purpose in [
 			"Receive from Customer",
 			"Return Raw Material to Customer",
@@ -413,7 +415,7 @@ class SubcontractingInwardController:
 							).format(item.idx, get_link_to_form("Warehouse", customer_warehouse))
 						)
 
-	def validate_serial_batch_for_return_or_delivery(self):
+	def validate_serial_batch_for_return_or_delivery(self) -> None:
 		if self.subcontracting_inward_order and self.purpose in [
 			"Return Raw Material to Customer",
 			"Subcontracting Delivery",
@@ -448,7 +450,7 @@ class SubcontractingInwardController:
 						)
 					)
 
-	def get_serial_nos_and_batches_from_sres(self, scio_detail, only_pending=True):
+	def get_serial_nos_and_batches_from_sres(self, scio_detail: str, only_pending: bool = True) -> tuple:
 		serial_nos, batch_nos = [], frappe._dict()
 
 		table = frappe.qb.DocType("Stock Reservation Entry")
@@ -474,7 +476,7 @@ class SubcontractingInwardController:
 
 		return serial_nos, batch_nos
 
-	def validate_delivery(self):
+	def validate_delivery(self) -> None:
 		if self.purpose == "Subcontracting Delivery":
 			if self._action in ["save", "submit"]:
 				self.validate_delivery_on_save()
@@ -493,7 +495,7 @@ class SubcontractingInwardController:
 								).format(item.idx, get_link_to_form("Item", item.item_code))
 							)
 
-	def validate_delivery_on_save(self):
+	def validate_delivery_on_save(self) -> None:
 		allow_delivery_of_overproduced_qty = frappe.get_single_value(
 			"Selling Settings", "allow_delivery_of_overproduced_qty"
 		)
@@ -560,7 +562,7 @@ class SubcontractingInwardController:
 					)
 				)
 
-	def update_customer_provided_item_cost(self):
+	def update_customer_provided_item_cost(self) -> None:
 		if self.purpose == "Receive from Customer":
 			for item in self.items:
 				item.valuation_rate = 0
@@ -568,7 +570,7 @@ class SubcontractingInwardController:
 					item.basic_rate + (item.additional_cost / item.transfer_qty), item.precision("basic_rate")
 				)
 
-	def validate_receive_from_customer_cancel(self):
+	def validate_receive_from_customer_cancel(self) -> None:
 		if self.purpose == "Receive from Customer":
 			for item in self.items:
 				scio_rm_item = frappe.get_value(
@@ -586,7 +588,7 @@ class SubcontractingInwardController:
 						)
 					)
 
-	def validate_manufacture_entry_cancel(self):
+	def validate_manufacture_entry_cancel(self) -> None:
 		if self.subcontracting_inward_order and self.purpose == "Manufacture":
 			fg_item_name = frappe.get_cached_value(
 				"Work Order", self.work_order, "subcontracting_inward_order_item"
@@ -646,7 +648,7 @@ class SubcontractingInwardController:
 							).format(item.idx, get_link_to_form("Item", item.item_code))
 						)
 
-	def update_inward_order_item(self):
+	def update_inward_order_item(self) -> None:
 		if self.purpose == "Manufacture" and (
 			scio_item_name := frappe.get_cached_value(
 				"Work Order", self.work_order, "subcontracting_inward_order_item"
@@ -676,7 +678,7 @@ class SubcontractingInwardController:
 				}
 				frappe.db.bulk_update(doctype, doc_updates, chunk_size=len(doc_updates))
 
-	def update_inward_order_received_items(self):
+	def update_inward_order_received_items(self) -> None:
 		if self.subcontracting_inward_order:
 			match self.purpose:
 				case "Receive from Customer":
@@ -703,7 +705,7 @@ class SubcontractingInwardController:
 							update_modified=False,
 						)
 
-	def update_inward_order_received_items_for_raw_materials_receipt(self):
+	def update_inward_order_received_items_for_raw_materials_receipt(self) -> None:
 		data = frappe._dict()
 		next_received_idx = (
 			frappe.db.count(
@@ -795,7 +797,7 @@ class SubcontractingInwardController:
 					update_modified=False,
 				)
 
-	def update_inward_order_received_items_for_manufacture(self):
+	def update_inward_order_received_items_for_manufacture(self) -> None:
 		customer_warehouse = frappe.get_cached_value(
 			"Subcontracting Inward Order", self.subcontracting_inward_order, "customer_warehouse"
 		)
@@ -910,7 +912,7 @@ class SubcontractingInwardController:
 				doc.submit()
 				next_received_idx += 1
 
-	def update_inward_order_secondary_items(self):
+	def update_inward_order_secondary_items(self) -> None:
 		if (scio := self.subcontracting_inward_order) and self.purpose == "Manufacture":
 			secondary_items_list = [
 				item for item in self.items if item.secondary_item_type or item.is_legacy_scrap_item
@@ -1001,7 +1003,7 @@ class SubcontractingInwardController:
 					doc.submit()
 					next_secondary_idx += 1
 
-	def cancel_stock_reservation_entries_for_inward(self):
+	def cancel_stock_reservation_entries_for_inward(self) -> None:
 		if self.purpose == "Receive from Customer":
 			table = frappe.qb.DocType("Stock Reservation Entry")
 			query = (
@@ -1015,7 +1017,7 @@ class SubcontractingInwardController:
 			for sre in query.run(pluck="name"):
 				frappe.get_doc("Stock Reservation Entry", sre).cancel()
 
-	def remove_reference_for_additional_items(self):
+	def remove_reference_for_additional_items(self) -> None:
 		if self.subcontracting_inward_order:
 			items = [
 				item
@@ -1030,7 +1032,7 @@ class SubcontractingInwardController:
 			for item in items:
 				item.db_set("scio_detail", None)
 
-	def create_stock_reservation_entries_for_inward(self):
+	def create_stock_reservation_entries_for_inward(self) -> None:
 		if self.purpose == "Receive from Customer":
 			for item in self.items:
 				item.reload()
@@ -1061,7 +1063,7 @@ class SubcontractingInwardController:
 				sre.submit()
 			frappe.msgprint(_("Stock Reservation Entries Created"), alert=True, indicator="green")
 
-	def adjust_stock_reservation_entries_for_return(self):
+	def adjust_stock_reservation_entries_for_return(self) -> None:
 		if self.purpose == "Return Raw Material to Customer":
 			for item in self.items:
 				serial_list, batch_list = get_serial_batch_list_from_item(item)
@@ -1152,7 +1154,7 @@ class SubcontractingInwardController:
 						if voucher_qty <= 0:
 							break
 
-	def update_inward_order_status(self):
+	def update_inward_order_status(self) -> None:
 		if self.subcontracting_inward_order:
 			from erpnext.subcontracting.doctype.subcontracting_inward_order.subcontracting_inward_order import (
 				set_subcontracting_inward_order_status,
@@ -1165,7 +1167,7 @@ class SubcontractingInwardController:
 @frappe.validate_and_sanitize_search_inputs
 def get_fg_reference_names(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
-):
+) -> list:
 	return frappe.get_all(
 		"Subcontracting Inward Order Item",
 		limit_start=start,

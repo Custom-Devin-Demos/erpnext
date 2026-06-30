@@ -1,8 +1,10 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
-def set_print_templates_for_item_table(doc, settings):
+
+def set_print_templates_for_item_table(doc, settings) -> None:
 	doc.print_templates = {
 		"items": "templates/print_formats/includes/items.html",
 	}
@@ -29,7 +31,7 @@ def set_print_templates_for_item_table(doc, settings):
 		doc.flags.format_columns = format_columns
 
 
-def set_print_templates_for_taxes(doc, settings):
+def set_print_templates_for_taxes(doc, settings) -> None:
 	doc.flags.show_inclusive_tax_in_print = doc.is_inclusive_tax()
 	doc.print_templates.update(
 		{
@@ -45,7 +47,7 @@ def set_print_templates_for_taxes(doc, settings):
 		)
 
 
-def format_columns(display_columns, compact_fields):
+def format_columns(display_columns: list, compact_fields: list) -> list:
 	compact_fields = [*compact_fields, "image", "item_code", "item_name"]
 	final_columns = []
 	for column in display_columns:
