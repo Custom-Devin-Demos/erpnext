@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import re
 
@@ -12,7 +14,7 @@ SCRIPT_TAG_PATTERN = re.compile(r"\<script[^<]*\</script\>", re.IGNORECASE)
 CLOSING_SCRIPT_TAG_PATTERN = re.compile(r"</script\>", re.IGNORECASE)
 
 
-def get_context(context):
+def get_context(context) -> dict:
 	csrf_token = frappe.sessions.get_csrf_token()
 
 	context = frappe._dict()
@@ -30,7 +32,7 @@ def get_context(context):
 
 
 @frappe.whitelist(methods=["POST"], allow_guest=True)
-def get_context_for_dev():
+def get_context_for_dev() -> dict:
 	if not frappe.conf.developer_mode:
 		frappe.throw(_("This method is only meant for developer mode"))
 	return {
@@ -39,7 +41,7 @@ def get_context_for_dev():
 	}
 
 
-def get_boot():
+def get_boot() -> str:
 	try:
 		boot = frappe.sessions.get()
 	except Exception as e:

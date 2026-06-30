@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import frappe
@@ -30,11 +32,11 @@ class CodeList(Document):
 		version: DF.Data | None
 	# end: auto-generated types
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		if not frappe.flags.in_bulk_delete:
 			self.__delete_linked_docs()
 
-	def __delete_linked_docs(self):
+	def __delete_linked_docs(self) -> None:
 		self.db_set("default_common_code", None)
 
 		linked_docs = frappe.get_all(
@@ -62,7 +64,7 @@ class CodeList(Document):
 			else None
 		)
 
-	def from_genericode(self, root: "Element"):
+	def from_genericode(self, root: Element) -> None:
 		"""Extract Code List details from genericode XML"""
 		self.title = escape_html(root.find(".//Identification/ShortName").text)
 		self.version = root.find(".//Identification/Version").text

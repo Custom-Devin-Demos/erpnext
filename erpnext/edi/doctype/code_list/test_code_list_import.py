@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 from unittest.mock import Mock, patch
 
 import frappe
@@ -50,7 +52,7 @@ SAMPLE_GENERICODE = b"""<?xml version="1.0" encoding="UTF-8"?>
 
 
 class TestCodeListImport(ERPNextTestSuite):
-	def test_import_genericode_rejects_remote_file_url(self):
+	def test_import_genericode_rejects_remote_file_url(self) -> None:
 		self.set_upload_context(
 			file_name="trusted.xml",
 			file_url="https://example.com/codelists/trusted.xml",
@@ -64,7 +66,7 @@ class TestCodeListImport(ERPNextTestSuite):
 
 		mock_get.assert_not_called()
 
-	def test_import_genericode_rejects_file_scheme_url(self):
+	def test_import_genericode_rejects_file_scheme_url(self) -> None:
 		self.set_upload_context(
 			file_name="trusted.xml",
 			file_url="file:///tmp/trusted.xml",
@@ -78,7 +80,7 @@ class TestCodeListImport(ERPNextTestSuite):
 
 		mock_get.assert_not_called()
 
-	def test_import_genericode_from_trusted_url(self):
+	def test_import_genericode_from_trusted_url(self) -> None:
 		response = Mock()
 		response.content = SAMPLE_GENERICODE
 		response.raise_for_status.return_value = None
@@ -101,7 +103,7 @@ class TestCodeListImport(ERPNextTestSuite):
 		self.assertEqual(file_doc.get_content(encodings=()), SAMPLE_GENERICODE)
 		self.assertFalse(file_doc.file_url.startswith("https://"))
 
-	def test_import_genericode_from_trusted_url_propagates_fetch_errors(self):
+	def test_import_genericode_from_trusted_url_propagates_fetch_errors(self) -> None:
 		with patch(
 			"erpnext.edi.doctype.code_list.code_list_import.requests.get",
 			side_effect=requests.Timeout,
@@ -109,7 +111,7 @@ class TestCodeListImport(ERPNextTestSuite):
 			with self.assertRaises(requests.Timeout):
 				code_list_import.import_genericode_from_url("https://example.com/codelists/trusted.xml")
 
-	def test_import_genericode_from_uploaded_file_returns_metadata(self):
+	def test_import_genericode_from_uploaded_file_returns_metadata(self) -> None:
 		self.set_upload_context(content=SAMPLE_GENERICODE, file_name="uploaded_genericode.xml")
 
 		import_result = code_list_import.import_genericode()
@@ -119,7 +121,7 @@ class TestCodeListImport(ERPNextTestSuite):
 		file_doc = frappe.get_doc("File", import_result["file"])
 		self.assertEqual(file_doc.get_content(encodings=()), SAMPLE_GENERICODE)
 
-	def test_process_genericode_import_reads_file_doc_content(self):
+	def test_process_genericode_import_reads_file_doc_content(self) -> None:
 		self.set_upload_context(content=SAMPLE_GENERICODE, file_name="uploaded_genericode.xml")
 
 		import_result = code_list_import.import_genericode()
@@ -141,7 +143,7 @@ class TestCodeListImport(ERPNextTestSuite):
 			"Alpha",
 		)
 
-	def test_import_genericode_from_local_file_url(self):
+	def test_import_genericode_from_local_file_url(self) -> None:
 		source_file = frappe.get_doc(
 			{
 				"doctype": "File",
@@ -162,7 +164,7 @@ class TestCodeListImport(ERPNextTestSuite):
 		file_name: str = "genericode.xml",
 		file_url: str | None = None,
 		docname: str | None = None,
-	):
+	) -> None:
 		attrs = ("form_dict", "uploaded_file", "uploaded_file_url", "uploaded_filename")
 		originals = {attr: getattr(frappe.local, attr, None) for attr in attrs}
 
@@ -177,7 +179,7 @@ class TestCodeListImport(ERPNextTestSuite):
 
 		self.addCleanup(restore)
 
-	def assert_import_response(self, import_result):
+	def assert_import_response(self, import_result: dict) -> None:
 		self.assertEqual(
 			set(import_result),
 			{

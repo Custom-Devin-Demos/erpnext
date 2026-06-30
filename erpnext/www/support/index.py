@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import Count, Max
 
 
-def get_context(context):
+def get_context(context) -> None:
 	context.no_cache = 1
 	context.align_greeting = ""
 	setting = frappe.get_doc("Support Settings")
@@ -30,7 +32,7 @@ def get_context(context):
 	context.help_article_list = get_help_article_list()
 
 
-def get_favorite_articles_by_page_view():
+def get_favorite_articles_by_page_view() -> list:
 	ha = frappe.qb.DocType("Help Article")
 	wpv = frappe.qb.DocType("Web Page View")
 	return (
@@ -55,7 +57,7 @@ def get_favorite_articles_by_page_view():
 	)
 
 
-def get_favorite_articles(favorite_articles):
+def get_favorite_articles(favorite_articles) -> list:
 	favorite_article_list = []
 	for article in favorite_articles:
 		description = frappe.utils.strip_html(article.content)
@@ -71,7 +73,7 @@ def get_favorite_articles(favorite_articles):
 	return favorite_article_list
 
 
-def get_help_article_list():
+def get_help_article_list() -> list:
 	help_article_list = []
 	category_list = frappe.get_all("Help Category", fields="name")
 	for category in category_list:

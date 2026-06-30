@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from urllib.parse import urlsplit
 
@@ -21,7 +23,7 @@ class CodeListSelectionMismatchError(Exception):
 
 
 @frappe.whitelist()
-def import_genericode():
+def import_genericode() -> dict | None:
 	try:
 		content, file_name = get_uploaded_genericode_file()
 
@@ -49,7 +51,7 @@ def import_genericode_from_url(
 	url: str,
 	doctype: str = "Code List",
 	docname: str | None = None,
-):
+) -> dict:
 	"""Import a Code List from a trusted backend URL."""
 	content = fetch_genericode_from_url(url)
 	file_name = urlsplit(url).path.rsplit("/", 1)[-1] or "genericode.xml"
@@ -99,7 +101,7 @@ def import_genericode_content(
 	docname: str | None,
 	content: bytes,
 	file_name: str | None,
-):
+) -> dict:
 	root = parse_genericode_content(content)
 
 	# Extract the name (CanonicalVersionUri) from the parsed XML
@@ -157,7 +159,7 @@ def process_genericode_import(
 	title_column: str | None = None,
 	description_column: str | None = None,
 	filters: str | dict | None = None,
-):
+) -> int:
 	from erpnext.edi.doctype.common_code.common_code import import_genericode
 
 	column_map = {"code": code_column, "title": title_column, "description": description_column}
@@ -167,7 +169,7 @@ def process_genericode_import(
 	)
 
 
-def get_genericode_columns_and_examples(root):
+def get_genericode_columns_and_examples(root) -> tuple:
 	columns = []
 	example_values = {}
 	filterable_columns = {}

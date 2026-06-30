@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import datetime
 import json
 import zoneinfo
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe import _
 from frappe.utils.data import get_system_timezone
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -17,7 +23,7 @@ def get_context(context):
 	return context
 
 
-def handle_appointment_booking_disabled():
+def handle_appointment_booking_disabled() -> None:
 	if not frappe.get_single_value("Appointment Booking Settings", "enable_scheduling"):
 		frappe.redirect_to_message(
 			_("Appointment Scheduling Disabled"),
@@ -29,7 +35,7 @@ def handle_appointment_booking_disabled():
 
 
 @frappe.whitelist(allow_guest=True)
-def get_appointment_settings():
+def get_appointment_settings() -> dict:
 	handle_appointment_booking_disabled()
 	settings = frappe.get_single_value(
 		"Appointment Booking Settings",
@@ -40,13 +46,13 @@ def get_appointment_settings():
 
 
 @frappe.whitelist(allow_guest=True)
-def get_timezones():
+def get_timezones() -> set:
 	handle_appointment_booking_disabled()
 	return zoneinfo.available_timezones()
 
 
 @frappe.whitelist(allow_guest=True)
-def get_appointment_slots(date: str, timezone: str):
+def get_appointment_slots(date: str, timezone: str) -> list:
 	# Convert query to local timezones
 	handle_appointment_booking_disabled()
 	format_string = "%Y-%m-%d %H:%M:%S"
@@ -83,7 +89,7 @@ def get_appointment_slots(date: str, timezone: str):
 	return converted_timeslots
 
 
-def get_available_slots_between(query_start_time, query_end_time, settings):
+def get_available_slots_between(query_start_time, query_end_time, settings) -> list:
 	records = _get_records(query_start_time, query_end_time, settings)
 	timeslots = []
 	appointment_duration = datetime.timedelta(minutes=settings.appointment_duration)
@@ -101,7 +107,7 @@ def get_available_slots_between(query_start_time, query_end_time, settings):
 
 
 @frappe.whitelist(allow_guest=True)
-def create_appointment(date: str, time: str, tz: str, contact: str | dict):
+def create_appointment(date: str, time: str, tz: str, contact: str | dict) -> Document:
 	handle_appointment_booking_disabled()
 	format_string = "%Y-%m-%d %H:%M:%S"
 	scheduled_time = datetime.datetime.strptime(date + " " + time, format_string)
@@ -124,7 +130,7 @@ def create_appointment(date: str, time: str, tz: str, contact: str | dict):
 
 
 # Helper Functions
-def filter_timeslots(date, timeslots):
+def filter_timeslots(date, timeslots) -> list:
 	filtered_timeslots = []
 	for timeslot in timeslots:
 		if timeslot["time"].date() == date:
@@ -132,7 +138,7 @@ def filter_timeslots(date, timeslots):
 	return filtered_timeslots
 
 
-def convert_to_guest_timezone(guest_tz, datetimeobject):
+def convert_to_guest_timezone(guest_tz: str, datetimeobject: datetime.datetime) -> datetime.datetime:
 	guest_tz = zoneinfo.ZoneInfo(guest_tz)
 	local_timezone = zoneinfo.ZoneInfo(get_system_timezone())
 	datetimeobject = datetimeobject.replace(tzinfo=local_timezone)
@@ -140,7 +146,7 @@ def convert_to_guest_timezone(guest_tz, datetimeobject):
 	return datetimeobject
 
 
-def convert_to_system_timezone(guest_tz, datetimeobject):
+def convert_to_system_timezone(guest_tz: str, datetimeobject: datetime.datetime) -> datetime.datetime:
 	guest_tz = zoneinfo.ZoneInfo(guest_tz)
 	datetimeobject = datetimeobject.replace(tzinfo=guest_tz)
 	system_tz = zoneinfo.ZoneInfo(get_system_timezone())
@@ -148,18 +154,18 @@ def convert_to_system_timezone(guest_tz, datetimeobject):
 	return datetimeobject
 
 
-def check_availabilty(timeslot, settings):
+def check_availabilty(timeslot, settings) -> bool:
 	return frappe.db.count("Appointment", {"scheduled_time": timeslot}) < settings.number_of_agents
 
 
-def _is_holiday(date, holiday_list):
+def _is_holiday(date, holiday_list) -> bool:
 	for holiday in holiday_list.holidays:
 		if holiday.holiday_date == date:
 			return True
 	return False
 
 
-def _get_records(start_time, end_time, settings):
+def _get_records(start_time, end_time, settings) -> list:
 	records = []
 	for record in settings.availability_of_slots:
 		if (
@@ -170,11 +176,11 @@ def _get_records(start_time, end_time, settings):
 	return records
 
 
-def _deltatime_to_datetime(date, deltatime):
+def _deltatime_to_datetime(date, deltatime) -> datetime.datetime:
 	time = (datetime.datetime.min + deltatime).time()
 	return datetime.datetime.combine(date.date(), time)
 
 
-def _datetime_to_deltatime(date_time):
+def _datetime_to_deltatime(date_time) -> datetime.timedelta:
 	midnight = datetime.datetime.combine(date_time.date(), datetime.time.min)
 	return date_time - midnight

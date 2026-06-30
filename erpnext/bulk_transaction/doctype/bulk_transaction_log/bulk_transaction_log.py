@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.model.document import Document
@@ -24,10 +26,10 @@ class BulkTransactionLog(Document):
 		succeeded: DF.Int
 	# end: auto-generated types
 
-	def db_insert(self, *args, **kwargs):
+	def db_insert(self, *args, **kwargs) -> None:
 		pass
 
-	def load_from_db(self):
+	def load_from_db(self) -> None:
 		log_detail = qb.DocType("Bulk Transaction Log Detail")
 
 		has_records = frappe.db.exists("Bulk Transaction Log Detail", {"date": self.name})
@@ -58,7 +60,7 @@ class BulkTransactionLog(Document):
 		super(Document, self).__init__(serialize_transaction_log(transaction_log))
 
 	@staticmethod
-	def get_list(args):
+	def get_list(args) -> list:
 		filter_date = parse_list_filters(args)
 		limit = cint(args.get("page_length")) or 20
 		log_detail = qb.DocType("Bulk Transaction Log Detail")
@@ -89,21 +91,21 @@ class BulkTransactionLog(Document):
 		return [serialize_transaction_log(x) for x in transaction_logs]
 
 	@staticmethod
-	def get_count(args):
+	def get_count(args) -> None:
 		pass
 
 	@staticmethod
-	def get_stats(args):
+	def get_stats(args) -> None:
 		pass
 
-	def db_update(self, *args, **kwargs):
+	def db_update(self, *args, **kwargs) -> None:
 		pass
 
-	def delete(self):
+	def delete(self) -> None:
 		pass
 
 
-def serialize_transaction_log(data):
+def serialize_transaction_log(data) -> dict:
 	return frappe._dict(
 		name=data.date,
 		date=data.date,

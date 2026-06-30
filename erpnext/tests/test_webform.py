@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
@@ -6,7 +8,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestWebsite(ERPNextTestSuite):
-	def test_permission_for_custom_doctype(self):
+	def test_permission_for_custom_doctype(self) -> None:
 		create_user("Supplier 1", "supplier1@gmail.com")
 		create_user("Supplier 2", "supplier2@gmail.com")
 
@@ -38,7 +40,7 @@ class TestWebsite(ERPNextTestSuite):
 			self.assertFalse([data.supplier for data in get_data() if data.supplier != "Supplier2"])
 
 
-def get_data():
+def get_data() -> list:
 	webform_list_contexts = frappe.get_hooks("webform_list_context")
 	if webform_list_contexts:
 		context = frappe._dict(frappe.get_attr(webform_list_contexts[0])("Buying") or {})
@@ -46,7 +48,7 @@ def get_data():
 	return context.get_list(**kwargs)
 
 
-def create_user(name, email):
+def create_user(name: str, email: str) -> None:
 	frappe.get_doc(
 		{
 			"doctype": "User",
@@ -59,7 +61,7 @@ def create_user(name, email):
 	).insert(ignore_if_duplicate=True)
 
 
-def create_webform():
+def create_webform() -> None:
 	frappe.get_doc(
 		{
 			"doctype": "Web Form",
@@ -86,7 +88,7 @@ def create_webform():
 	).insert(ignore_if_duplicate=True)
 
 
-def create_order_assignment(supplier, po):
+def create_order_assignment(supplier: str, po: str) -> None:
 	frappe.get_doc(
 		{
 			"doctype": "Order Assignment",

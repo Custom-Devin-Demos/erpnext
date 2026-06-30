@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
@@ -41,7 +43,7 @@ def _is_leading_index_column(doctype: str, field: str) -> bool:
 
 
 class TestPerformance(ERPNextTestSuite):
-	def test_ensure_indexes(self):
+	def test_ensure_indexes(self) -> None:
 		# These fields are not explicitly indexed BUT they are prefix in some
 		# other composite index. If those are removed this test should be
 		# updated accordingly.

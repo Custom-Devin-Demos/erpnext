@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import hashlib
 
 import frappe
@@ -31,10 +33,10 @@ class CommonCode(Document):
 		title: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_distinct_references()
 
-	def validate_distinct_references(self):
+	def validate_distinct_references(self) -> None:
 		"""Ensure no two Common Codes of the same Code List are linked to the same document."""
 		for link in self.applies_to:
 			existing_links = frappe.get_all(
@@ -58,7 +60,7 @@ class CommonCode(Document):
 					)
 				)
 
-	def from_genericode(self, column_map: dict, xml_element: "etree.Element"):
+	def from_genericode(self, column_map: dict, xml_element: etree.Element) -> None:
 		"""Populate the Common Code document from a genericode XML element
 
 		Args:
@@ -82,11 +84,11 @@ class CommonCode(Document):
 		self.additional_data = etree.tostring(xml_element, encoding="unicode", pretty_print=True)
 
 
-def simple_hash(input_string, length=6):
+def simple_hash(input_string: str, length: int = 6) -> str:
 	return hashlib.blake2b(input_string.encode(), digest_size=length // 2).hexdigest()
 
 
-def import_genericode(code_list: str, file_name: str, column_map: dict, filters: dict | None = None):
+def import_genericode(code_list: str, file_name: str, column_map: dict, filters: dict | None = None) -> int:
 	"""Import genericode file and create Common Code entries"""
 	file_doc = frappe.get_doc("File", file_name)
 	file_doc.check_permission("read")
@@ -113,5 +115,5 @@ def import_genericode(code_list: str, file_name: str, column_map: dict, filters:
 	return total_elements
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Common Code", ["code_list", "common_code"])

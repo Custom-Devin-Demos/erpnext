@@ -1,5 +1,7 @@
 """ smoak tests to check basic functionality calls on known form loads."""
 
+from __future__ import annotations
+
 import frappe
 from frappe.desk.form.load import getdoc
 from frappe.www.printview import get_html_and_style
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 class TestFormLoads(ERPNextTestSuite):
 	@ERPNextTestSuite.change_settings("Print Settings", {"allow_print_for_cancelled": 1})
-	def test_load(self):
+	def test_load(self) -> None:
 		erpnext_modules = frappe.get_all("Module Def", filters={"app_name": "erpnext"}, pluck="name")
 		doctypes = frappe.get_all(
 			"DocType",
@@ -25,7 +27,7 @@ class TestFormLoads(ERPNextTestSuite):
 				self.assertFormLoad(doctype, last_doc)
 				self.assertDocPrint(doctype, last_doc)
 
-	def assertFormLoad(self, doctype, docname):
+	def assertFormLoad(self, doctype: str, docname: str) -> None:
 		# reset previous response
 		frappe.response = frappe._dict({"docs": []})
 		frappe.response.docinfo = None
@@ -42,7 +44,7 @@ class TestFormLoads(ERPNextTestSuite):
 			frappe.response.docinfo, msg=f"expected docinfo in reponse, found: {frappe.response.docinfo}"
 		)
 
-	def assertDocPrint(self, doctype, docname):
+	def assertDocPrint(self, doctype: str, docname: str) -> None:
 		doc = frappe.get_doc(doctype, docname)
 		doc.set("__onload", frappe._dict())
 		doc.run_method("onload")
