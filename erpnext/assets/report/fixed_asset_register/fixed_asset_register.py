@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from itertools import chain
 
 import frappe
@@ -17,7 +19,7 @@ from erpnext.accounts.report.financial_statements import (
 from erpnext.accounts.utils import get_fiscal_year
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	filters = frappe._dict(filters or {})
 	columns = get_columns(filters)
 	data = get_data(filters)
@@ -30,7 +32,7 @@ def execute(filters=None):
 	return columns, data, None, chart
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	data = []
 
 	conditions = get_conditions(filters)
@@ -115,7 +117,7 @@ def get_data(filters):
 	return data
 
 
-def get_conditions(filters):
+def get_conditions(filters: dict) -> dict:
 	conditions = {"docstatus": 1}
 	status = filters.status
 	date_field = frappe.scrub(filters.date_based_on or "Purchase Date")
@@ -160,7 +162,7 @@ def get_conditions(filters):
 	return conditions
 
 
-def prepare_chart_data(data, filters):
+def prepare_chart_data(data: list, filters: dict) -> dict | None:
 	if not data:
 		return
 	labels_values_map = {}
@@ -219,7 +221,7 @@ def prepare_chart_data(data, filters):
 	}
 
 
-def get_assets_linked_to_fb(filters):
+def get_assets_linked_to_fb(filters: dict) -> list:
 	afb = frappe.qb.DocType("Asset Finance Book")
 
 	query = frappe.qb.from_(afb).select(
@@ -246,7 +248,7 @@ def get_assets_linked_to_fb(filters):
 	return assets_linked_to_fb
 
 
-def get_asset_depreciation_amount_map(filters, finance_book):
+def get_asset_depreciation_amount_map(filters: dict, finance_book: str | None) -> dict:
 	start_date = filters.from_date if filters.filter_based_on == "Date Range" else filters.year_start_date
 	end_date = filters.to_date if filters.filter_based_on == "Date Range" else filters.year_end_date
 
@@ -298,7 +300,7 @@ def get_asset_depreciation_amount_map(filters, finance_book):
 	return dict(asset_depr_amount_map)
 
 
-def get_asset_value_adjustment_map(filters, finance_book):
+def get_asset_value_adjustment_map(filters: dict, finance_book: str | None) -> dict:
 	start_date = filters.from_date if filters.filter_based_on == "Date Range" else filters.year_start_date
 	end_date = filters.to_date if filters.filter_based_on == "Date Range" else filters.year_end_date
 
@@ -350,8 +352,12 @@ def get_asset_value_adjustment_map(filters, finance_book):
 
 
 def get_group_by_data(
-	group_by, conditions, assets_linked_to_fb, depreciation_amount_map, revaluation_amount_map
-):
+	group_by: str,
+	conditions: dict,
+	assets_linked_to_fb: list,
+	depreciation_amount_map: dict,
+	revaluation_amount_map: dict,
+) -> list:
 	fields = [
 		group_by,
 		"name",
@@ -394,7 +400,7 @@ def get_group_by_data(
 	return data
 
 
-def get_purchase_receipt_supplier_map():
+def get_purchase_receipt_supplier_map() -> dict:
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pri = frappe.qb.DocType("Purchase Receipt Item")
 	return frappe._dict(
@@ -408,7 +414,7 @@ def get_purchase_receipt_supplier_map():
 	)
 
 
-def get_purchase_invoice_supplier_map():
+def get_purchase_invoice_supplier_map() -> dict:
 	pi = frappe.qb.DocType("Purchase Invoice")
 	pii = frappe.qb.DocType("Purchase Invoice Item")
 	return frappe._dict(
@@ -422,7 +428,7 @@ def get_purchase_invoice_supplier_map():
 	)
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	if filters.get("group_by") in ["Asset Category", "Location"]:
 		return [
 			{

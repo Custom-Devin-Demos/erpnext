@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
@@ -33,7 +35,7 @@ class AssetMaintenance(Document):
 		maintenance_team: DF.Link
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		for task in self.get("asset_maintenance_tasks"):
 			if task.end_date and (getdate(task.start_date) >= getdate(task.end_date)):
 				throw(_("Start date should be less than end date for task {0}").format(task.maintenance_task))
@@ -42,17 +44,17 @@ class AssetMaintenance(Document):
 			if not task.assign_to and self.docstatus == 0:
 				throw(_("Row #{}: Please assign task to a member.").format(task.idx))
 
-	def on_update(self):
+	def on_update(self) -> None:
 		for task in self.get("asset_maintenance_tasks"):
 			assign_tasks(self.name, task.assign_to, task.maintenance_task, task.next_due_date)
 		self.sync_maintenance_tasks()
 
-	def after_delete(self):
+	def after_delete(self) -> None:
 		asset = frappe.get_doc("Asset", self.asset_name)
 		if asset.status == "In Maintenance":
 			asset.set_status()
 
-	def sync_maintenance_tasks(self):
+	def sync_maintenance_tasks(self) -> None:
 		tasks_names = []
 		for task in self.get("asset_maintenance_tasks"):
 			tasks_names.append(task.name)
@@ -70,7 +72,9 @@ class AssetMaintenance(Document):
 				maintenance_log.db_set("maintenance_status", "Cancelled")
 
 
-def assign_tasks(asset_maintenance_name, assign_to_member, maintenance_task, next_due_date):
+def assign_tasks(
+	asset_maintenance_name: str, assign_to_member: str, maintenance_task: str, next_due_date
+) -> None:
 	team_member = frappe.db.get_value("User", assign_to_member, "email")
 	args = {
 		"doctype": "Asset Maintenance",
@@ -131,7 +135,7 @@ def calculate_next_due_date(
 	return next_due_date
 
 
-def update_maintenance_log(asset_maintenance, item_code, item_name, task):
+def update_maintenance_log(asset_maintenance: str, item_code: str, item_name: str, task) -> None:
 	asset_maintenance_log = frappe.get_value(
 		"Asset Maintenance Log",
 		{
@@ -189,7 +193,7 @@ def get_team_members(
 
 
 @frappe.whitelist()
-def get_maintenance_log(asset_name: str):
+def get_maintenance_log(asset_name: str) -> list:
 	return frappe.get_all(
 		"Asset Maintenance Log",
 		filters={"asset_name": asset_name},

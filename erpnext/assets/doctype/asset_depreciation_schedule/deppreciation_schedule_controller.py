@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import (
@@ -22,10 +24,10 @@ from erpnext.assets.doctype.asset_depreciation_schedule.depreciation_methods imp
 
 
 class DepreciationScheduleController(StraightLineMethod, WDVMethod):
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 
-	def create_depreciation_schedule(self, fb_row=None, disposal_date=None):
+	def create_depreciation_schedule(self, fb_row=None, disposal_date=None) -> None:
 		self.disposal_date = disposal_date
 		self.asset_doc = frappe.get_doc("Asset", self.asset)
 
@@ -35,7 +37,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 		self.create()
 		self.set_accumulated_depreciation()
 
-	def clear(self):
+	def clear(self) -> None:
 		self.first_non_depreciated_row_idx = 0
 		num_of_depreciations_completed = 0
 		depr_schedule = []
@@ -51,7 +53,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 
 		self.depreciation_schedule = depr_schedule
 
-	def create(self):
+	def create(self) -> None:
 		self.initialize_variables()
 		for row_idx in range(self.first_non_depreciated_row_idx, self.final_number_of_depreciations):
 			# If depreciation is already completed (for double declining balance)
@@ -96,7 +98,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			if flt(self.depreciation_amount, self.asset_doc.precision("net_purchase_amount")) > 0:
 				self.add_depr_schedule_row(row_idx)
 
-	def initialize_variables(self):
+	def initialize_variables(self) -> None:
 		self.pending_depreciation_amount = self.fb_row.value_after_depreciation
 		self.should_get_last_day = is_last_day_of_the_month(self.fb_row.depreciation_start_date)
 		self.skip_row = False
@@ -110,7 +112,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 		self.is_wdv_or_dd_non_yearly_pro_rata()
 		self.get_total_pending_days_or_years()
 
-	def get_final_number_of_depreciations(self):
+	def get_final_number_of_depreciations(self) -> None:
 		self.final_number_of_depreciations = cint(self.fb_row.total_number_of_depreciations) - cint(
 			self.opening_number_of_booked_depreciations
 		)
@@ -121,7 +123,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 
 		self.set_final_number_of_depreciations_considering_increase_in_asset_life()
 
-	def set_final_number_of_depreciations_considering_increase_in_asset_life(self):
+	def set_final_number_of_depreciations_considering_increase_in_asset_life(self) -> None:
 		# final schedule date after increasing asset life
 		self.final_schedule_date = add_months(
 			self.asset_doc.available_for_use_date,
@@ -141,14 +143,14 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			months = month_diff(self.final_schedule_date, schedule_date)
 			self.final_number_of_depreciations += months // cint(self.fb_row.frequency_of_depreciation) + 1
 
-	def is_wdv_or_dd_non_yearly_pro_rata(self):
+	def is_wdv_or_dd_non_yearly_pro_rata(self) -> None:
 		if (
 			self.fb_row.depreciation_method in ("Written Down Value", "Double Declining Balance")
 			and cint(self.fb_row.frequency_of_depreciation) != 12
 		):
 			self._check_is_pro_rata()
 
-	def _check_is_pro_rata(self):
+	def _check_is_pro_rata(self) -> None:
 		self.has_pro_rata = False
 
 		# if not existing asset, from_date = available_for_use_date
@@ -202,19 +204,19 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 		else:
 			return self.asset_doc.available_for_use_date
 
-	def get_total_days(self, date):
+	def get_total_days(self, date) -> int:
 		period_start_date = add_months(date, cint(self.fb_row.frequency_of_depreciation) * -1)
 		if is_last_day_of_the_month(date):
 			period_start_date = get_last_day(period_start_date)
 		return date_diff(date, period_start_date)
 
-	def _get_pro_rata_amt(self, from_date, to_date, original_schedule_date=None):
+	def _get_pro_rata_amt(self, from_date, to_date, original_schedule_date=None) -> tuple:
 		days = date_diff(to_date, from_date) + 1
 		months = month_diff(to_date, from_date)
 		total_days = self.get_total_days(original_schedule_date or to_date)
 		return (self.depreciation_amount * flt(days)) / flt(total_days), days, months
 
-	def get_number_of_pending_months(self):
+	def get_number_of_pending_months(self) -> None:
 		total_months = cint(self.fb_row.total_number_of_depreciations) * cint(
 			self.fb_row.frequency_of_depreciation
 		) + cint(self.fb_row.increase_in_asset_life)
@@ -233,7 +235,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			)
 		return last_depr_date
 
-	def get_booked_depr_for_months_count(self, last_depr_date):
+	def get_booked_depr_for_months_count(self, last_depr_date) -> float:
 		depr_booked_for_months = 0
 		if last_depr_date:
 			asset_used_for_months = self.fb_row.frequency_of_depreciation * (
@@ -249,7 +251,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			)
 		return depr_booked_for_months
 
-	def get_total_pending_days_or_years(self):
+	def get_total_pending_days_or_years(self) -> None:
 		if cint(frappe.get_single_value("Accounts Settings", "calculate_depr_using_total_days")):
 			last_depr_date = self.get_last_booked_depreciation_date()
 			if last_depr_date:
@@ -261,7 +263,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 		else:
 			self.total_pending_years = self.pending_months / 12
 
-	def has_fiscal_year_changed(self, row_idx):
+	def has_fiscal_year_changed(self, row_idx: int) -> None:
 		self.fiscal_year_changed = False
 
 		schedule_date = get_last_day(
@@ -277,7 +279,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			self.current_fiscal_year_end_date = add_years(self.current_fiscal_year_end_date, 1)
 			self.fiscal_year_changed = True
 
-	def get_prev_depreciation_amount(self, row_idx):
+	def get_prev_depreciation_amount(self, row_idx: int) -> None:
 		if row_idx > 1:
 			self.prev_depreciation_amount = 0
 			if len(self.get("depreciation_schedule")) > row_idx - 1:
@@ -294,7 +296,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 
 		return schedule_date
 
-	def set_depreciation_amount_for_disposal(self, row_idx):
+	def set_depreciation_amount_for_disposal(self, row_idx: int) -> None:
 		if self.depreciation_schedule:  # if there are already booked depreciations
 			from_date = add_days(self.depreciation_schedule[-1].schedule_date, 1)
 		else:
@@ -315,7 +317,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			self.schedule_date = self.disposal_date
 			self.add_depr_schedule_row(row_idx)
 
-	def set_depreciation_amount_for_first_row(self, row_idx):
+	def set_depreciation_amount_for_first_row(self, row_idx: int) -> None:
 		"""
 		For the first row, if available for use date is mid of the month, then pro rata amount is needed
 		"""
@@ -339,7 +341,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 
 			self.validate_depreciation_amount_for_low_value_assets()
 
-	def set_depreciation_amount_for_last_row(self, row_idx):
+	def set_depreciation_amount_for_last_row(self, row_idx: int) -> None:
 		if not self.fb_row.increase_in_asset_life:
 			self.final_schedule_date = add_months(
 				self.asset_doc.available_for_use_date,
@@ -361,7 +363,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 
 		self.schedule_date = add_days(self.schedule_date, days - 1)
 
-	def adjust_depr_amount_for_salvage_value(self, row_idx):
+	def adjust_depr_amount_for_salvage_value(self, row_idx: int) -> None:
 		"""
 		Adjust depreciation amount in the last period based on the expected value after useful life
 		"""
@@ -377,7 +379,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			)
 			self.skip_row = True
 
-	def validate_depreciation_amount_for_low_value_assets(self):
+	def validate_depreciation_amount_for_low_value_assets(self) -> None:
 		"""
 		If net purchase amount is too low, then depreciation amount
 		can come zero sometimes based on the frequency and number of depreciations.
@@ -390,7 +392,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 				)
 			)
 
-	def add_depr_schedule_row(self, row_idx):
+	def add_depr_schedule_row(self, row_idx: int) -> None:
 		shift = None
 		if self.shift_based:
 			shift = (
@@ -408,7 +410,7 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			},
 		)
 
-	def set_accumulated_depreciation(self):
+	def set_accumulated_depreciation(self) -> None:
 		accumulated_depreciation = flt(self.opening_accumulated_depreciation)
 		for d in self.get("depreciation_schedule"):
 			if d.journal_entry:
@@ -420,13 +422,13 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 				accumulated_depreciation, d.precision("accumulated_depreciation_amount")
 			)
 
-	def get_depreciation_amount(self, row_idx):
+	def get_depreciation_amount(self, row_idx: int) -> float:
 		if self.fb_row.depreciation_method in ("Straight Line", "Manual"):
 			return self.get_straight_line_depr_amount(row_idx)
 		else:
 			return self.get_wdv_or_dd_depr_amount(row_idx)
 
-	def _get_total_days(self, depreciation_start_date, row_idx):
+	def _get_total_days(self, depreciation_start_date, row_idx: int) -> tuple:
 		from_date = add_months(depreciation_start_date, (row_idx - 1) * self.frequency_of_depreciation)
 		to_date = add_months(from_date, self.frequency_of_depreciation)
 		if is_last_day_of_the_month(depreciation_start_date):
@@ -434,11 +436,11 @@ class DepreciationScheduleController(StraightLineMethod, WDVMethod):
 			from_date = add_days(get_last_day(from_date), 1)
 		return from_date, date_diff(to_date, from_date) + 1
 
-	def get_total_days_in_current_depr_year(self):
+	def get_total_days_in_current_depr_year(self) -> int:
 		fy_start_date, fy_end_date = self.get_fiscal_year(self.schedule_date)
 		return date_diff(fy_end_date, fy_start_date) + 1
 
-	def get_fiscal_year(self, date):
+	def get_fiscal_year(self, date) -> tuple:
 		fy = get_fiscal_year(date, as_dict=True, raise_on_missing=False)
 		if fy:
 			fy_start_date = fy.year_start_date

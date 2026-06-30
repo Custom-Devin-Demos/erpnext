@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -38,19 +40,19 @@ class AssetShiftAllocation(Document):
 		naming_series: DF.Literal["ACC-ASA-.YYYY.-"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.asset_depr_schedule_doc = get_asset_depr_schedule_doc(self.asset, "Active", self.finance_book)
 		if self.get("depreciation_schedule") and self.docstatus == 0:
 			self.validate_invalid_shift_change()
 			self.update_depr_schedule()
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		self.fetch_and_set_depr_schedule()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.create_new_asset_depr_schedule()
 
-	def validate_invalid_shift_change(self):
+	def validate_invalid_shift_change(self) -> None:
 		for i, sch in enumerate(self.depreciation_schedule):
 			if sch.journal_entry and self.asset_depr_schedule_doc.depreciation_schedule[i].shift != sch.shift:
 				frappe.throw(
@@ -59,7 +61,7 @@ class AssetShiftAllocation(Document):
 					).format(i)
 				)
 
-	def update_depr_schedule(self):
+	def update_depr_schedule(self) -> None:
 		self.adjust_depr_shifts()
 
 		asset_doc = frappe.get_doc("Asset", self.asset)
@@ -73,7 +75,7 @@ class AssetShiftAllocation(Document):
 		self.depreciation_schedule = []
 		self.modify_depr_schedule(temp_depr_schedule_doc.get("depreciation_schedule"))
 
-	def adjust_depr_shifts(self):
+	def adjust_depr_shifts(self) -> None:
 		"""
 		Adjust the shifts in the depreciation schedule based on the new shifts
 		"""
@@ -89,7 +91,7 @@ class AssetShiftAllocation(Document):
 		elif factor_diff < 0:
 			self.add_depr_shifts(factor_diff, shift_factors_map, reverse_shift_factors_map)
 
-	def calculate_shift_factor_diff(self, shift_factors_map):
+	def calculate_shift_factor_diff(self, shift_factors_map: dict) -> float:
 		original_shift_sum = sum(
 			shift_factors_map.get(schedule.shift, 0)
 			for schedule in self.asset_depr_schedule_doc.depreciation_schedule
@@ -99,7 +101,9 @@ class AssetShiftAllocation(Document):
 		)
 		return new_shift_sum - original_shift_sum
 
-	def reduce_depr_shifts(self, factor_diff, shift_factors_map, reverse_shift_factors_map):
+	def reduce_depr_shifts(
+		self, factor_diff: float, shift_factors_map: dict, reverse_shift_factors_map: dict
+	) -> None:
 		for i, schedule in reversed(list(enumerate(self.depreciation_schedule))):
 			if factor_diff <= 0:
 				break
@@ -113,7 +117,9 @@ class AssetShiftAllocation(Document):
 				self.depreciation_schedule[i].shift = reverse_shift_factors_map.get(new_factor)
 				factor_diff = 0
 
-	def add_depr_shifts(self, factor_diff, shift_factors_map, reverse_shift_factors_map):
+	def add_depr_shifts(
+		self, factor_diff: float, shift_factors_map: dict, reverse_shift_factors_map: dict
+	) -> None:
 		factor_diff = abs(factor_diff)
 		shift_factors = sorted(shift_factors_map.values(), reverse=True)
 
@@ -128,7 +134,7 @@ class AssetShiftAllocation(Document):
 					_("Could not find a suitable shift to match the difference: {0}").format(factor_diff)
 				)
 
-	def add_schedule_row(self, factor, reverse_shift_factors_map):
+	def add_schedule_row(self, factor: float, reverse_shift_factors_map: dict) -> None:
 		schedule_date = add_months(
 			self.depreciation_schedule[-1].schedule_date,
 			cint(self.asset_depr_schedule_doc.frequency_of_depreciation),
@@ -144,7 +150,7 @@ class AssetShiftAllocation(Document):
 			},
 		)
 
-	def get_finance_book_row(self, asset_doc):
+	def get_finance_book_row(self, asset_doc: Document) -> Document:
 		idx = 0
 		for d in asset_doc.get("finance_books"):
 			if d.finance_book == self.finance_book:
@@ -153,7 +159,7 @@ class AssetShiftAllocation(Document):
 
 		return asset_doc.get("finance_books")[idx - 1]
 
-	def modify_depr_schedule(self, temp_depr_schedule):
+	def modify_depr_schedule(self, temp_depr_schedule: list) -> None:
 		for schedule in temp_depr_schedule:
 			self.append(
 				"depreciation_schedule",
@@ -166,7 +172,7 @@ class AssetShiftAllocation(Document):
 				},
 			)
 
-	def fetch_and_set_depr_schedule(self):
+	def fetch_and_set_depr_schedule(self) -> None:
 		if self.asset_depr_schedule_doc:
 			if self.asset_depr_schedule_doc.shift_based:
 				self.modify_depr_schedule(self.asset_depr_schedule_doc.depreciation_schedule)
@@ -186,7 +192,7 @@ class AssetShiftAllocation(Document):
 				)
 			)
 
-	def create_new_asset_depr_schedule(self):
+	def create_new_asset_depr_schedule(self) -> None:
 		new_asset_depr_schedule_doc = frappe.copy_doc(self.asset_depr_schedule_doc)
 
 		new_asset_depr_schedule_doc.depreciation_schedule = []

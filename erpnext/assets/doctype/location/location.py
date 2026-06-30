@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import json
 import math
 
@@ -36,30 +38,30 @@ class Location(NestedSet):
 
 	nsm_parent_field = "parent_location"
 
-	def validate(self):
+	def validate(self) -> None:
 		self.calculate_location_area()
 
 		if not self.is_new() and self.get("parent_location"):
 			self.update_ancestor_location_features()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		# super(Location, self).on_update()
 		NestedSet.on_update(self)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		NestedSet.validate_if_child_exists(self)
 		update_nsm(self)
 		self.remove_ancestor_location_features()
 		# super(Location, self).on_update()
 
-	def calculate_location_area(self):
+	def calculate_location_area(self) -> None:
 		features = self.get_location_features()
 		new_area = compute_area(features)
 
 		self.area_difference = new_area - flt(self.area)
 		self.area = new_area
 
-	def get_location_features(self):
+	def get_location_features(self) -> list:
 		if not self.location:
 			return []
 
@@ -70,7 +72,7 @@ class Location(NestedSet):
 
 		return features
 
-	def set_location_features(self, features):
+	def set_location_features(self, features: list) -> None:
 		if not self.location:
 			self.location = '{"type":"FeatureCollection","features":[]}'
 
@@ -79,7 +81,7 @@ class Location(NestedSet):
 
 		self.db_set("location", json.dumps(location))
 
-	def update_ancestor_location_features(self):
+	def update_ancestor_location_features(self) -> None:
 		self_features = set(self.add_child_property())
 
 		for ancestor in self.get_ancestors():
@@ -107,7 +109,7 @@ class Location(NestedSet):
 			ancestor_doc.set_location_features(features=ancestor_features)
 			ancestor_doc.db_set("area", ancestor_doc.area + self.area_difference)
 
-	def remove_ancestor_location_features(self):
+	def remove_ancestor_location_features(self) -> None:
 		for ancestor in self.get_ancestors():
 			ancestor_doc = frappe.get_doc("Location", ancestor)
 			child_features, ancestor_features = ancestor_doc.feature_seperator(child_feature=self.name)
@@ -118,7 +120,7 @@ class Location(NestedSet):
 			ancestor_doc.set_location_features(features=ancestor_features)
 			ancestor_doc.db_set("area", ancestor_doc.area - self.area)
 
-	def add_child_property(self):
+	def add_child_property(self) -> list:
 		features = self.get_location_features()
 		filter_features = [
 			feature for feature in features if not feature.get("properties").get("child_feature")
@@ -130,7 +132,7 @@ class Location(NestedSet):
 
 		return filter_features
 
-	def feature_seperator(self, child_feature=None):
+	def feature_seperator(self, child_feature: str | None = None) -> tuple:
 		child_features, non_child_features = [], []
 		features = self.get_location_features()
 
@@ -143,7 +145,7 @@ class Location(NestedSet):
 		return child_features, non_child_features
 
 
-def compute_area(features):
+def compute_area(features: list) -> float:
 	"""
 	Calculate the total area for a set of location features.
 	Reference from https://github.com/scisco/area.
@@ -169,7 +171,7 @@ def compute_area(features):
 	return layer_area
 
 
-def _polygon_area(coords):
+def _polygon_area(coords: list) -> float:
 	if not coords:
 		return 0
 
@@ -181,7 +183,7 @@ def _polygon_area(coords):
 	return area
 
 
-def _ring_area(coords):
+def _ring_area(coords: list) -> float:
 	area = 0.0
 	coords_length = len(coords)
 
@@ -211,7 +213,9 @@ def _ring_area(coords):
 
 
 @frappe.whitelist()
-def get_children(doctype: str, parent: str | None = None, location: str | None = None, is_root: bool = False):
+def get_children(
+	doctype: str, parent: str | None = None, location: str | None = None, is_root: bool = False
+) -> list:
 	if parent is None or parent == "All Locations":
 		parent = ""
 
@@ -225,7 +229,7 @@ def get_children(doctype: str, parent: str | None = None, location: str | None =
 
 
 @frappe.whitelist()
-def add_node():
+def add_node() -> None:
 	from frappe.desk.treeview import make_tree_args
 
 	args = frappe.form_dict
@@ -237,5 +241,5 @@ def add_node():
 	frappe.get_doc(args).insert()
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Location", ["lft", "rgt"])

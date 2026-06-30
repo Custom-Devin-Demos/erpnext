@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -85,7 +87,7 @@ class AssetCapitalization(StockController):
 		total_value: DF.Currency
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_posting_time()
 		self.set_missing_values(for_validate=True)
 		self.validate_target_item()
@@ -98,22 +100,22 @@ class AssetCapitalization(StockController):
 		self.calculate_totals()
 		self.set_title()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		if self.stock_items:
 			self.set_serial_and_batch_bundle(table_name="stock_items")
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.validate_source_mandatory()
 		# self.create_target_asset()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.make_bundle_using_old_serial_batch_fields()
 		self.update_stock_ledger()
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
 		self.update_target_asset()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = (
 			"GL Entry",
 			"Stock Ledger Entry",
@@ -128,10 +130,10 @@ class AssetCapitalization(StockController):
 		self.restore_consumed_asset_items()
 		self.update_target_asset()
 
-	def set_title(self):
+	def set_title(self) -> None:
 		self.title = self.target_asset_name or self.target_item_code
 
-	def set_missing_values(self, for_validate=False):
+	def set_missing_values(self, for_validate: bool = False) -> None:
 		target_item_details = get_target_item_details(self.target_item_code, self.company)
 		for k, v in target_item_details.items():
 			if self.meta.has_field(k) and (not self.get(k) or k in force_fields):
@@ -173,7 +175,7 @@ class AssetCapitalization(StockController):
 				if d.meta.has_field(k) and (not d.get(k) or k in force_fields):
 					d.set(k, v)
 
-	def validate_target_item(self):
+	def validate_target_item(self) -> None:
 		target_item = frappe.get_cached_doc("Item", self.target_item_code)
 
 		if not target_item.is_fixed_asset:
@@ -181,7 +183,7 @@ class AssetCapitalization(StockController):
 
 		self.validate_item(target_item)
 
-	def validate_target_asset(self):
+	def validate_target_asset(self) -> None:
 		if self.target_asset:
 			target_asset = self.get_asset_for_validation(self.target_asset)
 
@@ -212,7 +214,7 @@ class AssetCapitalization(StockController):
 					)
 				)
 
-	def validate_consumed_stock_item(self):
+	def validate_consumed_stock_item(self) -> None:
 		for d in self.stock_items:
 			if d.item_code:
 				item = frappe.get_cached_doc("Item", d.item_code)
@@ -225,7 +227,7 @@ class AssetCapitalization(StockController):
 
 				self.validate_item(item)
 
-	def validate_consumed_asset_item(self):
+	def validate_consumed_asset_item(self) -> None:
 		for d in self.asset_items:
 			if d.asset:
 				if d.asset == self.target_asset:
@@ -258,7 +260,7 @@ class AssetCapitalization(StockController):
 						)
 					)
 
-	def validate_service_item(self):
+	def validate_service_item(self) -> None:
 		for d in self.service_items:
 			if d.item_code:
 				item = frappe.get_cached_doc("Item", d.item_code)
@@ -277,7 +279,7 @@ class AssetCapitalization(StockController):
 			if not d.cost_center:
 				d.cost_center = frappe.get_cached_value("Company", self.company, "cost_center")
 
-	def validate_source_mandatory(self):
+	def validate_source_mandatory(self) -> None:
 		if not (self.get("stock_items") or self.get("asset_items") or self.get("service_items")):
 			frappe.throw(
 				_(
@@ -285,12 +287,12 @@ class AssetCapitalization(StockController):
 				)
 			)
 
-	def validate_item(self, item):
+	def validate_item(self, item) -> None:
 		from erpnext.stock.doctype.item.item import validate_end_of_life
 
 		validate_end_of_life(item.name, item.end_of_life, item.disabled)
 
-	def get_asset_for_validation(self, asset):
+	def get_asset_for_validation(self, asset: str) -> dict | None:
 		return frappe.db.get_value(
 			"Asset",
 			asset,
@@ -299,7 +301,7 @@ class AssetCapitalization(StockController):
 		)
 
 	@frappe.whitelist()
-	def set_warehouse_details(self):
+	def set_warehouse_details(self) -> None:
 		for d in self.get("stock_items"):
 			if d.item_code and d.warehouse:
 				args = self.get_args_for_incoming_rate(d)
@@ -307,7 +309,7 @@ class AssetCapitalization(StockController):
 				d.update(warehouse_details)
 
 	@frappe.whitelist()
-	def set_asset_values(self):
+	def set_asset_values(self) -> None:
 		for d in self.get("asset_items"):
 			if d.asset:
 				finance_book = d.get("finance_book") or self.get("finance_book")
@@ -318,7 +320,7 @@ class AssetCapitalization(StockController):
 					d.asset, self.posting_date, finance_book=finance_book
 				)
 
-	def get_args_for_incoming_rate(self, item):
+	def get_args_for_incoming_rate(self, item) -> dict:
 		return frappe._dict(
 			{
 				"item_code": item.item_code,
@@ -336,7 +338,7 @@ class AssetCapitalization(StockController):
 			}
 		)
 
-	def calculate_totals(self):
+	def calculate_totals(self) -> None:
 		self.stock_items_total = 0
 		self.asset_items_total = 0
 		self.service_items_total = 0
@@ -362,7 +364,7 @@ class AssetCapitalization(StockController):
 
 		self.target_incoming_rate = self.total_value
 
-	def update_stock_ledger(self):
+	def update_stock_ledger(self) -> None:
 		sl_entries = []
 
 		for d in self.stock_items:
@@ -379,7 +381,7 @@ class AssetCapitalization(StockController):
 		if sl_entries:
 			self.make_sl_entries(sl_entries)
 
-	def make_gl_entries(self, gl_entries=None, from_repost=False):
+	def make_gl_entries(self, gl_entries: list | None = None, from_repost: bool = False) -> None:
 		from erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
 
 		if self.docstatus == 1:
@@ -392,15 +394,18 @@ class AssetCapitalization(StockController):
 			make_reverse_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
 
 	def get_gl_entries(
-		self, inventory_account_map=None, default_expense_account=None, default_cost_center=None
-	):
+		self,
+		inventory_account_map: dict | None = None,
+		default_expense_account: str | None = None,
+		default_cost_center: str | None = None,
+	) -> list:
 		from erpnext.assets.doctype.asset_capitalization.services.gl_composer import (
 			AssetCapitalizationGLComposer,
 		)
 
 		return AssetCapitalizationGLComposer(self).compose(inventory_account_map)
 
-	def get_target_account(self):
+	def get_target_account(self) -> str | None:
 		from erpnext.assets.doctype.asset.asset import is_cwip_accounting_enabled
 
 		asset_category = frappe.get_cached_value("Asset", self.target_asset, "asset_category")
@@ -414,7 +419,7 @@ class AssetCapitalization(StockController):
 		else:
 			return self.target_fixed_asset_account
 
-	def get_composite_component_value(self):
+	def get_composite_component_value(self) -> float:
 		composite_component_value = 0
 		for item in self.asset_items:
 			asset = frappe.db.get_value("Asset", item.asset, ["asset_type"], as_dict=True)
@@ -422,7 +427,7 @@ class AssetCapitalization(StockController):
 				composite_component_value += flt(item.asset_value, item.precision("asset_value"))
 		return composite_component_value
 
-	def update_target_asset(self):
+	def update_target_asset(self) -> None:
 		total_target_asset_value = flt(self.total_value, self.precision("total_value"))
 		asset_doc = frappe.get_doc("Asset", self.target_asset)
 
@@ -449,7 +454,7 @@ class AssetCapitalization(StockController):
 			)
 		)
 
-	def restore_consumed_asset_items(self):
+	def restore_consumed_asset_items(self) -> None:
 		for item in self.asset_items:
 			asset = frappe.get_doc("Asset", item.asset)
 			self.set_consumed_asset_status(asset)
@@ -464,7 +469,7 @@ class AssetCapitalization(StockController):
 				reset_depreciation_schedule(asset, notes)
 			asset.db_set("disposal_date", None)
 
-	def set_consumed_asset_status(self, asset):
+	def set_consumed_asset_status(self, asset) -> None:
 		if self.docstatus == 1:
 			asset.set_status("Capitalized")
 			add_asset_activity(
@@ -484,7 +489,7 @@ class AssetCapitalization(StockController):
 
 
 @frappe.whitelist()
-def get_target_item_details(item_code: str | None = None, company: str | None = None):
+def get_target_item_details(item_code: str | None = None, company: str | None = None) -> frappe._dict:
 	out = frappe._dict()
 
 	# Get Item Details
@@ -510,7 +515,7 @@ def get_target_item_details(item_code: str | None = None, company: str | None = 
 
 
 @frappe.whitelist()
-def get_target_asset_details(asset: str | None = None, company: str | None = None):
+def get_target_asset_details(asset: str | None = None, company: str | None = None) -> frappe._dict:
 	out = frappe._dict()
 
 	# Get Asset Details
@@ -538,7 +543,7 @@ def get_target_asset_details(asset: str | None = None, company: str | None = Non
 
 @frappe.whitelist()
 @erpnext.normalize_ctx_input(ItemDetailsCtx)
-def get_consumed_stock_item_details(ctx: ItemDetailsCtx):
+def get_consumed_stock_item_details(ctx: ItemDetailsCtx) -> frappe._dict:
 	out = frappe._dict()
 
 	item = frappe._dict()
@@ -668,7 +673,7 @@ def get_service_item_details(ctx: ItemDetailsCtx) -> frappe._dict:
 
 
 @frappe.whitelist()
-def get_items_tagged_to_wip_composite_asset(params: dict | str):
+def get_items_tagged_to_wip_composite_asset(params: dict | str) -> tuple:
 	params = frappe.parse_json(params)
 
 	fields = [
@@ -710,7 +715,7 @@ def get_items_tagged_to_wip_composite_asset(params: dict | str):
 	return stock_items, asset_items
 
 
-def process_stock_item(d):
+def process_stock_item(d) -> frappe._dict | None:
 	stock_capitalized = frappe.db.exists(
 		"Asset Capitalization Stock Item",
 		{
@@ -729,7 +734,7 @@ def process_stock_item(d):
 	return stock_item_data
 
 
-def process_fixed_asset(d):
+def process_fixed_asset(d) -> frappe._dict | None:
 	asset_details = frappe.db.get_value(
 		"Asset",
 		{

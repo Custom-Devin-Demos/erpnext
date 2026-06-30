@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -11,7 +13,7 @@ from erpnext.accounts.dashboard_fixtures import _get_fiscal_year
 from erpnext.buying.dashboard_fixtures import get_company_for_dashboards
 
 
-def get_data():
+def get_data() -> dict:
 	fiscal_year = _get_fiscal_year(nowdate())
 
 	if not fiscal_year:
@@ -29,7 +31,7 @@ def get_data():
 	)
 
 
-def get_dashboards():
+def get_dashboards() -> list:
 	return [
 		{
 			"name": "Asset",
@@ -48,7 +50,7 @@ def get_dashboards():
 	]
 
 
-def get_charts(fiscal_year, year_start_date, year_end_date):
+def get_charts(fiscal_year: dict, year_start_date: str, year_end_date: str) -> list:
 	company = get_company_for_dashboards()
 	return [
 		{
@@ -151,7 +153,7 @@ def get_charts(fiscal_year, year_start_date, year_end_date):
 	]
 
 
-def get_number_cards(fiscal_year, year_start_date, year_end_date):
+def get_number_cards(fiscal_year: dict, year_start_date: str, year_end_date: str) -> list:
 	return [
 		{
 			"name": "Total Assets",
