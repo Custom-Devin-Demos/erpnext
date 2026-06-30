@@ -130,7 +130,7 @@ def on_doctype_update() -> None:
 
 
 def get_timeline_data(doctype: str, name: str) -> dict[int, int]:
-	def _fetch_activity(doctype: str, date_field: str):
+	def _fetch_activity(doctype: str, date_field: str) -> dict:
 		sales_team = frappe.qb.DocType("Sales Team")
 		transaction = frappe.qb.DocType(doctype)
 
