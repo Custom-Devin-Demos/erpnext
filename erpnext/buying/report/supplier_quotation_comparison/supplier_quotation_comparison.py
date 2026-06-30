@@ -1,6 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 from collections import defaultdict
 
@@ -9,7 +10,7 @@ from frappe import _
 from frappe.utils import cint, flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		return [], []
 
@@ -24,13 +25,13 @@ def execute(filters=None):
 	return columns, data, message, chart_data
 
 
-def validate_filters(filters):
+def validate_filters(filters: dict) -> None:
 	if not filters.get("categorize_by") and filters.get("group_by"):
 		filters["categorize_by"] = filters["group_by"]
 		filters["categorize_by"] = filters["categorize_by"].replace("Group by", "Categorize by")
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	sq = frappe.qb.DocType("Supplier Quotation")
 	sq_item = frappe.qb.DocType("Supplier Quotation Item")
 
@@ -83,7 +84,7 @@ def get_data(filters):
 	return supplier_quotation_data
 
 
-def prepare_data(supplier_quotation_data, filters):
+def prepare_data(supplier_quotation_data: list, filters: dict) -> tuple:
 	out, groups, qty_list, suppliers, chart_data = [], [], [], [], []
 	group_wise_map = defaultdict(list)
 	supplier_qty_price_map = {}
@@ -157,7 +158,7 @@ def prepare_data(supplier_quotation_data, filters):
 	return out, chart_data
 
 
-def prepare_chart_data(suppliers, qty_list, supplier_qty_price_map):
+def prepare_chart_data(suppliers: list, qty_list: list, supplier_qty_price_map: dict) -> dict:
 	data_points_map = {}
 	qty_list.sort()
 
@@ -186,7 +187,7 @@ def prepare_chart_data(suppliers, qty_list, supplier_qty_price_map):
 	return chart_data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	currency = frappe.get_cached_value("Company", filters.get("company"), "default_currency")
 
 	group_by_columns = [
@@ -281,7 +282,7 @@ def get_columns(filters):
 	return columns
 
 
-def get_message():
+def get_message() -> str:
 	return f"""<span class="indicator">
 		{_("Valid Till")}:&nbsp;&nbsp;
 		</span>
@@ -295,7 +296,7 @@ def get_message():
 
 
 @frappe.whitelist()
-def set_default_supplier(item_code: str, supplier: str, company: str):
+def set_default_supplier(item_code: str, supplier: str, company: str) -> None:
 	frappe.has_permission("Item", "write", doc=item_code, throw=True)
 	frappe.db.set_value(
 		"Item Default",

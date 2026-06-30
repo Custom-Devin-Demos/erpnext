@@ -1,12 +1,13 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if filters.from_date >= filters.to_date:
 		frappe.msgprint(_("To Date must be greater than From Date"))
 
@@ -16,7 +17,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	return [
 		{
 			"label": _("Subcontract Order"),
@@ -55,7 +56,7 @@ def get_columns(filters):
 	]
 
 
-def get_data(data, filters):
+def get_data(data: list, filters: dict) -> None:
 	orders = get_subcontract_orders(filters)
 	orders_name = [order.name for order in orders]
 	subcontracted_items = get_subcontract_order_supplied_item("Subcontracting Order", orders_name)
@@ -75,7 +76,7 @@ def get_data(data, filters):
 				data.append(row)
 
 
-def get_subcontract_orders(filters):
+def get_subcontract_orders(filters: dict) -> list:
 	record_filters = [
 		["supplier", "=", filters.supplier],
 		["transaction_date", "<=", filters.to_date],
@@ -88,7 +89,7 @@ def get_subcontract_orders(filters):
 	)
 
 
-def get_subcontract_order_supplied_item(order_type, orders):
+def get_subcontract_order_supplied_item(order_type: str, orders: list) -> list:
 	return frappe.get_all(
 		f"{order_type} Item",
 		filters=[("parent", "IN", orders)],

@@ -2,8 +2,10 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from erpnext.selling.report.sales_analytics.sales_analytics import Analytics
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	return Analytics(filters).run()

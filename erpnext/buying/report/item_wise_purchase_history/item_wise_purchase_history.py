@@ -1,13 +1,15 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
 from frappe.utils.nestedset import get_descendants_of
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	filters = frappe._dict(filters or {})
 	if filters.from_date > filters.to_date:
 		frappe.throw(_("From Date cannot be greater than To Date"))
@@ -20,7 +22,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	return [
 		{
 			"label": _("Item Code"),
@@ -147,7 +149,7 @@ def get_columns(filters):
 	]
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	data = []
 
 	company_list = get_descendants_of("Company", filters.get("company"))
@@ -185,7 +187,7 @@ def get_data(filters):
 	return data
 
 
-def get_supplier_details():
+def get_supplier_details() -> dict:
 	details = frappe.get_all("Supplier", fields=["name", "supplier_name", "supplier_group"])
 	supplier_details = {}
 	for d in details:
@@ -196,7 +198,7 @@ def get_supplier_details():
 	return supplier_details
 
 
-def get_item_details():
+def get_item_details() -> dict:
 	details = frappe.db.get_all("Item", fields=["name", "item_name", "item_group"])
 	item_details = {}
 	for d in details:
@@ -204,7 +206,7 @@ def get_item_details():
 	return item_details
 
 
-def get_purchase_order_details(company_list, filters):
+def get_purchase_order_details(company_list: list, filters: dict) -> list:
 	db_po = frappe.qb.DocType("Purchase Order")
 	db_po_item = frappe.qb.DocType("Purchase Order Item")
 
@@ -247,7 +249,7 @@ def get_purchase_order_details(company_list, filters):
 	return query.run(as_dict=1)
 
 
-def get_chart_data(data):
+def get_chart_data(data: list) -> dict:
 	item_wise_purchase_map = {}
 	labels, datapoints = [], []
 
