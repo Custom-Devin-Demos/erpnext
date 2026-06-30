@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import OrderedDict
 
 import frappe
@@ -11,7 +13,7 @@ from erpnext.accounts.utils import get_fiscal_year
 
 
 class BudgetValidation:
-	def __init__(self, doc: object | None = None, gl_map: list | None = None):
+	def __init__(self, doc: object | None = None, gl_map: list | None = None) -> None:
 		if doc:
 			self.document_type = doc.get("doctype")
 			self.doc = doc
@@ -34,16 +36,16 @@ class BudgetValidation:
 			"Company", self.company, "exception_budget_approver_role"
 		)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.build_validation_map()
 		self.validate_for_overbooking()
 
-	def build_validation_map(self):
+	def build_validation_map(self) -> None:
 		self.build_budget_keys()
 		self.build_item_keys()
 		self.build_to_validate_map()
 
-	def initialize_dict(self, key):
+	def initialize_dict(self, key: tuple) -> dict:
 		_obj = frappe._dict(
 			{
 				"budget_amount": self.budget_map[key].budget_amount,
@@ -72,15 +74,15 @@ class BudgetValidation:
 		return _obj
 
 	@property
-	def overlap(self):
+	def overlap(self) -> set:
 		return self.budget_keys & self.item_keys
 
-	def build_to_validate_map(self):
+	def build_to_validate_map(self) -> None:
 		self.to_validate = frappe._dict()
 		for key in self.overlap:
 			self.to_validate[key] = self.initialize_dict(key)
 
-	def validate_for_overbooking(self):
+	def validate_for_overbooking(self) -> None:
 		for key, v in self.to_validate.items():
 			self.get_ordered_amount(key)
 			self.get_requested_amount(key)
@@ -97,7 +99,7 @@ class BudgetValidation:
 			self.get_actual_expense(key)
 			self.handle_actions(key, v)
 
-	def get_child_nodes(self, budget_against, dimension):
+	def get_child_nodes(self, budget_against: str, dimension: str) -> list:
 		lft, rgt = frappe.db.get_all(
 			budget_against, filters={"name": dimension}, fields=["lft", "rgt"], as_list=1
 		)[0]
@@ -107,7 +109,7 @@ class BudgetValidation:
 	def budget_keys(self):
 		return self.budget_map.keys()
 
-	def build_budget_keys(self):
+	def build_budget_keys(self) -> None:
 		"""
 		key structure - (dimension_type, dimension, GL account)
 		"""
@@ -130,7 +132,7 @@ class BudgetValidation:
 	def item_keys(self):
 		return self.item_map.keys()
 
-	def build_item_keys(self):
+	def build_item_keys(self) -> None:
 		"""
 		key structure - (dimension_type, dimension, GL account)
 		"""
@@ -149,7 +151,7 @@ class BudgetValidation:
 						key = (dim.get("fieldname"), gl.get(dim.get("fieldname")), gl.get("account"))
 						self.item_map.setdefault(key, []).append(gl)
 
-	def get_dimensions(self):
+	def get_dimensions(self) -> None:
 		self.dimensions = []
 		for _x in frappe.db.get_all("Accounting Dimension"):
 			self.dimensions.append(frappe.get_lazy_doc("Accounting Dimension", _x.name))
@@ -206,7 +208,7 @@ class BudgetValidation:
 
 		return _budgets
 
-	def get_ordered_amount(self, key: tuple | None = None):
+	def get_ordered_amount(self, key: tuple | None = None) -> None:
 		if key:
 			po = qb.DocType("Purchase Order")
 			poi = qb.DocType("Purchase Order Item")
@@ -236,7 +238,7 @@ class BudgetValidation:
 			):
 				self.to_validate[key].ordered_amount = ordered_amount[0].amount or 0
 
-	def get_requested_amount(self, key: tuple | None = None):
+	def get_requested_amount(self, key: tuple | None = None) -> None:
 		if key:
 			mr = qb.DocType("Material Request")
 			mri = qb.DocType("Material Request Item")
@@ -270,7 +272,7 @@ class BudgetValidation:
 			):
 				self.to_validate[key].requested_amount = requested_amount[0].amount or 0
 
-	def get_actual_expense(self, key: tuple | None = None):
+	def get_actual_expense(self, key: tuple | None = None) -> None:
 		if key:
 			gl = qb.DocType("GL Entry")
 
@@ -289,13 +291,13 @@ class BudgetValidation:
 			if actual_expense := query.run(as_dict=True):
 				self.to_validate[key].actual_expense = actual_expense[0].balance or 0
 
-	def stop(self, msg):
+	def stop(self, msg: str) -> None:
 		frappe.throw(msg, BudgetError, title=_("Budget Exceeded"))
 
-	def warn(self, msg):
+	def warn(self, msg: str) -> None:
 		frappe.msgprint(msg, _("Budget Exceeded"))
 
-	def execute_action(self, action, msg):
+	def execute_action(self, action: str, msg: str) -> None:
 		if self.exception_approver_role and self.exception_approver_role in frappe.get_roles(
 			frappe.session.user
 		):
@@ -309,8 +311,8 @@ class BudgetValidation:
 			self.stop(msg)
 
 	def handle_individual_doctype_action(
-		self, key, config, budget, budget_amt, existing_amt, current_amt, acc_monthly_budget
-	):
+		self, key: tuple, config, budget, budget_amt, existing_amt, current_amt, acc_monthly_budget
+	) -> None:
 		if config.applies:
 			currency = frappe.get_cached_value("Company", self.company, "default_currency")
 			annual_diff = (existing_amt + current_amt) - budget_amt
@@ -339,7 +341,7 @@ class BudgetValidation:
 				)
 				self.execute_action(config.action_for_monthly, _msg)
 
-	def handle_purchase_order_overlimit(self, key, v_map):
+	def handle_purchase_order_overlimit(self, key: tuple, v_map) -> None:
 		self.handle_individual_doctype_action(
 			key,
 			frappe._dict(
@@ -356,7 +358,7 @@ class BudgetValidation:
 			v_map.accumulated_monthly_budget,
 		)
 
-	def handle_material_request_overlimit(self, key, v_map):
+	def handle_material_request_overlimit(self, key: tuple, v_map) -> None:
 		self.handle_individual_doctype_action(
 			key,
 			frappe._dict(
@@ -373,7 +375,7 @@ class BudgetValidation:
 			v_map.accumulated_monthly_budget,
 		)
 
-	def handle_actual_expense_overlimit(self, key, v_map):
+	def handle_actual_expense_overlimit(self, key: tuple, v_map) -> None:
 		self.handle_individual_doctype_action(
 			key,
 			frappe._dict(
@@ -390,14 +392,14 @@ class BudgetValidation:
 			v_map.accumulated_monthly_budget,
 		)
 
-	def handle_actions(self, key, v_map):
+	def handle_actions(self, key: tuple, v_map) -> None:
 		self.handle_purchase_order_overlimit(key, v_map)
 		self.handle_material_request_overlimit(key, v_map)
 		self.handle_actual_expense_overlimit(key, v_map)
 		# PO + MR + Actual Expense
 		self.handle_cumulative_overlimit(key, v_map)
 
-	def handle_cumulative_overlimit(self, key, v_map):
+	def handle_cumulative_overlimit(self, key: tuple, v_map) -> None:
 		if v_map.budget_doc.applicable_on_cumulative_expense:
 			self.handle_cumulative_overlimit_for_monthly(key, v_map)
 			self.handle_cumulative_overlimit_for_annual(key, v_map)
@@ -417,7 +419,7 @@ class BudgetValidation:
 		doctypes = [f"'{x}'" for x in doctypes]
 		return "+".join(doctypes)
 
-	def handle_cumulative_overlimit_for_monthly(self, key, v_map):
+	def handle_cumulative_overlimit_for_monthly(self, key: tuple, v_map) -> None:
 		current_amt = (
 			v_map.current_ordered_amount + v_map.current_requested_amount + v_map.current_actual_exp_amount
 		)
@@ -441,7 +443,7 @@ class BudgetValidation:
 				v_map.budget_doc.action_if_accumulated_monthly_exceeded_on_cumulative_expense, _msg
 			)
 
-	def handle_cumulative_overlimit_for_annual(self, key, v_map):
+	def handle_cumulative_overlimit_for_annual(self, key: tuple, v_map) -> None:
 		current_amt = (
 			v_map.current_ordered_amount + v_map.current_requested_amount + v_map.current_actual_exp_amount
 		)
