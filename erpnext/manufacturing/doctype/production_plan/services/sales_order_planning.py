@@ -3,6 +3,10 @@
 
 """Sales Order / Material Request sourcing into Production Plan items (extracted from production_plan.py)."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import IfNull
@@ -12,12 +16,15 @@ from pypika.terms import ExistsCriterion
 from erpnext.manufacturing.doctype.production_plan.services.planning_queries import get_sales_orders
 from erpnext.manufacturing.doctype.work_order.work_order import get_item_details
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class SalesOrderSourcingService:
-	def __init__(self, doc):
+	def __init__(self, doc: Document) -> None:
 		self.doc = doc
 
-	def get_open_sales_orders(self):
+	def get_open_sales_orders(self) -> None:
 		"""Pull sales orders  which are pending to deliver based on criteria selected"""
 		open_so = get_sales_orders(self.doc)
 
@@ -26,7 +33,7 @@ class SalesOrderSourcingService:
 		else:
 			frappe.msgprint(_("Sales orders are not available for production"))
 
-	def add_so_in_table(self, open_so):
+	def add_so_in_table(self, open_so: list) -> None:
 		"""Add sales orders in the table"""
 		self.doc.set("sales_orders", [])
 
@@ -41,7 +48,7 @@ class SalesOrderSourcingService:
 				},
 			)
 
-	def get_pending_material_requests(self):
+	def get_pending_material_requests(self) -> None:
 		"""Pull Material Requests that are pending based on criteria selected"""
 		mr = frappe.qb.DocType("Material Request")
 		mr_item = frappe.qb.DocType("Material Request Item")
@@ -83,7 +90,7 @@ class SalesOrderSourcingService:
 			query = query.where(mr_item.item_code == self.doc.item_code)
 		return query
 
-	def add_mr_in_table(self, pending_mr):
+	def add_mr_in_table(self, pending_mr: list) -> None:
 		"""Add Material Requests in the table"""
 		self.doc.set("material_requests", [])
 
@@ -93,7 +100,7 @@ class SalesOrderSourcingService:
 				{"material_request": data.name, "material_request_date": data.transaction_date},
 			)
 
-	def combine_so_items(self):
+	def combine_so_items(self) -> None:
 		if not (self.doc.combine_items and self.doc.po_items and len(self.doc.po_items) > 0):
 			self.get_items()
 			return
@@ -103,7 +110,7 @@ class SalesOrderSourcingService:
 		self.add_items(items)
 
 	@staticmethod
-	def _combined_so_item(row):
+	def _combined_so_item(row) -> dict:
 		return frappe._dict(
 			{
 				"parent": row.sales_order,
@@ -117,14 +124,14 @@ class SalesOrderSourcingService:
 			}
 		)
 
-	def get_items(self):
+	def get_items(self) -> None:
 		self.doc.set("po_items", [])
 		if self.doc.get_items_from == "Sales Order":
 			self.get_so_items()
 		elif self.doc.get_items_from == "Material Request":
 			self.get_mr_items()
 
-	def get_so_mr_list(self, field, table):
+	def get_so_mr_list(self, field: str, table: str) -> list:
 		"""Returns a list of Sales Orders or Material Requests from the respective tables"""
 		so_mr_list = [d.get(field) for d in self.doc.get(table) if d.get(field)]
 		return so_mr_list
@@ -141,7 +148,7 @@ class SalesOrderSourcingService:
 
 		return bom_item_condition
 
-	def get_so_items(self):
+	def get_so_items(self) -> None:
 		# Check for empty table or empty rows
 		if not self.doc.get("sales_orders") or not self.get_so_mr_list("sales_order", "sales_orders"):
 			frappe.throw(_("Please fill the Sales Orders table"), title=_("Sales Orders Required"))
@@ -153,7 +160,7 @@ class SalesOrderSourcingService:
 		self.add_items(items + packed_items)
 		self.doc.calculate_total_planned_qty()
 
-	def _so_items(self, so_list):
+	def _so_items(self, so_list: list) -> list:
 		bom = frappe.qb.DocType("BOM")
 		so_item = frappe.qb.DocType("Sales Order Item")
 		items_subquery = frappe.qb.from_(bom).select(bom.name).where(bom.is_active == 1)
@@ -173,7 +180,7 @@ class SalesOrderSourcingService:
 		_set_so_item_pending_qty(items)
 		return items
 
-	def _so_packed_items(self, so_list):
+	def _so_packed_items(self, so_list: list) -> list:
 		bom = frappe.qb.DocType("BOM")
 		so_item = frappe.qb.DocType("Sales Order Item")
 		pi = frappe.qb.DocType("Packed Item")
@@ -188,7 +195,7 @@ class SalesOrderSourcingService:
 			query = query.where(so_item.item_code == self.doc.item_code)
 		return query.run(as_dict=True)
 
-	def get_mr_items(self):
+	def get_mr_items(self) -> None:
 		# Check for empty table or empty rows
 		if not self.doc.get("material_requests") or not self.get_so_mr_list(
 			"material_request", "material_requests"
@@ -200,7 +207,7 @@ class SalesOrderSourcingService:
 		self.add_items(items)
 		self.doc.calculate_total_planned_qty()
 
-	def _mr_items(self, mr_list):
+	def _mr_items(self, mr_list: list) -> list:
 		bom = frappe.qb.DocType("BOM")
 		mr_item = frappe.qb.DocType("Material Request Item")
 		query = (
@@ -213,7 +220,7 @@ class SalesOrderSourcingService:
 			query = query.where(mr_item.item_code == self.doc.item_code)
 		return query.run(as_dict=True)
 
-	def add_items(self, items):
+	def add_items(self, items: list) -> None:
 		refs = {}
 		for data in items:
 			if not data.pending_qty:
@@ -223,7 +230,7 @@ class SalesOrderSourcingService:
 			if self.doc.combine_items:
 				self._add_combine_ref(refs, data, item_details)
 
-			bom_no = data.bom_no or item_details and item_details.get("bom_no") or ""
+			bom_no = data.bom_no or (item_details and item_details.get("bom_no")) or ""
 			if not bom_no:
 				continue
 			self._append_po_item(data, item_details, bom_no)
@@ -232,7 +239,7 @@ class SalesOrderSourcingService:
 			self._apply_combined_refs(refs)
 
 	@staticmethod
-	def _add_combine_ref(refs, data, item_details):
+	def _add_combine_ref(refs: dict, data, item_details: dict) -> None:
 		bom_no = data.get("bom_no") or item_details.get("bom_no")
 		detail = {"sales_order": data.parent, "sales_order_item": data.name, "qty": data.pending_qty}
 		if bom_no in refs:
@@ -242,7 +249,7 @@ class SalesOrderSourcingService:
 
 		refs[bom_no] = {"qty": data.pending_qty, "po_item_ref": data.name, "so_details": [detail]}
 
-	def _append_po_item(self, data, item_details, bom_no):
+	def _append_po_item(self, data, item_details: dict, bom_no: str) -> None:
 		pi = self.doc.append("po_items", self._po_item_values(data, item_details, bom_no))
 		pi._set_defaults()
 
@@ -256,12 +263,12 @@ class SalesOrderSourcingService:
 			pi.description = data.description
 
 	@staticmethod
-	def _po_item_values(data, item_details, bom_no):
+	def _po_item_values(data, item_details: dict, bom_no: str) -> dict:
 		return {
 			"warehouse": data.warehouse,
 			"item_code": data.item_code,
 			"description": data.description or item_details.description,
-			"stock_uom": item_details and item_details.stock_uom or "",
+			"stock_uom": (item_details and item_details.stock_uom) or "",
 			"bom_no": bom_no,
 			"planned_qty": data.pending_qty,
 			"pending_qty": data.pending_qty,
@@ -269,14 +276,14 @@ class SalesOrderSourcingService:
 			"product_bundle_item": data.parent_item,
 		}
 
-	def _apply_combined_refs(self, refs):
+	def _apply_combined_refs(self, refs: dict) -> None:
 		for po_item in self.doc.po_items:
 			po_item.planned_qty = refs[po_item.bom_no]["qty"]
 			po_item.pending_qty = refs[po_item.bom_no]["qty"]
 			po_item.sales_order = ""
 		self.add_pp_ref(refs)
 
-	def add_pp_ref(self, refs):
+	def add_pp_ref(self, refs: dict) -> None:
 		for bom_no in refs:
 			for so_detail in refs[bom_no]["so_details"]:
 				self.doc.append(
@@ -290,7 +297,7 @@ class SalesOrderSourcingService:
 				)
 
 
-def _so_item_columns(so_item):
+def _so_item_columns(so_item) -> list:
 	return [
 		so_item.parent,
 		so_item.item_code,
@@ -305,7 +312,7 @@ def _so_item_columns(so_item):
 	]
 
 
-def _so_items_filter(so_item, so_list):
+def _so_items_filter(so_item, so_list: list):
 	return (
 		(so_item.parent.isin(so_list))
 		& (so_item.docstatus == 1)
@@ -313,14 +320,14 @@ def _so_items_filter(so_item, so_list):
 	)
 
 
-def _set_so_item_pending_qty(items):
+def _set_so_item_pending_qty(items: list) -> None:
 	for item in items:
 		item.pending_qty = flt(item.qty) - max(
 			item.work_order_qty, flt(item.delivered_qty) * item.conversion_factor, 0
 		)
 
 
-def _so_packed_columns(so_item, pi):
+def _so_packed_columns(so_item, pi) -> list:
 	pending_qty = (
 		frappe.qb.terms.Case()
 		.when(
@@ -340,7 +347,7 @@ def _so_packed_columns(so_item, pi):
 	]
 
 
-def _so_packed_filter(bom, so_item, pi, so_list):
+def _so_packed_filter(bom, so_item, pi, so_list: list):
 	bom_exists = ExistsCriterion(
 		frappe.qb.from_(bom).select(bom.name).where((bom.item == pi.item_code) & (bom.is_active == 1))
 	)
@@ -357,7 +364,7 @@ def _so_packed_filter(bom, so_item, pi, so_list):
 	)
 
 
-def _mr_item_columns(mr_item):
+def _mr_item_columns(mr_item) -> list:
 	return [
 		mr_item.parent,
 		mr_item.name,
@@ -369,7 +376,7 @@ def _mr_item_columns(mr_item):
 	]
 
 
-def _mr_items_filter(bom, mr_item, mr_list):
+def _mr_items_filter(bom, mr_item, mr_list: list):
 	bom_exists = ExistsCriterion(
 		frappe.qb.from_(bom).select(bom.name).where((bom.item == mr_item.item_code) & (bom.is_active == 1))
 	)
