@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.model.document import Document
@@ -25,7 +26,9 @@ class PartyType(Document):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_party_type(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_party_type(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	PartyType = DocType("Party Type")
 	get_party_type_query = frappe.qb.from_(PartyType).select(PartyType.name).orderby(PartyType.name)
 

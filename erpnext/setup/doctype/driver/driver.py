@@ -1,6 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 
@@ -32,6 +34,6 @@ class Driver(Document):
 		user: DF.Link | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.employee:
 			self.user = frappe.get_value("Employee", self.employee, "user_id")

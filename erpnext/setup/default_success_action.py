@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from frappe import _
 
 doctype_list = [
@@ -10,17 +12,17 @@ doctype_list = [
 ]
 
 
-def get_message(doctype):
+def get_message(doctype: str) -> str:
 	# Properly format the string with translated doctype
 	return _("{0} has been submitted successfully").format(doctype)
 
 
-def get_first_success_message(doctype):
+def get_first_success_message(doctype: str) -> str:
 	# Reuse the get_message function for consistency
 	return get_message(doctype)
 
 
-def get_default_success_action():
+def get_default_success_action() -> list:
 	# Loop through each doctype in the list and return formatted actions
 	return [
 		{

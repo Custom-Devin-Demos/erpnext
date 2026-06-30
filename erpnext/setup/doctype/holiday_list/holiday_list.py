@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 from datetime import date
@@ -40,14 +41,14 @@ class HolidayList(Document):
 		]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_days()
 		self.total_holidays = len(self.holidays)
 		self.validate_duplicate_date()
 		self.sort_holidays()
 
 	@frappe.whitelist()
-	def get_weekly_off_dates(self):
+	def get_weekly_off_dates(self) -> None:
 		if not self.weekly_off:
 			throw(_("Please select weekly off day"))
 
@@ -68,7 +69,7 @@ class HolidayList(Document):
 			)
 
 	@frappe.whitelist()
-	def get_supported_countries(self):
+	def get_supported_countries(self) -> dict:
 		from holidays.utils import list_supported_countries
 
 		subdivisions_by_country = list_supported_countries()
@@ -82,7 +83,7 @@ class HolidayList(Document):
 		}
 
 	@frappe.whitelist()
-	def get_local_holidays(self):
+	def get_local_holidays(self) -> None:
 		from holidays import country_holidays
 
 		if not self.country:
@@ -108,7 +109,7 @@ class HolidayList(Document):
 				"holidays", {"description": holiday_name, "holiday_date": holiday_date, "weekly_off": 0}
 			)
 
-	def sort_holidays(self):
+	def sort_holidays(self) -> None:
 		self.holidays.sort(key=lambda x: (x.weekly_off, getdate(x.holiday_date)))
 		for i in range(len(self.holidays)):
 			self.holidays[i].idx = i + 1
@@ -116,7 +117,7 @@ class HolidayList(Document):
 	def get_holidays(self) -> list[date]:
 		return [getdate(holiday.holiday_date) for holiday in self.holidays]
 
-	def validate_days(self):
+	def validate_days(self) -> None:
 		if getdate(self.from_date) > getdate(self.to_date):
 			throw(_("To Date cannot be before From Date"))
 
@@ -128,7 +129,7 @@ class HolidayList(Document):
 					)
 				)
 
-	def get_weekly_off_date_list(self, start_date, end_date):
+	def get_weekly_off_date_list(self, start_date, end_date) -> list:
 		start_date, end_date = getdate(start_date), getdate(end_date)
 
 		import calendar
@@ -151,10 +152,10 @@ class HolidayList(Document):
 		return date_list
 
 	@frappe.whitelist()
-	def clear_table(self):
+	def clear_table(self) -> None:
 		self.set("holidays", [])
 
-	def validate_duplicate_date(self):
+	def validate_duplicate_date(self) -> None:
 		unique_dates = []
 		for row in self.holidays:
 			if row.holiday_date in unique_dates:
@@ -168,7 +169,7 @@ class HolidayList(Document):
 
 
 @frappe.whitelist()
-def get_events(start: DateTimeLikeObject, end: DateTimeLikeObject, filters: str | dict | None = None):
+def get_events(start: DateTimeLikeObject, end: DateTimeLikeObject, filters: str | dict | None = None) -> list:
 	"""Returns events for Gantt / Calendar view rendering.
 
 	:param start: Start date-time.
@@ -198,7 +199,7 @@ def get_events(start: DateTimeLikeObject, end: DateTimeLikeObject, filters: str 
 	)
 
 
-def is_holiday(holiday_list, date=None):
+def is_holiday(holiday_list: str, date=None) -> bool:
 	"""Returns true if the given date is a holiday in the given holiday list"""
 	if date is None:
 		date = today()
@@ -212,7 +213,7 @@ def is_holiday(holiday_list, date=None):
 		return False
 
 
-def is_half_holiday(holiday_list, date=None):
+def is_half_holiday(holiday_list: str, date=None) -> bool:
 	"""Returns true if the given date is a half holiday in the given holiday list"""
 	if date is None:
 		date = today()

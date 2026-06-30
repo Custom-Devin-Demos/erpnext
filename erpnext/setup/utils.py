@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, flt, get_datetime_str, nowdate
@@ -10,7 +12,7 @@ from frappe.utils.nestedset import get_root_of
 from erpnext import get_default_company
 
 
-def get_pegged_currencies():
+def get_pegged_currencies() -> dict:
 	pegged_currencies = frappe.get_all(
 		"Pegged Currency Details",
 		filters={"parent": "Pegged Currencies"},
@@ -27,7 +29,12 @@ def get_pegged_currencies():
 	return pegged_map
 
 
-def get_pegged_rate(pegged_map, from_currency, to_currency, transaction_date=None):
+def get_pegged_rate(
+	pegged_map: dict,
+	from_currency: str,
+	to_currency: str,
+	transaction_date: DateTimeLikeObject | None = None,
+) -> float | None:
 	from_entry = pegged_map.get(from_currency)
 	to_entry = pegged_map.get(to_currency)
 
@@ -64,7 +71,7 @@ def get_exchange_rate(
 	to_currency: str,
 	transaction_date: DateTimeLikeObject | None = None,
 	args: str | None = None,
-):
+) -> float | None:
 	if not (from_currency and to_currency):
 		# manqala 19/09/2016: Should this be an empty return or should it throw and exception?
 		return
@@ -162,7 +169,7 @@ def get_exchange_rate(
 		return 0.0
 
 
-def format_ces_api(data, param):
+def format_ces_api(data: str, param: dict) -> str:
 	return data.format(
 		transaction_date=param.get("transaction_date"),
 		to_currency=param.get("to_currency"),
@@ -170,12 +177,12 @@ def format_ces_api(data, param):
 	)
 
 
-def enable_all_roles_and_domains():
+def enable_all_roles_and_domains() -> None:
 	"""enable all roles and domain for testing"""
 	_enable_all_roles_for_admin()
 
 
-def _enable_all_roles_for_admin():
+def _enable_all_roles_for_admin() -> None:
 	from frappe.desk.page.setup_wizard.setup_wizard import add_all_roles_to
 
 	all_roles = set(frappe.get_all("Role", pluck="name"))
@@ -187,7 +194,7 @@ def _enable_all_roles_for_admin():
 		add_all_roles_to("Administrator")
 
 
-def set_defaults_for_tests():
+def set_defaults_for_tests() -> None:
 	defaults = {
 		"customer_group": get_root_of("Customer Group"),
 		"territory": get_root_of("Territory"),
@@ -200,13 +207,13 @@ def set_defaults_for_tests():
 	frappe.db.set_single_value("Stock Settings", "enable_serial_and_batch_no_for_item", 1)
 
 
-def insert_record(records):
+def insert_record(records: list) -> None:
 	from frappe.desk.page.setup_wizard.setup_wizard import make_records
 
 	make_records(records)
 
 
-def welcome_email():
+def welcome_email() -> str:
 	site_name = get_default_company() or "ERPNext"
 	title = _("Welcome to {0}").format(site_name)
 	return title

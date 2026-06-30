@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 import os
 from random import randint
@@ -16,7 +18,7 @@ from erpnext.selling.doctype.sales_order.mapper import make_sales_invoice
 from erpnext.setup.setup_wizard.operations.install_fixtures import create_bank_account
 
 
-def setup_demo_data(company_name):
+def setup_demo_data(company_name: str) -> None:
 	from frappe.utils.telemetry import capture
 
 	capture("demo_data_creation_started", "erpnext")
@@ -34,7 +36,7 @@ def setup_demo_data(company_name):
 		capture("demo_data_creation_failed", "erpnext", properties={"exception": frappe.get_traceback()})
 
 
-def log_demo_data_failed_notification(error_log):
+def log_demo_data_failed_notification(error_log) -> None:
 	from frappe.core.doctype.role.role import get_users
 	from frappe.desk.doctype.notification_log.notification_log import make_notification_logs
 
@@ -57,7 +59,7 @@ def log_demo_data_failed_notification(error_log):
 
 
 @frappe.whitelist()
-def clear_demo_data():
+def clear_demo_data() -> None:
 	from frappe.utils.telemetry import capture
 
 	frappe.only_for("System Manager")
@@ -79,7 +81,7 @@ def clear_demo_data():
 		)
 
 
-def create_demo_company(company):
+def create_demo_company(company: str) -> str:
 	company_doc = frappe.get_doc("Company", company).as_dict()
 
 	# Make a dummy company
@@ -103,7 +105,7 @@ def create_demo_company(company):
 	return new_company.name
 
 
-def process_masters():
+def process_masters() -> None:
 	for doctype in frappe.get_hooks("demo_master_doctypes"):
 		data = read_data_file_using_hooks(doctype)
 		if data:
@@ -111,11 +113,11 @@ def process_masters():
 				create_demo_record(item)
 
 
-def create_demo_record(doctype):
+def create_demo_record(doctype: dict) -> None:
 	frappe.get_doc(doctype).insert(ignore_permissions=True)
 
 
-def make_transactions(company):
+def make_transactions(company: str) -> None:
 	frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 1)
 	from erpnext.accounts.utils import FiscalYearError
 
@@ -139,7 +141,7 @@ def make_transactions(company):
 	frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 0)
 
 
-def create_transaction(doctype, company, start_date):
+def create_transaction(doctype: dict, company: str, start_date) -> None:
 	document_type = doctype.get("doctype")
 	warehouse = get_warehouse(company)
 
@@ -164,7 +166,7 @@ def create_transaction(doctype, company, start_date):
 	doc.submit()
 
 
-def convert_order_to_invoices():
+def convert_order_to_invoices() -> None:
 	for document in ["Purchase Order", "Sales Order"]:
 		# Keep some orders intentionally unbilled/unpaid
 		for i, order in enumerate(
@@ -195,11 +197,11 @@ def convert_order_to_invoices():
 				payment.submit()
 
 
-def get_random_date(start_date, start_range, end_range):
+def get_random_date(start_date, start_range: int, end_range: int):
 	return add_days(start_date, randint(start_range, end_range))
 
 
-def create_transaction_deletion_record(company):
+def create_transaction_deletion_record(company: str) -> None:
 	transaction_deletion_record = frappe.new_doc("Transaction Deletion Record")
 	transaction_deletion_record.company = company
 	transaction_deletion_record.process_in_single_transaction = True
@@ -212,7 +214,7 @@ def create_transaction_deletion_record(company):
 	transaction_deletion_record.start_deletion_tasks()
 
 
-def clear_masters():
+def clear_masters() -> None:
 	for doctype in frappe.get_hooks("demo_master_doctypes")[::-1]:
 		data = read_data_file_using_hooks(doctype)
 		if data:
@@ -220,7 +222,7 @@ def clear_masters():
 				clear_demo_record(item)
 
 
-def clear_demo_record(document):
+def clear_demo_record(document: dict) -> None:
 	document_type = document.get("doctype")
 	del document["doctype"]
 
@@ -238,12 +240,12 @@ def clear_demo_record(document):
 		pass
 
 
-def delete_company(company):
+def delete_company(company: str) -> None:
 	frappe.db.set_single_value("Global Defaults", "demo_company", "")
 	frappe.delete_doc("Company", company, ignore_permissions=True)
 
 
-def read_data_file_using_hooks(doctype):
+def read_data_file_using_hooks(doctype: str) -> str:
 	path = os.path.join(os.path.dirname(__file__), "demo_data")
 	with open(os.path.join(path, doctype + ".json")) as f:
 		data = f.read()
@@ -251,6 +253,6 @@ def read_data_file_using_hooks(doctype):
 	return data
 
 
-def get_warehouse(company):
+def get_warehouse(company: str) -> str:
 	warehouses = frappe.db.get_all("Warehouse", {"company": company, "is_group": 0})
 	return warehouses[randint(0, 3)].name

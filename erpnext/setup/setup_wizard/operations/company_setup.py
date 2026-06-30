@@ -1,11 +1,13 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cstr, getdate
 
 
-def create_fiscal_year_and_company(args):
+def create_fiscal_year_and_company(args: dict) -> None:
 	if args.get("fy_start_date"):
 		curr_fiscal_year = get_fy_details(args.get("fy_start_date"), args.get("fy_end_date"))
 		frappe.get_doc(
@@ -32,7 +34,7 @@ def create_fiscal_year_and_company(args):
 		).insert()
 
 
-def get_fy_details(fy_start_date, fy_end_date):
+def get_fy_details(fy_start_date, fy_end_date) -> str:
 	start_year = getdate(fy_start_date).year
 	if start_year == getdate(fy_end_date).year:
 		fy = cstr(start_year)

@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 
@@ -28,7 +29,7 @@ class TermsandConditions(Document):
 		title: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.terms:
 			validate_template(self.terms)
 		if not cint(self.buying) and not cint(self.selling) and not cint(self.hr) and not cint(self.disabled):
@@ -36,7 +37,7 @@ class TermsandConditions(Document):
 
 
 @frappe.whitelist()
-def get_terms_and_conditions(template_name: str, doc: str | dict):
+def get_terms_and_conditions(template_name: str, doc: str | dict) -> str | None:
 	doc = frappe.parse_json(doc)
 
 	terms_and_conditions = frappe.get_doc("Terms and Conditions", template_name)

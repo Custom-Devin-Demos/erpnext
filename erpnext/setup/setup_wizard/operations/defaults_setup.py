@@ -1,13 +1,15 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cstr, getdate
 
 
 # nosemgrep
-def set_default_settings(args):
+def set_default_settings(args: dict) -> None:
 	# enable default currency
 	frappe.db.set_value("Currency", args.get("currency"), "enabled", 1)
 
@@ -59,14 +61,14 @@ def set_default_settings(args):
 	delivery_settings.save()
 
 
-def set_no_copy_fields_in_variant_settings():
+def set_no_copy_fields_in_variant_settings() -> None:
 	# set no copy fields of an item doctype to item variant settings
 	doc = frappe.get_doc("Item Variant Settings")
 	doc.set_default_fields()
 	doc.save()
 
 
-def create_price_lists(args):
+def create_price_lists(args: dict) -> None:
 	for pl_type, pl_name in (("Selling", _("Standard Selling")), ("Buying", _("Standard Buying"))):
 		frappe.get_doc(
 			{
@@ -80,7 +82,7 @@ def create_price_lists(args):
 		).insert()
 
 
-def create_employee_for_self(args):
+def create_employee_for_self(args: dict) -> None:
 	if frappe.session.user == "Administrator":
 		return
 
@@ -98,7 +100,7 @@ def create_employee_for_self(args):
 	emp.insert(ignore_permissions=True)
 
 
-def create_territories():
+def create_territories() -> None:
 	"""create two default territories, one for home country and one named Rest of the World"""
 	from frappe.utils.nestedset import get_root_of
 
@@ -117,12 +119,12 @@ def create_territories():
 			).insert()
 
 
-def create_feed_and_todo():
+def create_feed_and_todo() -> None:
 	"""update Activity feed and create todo for creation of item, customer, vendor"""
 	return
 
 
-def get_fy_details(fy_start_date, fy_end_date):
+def get_fy_details(fy_start_date, fy_end_date) -> str:
 	start_year = getdate(fy_start_date).year
 	if start_year == getdate(fy_end_date).year:
 		fy = cstr(start_year)

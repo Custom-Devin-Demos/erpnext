@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import os
 
@@ -17,7 +18,7 @@ default_mail_footer = """<div style="padding: 7px; text-align: right; color: #88
 	<a style="color: #888" href="http://frappe.io/erpnext">ERPNext</a></div>"""
 
 
-def after_install():
+def after_install() -> None:
 	if not frappe.db.exists("Role", "Analytics"):
 		frappe.get_doc({"doctype": "Role", "role_name": "Analytics"}).insert()
 
@@ -42,7 +43,7 @@ def after_install():
 	frappe.db.commit()
 
 
-def make_default_operations():
+def make_default_operations() -> None:
 	for operation in ["Assembly"]:
 		if not frappe.db.exists("Operation", operation):
 			doc = frappe.get_doc({"doctype": "Operation", "name": operation})
@@ -50,7 +51,7 @@ def make_default_operations():
 			doc.insert(ignore_permissions=True)
 
 
-def set_single_defaults():
+def set_single_defaults() -> None:
 	for dt in (
 		"Accounts Settings",
 		"Print Settings",
@@ -74,14 +75,14 @@ def set_single_defaults():
 	setup_currency_exchange()
 
 
-def setup_repost_defaults():
+def setup_repost_defaults() -> None:
 	accounts_settings = frappe.get_doc("Accounts Settings")
 	for x in frappe.get_hooks("repost_allowed_doctypes"):
 		accounts_settings.append("repost_allowed_types", {"document_type": x})
 	accounts_settings.save()
 
 
-def setup_currency_exchange():
+def setup_currency_exchange() -> None:
 	ces = frappe.get_single("Currency Exchange Settings")
 	try:
 		ces.service_provider = "frankfurter.dev - v2"
@@ -90,7 +91,7 @@ def setup_currency_exchange():
 		pass
 
 
-def create_print_setting_custom_fields():
+def create_print_setting_custom_fields() -> None:
 	create_custom_fields(
 		{
 			"Print Settings": [
@@ -120,7 +121,7 @@ def create_print_setting_custom_fields():
 	)
 
 
-def create_marketing_campaign_custom_fields():
+def create_marketing_campaign_custom_fields() -> None:
 	create_custom_fields(
 		{
 			"UTM Campaign": [
@@ -136,7 +137,7 @@ def create_marketing_campaign_custom_fields():
 	)
 
 
-def create_address_and_contact_custom_fields():
+def create_address_and_contact_custom_fields() -> None:
 	create_custom_fields(
 		{
 			"Address": [
@@ -167,14 +168,14 @@ def create_address_and_contact_custom_fields():
 	)
 
 
-def create_default_success_action():
+def create_default_success_action() -> None:
 	for success_action in get_default_success_action():
 		if not frappe.db.exists("Success Action", success_action.get("ref_doctype")):
 			doc = frappe.get_doc(success_action)
 			doc.insert(ignore_permissions=True)
 
 
-def create_custom_company_links():
+def create_custom_company_links() -> None:
 	"""Add link fields to Company in Email Account and Communication.
 
 	These DocTypes are provided by the Frappe Framework but need to be associated
@@ -207,13 +208,13 @@ def create_custom_company_links():
 	)
 
 
-def add_company_to_session_defaults():
+def add_company_to_session_defaults() -> None:
 	settings = frappe.get_single("Session Default Settings")
 	settings.append("session_defaults", {"ref_doctype": "Company"})
 	settings.save()
 
 
-def add_standard_navbar_items():
+def add_standard_navbar_items() -> None:
 	navbar_settings = frappe.get_single("Navbar Settings")
 	erpnext_navbar_items = [
 		{
@@ -266,17 +267,17 @@ def add_standard_navbar_items():
 	navbar_settings.save()
 
 
-def add_app_name():
+def add_app_name() -> None:
 	frappe.db.set_single_value("System Settings", "app_name", "ERPNext")
 
 
-def update_roles():
+def update_roles() -> None:
 	website_user_roles = ("Customer", "Supplier")
 	for role in website_user_roles:
 		frappe.db.set_value("Role", role, "desk_access", 0)
 
 
-def create_default_role_profiles():
+def create_default_role_profiles() -> None:
 	for role_profile_name, roles in DEFAULT_ROLE_PROFILES.items():
 		if frappe.db.exists("Role Profile", role_profile_name):
 			role_profile = frappe.get_doc("Role Profile", role_profile_name)
@@ -300,7 +301,7 @@ def create_default_role_profiles():
 		role_profile.insert(ignore_permissions=True)
 
 
-def update_pegged_currencies():
+def update_pegged_currencies() -> None:
 	doc = frappe.get_doc("Pegged Currencies", "Pegged Currencies")
 
 	existing_sources = {item.source_currency for item in doc.pegged_currency_item}
@@ -333,7 +334,7 @@ def update_pegged_currencies():
 	doc.save()
 
 
-def set_default_print_formats():
+def set_default_print_formats() -> None:
 	default_map = {
 		"Sales Order": "Sales Order with Item Image",
 		"Sales Invoice": "Sales Invoice with Item Image",
@@ -364,7 +365,7 @@ def set_default_print_formats():
 		)
 
 
-def toggle_hidden_fields():
+def toggle_hidden_fields() -> None:
 	from erpnext.accounts.doctype.accounts_settings.accounts_settings import (
 		toggle_accounting_dimension_sections,
 		toggle_loyalty_point_program_section,

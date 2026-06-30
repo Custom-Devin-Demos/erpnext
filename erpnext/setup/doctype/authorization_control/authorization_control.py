@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _, session
@@ -21,7 +22,16 @@ class AuthorizationControl(TransactionBase):
 
 	# end: auto-generated types
 
-	def get_appr_user_role(self, det, doctype_name, total, based_on, condition, master_name, company):
+	def get_appr_user_role(
+		self,
+		det: list,
+		doctype_name: str,
+		total: float,
+		based_on: str,
+		condition: str,
+		master_name: str,
+		company: str,
+	) -> None:
 		amt_list, appr_users, appr_roles = [], [], []
 		_users, _roles = "", ""
 		if det:
@@ -60,7 +70,15 @@ class AuthorizationControl(TransactionBase):
 				frappe.msgprint(_("Not authorized since {0} exceeds limits").format(_(based_on)))
 				frappe.throw(_("Can be approved by {0}").format(comma_or(appr_roles + appr_users)))
 
-	def validate_auth_rule(self, doctype_name, total, based_on, cond, company, master_name=""):
+	def validate_auth_rule(
+		self,
+		doctype_name: str,
+		total: float,
+		based_on: str,
+		cond: str,
+		company: str,
+		master_name: str = "",
+	) -> None:
 		chk = 1
 		add_cond1, add_cond2 = "", ""
 		if based_on in ["Itemwise Discount", "Item Group wise Discount"]:
@@ -114,7 +132,16 @@ class AuthorizationControl(TransactionBase):
 				appr, doctype_name, total, based_on, cond + add_cond2, master_name, company
 			)
 
-	def bifurcate_based_on_type(self, doctype_name, total, av_dis, based_on, doc_obj, val, company):
+	def bifurcate_based_on_type(
+		self,
+		doctype_name: str,
+		total: float,
+		av_dis: float,
+		based_on: str,
+		doc_obj,
+		val: int,
+		company: str,
+	) -> None:
 		add_cond = ""
 		auth_value = av_dis
 
@@ -151,7 +178,7 @@ class AuthorizationControl(TransactionBase):
 		else:
 			self.validate_auth_rule(doctype_name, auth_value, based_on, add_cond, company)
 
-	def validate_approving_authority(self, doctype_name, company, total, doc_obj=""):
+	def validate_approving_authority(self, doctype_name: str, company: str, total: float, doc_obj="") -> None:
 		if not frappe.db.count("Authorization Rule"):
 			return
 
@@ -236,7 +263,9 @@ class AuthorizationControl(TransactionBase):
 		for g in final_based_on:
 			self.bifurcate_based_on_type(doctype_name, total, av_dis, g, doc_obj, 0, company)
 
-	def get_value_based_rule(self, doctype_name, employee, total_claimed_amount, company):
+	def get_value_based_rule(
+		self, doctype_name: str, employee: str, total_claimed_amount: float, company: str
+	) -> list:
 		auth_rule = frappe.qb.DocType("Authorization Rule")
 		emp = frappe.qb.DocType("Employee")
 
