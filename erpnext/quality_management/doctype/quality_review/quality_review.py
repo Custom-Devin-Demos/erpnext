@@ -1,6 +1,7 @@
 # Copyright (c) 2018, Frappe and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.model.document import Document
@@ -27,7 +28,7 @@ class QualityReview(Document):
 		status: DF.Literal["Open", "Passed", "Failed"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		# fetch targets from goal
 		if not self.reviews:
 			for d in frappe.get_doc("Quality Goal", self.goal).objectives:
@@ -35,7 +36,7 @@ class QualityReview(Document):
 
 		self.set_status()
 
-	def set_status(self):
+	def set_status(self) -> None:
 		# if any child item is failed, fail the parent
 		if not len(self.reviews or []) or any([d.status == "Open" for d in self.reviews]):
 			self.status = "Open"
@@ -45,7 +46,7 @@ class QualityReview(Document):
 			self.status = "Passed"
 
 
-def review():
+def review() -> None:
 	day = frappe.utils.getdate().day
 	weekday = frappe.utils.getdate().strftime("%A")
 	month = frappe.utils.getdate().strftime("%B")
@@ -64,7 +65,7 @@ def review():
 			create_review(goal.name)
 
 
-def create_review(goal):
+def create_review(goal: str) -> None:
 	goal = frappe.get_doc("Quality Goal", goal)
 
 	review = frappe.get_doc({"doctype": "Quality Review", "goal": goal.name, "date": frappe.utils.getdate()})
@@ -72,7 +73,7 @@ def create_review(goal):
 	review.insert(ignore_permissions=True)
 
 
-def get_quarter(month):
+def get_quarter(month: str) -> bool:
 	if month in ["January", "April", "July", "October"]:
 		return True
 	else:

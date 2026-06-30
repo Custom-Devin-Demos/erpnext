@@ -1,6 +1,7 @@
 # Copyright (c) 2018, Frappe and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 from frappe.model.document import Document
 
@@ -28,5 +29,5 @@ class QualityAction(Document):
 		status: DF.Literal["Open", "Completed"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.status = "Open" if any([d.status == "Open" for d in self.resolutions]) else "Completed"

@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, getdate, now_datetime
 
@@ -11,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestFirstResponseTimeForIssues(ERPNextTestSuite):
-	def test_avg_first_response_time_grouped_by_creation_date(self):
+	def test_avg_first_response_time_grouped_by_creation_date(self) -> None:
 		today = getdate()
 
 		# Isolate today's group: any pre-existing Issue created today (from other

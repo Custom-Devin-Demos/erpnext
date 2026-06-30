@@ -1,6 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -18,7 +19,7 @@ time_slots = {
 }
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns, data = [], []
 	if not filters.get("periodicity"):
 		filters["periodicity"] = "Daily"
@@ -29,7 +30,7 @@ def execute(filters=None):
 	return columns, data, None, chart
 
 
-def get_data(filters):
+def get_data(filters) -> tuple:
 	start_date = getdate(filters.from_date)
 	data = []
 	time_slot_wise_total_count = {}
@@ -50,11 +51,11 @@ def get_data(filters):
 	return data, time_slot_wise_total_count
 
 
-def get_hours_count(start_time, end_time):
+def get_hours_count(start_time, end_time) -> int:
 	return frappe.db.count("Issue", {"creation": ["between", [start_time, end_time]]})
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [{"fieldname": "date", "label": _("Date"), "fieldtype": "Date", "width": 100}]
 
 	for label in [
@@ -72,7 +73,7 @@ def get_columns():
 	return columns
 
 
-def get_chart_data(timeslot_wise_count):
+def get_chart_data(timeslot_wise_count) -> dict:
 	total_count = []
 	timeslots = [
 		"12AM - 3AM",

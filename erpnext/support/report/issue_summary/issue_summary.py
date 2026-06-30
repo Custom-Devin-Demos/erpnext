@@ -1,6 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import json
 
@@ -10,15 +11,15 @@ from frappe.query_builder.functions import Avg
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	return IssueSummary(filters).run()
 
 
 class IssueSummary:
-	def __init__(self, filters=None):
+	def __init__(self, filters: dict | None = None) -> None:
 		self.filters = frappe._dict(filters or {})
 
-	def run(self):
+	def run(self) -> tuple:
 		self.get_columns()
 		self.get_data()
 		self.get_chart_data()
@@ -26,7 +27,7 @@ class IssueSummary:
 
 		return self.columns, self.data, None, self.chart, self.report_summary
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = []
 
 		if self.filters.based_on == "Customer":
@@ -106,11 +107,11 @@ class IssueSummary:
 				{"label": _(metric), "fieldname": scrub(metric), "fieldtype": "Duration", "width": 170}
 			)
 
-	def get_data(self):
+	def get_data(self) -> None:
 		self.get_issues()
 		self.get_rows()
 
-	def get_issues(self):
+	def get_issues(self) -> None:
 		filters = self.get_common_filters()
 		self.field_map = {
 			"Customer": "customer",
@@ -136,7 +137,7 @@ class IssueSummary:
 			filters=filters,
 		)
 
-	def get_common_filters(self):
+	def get_common_filters(self) -> dict:
 		filters = {}
 		filters["opening_date"] = ("between", [self.filters.from_date, self.filters.to_date])
 
@@ -149,7 +150,7 @@ class IssueSummary:
 
 		return filters
 
-	def get_rows(self):
+	def get_rows(self) -> None:
 		self.data = []
 		self.get_summary_data()
 
@@ -179,7 +180,7 @@ class IssueSummary:
 
 			self.data.append(row)
 
-	def get_summary_data(self):
+	def get_summary_data(self) -> None:
 		self.issue_summary_data = frappe._dict()
 
 		for d in self.entries:
@@ -215,7 +216,7 @@ class IssueSummary:
 
 		self.get_metrics_data()
 
-	def get_metrics_data(self):
+	def get_metrics_data(self) -> None:
 		issues = []
 
 		metrics_list = [
@@ -299,7 +300,7 @@ class IssueSummary:
 						entry.get("avg_user_resolution_time") or 0.0
 					)
 
-	def get_chart_data(self):
+	def get_chart_data(self) -> None:
 		self.chart = []
 
 		labels = []
@@ -337,7 +338,7 @@ class IssueSummary:
 			"barOptions": {"stacked": True},
 		}
 
-	def get_report_summary(self):
+	def get_report_summary(self) -> None:
 		self.report_summary = []
 
 		open_issues = 0

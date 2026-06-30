@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.desk.form.assign_to import add as add_assignment
 from frappe.utils import add_months, getdate
@@ -13,7 +15,7 @@ months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 
 
 class TestIssueAnalytics(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.db.set_single_value("Support Settings", "track_service_level_agreement", 1)
 
 		current_month_date = getdate()
@@ -24,7 +26,7 @@ class TestIssueAnalytics(ERPNextTestSuite):
 			self.current_month += "_" + str(current_month_date.year)
 			self.last_month += "_" + str(last_month_date.year)
 
-	def test_issue_analytics(self):
+	def test_issue_analytics(self) -> None:
 		create_service_level_agreements_for_issues()
 		create_issue_types()
 		create_records()
@@ -34,7 +36,7 @@ class TestIssueAnalytics(ERPNextTestSuite):
 		self.compare_result_for_issue_priority()
 		self.compare_result_for_assignment()
 
-	def compare_result_for_customer(self):
+	def compare_result_for_customer(self) -> None:
 		filters = {
 			"company": "_Test Company",
 			"based_on": "Customer",
@@ -54,7 +56,7 @@ class TestIssueAnalytics(ERPNextTestSuite):
 		self.assertEqual(expected_data, report[1])  # rows
 		self.assertEqual(len(report[0]), 4)  # cols
 
-	def compare_result_for_issue_type(self):
+	def compare_result_for_issue_type(self) -> None:
 		filters = {
 			"company": "_Test Company",
 			"based_on": "Issue Type",
@@ -74,7 +76,7 @@ class TestIssueAnalytics(ERPNextTestSuite):
 		self.assertEqual(expected_data, report[1])  # rows
 		self.assertEqual(len(report[0]), 4)  # cols
 
-	def compare_result_for_issue_priority(self):
+	def compare_result_for_issue_priority(self) -> None:
 		filters = {
 			"company": "_Test Company",
 			"based_on": "Issue Priority",
@@ -94,7 +96,7 @@ class TestIssueAnalytics(ERPNextTestSuite):
 		self.assertEqual(expected_data, report[1])  # rows
 		self.assertEqual(len(report[0]), 4)  # cols
 
-	def compare_result_for_assignment(self):
+	def compare_result_for_assignment(self) -> None:
 		filters = {
 			"company": "_Test Company",
 			"based_on": "Assigned To",
@@ -114,13 +116,13 @@ class TestIssueAnalytics(ERPNextTestSuite):
 		self.assertEqual(len(report[0]), 4)  # cols
 
 
-def create_issue_types():
+def create_issue_types() -> None:
 	for entry in ["Bug", "Service Request", "Discomfort"]:
 		if not frappe.db.exists("Issue Type", entry):
 			frappe.get_doc({"doctype": "Issue Type", "__newname": entry}).insert()
 
 
-def create_records():
+def create_records() -> None:
 	create_customer("__Test Customer", "_Test SLA Customer Group", "__Test SLA Territory")
 	create_customer("__Test Customer 1", "_Test SLA Customer Group", "__Test SLA Territory")
 	create_customer("__Test Customer 2", "_Test SLA Customer Group", "__Test SLA Territory")
