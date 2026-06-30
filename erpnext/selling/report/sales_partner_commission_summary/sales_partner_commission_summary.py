@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import DocType, Field, Order
@@ -11,7 +13,7 @@ from frappe.utils.data import comma_or
 SALES_TRANSACTION_DOCTYPES = ["Sales Order", "Sales Invoice", "Delivery Note", "POS Invoice"]
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -31,18 +33,18 @@ class SalesPartnerSummaryReport:
 	query: QueryBuilder
 	filters: dict
 
-	def __init__(self, filters: dict):
+	def __init__(self, filters: dict) -> None:
 		self.filters = filters
 		self.columns = []
 
-	def run(self):
+	def run(self) -> tuple:
 		self.validate_filters()
 		self.prepare_columns()
 		self.get_data()
 
 		return self.columns, self.data
 
-	def validate_filters(self):
+	def validate_filters(self) -> None:
 		if not self.filters.get("doctype"):
 			frappe.throw(_("Please select the document type first."))
 
@@ -61,30 +63,30 @@ class SalesPartnerSummaryReport:
 
 		self._set_date_field_and_label()
 
-	def _set_date_field_and_label(self):
+	def _set_date_field_and_label(self) -> None:
 		self.date_field = (
 			"transaction_date" if self.filters.get("doctype") == "Sales Order" else "posting_date"
 		)
 		self.date_label = _("Order Date") if self.date_field == "transaction_date" else _("Posting Date")
 
-	def prepare_columns(self):
+	def prepare_columns(self) -> None:
 		"""
 		Extend this method to add columns on the report. Use `make_column` to add more columns.
 		"""
 		raise NotImplementedError
 
-	def get_data(self):
+	def get_data(self) -> None:
 		self.build_report_query()
 
 		self.data = self.query.run(as_dict=1)
 
-	def build_report_query(self):
+	def build_report_query(self) -> None:
 		self._build_report_base_query()
 		self.extend_report_query()
 		self._apply_common_filters()
 		self.apply_filters()
 
-	def _build_report_base_query(self):
+	def _build_report_base_query(self) -> None:
 		self.dt = DocType(self.filters.get("doctype"))
 
 		company_currency = frappe.get_cached_value("Company", self.filters.get("company"), "default_currency")
@@ -107,13 +109,13 @@ class SalesPartnerSummaryReport:
 			.orderby(self.dt.sales_partner)
 		)
 
-	def extend_report_query(self):
+	def extend_report_query(self) -> None:
 		"""
 		Extend this method to select more columns on the query.
 		"""
 		pass
 
-	def _apply_common_filters(self):
+	def _apply_common_filters(self) -> None:
 		for field in ["company", "customer", "territory", "sales_partner"]:
 			if self.filters.get(field):
 				self.query = self.query.where(Field(field, table=self.dt) == self.filters.get(field))
@@ -128,7 +130,7 @@ class SalesPartnerSummaryReport:
 				Field(self.date_field, table=self.dt) <= self.filters.get("to_date")
 			)
 
-	def apply_filters(self):
+	def apply_filters(self) -> None:
 		"""
 		Extend this method to add more conditions on the query.
 		"""
@@ -136,7 +138,7 @@ class SalesPartnerSummaryReport:
 
 	def make_column(
 		self, label: str, fieldname: str, fieldtype: str, width: int = 140, options: str = "", hidden: int = 0
-	):
+	) -> None:
 		self.columns.append(
 			dict(
 				label=label,
@@ -150,7 +152,7 @@ class SalesPartnerSummaryReport:
 
 
 class SalesPartnerCommissionSummaryReport(SalesPartnerSummaryReport):
-	def prepare_columns(self):
+	def prepare_columns(self) -> None:
 		self.make_column(_(self.filters.get("doctype")), "name", "Link", options=self.filters.get("doctype"))
 
 		self.make_column(_("Customer"), "customer", "Link", options="Customer")
@@ -169,7 +171,7 @@ class SalesPartnerCommissionSummaryReport(SalesPartnerSummaryReport):
 
 		self.make_column(_("Total Commission"), "total_commission", "Currency", 120, "currency")
 
-	def extend_report_query(self):
+	def extend_report_query(self) -> None:
 		self.query = self.query.select(
 			self.dt.base_net_total.as_("amount"),
 			self.dt.total_commission,

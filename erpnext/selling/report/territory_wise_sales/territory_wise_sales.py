@@ -2,20 +2,22 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 from erpnext import get_default_currency
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	filters = frappe._dict(filters)
 	columns = get_columns()
 	data = get_data(filters)
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	currency = get_default_currency()
 	return [
 		{
@@ -56,7 +58,7 @@ def get_columns():
 	]
 
 
-def get_data(filters=None):
+def get_data(filters: dict | None = None) -> list:
 	data = []
 
 	opportunities = get_opportunities(filters)
@@ -103,7 +105,7 @@ def get_data(filters=None):
 	return data
 
 
-def get_opportunities(filters):
+def get_opportunities(filters: dict) -> list:
 	orm_filters = {}
 
 	if filters.get("transaction_date"):
@@ -120,7 +122,7 @@ def get_opportunities(filters):
 	)
 
 
-def get_quotations(opportunities):
+def get_quotations(opportunities: list) -> list:
 	if not opportunities:
 		return []
 
@@ -133,7 +135,7 @@ def get_quotations(opportunities):
 	)
 
 
-def get_sales_orders(quotations):
+def get_sales_orders(quotations: list) -> list:
 	if not quotations:
 		return []
 
@@ -154,7 +156,7 @@ def get_sales_orders(quotations):
 	return query.run(as_dict=True)
 
 
-def get_sales_invoice(sales_orders):
+def get_sales_invoice(sales_orders: list) -> list:
 	if not sales_orders:
 		return []
 
@@ -175,7 +177,7 @@ def get_sales_invoice(sales_orders):
 	return query.run(as_dict=True)
 
 
-def _get_total(doclist, amount_field="base_grand_total"):
+def _get_total(doclist: list, amount_field: str = "base_grand_total") -> float:
 	if not doclist:
 		return 0
 
