@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -29,11 +31,11 @@ class ActivityCost(Document):
 		title: DF.Data | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_title()
 		self.check_unique()
 
-	def set_title(self):
+	def set_title(self) -> None:
 		if self.employee:
 			if not self.employee_name:
 				self.employee_name = frappe.db.get_value("Employee", self.employee, "employee_name")
@@ -41,7 +43,7 @@ class ActivityCost(Document):
 		else:
 			self.title = self.activity_type
 
-	def check_unique(self):
+	def check_unique(self) -> None:
 		if self.employee:
 			if frappe.db.exists(
 				"Activity Cost",

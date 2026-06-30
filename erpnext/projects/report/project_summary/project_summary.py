@@ -2,11 +2,13 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns = get_columns()
 	data = []
 
@@ -40,7 +42,7 @@ def execute(filters=None):
 	return columns, data, None, chart, report_summary
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"fieldname": "name",
@@ -81,7 +83,7 @@ def get_columns():
 	]
 
 
-def get_chart_data(data):
+def get_chart_data(data: list) -> dict:
 	labels = []
 	total = []
 	completed = []
@@ -108,7 +110,7 @@ def get_chart_data(data):
 	}
 
 
-def get_report_summary(data):
+def get_report_summary(data: list) -> list | None:
 	if not data:
 		return None
 

@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import urllib.parse
 
 import frappe
 
 
-def get_context(context):
+def get_context(context) -> None:
 	if project := frappe.form_dict.project:
 		title = frappe.utils.data.escape_html(project)
 		route = "/projects?" + urllib.parse.urlencode({"project": project})

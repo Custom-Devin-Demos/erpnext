@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -26,10 +28,10 @@ class ProjectTemplate(Document):
 		tasks: DF.Table[ProjectTemplateTask]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_dependencies()
 
-	def validate_dependencies(self):
+	def validate_dependencies(self) -> None:
 		for task in self.tasks:
 			task_details = frappe.get_doc("Task", task.task)
 			if task_details.depends_on:
@@ -43,7 +45,7 @@ class ProjectTemplate(Document):
 							)
 						)
 
-	def check_dependent_task_presence(self, task):
+	def check_dependent_task_presence(self, task: str) -> bool:
 		for task_details in self.tasks:
 			if task_details.task == task:
 				return True

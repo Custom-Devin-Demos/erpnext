@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.docstatus import DocStatus
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	group_fieldname = filters.pop("group_by", None)
 
 	filters = frappe._dict(filters or {})
@@ -13,7 +15,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns(filters, group_fieldname=None):
+def get_columns(filters: dict, group_fieldname: str | None = None) -> list:
 	group_columns = {
 		"date": {
 			"label": _("Date"),
@@ -81,7 +83,7 @@ def get_columns(filters, group_fieldname=None):
 	return columns
 
 
-def get_data(filters, group_fieldname=None):
+def get_data(filters: dict, group_fieldname: str | None = None) -> list:
 	_filters = []
 	if filters.get("employee"):
 		_filters.append(("employee", "=", filters.get("employee")))
@@ -115,7 +117,7 @@ def get_data(filters, group_fieldname=None):
 	return group_by(data, group_fieldname) if group_fieldname else data
 
 
-def group_by(data, fieldname):
+def group_by(data: list, fieldname: str) -> list:
 	groups = {row.get(fieldname) for row in data}
 	grouped_data = []
 	for group in sorted(groups):

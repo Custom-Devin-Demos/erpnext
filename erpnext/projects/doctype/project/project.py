@@ -1,6 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from email_reply_parser import EmailReplyParser
 from frappe import _, qb
@@ -72,7 +74,7 @@ class Project(Document):
 		weekly_time_to_send: DF.Time | None
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		timesheet_detail = frappe.qb.DocType("Timesheet Detail")
 		self.set_onload(
 			"activity_summary",
@@ -84,10 +86,10 @@ class Project(Document):
 			.run(as_dict=True),
 		)
 
-	def before_print(self, settings=None):
+	def before_print(self, settings=None) -> None:
 		self.onload()
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.is_new():
 			self.copy_from_template()
 		self.send_welcome_email()
@@ -96,7 +98,7 @@ class Project(Document):
 		self.validate_from_to_dates("expected_start_date", "expected_end_date")
 		self.validate_from_to_dates("actual_start_date", "actual_end_date")
 
-	def copy_from_template(self, trigger=None):
+	def copy_from_template(self, trigger: str | None = None) -> None:
 		"""
 		Copy tasks from template
 		"""
@@ -126,7 +128,7 @@ class Project(Document):
 
 			self.dependency_mapping(tmp_task_details, project_tasks)
 
-	def create_task_from_template(self, task_details):
+	def create_task_from_template(self, task_details) -> Document:
 		return frappe.get_doc(
 			doctype="Task",
 			subject=task_details.subject,
@@ -159,14 +161,14 @@ class Project(Document):
 			date = add_days(date, 1)
 		return date
 
-	def dependency_mapping(self, template_tasks, project_tasks):
+	def dependency_mapping(self, template_tasks: list, project_tasks: list) -> None:
 		for project_task in project_tasks:
 			template_task = frappe.get_doc("Task", project_task.template_task)
 
 			self.check_depends_on_value(template_task, project_task, project_tasks)
 			self.check_for_parent_tasks(template_task, project_task, project_tasks)
 
-	def set_consumed_material_cost(self):
+	def set_consumed_material_cost(self) -> None:
 		parent_doc = frappe.qb.DocType("Stock Entry")
 		child_doc = frappe.qb.DocType("Stock Entry Detail")
 		lcv_doc = frappe.qb.DocType("Landed Cost Taxes and Charges")
@@ -200,7 +202,7 @@ class Project(Document):
 		amount += additional_cost_amt
 		self.total_consumed_material_cost = amount
 
-	def check_depends_on_value(self, template_task, project_task, project_tasks):
+	def check_depends_on_value(self, template_task, project_task, project_tasks: list) -> None:
 		if template_task.get("depends_on") and not project_task.get("depends_on"):
 			project_template_map = {pt.template_task: pt for pt in project_tasks}
 
@@ -212,7 +214,7 @@ class Project(Document):
 					)
 					project_task.save()
 
-	def check_for_parent_tasks(self, template_task, project_task, project_tasks):
+	def check_for_parent_tasks(self, template_task, project_task, project_tasks: list) -> None:
 		if template_task.get("parent_task") and not project_task.get("parent_task"):
 			for pt in project_tasks:
 				if pt.template_task == template_task.parent_task:
@@ -220,7 +222,7 @@ class Project(Document):
 					project_task.save()
 					break
 
-	def is_row_updated(self, row, existing_task_data, fields):
+	def is_row_updated(self, row, existing_task_data: dict, fields: list) -> bool | None:
 		if self.get("__islocal") or not existing_task_data:
 			return True
 
@@ -230,13 +232,13 @@ class Project(Document):
 			if row.get(field) != d.get(field):
 				return True
 
-	def update_project(self):
+	def update_project(self) -> None:
 		"""Called externally by Task"""
 		self.update_percent_complete()
 		self.update_costing()
 		self.db_update()
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		self.copy_from_template("after_insert")
 		self.link_with_sales_order()
 
@@ -262,10 +264,10 @@ class Project(Document):
 
 		frappe.db.set_value("Sales Order", self.sales_order, "project", self.name)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		frappe.db.set_value("Sales Order", {"project": self.name}, "project", "")
 
-	def update_percent_complete(self):
+	def update_percent_complete(self) -> None:
 		if self.status == "Completed":
 			if (
 				len(frappe.get_all("Task", dict(project=self.name))) == 0
@@ -317,7 +319,7 @@ class Project(Document):
 
 		self.status = "Completed" if self.percent_complete == 100 else "Open"
 
-	def update_costing(self):
+	def update_costing(self) -> None:
 		from frappe.query_builder.functions import Max, Min, Sum
 
 		TimesheetDetail = frappe.qb.DocType("Timesheet Detail")
@@ -347,7 +349,7 @@ class Project(Document):
 		self.update_billed_amount()
 		self.calculate_gross_margin()
 
-	def calculate_gross_margin(self):
+	def calculate_gross_margin(self) -> None:
 		expense_amount = (
 			flt(self.total_costing_amount)
 			+ flt(self.total_purchase_cost)
@@ -360,11 +362,11 @@ class Project(Document):
 		else:
 			self.per_gross_margin = 0
 
-	def update_purchase_costing(self):
+	def update_purchase_costing(self) -> None:
 		total_purchase_cost = calculate_total_purchase_cost(self.name)
 		self.total_purchase_cost = total_purchase_cost and total_purchase_cost[0][0] or 0
 
-	def update_sales_amount(self):
+	def update_sales_amount(self) -> None:
 		so = frappe.qb.DocType("Sales Order")
 		total_sales_amount = (
 			frappe.qb.from_(so)
@@ -375,10 +377,10 @@ class Project(Document):
 
 		self.total_sales_amount = total_sales_amount and total_sales_amount[0][0] or 0
 
-	def update_billed_amount(self):
+	def update_billed_amount(self) -> None:
 		self.total_billed_amount = self.get_billed_amount_from_parent() + self.get_billed_amount_from_child()
 
-	def get_billed_amount_from_parent(self):
+	def get_billed_amount_from_parent(self) -> float:
 		si = frappe.qb.DocType("Sales Invoice")
 		si_item = frappe.qb.DocType("Sales Invoice Item")
 		total_billed_amount = (
@@ -397,7 +399,7 @@ class Project(Document):
 
 		return total_billed_amount and total_billed_amount[0][0] or 0
 
-	def get_billed_amount_from_child(self):
+	def get_billed_amount_from_child(self) -> float:
 		si_item = frappe.qb.DocType("Sales Invoice Item")
 		total_billed_amount = (
 			frappe.qb.from_(si_item)
@@ -408,11 +410,11 @@ class Project(Document):
 
 		return total_billed_amount and total_billed_amount[0][0] or 0
 
-	def after_rename(self, old_name, new_name, merge=False):
+	def after_rename(self, old_name: str, new_name: str, merge: bool = False) -> None:
 		if old_name == self.copied_from:
 			frappe.db.set_value("Project", new_name, "copied_from", new_name)
 
-	def send_welcome_email(self):
+	def send_welcome_email(self) -> None:
 		label = f"{self.project_name} ({self.name})"
 		url = get_link_to_form(self.doctype, self.name, label)
 
@@ -453,7 +455,14 @@ def get_timeline_data(doctype: str, name: str) -> dict[int, int]:
 	)
 
 
-def get_project_list(doctype, txt, filters, limit_start, limit_page_length=20, order_by="creation"):
+def get_project_list(
+	doctype: str,
+	txt: str,
+	filters: list | dict | None,
+	limit_start: int,
+	limit_page_length: int = 20,
+	order_by: str = "creation",
+) -> list:
 	customers, suppliers = get_customers_suppliers("Project", frappe.session.user)
 
 	ignore_permissions = False
@@ -500,7 +509,7 @@ def get_project_list(doctype, txt, filters, limit_start, limit_page_length=20, o
 	)
 
 
-def get_list_context(context=None):
+def get_list_context(context=None) -> dict:
 	from erpnext.controllers.website_list_for_contact import get_list_context
 
 	list_context = get_list_context(context)
@@ -563,11 +572,11 @@ def get_users_for_project(doctype: str, txt: str, searchfield: str, start: int, 
 
 
 @frappe.whitelist()
-def get_cost_center_name(project: str):
+def get_cost_center_name(project: str) -> str | None:
 	return frappe.db.get_value("Project", project, "cost_center")
 
 
-def hourly_reminder():
+def hourly_reminder() -> None:
 	fields = ["from_time", "to_time"]
 	projects = get_projects_for_collect_progress("Hourly", fields)
 
@@ -578,13 +587,13 @@ def hourly_reminder():
 			send_project_update_email_to_users(project.name)
 
 
-def project_status_update_reminder():
+def project_status_update_reminder() -> None:
 	daily_reminder()
 	twice_daily_reminder()
 	weekly_reminder()
 
 
-def daily_reminder():
+def daily_reminder() -> None:
 	fields = ["daily_time_to_send"]
 	projects = get_projects_for_collect_progress("Daily", fields)
 
@@ -593,7 +602,7 @@ def daily_reminder():
 			send_project_update_email_to_users(project.name)
 
 
-def twice_daily_reminder():
+def twice_daily_reminder() -> None:
 	fields = ["first_email", "second_email"]
 	projects = get_projects_for_collect_progress("Twice Daily", fields)
 	fields.remove("name")
@@ -604,7 +613,7 @@ def twice_daily_reminder():
 				send_project_update_email_to_users(project.name)
 
 
-def weekly_reminder():
+def weekly_reminder() -> None:
 	fields = ["day_to_send", "weekly_time_to_send"]
 	projects = get_projects_for_collect_progress("Weekly", fields)
 
@@ -617,7 +626,7 @@ def weekly_reminder():
 			send_project_update_email_to_users(project.name)
 
 
-def allow_to_make_project_update(project, time, frequency):
+def allow_to_make_project_update(project: str, time, frequency: str) -> bool | None:
 	data = frappe.get_all("Project Update", filters={"project": project, "date": today()}, pluck="name")
 
 	# len(data) > 1 condition is checked for twicely frequency
@@ -629,7 +638,7 @@ def allow_to_make_project_update(project, time, frequency):
 
 
 @frappe.whitelist()
-def create_duplicate_project(prev_doc: str | dict, project_name: str):
+def create_duplicate_project(prev_doc: str | dict, project_name: str) -> None:
 	"""Create duplicate project based on the old project"""
 	import json
 
@@ -658,7 +667,7 @@ def create_duplicate_project(prev_doc: str | dict, project_name: str):
 	project.db_set("project_template", prev_doc.get("project_template"))
 
 
-def get_projects_for_collect_progress(frequency, fields):
+def get_projects_for_collect_progress(frequency: str, fields: list) -> list:
 	fields.extend(["name"])
 
 	return frappe.get_all(
@@ -668,7 +677,7 @@ def get_projects_for_collect_progress(frequency, fields):
 	)
 
 
-def send_project_update_email_to_users(project):
+def send_project_update_email_to_users(project: str) -> None:
 	doc = frappe.get_doc("Project", project)
 
 	if is_holiday(doc.holiday_list) or not doc.users:
@@ -699,7 +708,7 @@ def send_project_update_email_to_users(project):
 	)
 
 
-def collect_project_status():
+def collect_project_status() -> None:
 	for data in frappe.get_all("Project Update", {"date": today(), "sent": 0}):
 		replies = frappe.get_all(
 			"Communication",
@@ -734,7 +743,7 @@ def collect_project_status():
 			doc.save(ignore_permissions=True)
 
 
-def send_project_status_email_to_users():
+def send_project_status_email_to_users() -> None:
 	yesterday = add_days(today(), -1)
 
 	for d in frappe.get_all("Project Update", {"date": yesterday, "sent": 0}):
@@ -756,7 +765,7 @@ def send_project_status_email_to_users():
 		doc.db_set("sent", 1)
 
 
-def update_project_sales_billing():
+def update_project_sales_billing() -> None:
 	sales_update_frequency = frappe.get_single_value("Selling Settings", "sales_update_frequency")
 	if sales_update_frequency == "Each Transaction":
 		return
@@ -769,7 +778,7 @@ def update_project_sales_billing():
 
 
 @frappe.whitelist()
-def create_kanban_board_if_not_exists(project: str):
+def create_kanban_board_if_not_exists(project: str) -> bool:
 	from frappe.desk.doctype.kanban_board.kanban_board import quick_kanban_board
 
 	project = frappe.get_doc("Project", project)
@@ -780,7 +789,7 @@ def create_kanban_board_if_not_exists(project: str):
 
 
 @frappe.whitelist()
-def set_project_status(project: str, status: str):
+def set_project_status(project: str, status: str) -> None:
 	"""
 	set status for project and all related tasks
 	"""
@@ -809,11 +818,11 @@ def get_holiday_list(company: str | None = None) -> str:
 	return holiday_list
 
 
-def get_users_email(doc):
+def get_users_email(doc) -> list:
 	return [d.email for d in doc.users if frappe.db.get_value("User", d.user, "enabled")]
 
 
-def calculate_total_purchase_cost(project: str | None = None):
+def calculate_total_purchase_cost(project: str | None = None) -> list | None:
 	if project:
 		pitem = qb.DocType("Purchase Invoice Item")
 		total_purchase_cost = (
@@ -827,7 +836,7 @@ def calculate_total_purchase_cost(project: str | None = None):
 
 
 @frappe.whitelist()
-def update_costing_and_billing(project: str | None = None):
+def update_costing_and_billing(project: str | None = None) -> None:
 	project = frappe.get_doc("Project", project)
 	project.update_costing()
 	project.db_update()

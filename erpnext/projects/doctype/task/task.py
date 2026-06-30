@@ -2,7 +2,10 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe import _, throw
@@ -12,6 +15,9 @@ from frappe.query_builder.functions import Max, Min, Sum
 from frappe.utils import add_days, add_to_date, cstr, date_diff, flt, get_link_to_form, getdate, today
 from frappe.utils.data import format_date
 from frappe.utils.nestedset import NestedSet
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 
 class CircularReferenceError(frappe.ValidationError):
@@ -75,12 +81,12 @@ class Task(NestedSet):
 
 	nsm_parent_field = "parent_task"
 
-	def get_customer_details(self):
+	def get_customer_details(self) -> dict | None:
 		customer_name = frappe.db.get_value("Customer", self.customer, "customer_name")
 		if customer_name:
 			return {"customer_name": customer_name or ""}
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_dates()
 		self.validate_progress()
 		self.validate_status()
@@ -90,17 +96,17 @@ class Task(NestedSet):
 		self.set_default_end_date_if_missing()
 		self.validate_parent_is_group()
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		self.validate_from_to_dates("exp_start_date", "exp_end_date")
 		self.validate_from_to_dates("act_start_date", "act_end_date")
 		self.validate_parent_expected_end_date()
 		self.validate_parent_project_dates()
 
-	def set_default_end_date_if_missing(self):
+	def set_default_end_date_if_missing(self) -> None:
 		if self.exp_start_date and self.expected_time and not self.exp_end_date:
 			self.exp_end_date = add_to_date(self.exp_start_date, hours=self.expected_time)
 
-	def validate_parent_expected_end_date(self):
+	def validate_parent_expected_end_date(self) -> None:
 		if not self.parent_task or not self.exp_end_date:
 			return
 
@@ -116,7 +122,7 @@ class Task(NestedSet):
 				frappe.exceptions.InvalidDates,
 			)
 
-	def validate_parent_project_dates(self):
+	def validate_parent_project_dates(self) -> None:
 		if not self.project or frappe.in_test:
 			return
 
@@ -134,7 +140,7 @@ class Task(NestedSet):
 						frappe.exceptions.InvalidDates,
 					)
 
-	def validate_status(self):
+	def validate_status(self) -> None:
 		if self.is_template and self.status != "Template":
 			self.status = "Template"
 		if self.status == "Template" and not self.is_template:
@@ -150,19 +156,19 @@ class Task(NestedSet):
 
 			close_all_assignments(self.doctype, self.name)
 
-	def validate_progress(self):
+	def validate_progress(self) -> None:
 		if flt(self.progress or 0) > 100:
 			frappe.throw(_("Progress % for a task cannot be more than 100."))
 
 		if self.status == "Completed":
 			self.progress = 100
 
-	def validate_dependencies_for_template_task(self):
+	def validate_dependencies_for_template_task(self) -> None:
 		if self.is_template:
 			self.validate_parent_template_task()
 			self.validate_depends_on_tasks()
 
-	def validate_parent_template_task(self):
+	def validate_parent_template_task(self) -> None:
 		if self.parent_task:
 			if not frappe.db.get_value("Task", self.parent_task, "is_template"):
 				frappe.throw(
@@ -171,7 +177,7 @@ class Task(NestedSet):
 					)
 				)
 
-	def validate_depends_on_tasks(self):
+	def validate_depends_on_tasks(self) -> None:
 		if self.depends_on:
 			for task in self.depends_on:
 				if not frappe.db.get_value("Task", task.task, "is_template"):
@@ -181,11 +187,11 @@ class Task(NestedSet):
 						)
 					)
 
-	def validate_completed_on(self):
+	def validate_completed_on(self) -> None:
 		if self.completed_on and getdate(self.completed_on) > getdate():
 			frappe.throw(_("Completed On cannot be greater than Today"))
 
-	def validate_parent_is_group(self):
+	def validate_parent_is_group(self) -> None:
 		if self.parent_task:
 			if not frappe.db.get_value("Task", self.parent_task, "is_group"):
 				frappe.throw(
@@ -195,17 +201,17 @@ class Task(NestedSet):
 					ParentIsGroupError,
 				)
 
-	def update_depends_on(self):
+	def update_depends_on(self) -> None:
 		depends_on_tasks = ""
 		for d in self.depends_on:
 			if d.task and d.task not in depends_on_tasks:
 				depends_on_tasks += d.task + ","
 		self.depends_on_tasks = depends_on_tasks
 
-	def update_nsm_model(self):
+	def update_nsm_model(self) -> None:
 		frappe.utils.nestedset.update_nsm(self)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.update_nsm_model()
 		self.check_recursion()
 		self.reschedule_dependent_tasks()
@@ -213,13 +219,13 @@ class Task(NestedSet):
 		self.unassign_todo()
 		self.populate_depends_on()
 
-	def unassign_todo(self):
+	def unassign_todo(self) -> None:
 		if self.status == "Completed":
 			close_all_assignments(self.doctype, self.name)
 		if self.status == "Cancelled":
 			clear(self.doctype, self.name)
 
-	def update_time_and_costing(self):
+	def update_time_and_costing(self) -> None:
 		TimesheetDetail = frappe.qb.DocType("Timesheet Detail")
 		tl = (
 			frappe.qb.from_(TimesheetDetail)
@@ -240,11 +246,11 @@ class Task(NestedSet):
 		self.act_start_date = tl.start_date
 		self.act_end_date = tl.end_date
 
-	def update_project(self):
+	def update_project(self) -> None:
 		if self.project and not self.flags.from_project:
 			frappe.get_cached_doc("Project", self.project).update_project()
 
-	def check_recursion(self):
+	def check_recursion(self) -> None:
 		if self.flags.ignore_recursion_check:
 			return
 		check_list = [["task", "parent"], ["parent", "task"]]
@@ -267,7 +273,7 @@ class Task(NestedSet):
 				if count == 15:
 					break
 
-	def reschedule_dependent_tasks(self):
+	def reschedule_dependent_tasks(self) -> None:
 		end_date = self.exp_end_date or self.act_end_date
 		if not end_date:
 			return
@@ -298,14 +304,14 @@ class Task(NestedSet):
 				task.flags.ignore_recursion_check = True
 				task.save()
 
-	def has_webform_permission(self):
+	def has_webform_permission(self) -> bool | None:
 		project_user = frappe.db.get_value(
 			"Project User", {"parent": self.project, "user": frappe.session.user}, "user"
 		)
 		if project_user:
 			return True
 
-	def populate_depends_on(self):
+	def populate_depends_on(self) -> None:
 		if self.parent_task:
 			parent = frappe.get_doc("Task", self.parent_task)
 			if self.name not in [row.task for row in parent.depends_on]:
@@ -314,16 +320,16 @@ class Task(NestedSet):
 				)
 				parent.save()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		if check_if_child_exists(self.name):
 			throw(_("Child Task exists for this Task. You cannot delete this Task."))
 
 		self.update_nsm_model()
 
-	def after_delete(self):
+	def after_delete(self) -> None:
 		self.update_project()
 
-	def update_status(self):
+	def update_status(self) -> None:
 		if self.status not in ("Cancelled", "Completed") and self.exp_end_date:
 			from datetime import datetime
 
@@ -333,7 +339,7 @@ class Task(NestedSet):
 
 
 @frappe.whitelist()
-def check_if_child_exists(name: str):
+def check_if_child_exists(name: str) -> list:
 	child_tasks = frappe.get_all("Task", filters={"parent_task": name})
 	child_tasks = [get_link_to_form("Task", task.name) for task in child_tasks]
 	return child_tasks
@@ -341,7 +347,7 @@ def check_if_child_exists(name: str):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_project(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_project(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict) -> list:
 	from frappe.query_builder import Criterion
 
 	searchfields = frappe.get_meta(doctype).get_search_fields()
@@ -363,7 +369,7 @@ def get_project(doctype: str, txt: str, searchfield: str, start: int, page_len: 
 
 
 @frappe.whitelist()
-def set_multiple_status(names: str | list, status: str):
+def set_multiple_status(names: str | list, status: str) -> None:
 	names = frappe.parse_json(names)
 	for name in names:
 		task = frappe.get_doc("Task", name)
@@ -371,7 +377,7 @@ def set_multiple_status(names: str | list, status: str):
 		task.save()
 
 
-def set_tasks_as_overdue():
+def set_tasks_as_overdue() -> None:
 	tasks = frappe.get_all(
 		"Task",
 		filters={"status": ["not in", ["Cancelled", "Completed"]]},
@@ -385,7 +391,9 @@ def set_tasks_as_overdue():
 
 
 @frappe.whitelist()
-def make_timesheet(source_name: str, target_doc: dict | None = None, ignore_permissions: bool = False):
+def make_timesheet(
+	source_name: str, target_doc: dict | None = None, ignore_permissions: bool = False
+) -> Document:
 	def set_missing_values(source: dict, target: dict) -> None:
 		target.parent_project = source.project
 		target.append(
@@ -417,7 +425,7 @@ def get_children(
 	task: str | None = None,
 	project: str | None = None,
 	is_root: bool = False,
-):
+) -> list:
 	filters = [["docstatus", "<", "2"]]
 
 	if task:
@@ -445,7 +453,7 @@ def get_children(
 
 
 @frappe.whitelist()
-def add_node():
+def add_node() -> None:
 	from frappe.desk.treeview import make_tree_args
 
 	args = frappe.form_dict
@@ -459,7 +467,7 @@ def add_node():
 
 
 @frappe.whitelist()
-def add_multiple_tasks(data: str | list, parent: str):
+def add_multiple_tasks(data: str | list, parent: str) -> None:
 	data = frappe.parse_json(data)
 	new_doc = {"doctype": "Task", "parent_task": parent if parent != "All Tasks" else ""}
 	new_doc["project"] = frappe.db.get_value("Task", {"name": parent}, "project") or ""
@@ -472,5 +480,5 @@ def add_multiple_tasks(data: str | list, parent: str):
 		new_task.insert()
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Task", ["lft", "rgt"])
