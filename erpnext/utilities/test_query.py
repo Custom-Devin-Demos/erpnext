@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from pypika.terms import Criterion
 
@@ -9,11 +11,11 @@ from erpnext.utilities.query import get_filter_conditions_qb
 
 
 class TestQueryHelpers(ERPNextTestSuite):
-	def test_get_filter_conditions_qb_negation_dict(self):
+	def test_get_filter_conditions_qb_negation_dict(self) -> None:
 		# get_filter_conditions_qb is the query-builder equivalent of get_filters_cond, so it must
 		# honour the same dict shorthand where a string value prefixed with "!" means "not equal"
 		# ({"istable": "!1"} -> istable != "1"), not a literal istable = "!1".
-		def _where(filters):
+		def _where(filters: dict) -> str:
 			dt = frappe.qb.DocType("DocType")
 			criteria = get_filter_conditions_qb("DocType", filters, ignore_permissions=True)
 			return frappe.qb.from_(dt).select(dt.name).where(Criterion.all(criteria)).get_sql()

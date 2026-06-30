@@ -3,6 +3,7 @@
 
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.model.document import Document
@@ -28,14 +29,14 @@ class RenameTool(Document):
 
 @frappe.whitelist()
 @deprecated
-def get_doctypes():
+def get_doctypes() -> list:
 	return frappe.get_all(
 		"DocType", filters={"allow_rename": 1, "module": ["!=", "Core"]}, order_by="name", pluck="name"
 	)
 
 
 @frappe.whitelist()
-def upload(select_doctype: str | None = None):
+def upload(select_doctype: str | None = None) -> None:
 	from frappe.utils.csvutils import read_csv_content_from_attached_file
 
 	if not select_doctype:

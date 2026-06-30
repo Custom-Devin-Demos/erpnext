@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
@@ -8,7 +10,7 @@ from erpnext.utilities.report.youtube_interactions.youtube_interactions import e
 
 
 class TestYoutubeInteractions(ERPNextTestSuite):
-	def test_zero_view_video_is_listed(self):
+	def test_zero_view_video_is_listed(self) -> None:
 		"""The original report filtered `WHERE view_count is not null`. The conversion keeps that exact
 		semantics with `.where(video.view_count.isnotnull())` (IS NOT NULL), NOT a `<> 0` test, so a
 		video with exactly 0 views is still reported. This guards against a regression to `!= 0`

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.naming import get_default_naming_series
 
@@ -6,7 +8,13 @@ class NamingSeriesNotSetError(frappe.ValidationError):
 	pass
 
 
-def set_by_naming_series(doctype, fieldname, naming_series, hide_name_field=True, make_mandatory=1):
+def set_by_naming_series(
+	doctype: str,
+	fieldname: str,
+	naming_series: str | None,
+	hide_name_field: bool = True,
+	make_mandatory: int = 1,
+) -> None:
 	"""Change a doctype's naming to user naming series"""
 	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 

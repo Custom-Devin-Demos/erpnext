@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.query_builder.functions import Lower
@@ -10,7 +11,7 @@ from frappe.utils import escape_html
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=10, seconds=3 * 60)
-def send_message(sender: str, message: str, subject: str = "Website Query"):
+def send_message(sender: str, message: str, subject: str = "Website Query") -> None:
 	from frappe.www.contact import send_message as website_send_message
 
 	website_send_message(sender, message, subject)
@@ -66,7 +67,7 @@ def send_message(sender: str, message: str, subject: str = "Website Query"):
 	comm.insert(ignore_permissions=True)
 
 
-def get_customer_from_contact_email(sender: str):
+def get_customer_from_contact_email(sender: str) -> list:
 	dl = frappe.qb.DocType("Dynamic Link")
 	contact = frappe.qb.DocType("Contact")
 	return (

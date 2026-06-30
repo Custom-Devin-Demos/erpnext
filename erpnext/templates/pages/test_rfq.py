@@ -1,6 +1,7 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.utils import formatdate
@@ -22,7 +23,7 @@ class TestRFQPage(ERPNextTestSuite):
 	returns the expected row(s) on both engines.
 	"""
 
-	def test_get_link_quotation_returns_linked_quotation(self):
+	def test_get_link_quotation_returns_linked_quotation(self) -> None:
 		# Seed: RFQ for _Test Supplier / _Test Supplier 1, then a Supplier Quotation
 		# raised against it for _Test Supplier.
 		rfq = make_request_for_quotation()
@@ -60,7 +61,7 @@ class TestRFQPage(ERPNextTestSuite):
 		self.assertEqual(row.transaction_date, formatdate(sq.transaction_date))
 		self.assertEqual({r.name for r in result}, {sq.name})
 
-	def test_get_link_quotation_filters_by_supplier(self):
+	def test_get_link_quotation_filters_by_supplier(self) -> None:
 		# The quotation belongs to supplier[0]; supplier[1] must see nothing for
 		# this RFQ. Guards the ``sq.supplier == supplier`` predicate.
 		rfq = make_request_for_quotation()
@@ -72,7 +73,7 @@ class TestRFQPage(ERPNextTestSuite):
 
 		self.assertIsNone(get_link_quotation(other_supplier, rfq.name))
 
-	def test_get_link_quotation_no_quotation(self):
+	def test_get_link_quotation_no_quotation(self) -> None:
 		# An RFQ with no Supplier Quotation raised yet returns None (helper coerces
 		# an empty list to None). Guards the ``request_for_quotation == rfq`` filter.
 		rfq = make_request_for_quotation()

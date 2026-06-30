@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import now_datetime, random_string
 
@@ -9,7 +11,7 @@ from erpnext.utilities.transaction_base import delete_events
 
 
 class TestDeleteEvents(ERPNextTestSuite):
-	def _make_event(self, reference_doctype, reference_docname):
+	def _make_event(self, reference_doctype: str, reference_docname: str) -> str:
 		# Insert a bare Event, then attach the Event Participants child row directly.
 		# reference_docname is a Dynamic Link that would otherwise be validated against a
 		# real target doc on save; db_insert keeps the test self-contained with arbitrary
@@ -37,7 +39,7 @@ class TestDeleteEvents(ERPNextTestSuite):
 
 		return event.name
 
-	def test_delete_events_removes_matching_and_keeps_others(self):
+	def test_delete_events_removes_matching_and_keeps_others(self) -> None:
 		# Two distinct, real reference_docnames so the filter has something to discriminate on.
 		match_name = "Match " + random_string(10)
 		other_name = "Other " + random_string(10)
@@ -55,7 +57,7 @@ class TestDeleteEvents(ERPNextTestSuite):
 		self.assertFalse(frappe.db.exists("Event", event_match))
 		self.assertTrue(frappe.db.exists("Event", event_other))
 
-	def test_delete_events_no_match_is_noop(self):
+	def test_delete_events_no_match_is_noop(self) -> None:
 		# When nothing matches, no Event may be deleted.
 		event = self._make_event("Customer", "Present " + random_string(10))
 		self.assertTrue(frappe.db.exists("Event", event))
@@ -64,7 +66,7 @@ class TestDeleteEvents(ERPNextTestSuite):
 
 		self.assertTrue(frappe.db.exists("Event", event))
 
-	def test_delete_events_distinguishes_reference_doctype(self):
+	def test_delete_events_distinguishes_reference_doctype(self) -> None:
 		# Same docname under two different reference_doctypes: only the queried doctype
 		# is deleted, proving both predicates are ANDed together.
 		shared_name = "Shared " + random_string(10)

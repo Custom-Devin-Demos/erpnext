@@ -1,13 +1,14 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not frappe.db.get_single_value("Video Settings", "enable_youtube_tracking") or not filters:
 		return [], []
 
@@ -17,7 +18,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data, summary
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{"label": _("Published Date"), "fieldname": "publish_date", "fieldtype": "Date", "width": 100},
 		{"label": _("Title"), "fieldname": "title", "fieldtype": "Data", "width": 200},
@@ -29,7 +30,7 @@ def get_columns():
 	]
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	video = frappe.qb.DocType("Video")
 	return (
 		frappe.qb.from_(video)
@@ -49,7 +50,7 @@ def get_data(filters):
 	).run(as_dict=True)
 
 
-def get_chart_summary_data(data):
+def get_chart_summary_data(data: list) -> tuple:
 	labels, likes, views = [], [], []
 	total_views = 0
 

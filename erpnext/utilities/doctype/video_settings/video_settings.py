@@ -1,6 +1,7 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from apiclient.discovery import build
@@ -22,10 +23,10 @@ class VideoSettings(Document):
 		frequency: DF.Literal["30 mins", "1 hr", "6 hrs", "Daily"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_youtube_api_key()
 
-	def validate_youtube_api_key(self):
+	def validate_youtube_api_key(self) -> None:
 		if self.enable_youtube_tracking and self.api_key:
 			try:
 				build("youtube", "v3", developerKey=self.api_key)

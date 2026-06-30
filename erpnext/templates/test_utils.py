@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.templates.utils import get_customer_from_contact_email
@@ -8,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestTemplateUtils(ERPNextTestSuite):
-	def test_contact_email_lookup_is_case_insensitive(self):
+	def test_contact_email_lookup_is_case_insensitive(self) -> None:
 		"""send_message resolves the Opportunity party by matching Contact.email_id with `==`.
 		Equality is case-SENSITIVE on Postgres (the query-builder ILIKE patch only rewrites LIKE),
 		while MariaDB's default collation is case-insensitive. A Contact email stored as
