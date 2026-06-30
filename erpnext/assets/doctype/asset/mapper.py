@@ -1,6 +1,8 @@
 # Copyright (c) 2016, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -21,7 +23,9 @@ from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_sched
 
 
 @frappe.whitelist()
-def make_sales_invoice(asset: str, item_code: str, company: str, sell_qty: int, serial_no: str | None = None):
+def make_sales_invoice(
+	asset: str, item_code: str, company: str, sell_qty: int, serial_no: str | None = None
+) -> Document:
 	asset_doc = frappe.get_doc("Asset", asset)
 	si = frappe.new_doc("Sales Invoice")
 	si.company = company
@@ -60,7 +64,7 @@ def create_asset_maintenance(
 	item_name: str,
 	asset_category: str,
 	company: str,
-):
+) -> Document:
 	asset_maintenance = frappe.new_doc("Asset Maintenance")
 	asset_maintenance.update(
 		{
@@ -79,7 +83,7 @@ def create_asset_repair(
 	company: str,
 	asset: str,
 	asset_name: str,
-):
+) -> Document:
 	asset_repair = frappe.new_doc("Asset Repair")
 	asset_repair.update({"company": company, "asset": asset, "asset_name": asset_name})
 	return asset_repair
@@ -91,7 +95,7 @@ def create_asset_capitalization(
 	asset: str,
 	asset_name: str,
 	item_code: str,
-):
+) -> Document:
 	asset_capitalization = frappe.new_doc("Asset Capitalization")
 	asset_capitalization.update(
 		{
@@ -109,14 +113,14 @@ def create_asset_value_adjustment(
 	asset: str,
 	asset_category: str,
 	company: str,
-):
+) -> Document:
 	asset_value_adjustment = frappe.new_doc("Asset Value Adjustment")
 	asset_value_adjustment.update({"asset": asset, "company": company, "asset_category": asset_category})
 	return asset_value_adjustment
 
 
 @frappe.whitelist()
-def make_journal_entry(asset_name: str):
+def make_journal_entry(asset_name: str) -> Document:
 	asset = frappe.get_doc("Asset", asset_name)
 	(
 		fixed_asset_account,
@@ -161,7 +165,7 @@ def make_journal_entry(asset_name: str):
 def make_asset_movement(
 	assets: list[dict] | str,
 	purpose: str = "Transfer",
-):
+) -> dict | None:
 	assets = frappe.parse_json(assets)
 
 	if len(assets) == 0:
@@ -186,7 +190,7 @@ def make_asset_movement(
 
 
 @frappe.whitelist()
-def split_asset(asset_name: str, split_qty: int):
+def split_asset(asset_name: str, split_qty: int) -> Document:
 	"""Split an asset into two based on the given quantity."""
 	existing_asset = frappe.get_doc("Asset", asset_name)
 	split_qty = cint(split_qty)
@@ -200,22 +204,24 @@ def split_asset(asset_name: str, split_qty: int):
 	return splitted_asset
 
 
-def validate_split_quantity(existing_asset, split_qty):
+def validate_split_quantity(existing_asset, split_qty: int) -> None:
 	if split_qty >= existing_asset.asset_quantity:
 		frappe.throw(_("Split Quantity must be less than Asset Quantity"))
 
 
-def create_new_asset_from_split(existing_asset, split_qty):
+def create_new_asset_from_split(existing_asset, split_qty: int) -> Document:
 	"""Create a new asset from the split quantity."""
 	return process_asset_split(existing_asset, split_qty, is_new_asset=True)
 
 
-def update_existing_asset_after_split(existing_asset, remaining_qty, splitted_asset):
+def update_existing_asset_after_split(existing_asset, remaining_qty, splitted_asset) -> None:
 	"""Update the existing asset with the remaining quantity."""
 	process_asset_split(existing_asset, remaining_qty, splitted_asset=splitted_asset)
 
 
-def process_asset_split(existing_asset, split_qty, splitted_asset=None, is_new_asset=False):
+def process_asset_split(
+	existing_asset, split_qty, splitted_asset=None, is_new_asset: bool = False
+) -> Document:
 	"""Handle asset creation or update during the split."""
 	scaling_factor = flt(split_qty) / flt(existing_asset.asset_quantity)
 	new_asset = frappe.copy_doc(existing_asset) if is_new_asset else splitted_asset
@@ -229,7 +235,9 @@ def process_asset_split(existing_asset, split_qty, splitted_asset=None, is_new_a
 	return new_asset
 
 
-def set_split_asset_values(asset_doc, scaling_factor, split_qty, existing_asset, is_new_asset):
+def set_split_asset_values(
+	asset_doc, scaling_factor: float, split_qty, existing_asset, is_new_asset: bool
+) -> None:
 	asset_doc.net_purchase_amount = existing_asset.net_purchase_amount * scaling_factor
 	asset_doc.purchase_amount = existing_asset.net_purchase_amount * scaling_factor
 	asset_doc.additional_asset_cost = existing_asset.additional_asset_cost * scaling_factor
@@ -250,7 +258,7 @@ def set_split_asset_values(asset_doc, scaling_factor, split_qty, existing_asset,
 		asset_doc.save()
 
 
-def log_asset_activity(existing_asset, asset_doc, splitted_asset, is_new_asset):
+def log_asset_activity(existing_asset, asset_doc, splitted_asset, is_new_asset: bool) -> None:
 	if is_new_asset:
 		asset_doc.insert()
 		add_asset_activity(
@@ -270,7 +278,9 @@ def log_asset_activity(existing_asset, asset_doc, splitted_asset, is_new_asset):
 		)
 
 
-def update_finance_books(asset_doc, existing_asset, new_asset, scaling_factor, is_new_asset):
+def update_finance_books(
+	asset_doc, existing_asset, new_asset, scaling_factor: float, is_new_asset: bool
+) -> None:
 	"""Update finance books and depreciation schedules for the asset."""
 	for fb_row in asset_doc.get("finance_books"):
 		reschedule_depr_for_updated_asset(existing_asset, new_asset, fb_row, scaling_factor, is_new_asset)
@@ -288,7 +298,9 @@ def update_finance_books(asset_doc, existing_asset, new_asset, scaling_factor, i
 					)
 
 
-def reschedule_depr_for_updated_asset(existing_asset, new_asset, fb_row, scaling_factor, is_new_asset):
+def reschedule_depr_for_updated_asset(
+	existing_asset, new_asset, fb_row, scaling_factor: float, is_new_asset: bool
+) -> None:
 	"""Reschedule depreciation for an asset after a split."""
 	current_depr_schedule_doc = get_asset_depr_schedule_doc(
 		existing_asset.name, "Active", fb_row.finance_book
@@ -310,7 +322,9 @@ def reschedule_depr_for_updated_asset(existing_asset, new_asset, fb_row, scaling
 	new_depr_schedule_doc.submit()
 
 
-def create_new_depr_schedule(current_depr_schedule_doc, existing_asset, new_asset, is_new_asset, fb_row):
+def create_new_depr_schedule(
+	current_depr_schedule_doc, existing_asset, new_asset, is_new_asset: bool, fb_row
+) -> Document:
 	"""Create a new depreciation schedule based on the current one."""
 	new_depr_schedule_doc = frappe.copy_doc(current_depr_schedule_doc)
 	new_depr_schedule_doc.asset_doc = new_asset if is_new_asset else existing_asset
@@ -319,7 +333,7 @@ def create_new_depr_schedule(current_depr_schedule_doc, existing_asset, new_asse
 	return new_depr_schedule_doc
 
 
-def update_depreciation_terms(new_depr_schedule_doc, scaling_factor):
+def update_depreciation_terms(new_depr_schedule_doc, scaling_factor: float) -> None:
 	"""Update depreciation terms with scaled amounts."""
 	accumulated_depreciation = 0
 	for term in new_depr_schedule_doc.get("depreciation_schedule"):
@@ -333,7 +347,7 @@ def update_depreciation_terms(new_depr_schedule_doc, scaling_factor):
 		term.accumulated_depreciation_amount = accumulated_depreciation
 
 
-def add_depr_schedule_notes(new_depr_schedule_doc, existing_asset, new_asset, is_new_asset):
+def add_depr_schedule_notes(new_depr_schedule_doc, existing_asset, new_asset, is_new_asset: bool) -> None:
 	notes = _("This schedule was created when Asset {0} was {1} into new Asset {2}.").format(
 		get_link_to_form(existing_asset.doctype, existing_asset.name),
 		"split" if is_new_asset else "updated after being split",
@@ -342,7 +356,9 @@ def add_depr_schedule_notes(new_depr_schedule_doc, existing_asset, new_asset, is
 	new_depr_schedule_doc.notes = notes
 
 
-def add_reference_in_jv_on_split(entry_name, new_asset_name, old_asset_name, depreciation_amount):
+def add_reference_in_jv_on_split(
+	entry_name: str, new_asset_name: str, old_asset_name: str, depreciation_amount: float
+) -> None:
 	"""Add a reference to a new asset in a journal entry after a split."""
 	journal_entry = frappe.get_doc("Journal Entry", entry_name)
 	entries_to_add = []
@@ -359,7 +375,9 @@ def add_reference_in_jv_on_split(entry_name, new_asset_name, old_asset_name, dep
 	journal_entry.make_gl_entries()
 
 
-def adjust_existing_accounts(journal_entry, old_asset_name, depreciation_amount, entries_to_add):
+def adjust_existing_accounts(
+	journal_entry, old_asset_name: str, depreciation_amount: float, entries_to_add: list
+) -> None:
 	"""Adjust existing accounts and prepare new entries for the new asset."""
 	for account in journal_entry.get("accounts"):
 		if account.reference_name == old_asset_name:
@@ -367,7 +385,7 @@ def adjust_existing_accounts(journal_entry, old_asset_name, depreciation_amount,
 			adjust_account_balance(account, depreciation_amount)
 
 
-def adjust_account_balance(account, depreciation_amount):
+def adjust_account_balance(account, depreciation_amount: float) -> None:
 	"""Adjust the balance of an account based on the depreciation amount."""
 	if account.credit:
 		account.credit -= depreciation_amount
@@ -377,7 +395,9 @@ def adjust_account_balance(account, depreciation_amount):
 		account.debit_in_account_currency -= account.exchange_rate * depreciation_amount
 
 
-def add_new_entries(journal_entry, entries_to_add, new_asset_name, depreciation_amount):
+def add_new_entries(
+	journal_entry, entries_to_add: list, new_asset_name: str, depreciation_amount: float
+) -> None:
 	"""Add new entries for the new asset to the journal entry."""
 	idx = len(journal_entry.get("accounts")) + 1
 	for entry in entries_to_add:

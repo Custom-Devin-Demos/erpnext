@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -20,10 +22,10 @@ class AssetShiftFactor(Document):
 		shift_name: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_default()
 
-	def validate_default(self):
+	def validate_default(self) -> None:
 		if self.default:
 			existing_default_shift_factor = frappe.db.get_value("Asset Shift Factor", {"default": 1}, "name")
 

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -27,13 +29,13 @@ class AssetCategory(Document):
 		non_depreciable_category: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_finance_books()
 		self.validate_account_types()
 		self.validate_account_currency()
 		self.validate_accounts()
 
-	def validate_finance_books(self):
+	def validate_finance_books(self) -> None:
 		for d in self.finance_books:
 			for field in ("Total Number of Depreciations", "Frequency of Depreciation"):
 				if cint(d.get(frappe.scrub(field))) < 1:
@@ -41,7 +43,7 @@ class AssetCategory(Document):
 						_("Row {0}: {1} must be greater than 0").format(d.idx, field), frappe.MandatoryError
 					)
 
-	def validate_account_currency(self):
+	def validate_account_currency(self) -> None:
 		account_types = [
 			"fixed_asset_account",
 			"accumulated_depreciation_account",
@@ -69,7 +71,7 @@ class AssetCategory(Document):
 				title=_("Invalid Account"),
 			)
 
-	def validate_account_types(self):
+	def validate_account_types(self) -> None:
 		account_type_map = {
 			"fixed_asset_account": {"account_type": ["Fixed Asset"]},
 			"accumulated_depreciation_account": {"account_type": ["Accumulated Depreciation"]},
@@ -97,17 +99,17 @@ class AssetCategory(Document):
 							title=_("Invalid Account"),
 						)
 
-	def validate_accounts(self):
+	def validate_accounts(self) -> None:
 		self.validate_duplicate_rows()
 		self.validate_cwip_accounts()
 		self.validate_depreciation_accounts()
 
-	def validate_duplicate_rows(self):
+	def validate_duplicate_rows(self) -> None:
 		companies = {row.company_name for row in self.accounts}
 		if len(companies) != len(self.accounts):
 			frappe.throw(_("Cannot set multiple account rows for the same company"))
 
-	def validate_cwip_accounts(self):
+	def validate_cwip_accounts(self) -> None:
 		if self.enable_cwip_accounting:
 			missing_cwip_accounts_for_company = []
 			for d in self.accounts:
@@ -126,7 +128,7 @@ class AssetCategory(Document):
 				)
 				frappe.throw(msg, title=_("Missing Account"))
 
-	def validate_depreciation_accounts(self):
+	def validate_depreciation_accounts(self) -> None:
 		depreciation_account_map = {
 			"accumulated_depreciation_account": "Accumulated Depreciation Account",
 			"depreciation_expense_account": "Depreciation Expense Account",
@@ -135,7 +137,7 @@ class AssetCategory(Document):
 		error_msg = []
 		companies_with_accounts = set()
 
-		def validate_company_accounts(company, acc_row=None):
+		def validate_company_accounts(company: str, acc_row=None) -> None:
 			default_accounts = frappe.get_cached_value(
 				"Company",
 				company,
@@ -193,8 +195,13 @@ class AssetCategory(Document):
 
 
 def get_asset_category_account(
-	fieldname, item=None, asset=None, account=None, asset_category=None, company=None
-):
+	fieldname: str,
+	item: str | None = None,
+	asset: str | None = None,
+	account: str | None = None,
+	asset_category: str | None = None,
+	company: str | None = None,
+) -> str | None:
 	if item and frappe.db.get_value("Item", item, "is_fixed_asset"):
 		asset_category = frappe.db.get_value("Item", item, ["asset_category"])
 

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -41,7 +43,7 @@ class AssetMaintenanceLog(Document):
 		task_name: DF.Data | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if getdate(self.due_date) < getdate(nowdate()) and self.maintenance_status not in [
 			"Completed",
 			"Cancelled",
@@ -54,12 +56,12 @@ class AssetMaintenanceLog(Document):
 		if self.maintenance_status != "Completed" and self.completion_date:
 			frappe.throw(_("Please select Maintenance Status as Completed or remove Completion Date"))
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		if self.maintenance_status not in ["Completed", "Cancelled"]:
 			frappe.throw(_("Maintenance Status has to be Cancelled or Completed to Submit"))
 		self.update_maintenance_task()
 
-	def update_maintenance_task(self):
+	def update_maintenance_task(self) -> None:
 		asset_maintenance_doc = frappe.get_doc("Asset Maintenance Task", self.task)
 		if self.maintenance_status == "Completed":
 			if asset_maintenance_doc.last_completion_date != self.completion_date:
@@ -77,7 +79,7 @@ class AssetMaintenanceLog(Document):
 		asset_maintenance_doc.save()
 
 
-def update_asset_maintenance_log_status():
+def update_asset_maintenance_log_status() -> None:
 	AssetMaintenanceLog = DocType("Asset Maintenance Log")
 	(
 		frappe.qb.update(AssetMaintenanceLog)
@@ -90,7 +92,9 @@ def update_asset_maintenance_log_status():
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_maintenance_tasks(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_maintenance_tasks(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	asset_maintenance_tasks = frappe.db.get_values(
 		"Asset Maintenance Task", {"parent": filters.get("asset_maintenance")}, "maintenance_task"
 	)
