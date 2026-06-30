@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.permissions import add_permission, update_permission_property
 
 
-def execute():
+def execute() -> None:
 	company = frappe.get_all("Company", filters={"country": "India"})
 	if not company:
 		return

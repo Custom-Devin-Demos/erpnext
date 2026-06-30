@@ -2,12 +2,14 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.regional.united_arab_emirates.setup import make_custom_fields
 
 
-def execute():
+def execute() -> None:
 	company = frappe.get_all("Company", filters={"country": ["in", ["Saudi Arabia", "United Arab Emirates"]]})
 	if not company:
 		return

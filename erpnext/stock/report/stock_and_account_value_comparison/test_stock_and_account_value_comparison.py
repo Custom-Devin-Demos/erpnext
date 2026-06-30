@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -17,7 +19,7 @@ PI_STORES = "Stores - TCP1"
 
 
 class TestStockAndAccountValueComparison(ERPNextTestSuite):
-	def test_purchase_voucher_reposted_transaction_based(self):
+	def test_purchase_voucher_reposted_transaction_based(self) -> None:
 		# A Purchase Receipt whose GL entries are missing must surface in the report and, when reposted
 		# from it, be reposted Transaction-based (so its own GL is regenerated) rather than the slower
 		# Item-and-Warehouse based reposting.

@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -9,7 +11,7 @@ from frappe import _
 from erpnext.stock.doctype.batch.batch import get_batch_qty
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -100,7 +102,7 @@ def get_data(filters=None):
 
 
 @frappe.whitelist()
-def update_batch_qty(selected_batches: str | list | None = None):
+def update_batch_qty(selected_batches: str | list | None = None) -> None:
 	frappe.has_permission("Batch", "write", throw=True, ignore_share_permissions=True)
 	if not selected_batches:
 		return

@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import frappe
 from frappe.desk.page.setup_wizard.setup_wizard import make_records
 
 
-def setup(company=None, patch=True):
+def setup(company: str | None = None, patch: bool = True) -> None:
 	pass
 
 
-def update_regional_tax_settings(country=None, company=None):
+def update_regional_tax_settings(country: str | None = None, company: str | None = None) -> None:
 	# tax rules
 	records = [
 		{

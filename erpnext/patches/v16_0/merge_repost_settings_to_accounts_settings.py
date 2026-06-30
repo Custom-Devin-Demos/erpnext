@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if allowed := frappe.get_hooks("repost_allowed_doctypes"):
 		accounts_settings = frappe.get_doc("Accounts Settings")
 		for x in allowed:

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def get_inventory_dimensions():
+def get_inventory_dimensions() -> list:
 	return frappe.get_all(
 		"Inventory Dimension",
 		fields=[
@@ -16,7 +18,7 @@ def get_inventory_dimensions():
 	)
 
 
-def get_display_depends_on(doctype, fieldname):
+def get_display_depends_on(doctype: str, fieldname: str) -> tuple:
 	if doctype not in [
 		"Stock Entry Detail",
 		"Sales Invoice Item",
@@ -40,7 +42,7 @@ def get_display_depends_on(doctype, fieldname):
 	return f"{fieldname_start_with}_{fieldname}", display_depends_on
 
 
-def execute():
+def execute() -> None:
 	for dimension in get_inventory_dimensions():
 		if frappe.db.exists(
 			"Custom Field", {"fieldname": dimension.source_fieldname, "dt": "Stock Entry Detail"}

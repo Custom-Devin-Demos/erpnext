@@ -4,6 +4,8 @@
 # ERPNext - web based ERP (http://erpnext.com)
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -34,19 +36,19 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 1)
 		frappe.local.future_sle = {}
 		frappe.flags.pop("dont_execute_stock_reposts", None)
 
-	def test_reco_for_fifo(self):
+	def test_reco_for_fifo(self) -> None:
 		self._test_reco_sle_gle("FIFO")
 
-	def test_reco_for_moving_average(self):
+	def test_reco_for_moving_average(self) -> None:
 		self._test_reco_sle_gle("Moving Average")
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"allow_negative_stock": 1})
-	def _test_reco_sle_gle(self, valuation_method):
+	def _test_reco_sle_gle(self, valuation_method) -> None:
 		item_code = self.make_item(properties={"valuation_method": valuation_method}).name
 
 		se1, se2, se3 = insert_existing_sle(warehouse="Stores - TCP1", item_code=item_code)
@@ -122,7 +124,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		se2.cancel()
 		se1.cancel()
 
-	def test_get_items(self):
+	def test_get_items(self) -> None:
 		create_warehouse(
 			"_Test Warehouse Group 1",
 			{"is_group": 1, "company": "_Test Company", "parent_warehouse": "All Warehouses - _TC"},
@@ -151,7 +153,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 			[items[0]["item_code"], items[0]["warehouse"], items[0]["qty"]],
 		)
 
-	def test_stock_reco_for_serialized_item(self):
+	def test_stock_reco_for_serialized_item(self) -> None:
 		to_delete_records = []
 
 		# Add new serial nos
@@ -208,7 +210,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 			stock_doc = frappe.get_doc("Stock Reconciliation", d)
 			stock_doc.cancel()
 
-	def test_stock_reco_for_batch_item(self):
+	def test_stock_reco_for_batch_item(self) -> None:
 		to_delete_records = []
 
 		# Add new serial nos
@@ -266,7 +268,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 			stock_doc = frappe.get_doc("Stock Reconciliation", d)
 			stock_doc.cancel()
 
-	def test_stock_reco_for_serial_and_batch_item(self):
+	def test_stock_reco_for_serial_and_batch_item(self) -> None:
 		item = create_item("_TestBatchSerialItemReco")
 		item.has_batch_no = 1
 		item.create_new_batch = 1
@@ -289,7 +291,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertEqual(frappe.db.get_value("Serial No", serial_nos[0], "warehouse"), None)
 
-	def test_stock_reco_for_serial_and_batch_item_with_future_dependent_entry(self):
+	def test_stock_reco_for_serial_and_batch_item_with_future_dependent_entry(self) -> None:
 		"""
 		Behaviour: 1) Create Stock Reconciliation, which will be the origin document
 		of a new batch having a serial no
@@ -342,7 +344,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		stock_reco.cancel()
 
-	def test_customer_provided_items(self):
+	def test_customer_provided_items(self) -> None:
 		item_code = "Stock-Reco-customer-Item-100"
 		create_item(item_code, is_customer_provided_item=1, customer="_Test Customer", is_purchase_item=0)
 
@@ -352,7 +354,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(sr.get("items")[0].valuation_rate, 0)
 		self.assertEqual(sr.get("items")[0].amount, 0)
 
-	def test_backdated_stock_reco_qty_reposting(self):
+	def test_backdated_stock_reco_qty_reposting(self) -> None:
 		"""
 		Test if a backdated stock reco recalculates future qty until next reco.
 		-------------------------------------------
@@ -370,7 +372,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		frappe.flags.dont_execute_stock_reposts = True
 
-		def assertBalance(doc, qty_after_transaction):
+		def assertBalance(doc, qty_after_transaction) -> None:
 			sle_balance = frappe.db.get_value(
 				"Stock Ledger Entry", {"voucher_no": doc.name, "is_cancelled": 0}, "qty_after_transaction"
 			)
@@ -418,7 +420,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		assertBalance(sr4, 6)  # check if future stock reco is unaffected
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"allow_negative_stock": 0})
-	def test_backdated_stock_reco_future_negative_stock(self):
+	def test_backdated_stock_reco_future_negative_stock(self) -> None:
 		"""
 		Test if a backdated stock reco causes future negative stock and is blocked.
 		-------------------------------------------
@@ -467,7 +469,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		pr1.cancel()
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"allow_negative_stock": 0})
-	def test_backdated_stock_reco_cancellation_future_negative_stock(self):
+	def test_backdated_stock_reco_cancellation_future_negative_stock(self) -> None:
 		"""
 		Test if a backdated stock reco cancellation that causes future negative stock is blocked.
 		-------------------------------------------
@@ -507,7 +509,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		)
 		self.assertFalse(repost_exists, msg="Negative stock validation not working on reco cancellation")
 
-	def test_intermediate_sr_bin_update(self):
+	def test_intermediate_sr_bin_update(self) -> None:
 		"""Bin should show correct qty even for backdated entries.
 
 		-------------------------------------------
@@ -545,7 +547,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertEqual(old_bin_qty + 1, new_bin_qty)
 
-	def test_valid_batch(self):
+	def test_valid_batch(self) -> None:
 		create_batch_item_with_batch("Testing Batch Item 1", "001")
 		create_batch_item_with_batch("Testing Batch Item 2", "002")
 
@@ -567,7 +569,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertRaises(frappe.ValidationError, doc.save)
 
-	def test_serial_no_cancellation(self):
+	def test_serial_no_cancellation(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item = create_item("Stock-Reco-Serial-Item-9", is_stock_item=1)
@@ -596,7 +598,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertEqual(len(active_sr_no), 10)
 
-	def test_serial_no_creation_and_inactivation(self):
+	def test_serial_no_creation_and_inactivation(self) -> None:
 		item = create_item("_TestItemCreatedWithStockReco", is_stock_item=1)
 		if not item.has_serial_no:
 			item.has_serial_no = 1
@@ -638,7 +640,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		)
 		self.assertEqual(len(active_sr_no), 0)
 
-	def test_serial_no_batch_no_item(self):
+	def test_serial_no_batch_no_item(self) -> None:
 		item = self.make_item(
 			"Test Serial No Batch No Item",
 			{
@@ -671,7 +673,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(flt(sl_entry.qty_after_transaction), 1.0)
 
 	@ERPNextTestSuite.change_settings("Stock Reposting Settings", {"item_based_reposting": 0})
-	def test_backdated_stock_reco_entry(self):
+	def test_backdated_stock_reco_entry(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item_code = self.make_item(
@@ -742,7 +744,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertRaises(frappe.ValidationError, stock_reco.cancel)
 
-	def test_update_stock_reconciliation_while_reposting(self):
+	def test_update_stock_reconciliation_while_reposting(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item_code = self.make_item().name
@@ -786,7 +788,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		sr1.load_from_db()
 		self.assertEqual(sr1.difference_amount, 10000)
 
-	def assert_reco_difference_matches_gl(self, reco_name):
+	def assert_reco_difference_matches_gl(self, reco_name) -> None:
 		"""The displayed Difference Amount (doc and per-row) must equal the reposted GL impact,
 		i.e. the sum of the reconciliation's Stock Ledger Entry ``stock_value_difference``."""
 		from erpnext.stock.doctype.stock_reconciliation.stock_reconciliation import (
@@ -810,7 +812,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 			flt(total_difference, reco.precision("difference_amount")),
 		)
 
-	def test_difference_amount_synced_with_gl_after_repost_non_serialized(self):
+	def test_difference_amount_synced_with_gl_after_repost_non_serialized(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item_code = self.make_item().name
@@ -851,7 +853,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(reco.difference_amount, 17500)
 		self.assert_reco_difference_matches_gl(reco.name)
 
-	def test_difference_amount_synced_with_gl_after_repost_batched(self):
+	def test_difference_amount_synced_with_gl_after_repost_batched(self) -> None:
 		from erpnext.stock.doctype.landed_cost_voucher.test_landed_cost_voucher import (
 			make_landed_cost_voucher,
 		)
@@ -902,7 +904,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertNotEqual(reco.difference_amount, difference_on_submit)
 		self.assert_reco_difference_matches_gl(reco.name)
 
-	def test_difference_amount_synced_with_gl_after_repost_serialized(self):
+	def test_difference_amount_synced_with_gl_after_repost_serialized(self) -> None:
 		from erpnext.stock.doctype.landed_cost_voucher.test_landed_cost_voucher import (
 			make_landed_cost_voucher,
 		)
@@ -952,7 +954,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertNotEqual(reco.difference_amount, difference_on_submit)
 		self.assert_reco_difference_matches_gl(reco.name)
 
-	def test_make_stock_zero_for_serial_batch_item(self):
+	def test_make_stock_zero_for_serial_batch_item(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		serial_item = self.make_item(
@@ -1012,7 +1014,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 			self.assertEqual(len(serial_batch_bundle), 0)
 
-	def test_backdated_purchase_receipt_with_stock_reco(self):
+	def test_backdated_purchase_receipt_with_stock_reco(self) -> None:
 		item_code = self.make_item(
 			properties={
 				"is_stock_item": 1,
@@ -1067,7 +1069,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertRaises(frappe.ValidationError, pr.submit)
 
-	def test_balance_qty_for_batch_with_backdated_stock_reco_and_future_entries(self):
+	def test_balance_qty_for_batch_with_backdated_stock_reco_and_future_entries(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item = self.make_item(
@@ -1169,7 +1171,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertEqual(flt(sle[0].qty_after_transaction), flt(100.0))
 
-	def test_stock_reco_and_backdated_purchase_receipt(self):
+	def test_stock_reco_and_backdated_purchase_receipt(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item = self.make_item(
@@ -1211,7 +1213,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertTrue(sr.items[0].serial_and_batch_bundle)
 		self.assertFalse(sr.items[0].current_serial_and_batch_bundle)
 
-	def test_not_reconcile_all_batch(self):
+	def test_not_reconcile_all_batch(self) -> None:
 		from erpnext.stock.doctype.batch.batch import get_batch_qty
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
@@ -1274,7 +1276,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		):
 			self.assertEqual(row.docstatus, 2)
 
-	def test_not_reconcile_all_serial_nos(self):
+	def test_not_reconcile_all_serial_nos(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item = self.make_item(
@@ -1322,7 +1324,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 			self.assertAlmostEqual(row.incoming_rate, 1000.00)
 			self.assertEqual(row.serial_no, serial_nos[row.idx - 1])
 
-	def test_stock_reco_with_legacy_batch(self):
+	def test_stock_reco_with_legacy_batch(self) -> None:
 		from erpnext.stock.doctype.batch.batch import get_batch_qty
 
 		batch_item_code = self.make_item(
@@ -1415,7 +1417,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		qty = get_batch_qty(batch_id, warehouse, batch_item_code)
 		self.assertEqual(qty, 110)
 
-	def test_skip_reposting_for_entries_after_stock_reco(self):
+	def test_skip_reposting_for_entries_after_stock_reco(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item_code = create_item("Test Item For Skip Reposting After Stock Reco", is_stock_item=1).name
@@ -1469,7 +1471,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertEqual(stock_value_difference, 1500.00 * -1)
 
-	def test_stock_reco_for_negative_batch(self):
+	def test_stock_reco_for_negative_batch(self) -> None:
 		from erpnext.stock.doctype.batch.batch import get_batch_qty
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
@@ -1547,7 +1549,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertTrue(sr.items[0].current_serial_and_batch_bundle)
 		self.assertFalse(sr.items[0].serial_and_batch_bundle)
 
-	def test_stock_reco_batch_item_current_valuation(self):
+	def test_stock_reco_batch_item_current_valuation(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		# Add new serial nos
@@ -1585,7 +1587,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(sr.difference_amount, 100 * -1)
 		self.assertEqual(sr.items[0].qty, 0)
 
-	def test_stock_reco_recalculate_qty_for_backdated_entry(self):
+	def test_stock_reco_recalculate_qty_for_backdated_entry(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		item_code = self.make_item(
@@ -1651,7 +1653,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertEqual(stock_ledger[0].stock_value_difference, 2000.0 * -1)
 
-	def test_serial_no_backdated_stock_reco(self):
+	def test_serial_no_backdated_stock_reco(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		serial_item = self.make_item(
@@ -1727,7 +1729,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertNotEqual(status, "Active")
 
-	def test_change_valuation_of_batch_using_backdated_stock_reco(self):
+	def test_change_valuation_of_batch_using_backdated_stock_reco(self) -> None:
 		from erpnext.stock.doctype.batch.batch import get_batch_qty
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
@@ -1816,7 +1818,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		batch_qty = get_batch_qty(batch_no, warehouse, item_code)
 		self.assertEqual(batch_qty, 4)
 
-	def test_sabb_cancel_on_stock_reco_cancellation(self):
+	def test_sabb_cancel_on_stock_reco_cancellation(self) -> None:
 		item_code = self.make_item(
 			"Test Item for SABB Cancel on Stock Reco Cancellation",
 			{
@@ -1870,7 +1872,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 			self.assertEqual(docstatus, 2)
 
-	def test_stock_reco_with_opening_stock_with_diff_inventory(self):
+	def test_stock_reco_with_opening_stock_with_diff_inventory(self) -> None:
 		from erpnext.stock.doctype.inventory_dimension.test_inventory_dimension import (
 			create_inventory_dimension,
 		)
@@ -1965,7 +1967,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 			elif s.id_plant == plant_b.name:
 				self.assertEqual(s.actual_qty, 3)
 
-	def test_serial_no_status_with_backdated_stock_reco(self):
+	def test_serial_no_status_with_backdated_stock_reco(self) -> None:
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 
 		item_code = self.make_item(
@@ -2006,7 +2008,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertEqual(frappe.get_value("Serial No", serial_no, "status"), "Delivered")
 
-	def test_get_items_for_stock_reco_from_bin(self):
+	def test_get_items_for_stock_reco_from_bin(self) -> None:
 		"""get_items_for_stock_reco Bin branch (comma-join -> inner_join, ifnull(disabled) ->
 		disabled==0|isnull, warehouse-subtree EXISTS -> isin) must surface a stocked item."""
 		from erpnext.stock.doctype.item.test_item import make_item
@@ -2024,7 +2026,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		}
 		self.assertIn((item, warehouse), returned)
 
-	def test_get_items_for_stock_reco_from_item_default(self):
+	def test_get_items_for_stock_reco_from_item_default(self) -> None:
 		"""get_items_for_stock_reco Item Default branch (EXISTS -> isin, dropped `group by i.name` —
 		sound because Item Default is one-per-(item, company)) must surface an item via its
 		default_warehouse even without stock."""
@@ -2047,7 +2049,7 @@ class TestStockReconciliation(ERPNextTestSuite, StockTestMixin):
 		self.assertIn((item, warehouse), returned)
 
 
-def create_batch_item_with_batch(item_name, batch_id):
+def create_batch_item_with_batch(item_name, batch_id) -> None:
 	batch_item_doc = create_item(item_name, is_stock_item=1)
 	if not batch_item_doc.has_batch_no:
 		batch_item_doc.has_batch_no = 1
@@ -2061,7 +2063,7 @@ def create_batch_item_with_batch(item_name, batch_id):
 		b.save()
 
 
-def insert_existing_sle(warehouse, item_code="_Test Item"):
+def insert_existing_sle(warehouse, item_code: str = "_Test Item") -> tuple:
 	from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 	se1 = make_stock_entry(
@@ -2169,7 +2171,7 @@ def create_stock_reconciliation(**args):
 	return sr
 
 
-def set_valuation_method(item_code, valuation_method):
+def set_valuation_method(item_code, valuation_method) -> None:
 	existing_valuation_method = get_valuation_method(item_code)
 	if valuation_method == existing_valuation_method:
 		return

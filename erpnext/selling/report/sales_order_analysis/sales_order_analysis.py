@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import copy
 from collections import OrderedDict
 
@@ -11,7 +13,7 @@ from frappe.query_builder.functions import Coalesce, DateDiff, Max, Sum
 from frappe.utils import date_diff, flt, getdate, nowdate
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		return [], [], None, []
 
@@ -29,7 +31,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def validate_filters(filters):
+def validate_filters(filters: dict) -> None:
 	from_date, to_date = filters.get("from_date"), filters.get("to_date")
 
 	if not from_date and to_date:
@@ -38,7 +40,7 @@ def validate_filters(filters):
 		frappe.throw(_("To Date cannot be before From Date."))
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	so = qb.DocType("Sales Order")
 	soi = qb.DocType("Sales Order Item")
 	sii = qb.DocType("Sales Invoice Item")
@@ -100,7 +102,7 @@ def get_data(filters):
 	return query.run(as_dict=True)
 
 
-def get_so_elapsed_time(data):
+def get_so_elapsed_time(data: list) -> dict:
 	"""
 	query SO's elapsed time till latest delivery note
 	"""
@@ -151,7 +153,7 @@ def get_so_elapsed_time(data):
 	return so_elapsed_time
 
 
-def prepare_data(data, so_elapsed_time, filters):
+def prepare_data(data: list, so_elapsed_time: dict, filters: dict) -> tuple:
 	completed, pending = 0, 0
 
 	if filters.get("group_by_so"):
@@ -216,7 +218,7 @@ def prepare_data(data, so_elapsed_time, filters):
 	return data, chart_data
 
 
-def prepare_chart_data(pending, completed):
+def prepare_chart_data(pending: float, completed: float) -> dict:
 	labels = [_("Amount to Bill"), _("Billed Amount")]
 
 	return {
@@ -226,7 +228,7 @@ def prepare_chart_data(pending, completed):
 	}
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	columns = [
 		{"label": _("Date"), "fieldname": "date", "fieldtype": "Date", "width": 90},
 		{

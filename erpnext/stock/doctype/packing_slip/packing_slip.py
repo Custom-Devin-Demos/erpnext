@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
@@ -70,19 +72,19 @@ class PackingSlip(StatusUpdater):
 		self.set_missing_values()
 		self.calculate_net_total_pkg()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_prevdoc_status()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_prevdoc_status()
 
-	def validate_delivery_note(self):
+	def validate_delivery_note(self) -> None:
 		"""Raises an exception if the `Delivery Note` status is not Draft"""
 
 		if cint(frappe.db.get_value("Delivery Note", self.delivery_note, "docstatus")) != 0:
 			frappe.throw(_("A Packing Slip can only be created for a Draft Delivery Note."))
 
-	def validate_case_nos(self):
+	def validate_case_nos(self) -> None:
 		"""Validate if case nos overlap. If they do, recommend next case no."""
 
 		if cint(self.from_case_no) <= 0:
@@ -116,7 +118,7 @@ class PackingSlip(StatusUpdater):
 					)
 				)
 
-	def validate_items(self):
+	def validate_items(self) -> None:
 		for item in self.items:
 			if item.qty <= 0:
 				frappe.throw(_("Row {0}: Qty must be greater than 0.").format(item.idx))
@@ -153,7 +155,7 @@ class PackingSlip(StatusUpdater):
 					)
 				)
 
-	def set_missing_values(self):
+	def set_missing_values(self) -> None:
 		if not self.from_case_no:
 			self.from_case_no = self.get_recommended_case_no()
 
@@ -181,7 +183,7 @@ class PackingSlip(StatusUpdater):
 			+ 1
 		)
 
-	def calculate_net_total_pkg(self):
+	def calculate_net_total_pkg(self) -> None:
 		self.net_weight_uom = self.items[0].weight_uom if self.items else None
 		self.gross_weight_uom = self.net_weight_uom
 

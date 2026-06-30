@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("projects", "doctype", "timesheet")
 	frappe.reload_doc("projects", "doctype", "timesheet_detail")
 

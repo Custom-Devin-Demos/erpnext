@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, now
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	set_defaut_value_for_filters(filters)
 	columns = get_columns()
@@ -16,14 +18,14 @@ def execute(filters=None):
 	return columns, data
 
 
-def set_defaut_value_for_filters(filters):
+def set_defaut_value_for_filters(filters: dict) -> None:
 	if not filters.get("no_of_interaction"):
 		filters["no_of_interaction"] = 1
 	if not filters.get("lead_age"):
 		filters["lead_age"] = 60
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		{"label": _("Lead"), "fieldname": "lead", "fieldtype": "Link", "options": "Lead", "width": 130},
 		{"label": _("Name"), "fieldname": "name", "width": 120},
@@ -58,7 +60,7 @@ def get_columns():
 	return columns
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	lead_details = []
 	lead_filters = get_lead_filters(filters)
 	leads = frappe.get_all("Lead", fields=["name", "lead_name", "company_name"], filters=lead_filters)
@@ -111,7 +113,7 @@ def get_data(filters):
 	return lead_details
 
 
-def get_lead_filters(filters):
+def get_lead_filters(filters: dict) -> list:
 	lead_creation_date = get_creation_date_based_on_lead_age(filters)
 	lead_filters = [["status", "!=", "Converted"], ["creation", ">", lead_creation_date]]
 
@@ -120,5 +122,5 @@ def get_lead_filters(filters):
 	return lead_filters
 
 
-def get_creation_date_based_on_lead_age(filters):
+def get_creation_date_based_on_lead_age(filters: dict) -> str:
 	return add_days(now(), (filters.get("lead_age") * -1))

@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import date_diff, nowdate
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	data = get_data(filters)
 	columns = get_columns()
@@ -15,7 +17,7 @@ def execute(filters=None):
 	return columns, data, None, charts
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	conditions = get_conditions(filters)
 	tasks = frappe.get_all(
 		"Task",
@@ -55,7 +57,7 @@ def get_data(filters):
 	return tasks
 
 
-def get_conditions(filters):
+def get_conditions(filters: dict) -> dict:
 	conditions = frappe._dict()
 	keys = ["priority", "status", "project"]
 	for key in keys:
@@ -68,7 +70,7 @@ def get_conditions(filters):
 	return conditions
 
 
-def get_chart_data(data):
+def get_chart_data(data: list) -> dict:
 	delay, on_track = 0, 0
 	for entry in data:
 		if entry.get("delay") > 0:
@@ -100,7 +102,7 @@ def get_chart_data(data):
 	return charts
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		{"fieldname": "name", "fieldtype": "Link", "label": _("Task"), "options": "Task", "width": 150},
 		{"fieldname": "subject", "fieldtype": "Data", "label": _("Subject"), "width": 200},

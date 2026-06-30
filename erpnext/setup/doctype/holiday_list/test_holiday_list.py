@@ -1,5 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
+from __future__ import annotations
+
 from contextlib import contextmanager
 from datetime import date, timedelta
 
@@ -11,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestHolidayList(ERPNextTestSuite):
-	def test_holiday_list(self):
+	def test_holiday_list(self) -> None:
 		today_date = getdate()
 		test_holiday_dates = [today_date - timedelta(days=5), today_date - timedelta(days=4)]
 		holiday_list = make_holiday_list(
@@ -24,7 +26,7 @@ class TestHolidayList(ERPNextTestSuite):
 		fetched_holiday_list = frappe.get_value("Holiday List", holiday_list.name)
 		self.assertEqual(holiday_list.name, fetched_holiday_list)
 
-	def test_weekly_off(self):
+	def test_weekly_off(self) -> None:
 		holiday_list = frappe.new_doc("Holiday List")
 		holiday_list.from_date = "2023-01-01"
 		holiday_list.to_date = "2023-02-28"
@@ -45,7 +47,7 @@ class TestHolidayList(ERPNextTestSuite):
 		self.assertIn(date(2023, 2, 26), holidays)
 		self.assertNotIn(date(2023, 3, 5), holidays)
 
-	def test_local_holidays(self):
+	def test_local_holidays(self) -> None:
 		holiday_list = frappe.new_doc("Holiday List")
 		holiday_list.from_date = "2022-01-01"
 		holiday_list.to_date = "2024-12-31"
@@ -100,7 +102,7 @@ class TestHolidayList(ERPNextTestSuite):
 		self.assertNotIn(date(2024, 11, 17), holidays)
 		self.assertNotIn(date(2022, 12, 24), holidays)
 
-	def test_localized_country_names(self):
+	def test_localized_country_names(self) -> None:
 		lang = frappe.local.lang
 		frappe.local.lang = "en-gb"
 		self.assertEqual(local_country_name("IN"), "India")
@@ -111,7 +113,7 @@ class TestHolidayList(ERPNextTestSuite):
 		frappe.local.lang = lang
 
 
-def make_holiday_list(name, from_date=None, to_date=None, holiday_dates=None):
+def make_holiday_list(name: str, from_date=None, to_date=None, holiday_dates: list | None = None):
 	if from_date is None:
 		from_date = getdate() - timedelta(days=10)
 
@@ -132,7 +134,7 @@ def make_holiday_list(name, from_date=None, to_date=None, holiday_dates=None):
 
 
 @contextmanager
-def set_holiday_list(holiday_list, company_name):
+def set_holiday_list(holiday_list: str, company_name: str):
 	"""
 	Context manager for setting holiday list in tests
 	"""

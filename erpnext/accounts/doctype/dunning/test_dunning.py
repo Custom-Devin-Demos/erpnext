@@ -1,5 +1,7 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -18,7 +20,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestDunning(ERPNextTestSuite):
-	def test_dunning_without_fees(self):
+	def test_dunning_without_fees(self) -> None:
 		dunning = create_dunning(overdue_days=20)
 
 		self.assertEqual(round(dunning.total_outstanding, 2), 100.00)
@@ -27,7 +29,7 @@ class TestDunning(ERPNextTestSuite):
 		self.assertEqual(round(dunning.dunning_amount, 2), 0.00)
 		self.assertEqual(round(dunning.grand_total, 2), 100.00)
 
-	def test_dunning_with_fees_and_interest(self):
+	def test_dunning_with_fees_and_interest(self) -> None:
 		dunning = create_dunning(overdue_days=15, dunning_type_name="Second Notice - _TC")
 
 		self.assertEqual(round(dunning.total_outstanding, 2), 100.00)
@@ -36,7 +38,7 @@ class TestDunning(ERPNextTestSuite):
 		self.assertEqual(round(dunning.dunning_amount, 2), 10.41)
 		self.assertEqual(round(dunning.grand_total, 2), 110.41)
 
-	def test_dunning_with_payment_entry(self):
+	def test_dunning_with_payment_entry(self) -> None:
 		dunning = create_dunning(overdue_days=15, dunning_type_name="Second Notice - _TC")
 		dunning.submit()
 		pe = get_payment_entry("Dunning", dunning.name)
@@ -54,7 +56,7 @@ class TestDunning(ERPNextTestSuite):
 		dunning.reload()
 		self.assertEqual(dunning.status, "Resolved")
 
-	def test_fetch_overdue_payments(self):
+	def test_fetch_overdue_payments(self) -> None:
 		"""
 		Create SI with overdue payment. Check if overdue payment is fetched in Dunning.
 		"""
@@ -84,7 +86,7 @@ class TestDunning(ERPNextTestSuite):
 		self.assertEqual(updated_dunning.overdue_payments[1].sales_invoice, si2.name)
 		self.assertEqual(updated_dunning.overdue_payments[1].outstanding, si2.outstanding_amount)
 
-	def test_dunning_and_payment_against_partially_due_invoice(self):
+	def test_dunning_and_payment_against_partially_due_invoice(self) -> None:
 		"""
 		Create SI with first installment overdue. Check impact of Dunning and Payment Entry.
 		"""
@@ -122,7 +124,7 @@ class TestDunning(ERPNextTestSuite):
 		self.assertEqual(sales_invoice.status, "Overdue")
 		self.assertEqual(dunning.status, "Unresolved")
 
-	def test_dunning_resolution_from_credit_note(self):
+	def test_dunning_resolution_from_credit_note(self) -> None:
 		"""
 		Test that dunning is resolved when a credit note is issued against the original invoice.
 		"""
@@ -152,7 +154,7 @@ class TestDunning(ERPNextTestSuite):
 		dunning.reload()
 		self.assertEqual(dunning.status, "Unresolved")
 
-	def test_dunning_not_affected_by_standalone_credit_note(self):
+	def test_dunning_not_affected_by_standalone_credit_note(self) -> None:
 		"""
 		Test that dunning is NOT resolved when a credit note has update_outstanding_for_self checked.
 		"""
@@ -197,7 +199,7 @@ def create_dunning(overdue_days, dunning_type_name=None):
 	return dunning.save()
 
 
-def create_dunning_type(title, fee, interest, is_default):
+def create_dunning_type(title, fee, interest, is_default) -> None:
 	company = "_Test Company"
 	if frappe.db.exists("Dunning Type", f"{title} - _TC"):
 		return
@@ -237,7 +239,7 @@ def get_income_account(company):
 	)
 
 
-def create_payment_terms_template_for_dunning():
+def create_payment_terms_template_for_dunning() -> None:
 	from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_term
 
 	create_payment_term("_Test Payment Term 1 for Dunning")

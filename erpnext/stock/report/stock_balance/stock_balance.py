@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import json
 from operator import itemgetter
 from typing import Any, TypedDict
@@ -63,7 +65,7 @@ class StockBalanceReport:
 		else:
 			self.company_currency = frappe.db.get_single_value("Global Defaults", "default_currency")
 
-	def run(self):
+	def run(self) -> tuple:
 		self.float_precision = cint(frappe.db.get_default("float_precision")) or 3
 
 		self.item_warehouse_map = frappe._dict({})
@@ -146,7 +148,7 @@ class StockBalanceReport:
 
 		return fields
 
-	def prepare_sle_query(self):
+	def prepare_sle_query(self) -> None:
 		sle = frappe.qb.DocType("Stock Ledger Entry")
 		item_table = frappe.qb.DocType("Item")
 
@@ -191,7 +193,7 @@ class StockBalanceReport:
 
 		self.sle_query = query
 
-	def prepare_item_warehouse_map_for_current_period(self):
+	def prepare_item_warehouse_map_for_current_period(self) -> None:
 		self.opening_vouchers = self.get_opening_vouchers()
 
 		if self.filters.get("show_stock_ageing_data"):
@@ -216,7 +218,7 @@ class StockBalanceReport:
 			self.item_warehouse_map, self.float_precision, self.inventory_dimensions
 		)
 
-	def prepare_stock_reco_voucher_wise_count(self):
+	def prepare_stock_reco_voucher_wise_count(self) -> None:
 		self.stock_reco_voucher_wise_count = frappe._dict()
 
 		doctype = frappe.qb.DocType("Stock Ledger Entry")
@@ -281,7 +283,7 @@ class StockBalanceReport:
 			if sr_item.qty and sr_item.current_qty:
 				self.stock_reco_voucher_wise_count[row.voucher_detail_no] = sr_item.current_qty
 
-	def prepare_new_data(self):
+	def prepare_new_data(self) -> None:
 		if self.filters.get("show_stock_ageing_data"):
 			self.filters["show_warehouse_wise_stock"] = True
 			item_wise_fifo_queue = FIFOSlots(self.filters).generate()
@@ -341,7 +343,7 @@ class StockBalanceReport:
 
 		return get_reserved_qty_details(item_code_list, warehouse_list)
 
-	def prepare_item_warehouse_map(self, entry, group_by_key):
+	def prepare_item_warehouse_map(self, entry, group_by_key) -> None:
 		qty_dict = self.item_warehouse_map[group_by_key]
 		for field in self.inventory_dimensions:
 			qty_dict[field] = entry.get(field)
@@ -382,7 +384,7 @@ class StockBalanceReport:
 		qty_dict.bal_qty += qty_diff
 		qty_dict.bal_val += value_diff
 
-	def initialize_data(self, group_by_key, entry):
+	def initialize_data(self, group_by_key, entry) -> None:
 		self.item_warehouse_map[group_by_key] = frappe._dict(
 			{
 				"item_code": entry.item_code,
@@ -601,7 +603,7 @@ class StockBalanceReport:
 
 		return columns
 
-	def add_additional_uom_columns(self):
+	def add_additional_uom_columns(self) -> None:
 		if not self.filters.get("include_uom"):
 			return
 
@@ -689,7 +691,7 @@ class StockBalanceReport:
 
 		return result
 
-	def get_itemwise_conversion_factor(self):
+	def get_itemwise_conversion_factor(self) -> dict:
 		items = []
 		if self.filters.item_code or self.filters.item_group:
 			items = [d.item_code for d in self.data]
@@ -768,7 +770,7 @@ class StockBalanceReport:
 		return opening_vouchers
 
 	@staticmethod
-	def get_inventory_dimension_fields():
+	def get_inventory_dimension_fields() -> list:
 		return [dimension.fieldname for dimension in get_inventory_dimensions()]
 
 	@staticmethod

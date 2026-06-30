@@ -1,6 +1,9 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe.utils import today
@@ -11,9 +14,12 @@ from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sal
 from erpnext.regional.report.vat_audit_report.vat_audit_report import execute
 from erpnext.tests.utils import ERPNextTestSuite
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class TestVATAuditReport(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company SA VAT"
 
 		create_account(
@@ -39,7 +45,7 @@ class TestVATAuditReport(ERPNextTestSuite):
 		make_sales_invoices()
 		create_purchase_invoices()
 
-	def test_vat_audit_report(self):
+	def test_vat_audit_report(self) -> None:
 		filters = {"company": "_Test Company SA VAT", "from_date": today(), "to_date": today()}
 		columns, data = execute(filters)
 		total_tax_amount = 0
@@ -55,7 +61,7 @@ class TestVATAuditReport(ERPNextTestSuite):
 		self.assertEqual(total_tax_amount, total_row_tax)
 
 
-def make_company(company_name, abbr):
+def make_company(company_name: str, abbr: str) -> Document:
 	if not frappe.db.exists("Company", company_name):
 		company = frappe.get_doc(
 			{
@@ -81,7 +87,7 @@ def make_company(company_name, abbr):
 	return company
 
 
-def set_sa_vat_accounts():
+def set_sa_vat_accounts() -> None:
 	if not frappe.db.exists("South Africa VAT Settings", "_Test Company SA VAT"):
 		vat_accounts = frappe.get_all(
 			"Account",
@@ -102,7 +108,7 @@ def set_sa_vat_accounts():
 		).insert()
 
 
-def make_customer():
+def make_customer() -> None:
 	if not frappe.db.exists("Customer", "_Test SA Customer"):
 		frappe.get_doc(
 			{
@@ -113,7 +119,7 @@ def make_customer():
 		).insert()
 
 
-def make_supplier():
+def make_supplier() -> None:
 	if not frappe.db.exists("Supplier", "_Test SA Supplier"):
 		frappe.get_doc(
 			{
@@ -125,7 +131,7 @@ def make_supplier():
 		).insert()
 
 
-def make_item(item_code, properties=None):
+def make_item(item_code: str, properties: dict | None = None) -> None:
 	if not frappe.db.exists("Item", item_code):
 		item = frappe.get_doc(
 			{
@@ -143,8 +149,10 @@ def make_item(item_code, properties=None):
 		item.insert()
 
 
-def make_sales_invoices():
-	def make_sales_invoices_wrapper(item, rate, tax_account, tax_rate, tax=True):
+def make_sales_invoices() -> None:
+	def make_sales_invoices_wrapper(
+		item: str, rate: float, tax_account: str, tax_rate: float, tax: bool = True
+	) -> None:
 		si = create_sales_invoice(
 			company="_Test Company SA VAT",
 			customer="_Test SA Customer",
@@ -179,7 +187,7 @@ def make_sales_invoices():
 	make_sales_invoices_wrapper(test_zero_rated_item, 100.0, "VAT - 0% - _TCSV", 0.0)
 
 
-def create_purchase_invoices():
+def create_purchase_invoices() -> None:
 	pi = make_purchase_invoice(
 		company="_Test Company SA VAT",
 		supplier="_Test SA Supplier",

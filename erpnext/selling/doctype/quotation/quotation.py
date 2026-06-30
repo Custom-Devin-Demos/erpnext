@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -128,7 +130,7 @@ class Quotation(SellingController):
 		valid_till: DF.Date | None
 	# end: auto-generated types
 
-	def set_indicator(self):
+	def set_indicator(self) -> None:
 		if self.docstatus == 1:
 			self.indicator_color = "blue"
 			self.indicator_title = "Submitted"
@@ -136,11 +138,11 @@ class Quotation(SellingController):
 			self.indicator_color = "gray"
 			self.indicator_title = "Expired"
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_has_unit_price_items()
 		self.flags.allow_zero_qty = self.has_unit_price_items
 
-	def validate(self):
+	def validate(self) -> None:
 		super().validate()
 		self.set_status()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
@@ -154,14 +156,14 @@ class Quotation(SellingController):
 
 		make_packing_list(self)
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.set_has_alternative_item()
 
-	def validate_valid_till(self):
+	def validate_valid_till(self) -> None:
 		if self.valid_till and getdate(self.valid_till) < getdate(self.transaction_date):
 			frappe.throw(_("Valid till date cannot be before transaction date"))
 
-	def set_has_alternative_item(self):
+	def set_has_alternative_item(self) -> None:
 		"""Mark 'Has Alternative Item' for rows."""
 		if not any(row.is_alternative for row in self.get("items")):
 			return
@@ -171,7 +173,7 @@ class Quotation(SellingController):
 			if not row.is_alternative and row.name in items_with_alternatives:
 				row.has_alternative_item = 1
 
-	def set_has_unit_price_items(self):
+	def set_has_unit_price_items(self) -> None:
 		"""
 		If permitted in settings and any item has 0 qty, the SO has unit price items.
 		"""
@@ -182,7 +184,7 @@ class Quotation(SellingController):
 			not row.qty for row in self.get("items") if (row.item_code and not row.qty)
 		)
 
-	def get_ordered_status(self):
+	def get_ordered_status(self) -> str:
 		ordered_items = get_ordered_items(self.name)
 
 		if not ordered_items:
@@ -200,12 +202,12 @@ class Quotation(SellingController):
 
 		return "Ordered"
 
-	def get_valid_items(self):
+	def get_valid_items(self) -> list:
 		"""
 		Filters out items in an alternatives set that were not ordered.
 		"""
 
-		def is_in_sales_order(row):
+		def is_in_sales_order(row) -> bool:
 			in_sales_order = bool(
 				frappe.db.exists(
 					"Sales Order Item",
@@ -222,17 +224,17 @@ class Quotation(SellingController):
 
 		return list(filter(can_map, self.get("items")))
 
-	def is_fully_ordered(self):
+	def is_fully_ordered(self) -> bool:
 		return self.get_ordered_status() == "Ordered"
 
-	def is_partially_ordered(self):
+	def is_partially_ordered(self) -> bool:
 		return self.get_ordered_status() == "Partially Ordered"
 
-	def update_lead(self):
+	def update_lead(self) -> None:
 		if self.quotation_to == "Lead" and self.party_name:
 			frappe.get_doc("Lead", self.party_name).set_status(update=True)
 
-	def set_customer_name(self):
+	def set_customer_name(self) -> None:
 		if self.party_name and self.quotation_to == "Customer":
 			self.customer_name = frappe.db.get_value("Customer", self.party_name, "customer_name")
 		elif self.party_name and self.quotation_to == "Lead":
@@ -245,7 +247,7 @@ class Quotation(SellingController):
 		elif self.party_name and self.quotation_to == "CRM Deal":
 			self.customer_name = frappe.db.get_value("CRM Deal", self.party_name, "organization")
 
-	def update_opportunity(self, status):
+	def update_opportunity(self, status: str) -> None:
 		for opportunity in set(d.prevdoc_docname for d in self.get("items")):
 			if opportunity:
 				self.update_opportunity_status(status, opportunity)
@@ -253,7 +255,7 @@ class Quotation(SellingController):
 		if self.opportunity:
 			self.update_opportunity_status(status)
 
-	def update_opportunity_status(self, status, opportunity=None):
+	def update_opportunity_status(self, status: str, opportunity: str | None = None) -> None:
 		if not opportunity:
 			opportunity = self.opportunity
 
@@ -263,7 +265,7 @@ class Quotation(SellingController):
 	@frappe.whitelist()
 	def declare_enquiry_lost(
 		self, lost_reasons_list: list, competitors: list, detailed_reason: str | None = None
-	):
+	) -> None:
 		if not (self.is_fully_ordered() or self.is_partially_ordered()):
 			get_lost_reasons = frappe.get_list("Quotation Lost Reason", fields=["name"])
 			lost_reasons_lst = [reason.get("name") for reason in get_lost_reasons]
@@ -292,7 +294,7 @@ class Quotation(SellingController):
 		else:
 			frappe.throw(_("Cannot set as Lost as Sales Order is made."))
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		# Check for Approving Authority
 		frappe.get_cached_doc("Authorization Control").validate_approving_authority(
 			self.doctype, self.company, self.base_grand_total, self
@@ -302,7 +304,7 @@ class Quotation(SellingController):
 		self.update_opportunity("Quotation")
 		self.update_lead()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		if self.lost_reasons:
 			self.lost_reasons = []
 		super().on_cancel()
@@ -312,7 +314,7 @@ class Quotation(SellingController):
 		self.update_opportunity("Open")
 		self.update_lead()
 
-	def print_other_charges(self, docname):
+	def print_other_charges(self, docname: str) -> list:
 		print_lst = []
 		for d in self.get("taxes"):
 			lst1 = []
@@ -321,10 +323,10 @@ class Quotation(SellingController):
 			print_lst.append(lst1)
 		return print_lst
 
-	def on_recurring(self, reference_doc, auto_repeat_doc):
+	def on_recurring(self, reference_doc, auto_repeat_doc) -> None:
 		self.valid_till = None
 
-	def get_rows_with_alternatives(self):
+	def get_rows_with_alternatives(self) -> list:
 		rows_with_alternatives = []
 		table_length = len(self.get("items"))
 
@@ -341,7 +343,7 @@ class Quotation(SellingController):
 		return rows_with_alternatives
 
 
-def get_list_context(context=None):
+def get_list_context(context=None) -> dict:
 	from erpnext.controllers.website_list_for_contact import get_list_context
 
 	list_context = get_list_context(context)
@@ -358,7 +360,7 @@ def get_list_context(context=None):
 	return list_context
 
 
-def set_expired_status():
+def set_expired_status() -> None:
 	quotation = frappe.qb.DocType("Quotation")
 	so = frappe.qb.DocType("Sales Order")
 	so_item = frappe.qb.DocType("Sales Order Item")

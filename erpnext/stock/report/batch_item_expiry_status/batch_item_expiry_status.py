@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Date
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	validate_filters(filters)
 
 	columns = get_columns()
@@ -16,7 +18,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	if not filters:
 		frappe.throw(_("Please select the required filters"))
 
@@ -27,7 +29,7 @@ def validate_filters(filters):
 		frappe.throw(_("'To Date' is required"))
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		_("Item") + ":Link/Item:150",
 		_("Item Name") + "::150",

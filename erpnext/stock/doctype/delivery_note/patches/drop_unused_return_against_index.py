@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import click
 import frappe
 
@@ -9,14 +11,14 @@ UNUSED_INDEXES = [
 ]
 
 
-def execute():
+def execute() -> None:
 	for doctype, index_fields in UNUSED_INDEXES:
 		table = f"tab{doctype}"
 		index_name = frappe.db.get_index_name(index_fields)
 		drop_index_if_exists(table, index_name)
 
 
-def drop_index_if_exists(table: str, index: str):
+def drop_index_if_exists(table: str, index: str) -> None:
 	if not frappe.db.has_index(table, index):
 		return
 

@@ -8,6 +8,7 @@ them, and triggers future SLE/GL reposting. The repost helper *functions* remain
 module-level in ``stock_controller`` (imported widely); this service owns the
 instance-level logic.
 """
+from __future__ import annotations
 
 import frappe
 from frappe.utils import flt
@@ -201,7 +202,9 @@ class StockLedgerService:
 				if sl_dict[dimension.target_fieldname] and self.doc.docstatus == 1:
 					row.db_set(dimension.source_fieldname, sl_dict[dimension.target_fieldname])
 
-	def make_sl_entries(self, sl_entries, allow_negative_stock=False, via_landed_cost_voucher=False):
+	def make_sl_entries(
+		self, sl_entries, allow_negative_stock: bool = False, via_landed_cost_voucher: bool = False
+	) -> None:
 		from erpnext.stock.serial_batch_bundle import update_batch_qty
 		from erpnext.stock.services.serial_batch_bundle_service import SerialBatchBundleService
 		from erpnext.stock.stock_ledger import make_sl_entries
@@ -216,7 +219,7 @@ class StockLedgerService:
 
 		SerialBatchBundleService(self.doc).validate_reserved_batches()
 
-	def repost_future_sle_and_gle(self, force=False, via_landed_cost_voucher=False):
+	def repost_future_sle_and_gle(self, force: bool = False, via_landed_cost_voucher: bool = False) -> None:
 		from erpnext.controllers.stock_controller import (
 			create_item_wise_repost_entries,
 			create_repost_item_valuation_entry,

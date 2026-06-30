@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.desk.notifications import notify_mentions
 from frappe.model.document import Document
@@ -5,12 +7,12 @@ from frappe.utils import cstr, now, today
 from pypika import functions
 
 
-def disable_opportunity_creation_on_contact_us_disabled(doc, method):
+def disable_opportunity_creation_on_contact_us_disabled(doc, method) -> None:
 	if doc.is_disabled:
 		frappe.db.set_single_value("CRM Settings", "enable_opportunity_creation_from_contact_us", 0)
 
 
-def update_lead_phone_numbers(contact, method):
+def update_lead_phone_numbers(contact, method) -> None:
 	if contact.phone_nos:
 		contact_lead = contact.get_link_for("Lead")
 		if contact_lead:
@@ -36,7 +38,7 @@ def update_lead_phone_numbers(contact, method):
 			lead.db_set("mobile_no", mobile_no)
 
 
-def copy_comments(doctype, docname, doc):
+def copy_comments(doctype: str, docname: str, doc) -> None:
 	comments = frappe.db.get_values(
 		"Comment",
 		filters={"reference_doctype": doctype, "reference_name": docname, "comment_type": "Comment"},
@@ -50,7 +52,7 @@ def copy_comments(doctype, docname, doc):
 		comment.insert()
 
 
-def link_communications(doctype, docname, doc):
+def link_communications(doctype: str, docname: str, doc) -> None:
 	communication_list = get_linked_communication_list(doctype, docname)
 
 	for communication in communication_list:
@@ -58,7 +60,7 @@ def link_communications(doctype, docname, doc):
 		communication_doc.add_link(doc.doctype, doc.name, autosave=True)
 
 
-def get_linked_communication_list(doctype, docname):
+def get_linked_communication_list(doctype: str, docname: str) -> list:
 	communications = frappe.get_all(
 		"Communication", filters={"reference_doctype": doctype, "reference_name": docname}, pluck="name"
 	)
@@ -71,7 +73,7 @@ def get_linked_communication_list(doctype, docname):
 	return communications + communication_links
 
 
-def link_communications_with_prospect(communication, method):
+def link_communications_with_prospect(communication, method) -> None:
 	prospect = get_linked_prospect(communication.reference_doctype, communication.reference_name)
 
 	if prospect:
@@ -89,7 +91,7 @@ def link_communications_with_prospect(communication, method):
 			row.db_update()
 
 
-def update_modified_timestamp(communication, method):
+def update_modified_timestamp(communication, method) -> None:
 	if communication.reference_doctype and communication.reference_name:
 		if communication.sent_or_received == "Received" and frappe.db.get_single_value(
 			"CRM Settings", "update_timestamp_on_new_communication"
@@ -103,7 +105,7 @@ def update_modified_timestamp(communication, method):
 			)
 
 
-def get_linked_prospect(reference_doctype, reference_name):
+def get_linked_prospect(reference_doctype: str, reference_name: str) -> str | None:
 	prospect = None
 	if reference_doctype == "Lead":
 		prospect = frappe.db.get_value("Prospect Lead", {"lead": reference_name}, "parent")
@@ -120,7 +122,7 @@ def get_linked_prospect(reference_doctype, reference_name):
 	return prospect
 
 
-def link_events_with_prospect(event, method):
+def link_events_with_prospect(event, method) -> None:
 	if event.event_participants:
 		ref_doctype = event.event_participants[0].reference_doctype
 		ref_docname = event.event_participants[0].reference_docname
@@ -130,7 +132,7 @@ def link_events_with_prospect(event, method):
 			event.save()
 
 
-def link_open_tasks(ref_doctype, ref_docname, doc):
+def link_open_tasks(ref_doctype: str, ref_docname: str, doc) -> None:
 	todos = get_open_todos(ref_doctype, ref_docname)
 
 	for todo in todos:
@@ -140,7 +142,7 @@ def link_open_tasks(ref_doctype, ref_docname, doc):
 		todo_doc.save()
 
 
-def link_open_events(ref_doctype, ref_docname, doc):
+def link_open_events(ref_doctype: str, ref_docname: str, doc) -> None:
 	events = get_open_events(ref_doctype, ref_docname)
 	for event in events:
 		event_doc = frappe.get_doc("Event", event.name)
@@ -149,7 +151,7 @@ def link_open_events(ref_doctype, ref_docname, doc):
 
 
 @frappe.whitelist()
-def get_open_activities(ref_doctype: str, ref_docname: str):
+def get_open_activities(ref_doctype: str, ref_docname: str) -> dict:
 	tasks = get_open_todos(ref_doctype, ref_docname)
 	events = get_open_events(ref_doctype, ref_docname)
 	tasks_history = get_closed_todos(ref_doctype, ref_docname)
@@ -163,23 +165,23 @@ def get_open_activities(ref_doctype: str, ref_docname: str):
 	}
 
 
-def get_closed_todos(ref_doctype, ref_docname):
+def get_closed_todos(ref_doctype: str, ref_docname: str) -> list:
 	return get_filtered_todos(ref_doctype, ref_docname, status=("!=", "Open"))
 
 
-def get_open_todos(ref_doctype, ref_docname):
+def get_open_todos(ref_doctype: str, ref_docname: str) -> list:
 	return get_filtered_todos(ref_doctype, ref_docname, status="Open")
 
 
-def get_open_events(ref_doctype, ref_docname):
+def get_open_events(ref_doctype: str, ref_docname: str) -> list:
 	return get_filtered_events(ref_doctype, ref_docname, open=True)
 
 
-def get_closed_events(ref_doctype, ref_docname):
+def get_closed_events(ref_doctype: str, ref_docname: str) -> list:
 	return get_filtered_events(ref_doctype, ref_docname, open=False)
 
 
-def get_filtered_todos(ref_doctype, ref_docname, status: str | tuple[str, str]):
+def get_filtered_todos(ref_doctype: str, ref_docname: str, status: str | tuple[str, str]) -> list:
 	return frappe.get_all(
 		"ToDo",
 		filters={"reference_type": ref_doctype, "reference_name": ref_docname, "status": status},
@@ -192,7 +194,7 @@ def get_filtered_todos(ref_doctype, ref_docname, status: str | tuple[str, str]):
 	)
 
 
-def get_filtered_events(ref_doctype, ref_docname, open: bool):
+def get_filtered_events(ref_doctype: str, ref_docname: str, open: bool) -> list:
 	event = frappe.qb.DocType("Event")
 	event_link = frappe.qb.DocType("Event Participants")
 
@@ -224,7 +226,7 @@ def get_filtered_events(ref_doctype, ref_docname, open: bool):
 	return data
 
 
-def open_leads_opportunities_based_on_todays_event():
+def open_leads_opportunities_based_on_todays_event() -> None:
 	event = frappe.qb.DocType("Event")
 	event_link = frappe.qb.DocType("Event Participants")
 
@@ -247,20 +249,20 @@ def open_leads_opportunities_based_on_todays_event():
 
 class CRMNote(Document):
 	@frappe.whitelist()
-	def add_note(self, note: str):
+	def add_note(self, note: str) -> None:
 		self.append("notes", {"note": note, "added_by": frappe.session.user, "added_on": now()})
 		self.save()
 		notify_mentions(self.doctype, self.name, note)
 
 	@frappe.whitelist()
-	def edit_note(self, note: str, row_id: str):
+	def edit_note(self, note: str, row_id: str) -> None:
 		for d in self.notes:
 			if cstr(d.name) == row_id:
 				d.note = note
 				d.db_update()
 
 	@frappe.whitelist()
-	def delete_note(self, row_id: str):
+	def delete_note(self, row_id: str) -> None:
 		for d in self.notes:
 			if cstr(d.name) == row_id:
 				self.remove(d)

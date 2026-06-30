@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -25,7 +27,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestBatch(ERPNextTestSuite):
-	def test_item_has_batch_enabled(self):
+	def test_item_has_batch_enabled(self) -> None:
 		self.assertRaises(
 			ValidationError,
 			frappe.get_doc({"doctype": "Batch", "name": "_test Batch", "item": "_Test Item"}).save,
@@ -59,7 +61,7 @@ class TestBatch(ERPNextTestSuite):
 
 		return receipt
 
-	def test_batch_stock_levels(self, batch_qty=100):
+	def test_batch_stock_levels(self, batch_qty=100) -> None:
 		"""Test automated batch creation from Purchase Receipt"""
 		self.make_batch_item("ITEM-BATCH-1")
 
@@ -123,7 +125,7 @@ class TestBatch(ERPNextTestSuite):
 		for d in batches:
 			self.assertEqual(d.qty, batchwise_qty[(d.batch_no, d.warehouse)])
 
-	def test_batch_qty_on_pos_creation(self):
+	def test_batch_qty_on_pos_creation(self) -> None:
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import (
 			init_user_and_profile,
 		)
@@ -197,7 +199,7 @@ class TestBatch(ERPNextTestSuite):
 			# Set user to session user
 			frappe.set_user(session_user)
 
-	def test_stock_entry_incoming(self):
+	def test_stock_entry_incoming(self) -> None:
 		"""Test batch creation via Stock Entry (Work Order)"""
 
 		self.make_batch_item("ITEM-BATCH-1")
@@ -227,7 +229,7 @@ class TestBatch(ERPNextTestSuite):
 		self.assertTrue(bundle)
 		self.assertEqual(get_batch_qty(get_batch_from_bundle(bundle), stock_entry.items[0].t_warehouse), 90)
 
-	def test_delivery_note(self):
+	def test_delivery_note(self) -> None:
 		"""Test automatic batch selection for outgoing items"""
 		batch_qty = 15
 		receipt = self.test_purchase_receipt(batch_qty)
@@ -277,7 +279,7 @@ class TestBatch(ERPNextTestSuite):
 			batch_no,
 		)
 
-	def test_batch_negative_stock_error(self):
+	def test_batch_negative_stock_error(self) -> None:
 		"""Test automatic batch selection for outgoing items"""
 		receipt = self.test_purchase_receipt(100)
 
@@ -298,7 +300,7 @@ class TestBatch(ERPNextTestSuite):
 
 		self.assertRaises(BatchNegativeStockError, sn_doc.make_serial_and_batch_bundle)
 
-	def test_stock_entry_outgoing(self):
+	def test_stock_entry_outgoing(self) -> None:
 		"""Test automatic batch selection for outgoing stock entry"""
 
 		batch_qty = 16
@@ -348,7 +350,7 @@ class TestBatch(ERPNextTestSuite):
 			get_batch_from_bundle(receipt.items[0].serial_and_batch_bundle),
 		)
 
-	def test_batch_split(self):
+	def test_batch_split(self) -> None:
 		"""Test batch splitting"""
 		receipt = self.test_purchase_receipt()
 		from erpnext.stock.doctype.batch.batch import split_batch
@@ -360,7 +362,7 @@ class TestBatch(ERPNextTestSuite):
 		self.assertEqual(get_batch_qty(batch_no, receipt.items[0].warehouse), 78)
 		self.assertEqual(get_batch_qty(new_batch, receipt.items[0].warehouse), 22)
 
-	def test_get_batch_qty(self):
+	def test_get_batch_qty(self) -> None:
 		"""Test getting batch quantities by batch_numbers, item_code or warehouse"""
 		self.make_batch_item("ITEM-BATCH-2")
 		self.make_new_batch_and_entry("ITEM-BATCH-2", "batch a", "_Test Warehouse - _TC")
@@ -386,7 +388,7 @@ class TestBatch(ERPNextTestSuite):
 
 		self.assertEqual(get_batch_qty("batch a", "_Test Warehouse - _TC"), 90)
 
-	def test_get_batch_no_search_returns_batches(self):
+	def test_get_batch_no_search_returns_batches(self) -> None:
 		"""The batch-number picker must run on every engine.
 
 		Both query builders group by Stock Ledger Entry / Serial-and-Batch-Entry
@@ -432,7 +434,7 @@ class TestBatch(ERPNextTestSuite):
 		self.assertNotIn("MFG-", flat)
 		self.assertNotIn("EXP-", flat)
 
-	def test_ignore_reserved_qty(self):
+	def test_ignore_reserved_qty(self) -> None:
 		from erpnext.selling.doctype.sales_order.mapper import create_pick_list
 		from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 
@@ -464,7 +466,7 @@ class TestBatch(ERPNextTestSuite):
 		# Case: Ignore Reserved Qty
 		self.assertEqual(batch.batch_qty, 90)
 
-	def test_total_batch_qty(self):
+	def test_total_batch_qty(self) -> None:
 		self.make_batch_item("ITEM-BATCH-3")
 		existing_batch_qty = flt(frappe.db.get_value("Batch", "B100", "batch_qty"))
 		stock_entry = self.make_new_batch_and_entry("ITEM-BATCH-3", "B100", "_Test Warehouse - _TC")
@@ -523,7 +525,7 @@ class TestBatch(ERPNextTestSuite):
 
 		return stock_entry
 
-	def test_batch_name_with_naming_series(self):
+	def test_batch_name_with_naming_series(self) -> None:
 		stock_settings = frappe.get_single("Stock Settings")
 		use_naming_series = cint(stock_settings.use_naming_series)
 
@@ -544,7 +546,7 @@ class TestBatch(ERPNextTestSuite):
 		if not use_naming_series:
 			frappe.set_value("Stock Settings", "Stock Settings", "use_naming_series", 0)
 
-	def test_naming_series_prefix_is_not_rendered_as_jinja(self):
+	def test_naming_series_prefix_is_not_rendered_as_jinja(self) -> None:
 		from frappe.model.naming import InvalidNamingSeriesError
 
 		stock_settings = frappe.get_single("Stock Settings")
@@ -575,7 +577,7 @@ class TestBatch(ERPNextTestSuite):
 
 		return batch
 
-	def test_batch_wise_item_price(self):
+	def test_batch_wise_item_price(self) -> None:
 		if not frappe.db.get_value("Item", "_Test Batch Price Item"):
 			frappe.get_doc(
 				{
@@ -626,7 +628,7 @@ class TestBatch(ERPNextTestSuite):
 		details = get_item_details(ctx)
 		self.assertEqual(details.get("price_list_rate"), 400)
 
-	def test_basic_batch_wise_valuation(self, batch_qty=100):
+	def test_basic_batch_wise_valuation(self, batch_qty=100) -> None:
 		item_code = "_TestBatchWiseVal"
 		warehouse = "_Test Warehouse - _TC"
 		self.make_batch_item(item_code)
@@ -672,7 +674,7 @@ class TestBatch(ERPNextTestSuite):
 
 			self.assertEqual(json.loads(sle.stock_queue), [])  # queues don't apply on batched items
 
-	def test_update_batch_properties(self):
+	def test_update_batch_properties(self) -> None:
 		item_code = "_TestBatchWiseVal"
 		self.make_batch_item(item_code)
 
@@ -689,7 +691,7 @@ class TestBatch(ERPNextTestSuite):
 
 		self.assertEqual(getdate(batch.expiry_date), getdate(expiry_date))
 
-	def test_autocreation_of_batches(self):
+	def test_autocreation_of_batches(self) -> None:
 		"""
 		Test if auto created Serial No excludes existing serial numbers
 		"""
@@ -737,7 +739,7 @@ def create_batch(item_code, rate, create_item_price_for_batch):
 	return batch
 
 
-def create_price_list_for_batch(item_code, batch, rate):
+def create_price_list_for_batch(item_code, batch, rate) -> None:
 	frappe.get_doc(
 		{
 			"doctype": "Item Price",

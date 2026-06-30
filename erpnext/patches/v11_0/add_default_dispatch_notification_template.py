@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import os
 
 import frappe
 from frappe import _
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("email", "doctype", "email_template")
 	frappe.reload_doc("stock", "doctype", "delivery_settings")
 

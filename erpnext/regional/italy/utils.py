@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import io
 import json
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe import _
@@ -10,8 +13,11 @@ from erpnext.controllers.taxes_and_totals import get_itemised_tax
 from erpnext.regional.italy import state_codes
 from erpnext.stock.utils import get_default_stock_uom
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
-def update_itemised_tax_data(doc):
+
+def update_itemised_tax_data(doc) -> None:
 	if not doc.taxes:
 		return
 
@@ -31,7 +37,7 @@ def update_itemised_tax_data(doc):
 
 
 @frappe.whitelist()
-def export_invoices(filters: str | None = None):
+def export_invoices(filters: str | None = None) -> None:
 	frappe.has_permission("Sales Invoice", throw=True)
 
 	invoices = frappe.get_all(
@@ -45,7 +51,7 @@ def export_invoices(filters: str | None = None):
 	download_zip(attachments, zip_filename)
 
 
-def prepare_invoice(invoice, progressive_number):
+def prepare_invoice(invoice, progressive_number: str) -> Document:
 	# set company information
 	company = frappe.get_doc("Company", invoice.company)
 
@@ -103,7 +109,7 @@ def prepare_invoice(invoice, progressive_number):
 	return invoice
 
 
-def get_conditions(filters):
+def get_conditions(filters) -> dict:
 	filters = frappe.parse_json(filters)
 
 	conditions = {"docstatus": 1, "company_tax_id": ("!=", "")}
@@ -124,7 +130,7 @@ def get_conditions(filters):
 	return conditions
 
 
-def download_zip(files, output_filename):
+def download_zip(files: list, output_filename: str) -> None:
 	import zipfile
 
 	zip_stream = io.BytesIO()
@@ -140,7 +146,7 @@ def download_zip(files, output_filename):
 	zip_stream.close()
 
 
-def get_invoice_summary(items, taxes, item_wise_tax_details):
+def get_invoice_summary(items: list, taxes: list, item_wise_tax_details: list) -> dict:
 	summary_data = frappe._dict()
 	taxes_wise_tax_details = {}
 
@@ -171,7 +177,9 @@ def get_invoice_summary(items, taxes, item_wise_tax_details):
 	return summary_data
 
 
-def update_summary_details(summary_data, tax, rate, amount, taxable_amount):
+def update_summary_details(
+	summary_data: dict, tax, rate: float, amount: float, taxable_amount: float
+) -> None:
 	key = cstr(rate)
 	summary_data.setdefault(
 		key,
@@ -191,7 +199,7 @@ def update_summary_details(summary_data, tax, rate, amount, taxable_amount):
 		summary_data[key]["tax_exemption_law"] = tax.tax_exemption_law
 
 
-def append_row_as_charges(items, tax, reference_row, summary_data):
+def append_row_as_charges(items: list, tax, reference_row, summary_data: dict) -> None:
 	rate = tax.rate
 	amount = (reference_row.tax_amount * tax.rate) / 100
 	taxable_amount = reference_row.tax_amount
@@ -217,7 +225,7 @@ def append_row_as_charges(items, tax, reference_row, summary_data):
 
 
 # Preflight for successful e-invoice export.
-def sales_invoice_validate(doc):
+def sales_invoice_validate(doc) -> None:
 	# Validate company
 	if doc.doctype != "Sales Invoice":
 		return
@@ -301,7 +309,7 @@ def sales_invoice_validate(doc):
 
 
 # Ensure payment details are valid for e-invoice.
-def sales_invoice_on_submit(doc, method):
+def sales_invoice_on_submit(doc, method: str) -> None:
 	# Validate payment details
 	if get_company_country(doc.company) not in [
 		"Italy",
@@ -328,7 +336,7 @@ def sales_invoice_on_submit(doc, method):
 	prepare_and_attach_invoice(doc)
 
 
-def prepare_and_attach_invoice(doc, replace=False):
+def prepare_and_attach_invoice(doc, replace: bool = False) -> Document:
 	progressive_name, progressive_number = get_progressive_name_and_number(doc, replace)
 
 	invoice = prepare_invoice(doc, progressive_number)
@@ -359,7 +367,7 @@ def prepare_and_attach_invoice(doc, replace=False):
 
 
 @frappe.whitelist()
-def generate_single_invoice(docname: str):
+def generate_single_invoice(docname: str) -> str:
 	doc = frappe.get_doc("Sales Invoice", docname)
 	frappe.has_permission("Sales Invoice", doc=doc, throw=True)
 
@@ -368,7 +376,7 @@ def generate_single_invoice(docname: str):
 
 
 # Delete e-invoice attachment on cancel.
-def sales_invoice_on_cancel(doc, method):
+def sales_invoice_on_cancel(doc, method: str) -> None:
 	if get_company_country(doc.company) not in [
 		"Italy",
 		"Italia",
@@ -381,11 +389,11 @@ def sales_invoice_on_cancel(doc, method):
 		remove_file(attachment.name, attached_to_doctype=doc.doctype, attached_to_name=doc.name)
 
 
-def get_company_country(company):
+def get_company_country(company: str) -> str:
 	return frappe.get_cached_value("Company", company, "country")
 
 
-def get_e_invoice_attachments(invoices):
+def get_e_invoice_attachments(invoices) -> list | None:
 	if not isinstance(invoices, list):
 		if not invoices.company_tax_id:
 			return
@@ -419,7 +427,7 @@ def get_e_invoice_attachments(invoices):
 	return out
 
 
-def validate_address(address_name):
+def validate_address(address_name: str) -> None:
 	fields = ["pincode", "city", "country_code"]
 	data = frappe.get_cached_value("Address", address_name, fields, as_dict=1) or {}
 
@@ -431,7 +439,7 @@ def validate_address(address_name):
 			)
 
 
-def get_unamended_name(doc):
+def get_unamended_name(doc) -> str:
 	attributes = ["naming_series", "amended_from"]
 	for attribute in attributes:
 		if not hasattr(doc, attribute):
@@ -443,7 +451,7 @@ def get_unamended_name(doc):
 		return doc.name
 
 
-def get_progressive_name_and_number(doc, replace=False):
+def get_progressive_name_and_number(doc, replace: bool = False) -> tuple:
 	if replace:
 		for attachment in get_e_invoice_attachments(doc):
 			remove_file(attachment.name, attached_to_doctype=doc.doctype, attached_to_name=doc.name)
@@ -457,7 +465,7 @@ def get_progressive_name_and_number(doc, replace=False):
 	return progressive_name, progressive_number
 
 
-def set_state_code(doc, method):
+def set_state_code(doc, method: str) -> None:
 	if doc.get("country_code"):
 		doc.country_code = doc.country_code.upper()
 

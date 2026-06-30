@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.mode_of_payment.test_mode_of_payment import (
@@ -21,7 +23,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPOSInvoiceMergeLog(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		mode_of_payment = frappe.get_doc("Mode of Payment", "Bank Draft")
 		self.test_user, self.pos_profile = init_user_and_profile()
 		self.opening_entry = create_opening_entry(self.pos_profile, self.test_user.name)
@@ -35,7 +37,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 		closing_entry.insert().submit()
 		return closing_entry
 
-	def test_consolidated_invoice_creation(self):
+	def test_consolidated_invoice_creation(self) -> None:
 		pos_inv = create_pos_invoice(rate=300, do_not_submit=1)
 		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 300})
 		pos_inv.save()
@@ -61,7 +63,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 
 		self.assertNotEqual(pos_inv.consolidated_invoice, pos_inv3.consolidated_invoice)
 
-	def test_consolidated_credit_note_creation(self):
+	def test_consolidated_credit_note_creation(self) -> None:
 		pos_inv = create_pos_invoice(rate=300, do_not_submit=1)
 		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 300})
 		pos_inv.save()
@@ -103,7 +105,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 		self.assertEqual(consolidated_credit_note.payments[1].mode_of_payment, "Bank Draft")
 		self.assertEqual(consolidated_credit_note.payments[1].amount, -200)
 
-	def test_consolidated_invoice_item_taxes(self):
+	def test_consolidated_invoice_item_taxes(self) -> None:
 		inv = create_pos_invoice(qty=1, rate=100, do_not_save=True)
 
 		inv.append(
@@ -176,7 +178,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 
 		self.assertEqual(actual, expected_item_wise_tax_details)
 
-	def test_consolidation_round_off_error_1(self):
+	def test_consolidation_round_off_error_1(self) -> None:
 		"""
 		Test round off error in consolidated invoice creation if POS Invoice has inclusive tax
 		"""
@@ -229,7 +231,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 		self.assertEqual(consolidated_invoice.outstanding_amount, 0)
 		self.assertEqual(consolidated_invoice.status, "Paid")
 
-	def test_consolidation_round_off_error_2(self):
+	def test_consolidation_round_off_error_2(self) -> None:
 		"""
 		Test the same case as above but with an Unpaid POS Invoice
 		"""
@@ -289,7 +291,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 	@ERPNextTestSuite.change_settings(
 		"System Settings", {"number_format": "#,###.###", "currency_precision": 3, "float_precision": 3}
 	)
-	def test_consolidation_round_off_error_3(self):
+	def test_consolidation_round_off_error_3(self) -> None:
 		make_stock_entry(
 			to_warehouse="_Test Warehouse - _TC",
 			item_code="_Test Item",
@@ -339,7 +341,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 		self.assertEqual(consolidated_invoice.status, "Return")
 		self.assertEqual(consolidated_invoice.rounding_adjustment, -0.002)
 
-	def test_consolidation_rounding_adjustment(self):
+	def test_consolidation_rounding_adjustment(self) -> None:
 		"""
 		Test if the rounding adjustment is calculated correctly
 		"""
@@ -366,7 +368,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 		consolidated_invoice = frappe.get_doc("Sales Invoice", inv.consolidated_invoice)
 		self.assertEqual(consolidated_invoice.rounding_adjustment, 1)
 
-	def test_serial_no_case_1(self):
+	def test_serial_no_case_1(self) -> None:
 		"""
 		Create a POS Invoice with serial no
 		Create a Return Invoice with serial no
@@ -416,7 +418,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 
 		self.assertNotEqual(pos_inv.consolidated_invoice, pos_inv2.consolidated_invoice)
 
-	def test_separate_consolidated_invoice_for_different_accounting_dimensions(self):
+	def test_separate_consolidated_invoice_for_different_accounting_dimensions(self) -> None:
 		"""
 		Creating 3 POS Invoices where first POS Invoice has different Cost Center than the other two.
 		Consolidate the Invoices.
@@ -461,7 +463,7 @@ class TestPOSInvoiceMergeLog(ERPNextTestSuite):
 
 		self.assertEqual(pos_inv2.consolidated_invoice, pos_inv3.consolidated_invoice)
 
-	def test_company_in_pos_invoice_merge_log(self):
+	def test_company_in_pos_invoice_merge_log(self) -> None:
 		"""
 		Test if the company is fetched from POS Closing Entry
 		"""

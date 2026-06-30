@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import DocType
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_column("Asset Maintenance Log", "task_assignee_email"):
 		asset_maintenance_log = DocType("Asset Maintenance Log")
 		asset_maintenance_task = DocType("Asset Maintenance Task")

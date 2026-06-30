@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import IfNull, Sum
 
 
-def execute():
+def execute() -> None:
 	asset = frappe.qb.DocType("Asset")
 	gle = frappe.qb.DocType("GL Entry")
 	aca = frappe.qb.DocType("Asset Category Account")

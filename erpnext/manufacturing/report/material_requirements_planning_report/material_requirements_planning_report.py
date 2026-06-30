@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import math
 from datetime import datetime, timedelta
 
@@ -23,7 +25,7 @@ from frappe.utils import (
 from frappe.utils.nestedset import get_descendants_of
 
 
-def execute(filters: dict | None = None):
+def execute(filters: dict | None = None) -> tuple:
 	obj = MaterialRequirementsPlanningReport(filters)
 	data, chart = obj.generate_mrp()
 	columns = obj.get_columns()
@@ -32,10 +34,10 @@ def execute(filters: dict | None = None):
 
 
 class MaterialRequirementsPlanningReport:
-	def __init__(self, filters):
+	def __init__(self, filters: dict) -> None:
 		self.filters = filters
 
-	def generate_mrp(self):
+	def generate_mrp(self) -> tuple:
 		self.fg_items = []
 		self.rm_items = []
 		self.dates = self.get_dates()
@@ -56,7 +58,7 @@ class MaterialRequirementsPlanningReport:
 
 		return data, chart
 
-	def add_non_planned_orders(self, items):
+	def add_non_planned_orders(self, items: list) -> None:
 		_adhoc_so_details = frappe._dict({})
 
 		so = frappe.qb.DocType("Sales Order")
@@ -115,14 +117,14 @@ class MaterialRequirementsPlanningReport:
 				)
 			)
 
-	def get_orders_to_skip(self):
+	def get_orders_to_skip(self) -> list:
 		return frappe.get_all(
 			"Production Plan Sales Order",
 			filters={"parent": self.filters.mps},
 			pluck="sales_order",
 		)
 
-	def get_item_wise_bin_details(self):
+	def get_item_wise_bin_details(self) -> dict:
 		items = self.fg_items + self.rm_items
 		if not items:
 			return {}
@@ -164,7 +166,7 @@ class MaterialRequirementsPlanningReport:
 
 		return _bin_details
 
-	def update_mps_data_with_bin_details(self, bin_details):
+	def update_mps_data_with_bin_details(self, bin_details: dict) -> None:
 		if not self.filters.mps:
 			return
 
@@ -200,7 +202,7 @@ class MaterialRequirementsPlanningReport:
 				details.reserved_qty -= reserved_qty
 				details.projected_qty += reserved_qty
 
-	def update_sales_forecast_data(self):
+	def update_sales_forecast_data(self) -> None:
 		sales_forecast_data = self.get_sales_forecast_data()
 
 		if not sales_forecast_data:
@@ -230,7 +232,7 @@ class MaterialRequirementsPlanningReport:
 					)
 				)
 
-	def get_mrp_data(self):
+	def get_mrp_data(self) -> tuple:
 		data = self.get_detailed_view_data()
 		data = self.filter_based_on_type_of_materials(data)
 		chart = self.get_chart_data(data) or {}
@@ -240,7 +242,7 @@ class MaterialRequirementsPlanningReport:
 
 		return data, chart
 
-	def filter_based_on_type_of_materials(self, data):
+	def filter_based_on_type_of_materials(self, data: list) -> list:
 		new_data = []
 		if self.filters.type_of_material == "All":
 			return data
@@ -257,7 +259,7 @@ class MaterialRequirementsPlanningReport:
 
 		return new_data
 
-	def get_chart_data(self, data):
+	def get_chart_data(self, data: list) -> dict:
 		# Prepare chart for demand vs supply
 
 		if self.filters.get("show_in_bucket_view"):
@@ -265,7 +267,7 @@ class MaterialRequirementsPlanningReport:
 		else:
 			return self.get_detailed_view_chart_data(data)
 
-	def get_detailed_view_chart_data(self, data):
+	def get_detailed_view_chart_data(self, data: list) -> dict:
 		chart_data = frappe._dict({})
 		i = 0
 
@@ -324,7 +326,7 @@ class MaterialRequirementsPlanningReport:
 			"title": _("Demand vs Supply"),
 		}
 
-	def get_bucket_view_chart_data(self, data):
+	def get_bucket_view_chart_data(self, data: list) -> dict:
 		chart_data = frappe._dict({})
 		labels = []
 		i = 0
@@ -389,7 +391,7 @@ class MaterialRequirementsPlanningReport:
 			"title": _("Demand vs Supply"),
 		}
 
-	def get_bucket_view_data(self, data):
+	def get_bucket_view_data(self, data: list) -> list:
 		new_data = []
 
 		item_wise_data = frappe._dict({})
@@ -430,7 +432,7 @@ class MaterialRequirementsPlanningReport:
 
 		return new_data
 
-	def get_detailed_view_data(self):
+	def get_detailed_view_data(self) -> list:
 		data = []
 		i = 0
 
@@ -480,7 +482,7 @@ class MaterialRequirementsPlanningReport:
 
 		return data
 
-	def get_lead_time_from_raw_materials(self, raw_materials):
+	def get_lead_time_from_raw_materials(self, raw_materials: list) -> int:
 		lead_time = 0
 		for material in raw_materials:
 			lead_time += math.ceil(material.lead_time)
@@ -489,13 +491,13 @@ class MaterialRequirementsPlanningReport:
 
 		return lead_time
 
-	def add_non_planned_so(self, row):
+	def add_non_planned_so(self, row: dict) -> None:
 		if so_details := self._so_details.get((row.item_code, row.delivery_date)):
 			row.adhoc_qty = so_details.qty
 			row.planned_qty += so_details.qty
 			del self._so_details[(row.item_code, row.delivery_date)]
 
-	def add_bin_details(self, row):
+	def add_bin_details(self, row: dict) -> None:
 		if bin_details := self._bin_details.get(row.item_code):
 			current_qty = bin_details.get("actual_qty", 0.0) - flt(bin_details.get("reserved_stock", 0.0))
 			if current_qty > 0:
@@ -508,7 +510,7 @@ class MaterialRequirementsPlanningReport:
 					bin_details["actual_qty"] -= row.required_qty
 					row.required_qty = 0.0
 
-	def add_po_details(self, row):
+	def add_po_details(self, row: dict) -> None:
 		if row.required_qty > 0 and self._po_details:
 			dict_update = {}
 			for (item_code, delivery_date), po_data in self._po_details.items():
@@ -532,7 +534,7 @@ class MaterialRequirementsPlanningReport:
 				elif key in self._po_details:
 					self._po_details[key].qty = qty
 
-	def add_wo_details(self, row):
+	def add_wo_details(self, row: dict) -> None:
 		if row.required_qty > 0 and self._wo_details:
 			dict_update = {}
 			for (item_code, delivery_date), wo_data in self._wo_details.items():
@@ -557,7 +559,7 @@ class MaterialRequirementsPlanningReport:
 					elif key in self._wo_details:
 						self._wo_details[key].qty = qty
 
-	def update_required_qty(self, row):
+	def update_required_qty(self, row: dict) -> None:
 		row.required_qty = flt(row.planned_qty)
 		row.in_hand_qty = 0.0
 
@@ -567,11 +569,11 @@ class MaterialRequirementsPlanningReport:
 		self.add_wo_details(row)
 		self.add_safety_stock(row)
 
-	def add_safety_stock(self, row):
+	def add_safety_stock(self, row: dict) -> None:
 		if self.filters.add_safety_stock:
 			row.required_qty += flt(row.safety_stock)
 
-	def get_work_order_data(self):
+	def get_work_order_data(self) -> dict:
 		wo_details = frappe._dict({})
 
 		doctype = frappe.qb.DocType("Work Order")
@@ -608,7 +610,7 @@ class MaterialRequirementsPlanningReport:
 
 		return wo_details
 
-	def get_purchase_order_data(self):
+	def get_purchase_order_data(self) -> dict:
 		po_details = frappe._dict({})
 
 		parent_doctype = frappe.qb.DocType("Purchase Order")
@@ -659,7 +661,7 @@ class MaterialRequirementsPlanningReport:
 
 		return po_details
 
-	def get_sales_order_data(self):
+	def get_sales_order_data(self) -> dict:
 		if not self.rm_items:
 			return frappe._dict({})
 
@@ -712,7 +714,7 @@ class MaterialRequirementsPlanningReport:
 
 		return so_details
 
-	def get_packed_items_sales_order(self):
+	def get_packed_items_sales_order(self) -> list:
 		parent_doctype = frappe.qb.DocType("Sales Order")
 		so_item = frappe.qb.DocType("Sales Order Item")
 		doctype = frappe.qb.DocType("Packed Item")
@@ -748,7 +750,7 @@ class MaterialRequirementsPlanningReport:
 
 		return query.run(as_dict=True)
 
-	def get_subcontracted_data(self):
+	def get_subcontracted_data(self) -> list:
 		parent_doctype = frappe.qb.DocType("Subcontracting Order")
 		doctype = frappe.qb.DocType("Subcontracting Order Item")
 
@@ -779,7 +781,9 @@ class MaterialRequirementsPlanningReport:
 
 		return query.run(as_dict=True)
 
-	def update_rm_details(self, raw_materials, delivery_date, planned_qty, bom_no, data):
+	def update_rm_details(
+		self, raw_materials: list, delivery_date, planned_qty: float, bom_no: str, data: list
+	) -> None:
 		for material in raw_materials:
 			lead_time = math.ceil(material.lead_time)
 			row = frappe._dict(
@@ -819,7 +823,7 @@ class MaterialRequirementsPlanningReport:
 					material.raw_materials, row.release_date, row.required_qty, material.bom_no, data
 				)
 
-	def get_mps_data(self):
+	def get_mps_data(self) -> list:
 		doctype = frappe.qb.DocType("Master Production Schedule")
 		child_doctype = frappe.qb.DocType("Master Production Schedule Item")
 
@@ -861,7 +865,7 @@ class MaterialRequirementsPlanningReport:
 
 		return query.run(as_dict=True)
 
-	def get_items_from_mps(self, mps_data):
+	def get_items_from_mps(self, mps_data: list) -> list:
 		items = []
 		for row in mps_data:
 			if row.item_code not in items:
@@ -886,7 +890,7 @@ class MaterialRequirementsPlanningReport:
 
 		return items
 
-	def get_raw_materials_data(self, items):
+	def get_raw_materials_data(self, items: list) -> dict:
 		item_wise_rm_details = frappe._dict()
 		for item_code in items:
 			if item_code not in item_wise_rm_details:
@@ -910,7 +914,7 @@ class MaterialRequirementsPlanningReport:
 
 		return item_wise_rm_details
 
-	def get_raw_materials(self, bom_no, indent=0):
+	def get_raw_materials(self, bom_no: str, indent: int = 0) -> list:
 		company = self.filters.get("company")
 		raw_materials = frappe.get_all(
 			"BOM",
@@ -944,7 +948,7 @@ class MaterialRequirementsPlanningReport:
 
 		return raw_materials
 
-	def get_columns(self):
+	def get_columns(self) -> list:
 		if self.filters.show_in_bucket_view:
 			columns = [
 				{
@@ -1089,7 +1093,7 @@ class MaterialRequirementsPlanningReport:
 
 		return columns
 
-	def get_dates(self):
+	def get_dates(self) -> list:
 		bucket_size = self.filters.bucket_size
 
 		from_date = self.filters.from_date
@@ -1126,7 +1130,7 @@ class MaterialRequirementsPlanningReport:
 
 		return dates_list
 
-	def get_first_date_of_week(self, input_date):
+	def get_first_date_of_week(self, input_date) -> str:
 		# convert string to datetime
 		if isinstance(input_date, str):
 			input_date = datetime.strptime(input_date, "%Y-%m-%d")
@@ -1134,7 +1138,7 @@ class MaterialRequirementsPlanningReport:
 		start_of_week = input_date - timedelta(days=input_date.weekday())
 		return start_of_week.strftime("%Y-%m-%d")
 
-	def get_last_date_of_week(self, input_date):
+	def get_last_date_of_week(self, input_date) -> str:
 		# convert string to datetime
 		if isinstance(input_date, str):
 			input_date = datetime.strptime(input_date, "%Y-%m-%d")
@@ -1142,7 +1146,7 @@ class MaterialRequirementsPlanningReport:
 		end_of_week = input_date + timedelta(days=(6 - input_date.weekday()))
 		return end_of_week.strftime("%Y-%m-%d")
 
-	def get_sales_forecast_data(self):
+	def get_sales_forecast_data(self) -> list:
 		forecast_doc = frappe.qb.DocType("Sales Forecast")
 		doctype = frappe.qb.DocType("Sales Forecast Item")
 
@@ -1189,7 +1193,7 @@ class MaterialRequirementsPlanningReport:
 
 
 @frappe.request_cache
-def get_item_details(item_code, company):
+def get_item_details(item_code: str, company: str) -> dict:
 	data = frappe.db.get_value(
 		"Item", item_code, ["safety_stock", "min_order_qty", "purchase_uom"], as_dict=True
 	) or frappe._dict({"safety_stock": 0})
@@ -1208,7 +1212,7 @@ def get_item_details(item_code, company):
 
 
 @frappe.request_cache
-def get_item_lead_time(item_code, type_of_material):
+def get_item_lead_time(item_code: str, type_of_material: str) -> float:
 	doctype = frappe.qb.DocType("Item Lead Time")
 
 	query = frappe.qb.from_(doctype).where(doctype.item_code == item_code)
@@ -1235,7 +1239,7 @@ def get_item_lead_time(item_code, type_of_material):
 	return time[0] if time else 0
 
 
-def convert_to_daily_bucket_data(data):
+def convert_to_daily_bucket_data(data: list) -> list:
 	bucketed_data = []
 
 	for row in data:
@@ -1279,7 +1283,7 @@ def convert_to_daily_bucket_data(data):
 
 
 @frappe.request_cache
-def get_item_capacity(item_code, bucket_size):
+def get_item_capacity(item_code: str, bucket_size: str) -> float:
 	capacity = frappe.db.get_value(
 		"Item Lead Time",
 		item_code,
@@ -1297,7 +1301,9 @@ def get_item_capacity(item_code, bucket_size):
 
 
 @frappe.whitelist()
-def make_order(selected_rows: str | list, company: str, warehouse: str | None = None, mps: str | None = None):
+def make_order(
+	selected_rows: str | list, company: str, warehouse: str | None = None, mps: str | None = None
+) -> None:
 	if not frappe.has_permission("Purchase Order", "create"):
 		frappe.throw(_("Not permitted to make Purchase Orders"), frappe.PermissionError)
 
@@ -1324,7 +1330,9 @@ def make_order(selected_rows: str | list, company: str, warehouse: str | None = 
 		make_work_orders(work_orders, company, warehouse=warehouse, mps=mps)
 
 
-def make_purchase_orders(purchase_orders, company, warehouse=None, mps=None):
+def make_purchase_orders(
+	purchase_orders: dict, company: str, warehouse: str | None = None, mps: str | None = None
+) -> None:
 	for (supplier, release_date), items in purchase_orders.items():
 		po = frappe.new_doc("Purchase Order")
 		po.supplier = supplier
@@ -1364,7 +1372,9 @@ def make_purchase_orders(purchase_orders, company, warehouse=None, mps=None):
 			)
 
 
-def make_work_orders(work_orders, company, warehouse=None, mps=None):
+def make_work_orders(
+	work_orders: list, company: str, warehouse: str | None = None, mps: str | None = None
+) -> None:
 	for item in work_orders:
 		uom = item.uom
 		if not uom:
@@ -1394,10 +1404,10 @@ def make_work_orders(work_orders, company, warehouse=None, mps=None):
 
 
 @frappe.request_cache
-def get_item_uom(item_code):
+def get_item_uom(item_code: str) -> dict:
 	return frappe.get_cached_value("Item", item_code, ["stock_uom", "purchase_uom"], as_dict=True)
 
 
 @frappe.request_cache
-def is_whole_number(uom):
+def is_whole_number(uom: str) -> int:
 	return frappe.get_cached_value("UOM", uom, "must_be_whole_number")

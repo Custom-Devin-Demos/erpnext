@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, getdate
@@ -9,7 +11,7 @@ from frappe.utils import add_days, getdate
 from erpnext.stock.utils import get_combine_datetime
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	filters = filters or {}
 
 	columns = get_column()
@@ -18,7 +20,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_column():
+def get_column() -> list:
 	return [
 		_("Timesheet") + ":Link/Timesheet:120",
 		_("Employee") + "::150",
@@ -33,7 +35,7 @@ def get_column():
 	]
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	ts = frappe.qb.DocType("Timesheet")
 	tsd = frappe.qb.DocType("Timesheet Detail")
 

@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt
 
@@ -23,7 +25,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 	"""Test cases for DependencyResolver class"""
 
 	# 1. BASIC FUNCTIONALITY
-	def test_resolve_basic_processing_order(self):
+	def test_resolve_basic_processing_order(self) -> None:
 		resolver = DependencyResolver(self.test_template)
 		order = resolver.get_processing_order()
 
@@ -33,7 +35,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 
 		self.assertTrue(all(ai < fi for ai in account_indices for fi in formula_indices))
 
-	def test_resolve_simple_dependency(self):
+	def test_resolve_simple_dependency(self) -> None:
 		# Create test rows with dependencies
 		test_rows = [
 			{
@@ -66,7 +68,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		self.assertLess(a001_index, b001_index, "A001 should be processed before B001")
 
 	# 2. DEPENDENCY PATTERNS
-	def test_resolve_multiple_dependencies(self):
+	def test_resolve_multiple_dependencies(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "INC001",
@@ -114,7 +116,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		# GROSS001 should come before MARGIN001 (which depends on it)
 		self.assertLess(positions["GROSS001"], positions["MARGIN001"])
 
-	def test_resolve_chain_dependencies(self):
+	def test_resolve_chain_dependencies(self) -> None:
 		"""Test dependency resolution with chain of dependencies (A -> B -> C -> D)"""
 		test_rows = [
 			{
@@ -154,7 +156,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		self.assertLess(positions["B001"], positions["C001"])
 		self.assertLess(positions["C001"], positions["D001"])
 
-	def test_resolve_diamond_dependency_pattern(self):
+	def test_resolve_diamond_dependency_pattern(self) -> None:
 		"""Test Diamond Dependency Pattern - A → B, A → C, and both B,C → D"""
 		test_rows = [
 			{
@@ -201,7 +203,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		# Verify D has correct dependencies
 		self.assertEqual(set(resolver.dependencies["D001"]), {"B001", "C001"})
 
-	def test_resolve_independent_formula_row_groups(self):
+	def test_resolve_independent_formula_row_groups(self) -> None:
 		test_rows = [
 			# Chain 1: A → B → C
 			{
@@ -273,7 +275,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 				self.assertFalse(deps.intersection(chain1_codes), f"{code} should not depend on chain 1")
 
 	# 3. DATA SOURCE PROCESSING
-	def test_resolve_mixed_data_sources(self):
+	def test_resolve_mixed_data_sources(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "CALC001",
@@ -318,7 +320,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		# All rows should be present
 		self.assertEqual(len(order), 4)
 
-	def test_resolve_api_to_formula_dependencies(self):
+	def test_resolve_api_to_formula_dependencies(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "API001",
@@ -352,7 +354,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		# API001 should be processed before ACC001 (API rows come first)
 		self.assertLess(positions["API001"], positions["ACC001"])
 
-	def test_resolve_cross_datasource_dependencies(self):
+	def test_resolve_cross_datasource_dependencies(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "API001",
@@ -400,7 +402,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		self.assertEqual(set(resolver.dependencies["FINAL001"]), {"MIXED001", "API001"})
 
 	# 4. FORMULA PARSING
-	def test_extract_from_complex_formulas(self):
+	def test_extract_from_complex_formulas(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "INCOME",
@@ -438,7 +440,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		net_deps = resolver.dependencies.get("NET_RESULT", [])
 		self.assertEqual(set(net_deps), {"INCOME", "EXPENSE", "TAX_RATE"})
 
-	def test_extract_references_with_math_functions(self):
+	def test_extract_references_with_math_functions(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "INCOME",
@@ -493,7 +495,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		# MATH_TEST3 should correctly identify dependencies despite sqrt/pow functions
 		self.assertEqual(set(resolver.dependencies["MATH_TEST3"]), {"INCOME", "EXPENSE"})
 
-	def test_extract_accurate_reference_matching(self):
+	def test_extract_accurate_reference_matching(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "INC001",
@@ -557,7 +559,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		# TEST4 should depend on both INC001_2023 and INC001 (separated by *)
 		self.assertEqual(set(resolver.dependencies["TEST4"]), {"INC001_2023", "INC001"})
 
-	def test_prevent_partial_reference_matches(self):
+	def test_prevent_partial_reference_matches(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "INC001",
@@ -596,7 +598,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		self.assertIn("INC001_ADJ", positions)
 
 	# 5. EDGE CASES
-	def test_resolve_rows_without_dependencies(self):
+	def test_resolve_rows_without_dependencies(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "A001",
@@ -623,7 +625,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		order = resolver.get_processing_order()
 		self.assertEqual(len(order), 2)
 
-	def test_handle_empty_reference_codes(self):
+	def test_handle_empty_reference_codes(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "VALID001",
@@ -679,7 +681,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		}
 		self.assertLess(positions["VALID001"], positions["CALC001"])
 
-	def test_resolve_include_orphaned_nodes(self):
+	def test_resolve_include_orphaned_nodes(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "USED001",
@@ -730,7 +732,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		self.assertEqual(resolver.dependencies.get("ORPHAN001", []), [])
 		self.assertEqual(resolver.dependencies.get("ORPHAN002", []), [])
 
-	def test_handle_valid_missing_references(self):
+	def test_handle_valid_missing_references(self) -> None:
 		test_rows = [
 			{
 				"reference_code": "A001",
@@ -755,7 +757,7 @@ class TestDependencyResolver(FinancialReportTemplateTestCase):
 		self.assertEqual(len(processing_order), 2)
 
 	# 6. ERROR DETECTION
-	def test_detect_circular_dependency(self):
+	def test_detect_circular_dependency(self) -> None:
 		"""Test detection of circular dependency (A -> B -> C -> A)"""
 		test_rows = [
 			{
@@ -789,7 +791,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 
 	def _create_mock_report_row(self, formula: str, reference_code: str = "TEST_ROW"):
 		class MockReportRow:
-			def __init__(self, formula, ref_code):
+			def __init__(self, formula, ref_code) -> None:
 				self.calculation_formula = formula
 				self.reference_code = ref_code
 				self.data_source = "Calculated Amount"
@@ -799,7 +801,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		return MockReportRow(formula, reference_code)
 
 	# 1. FOUNDATION TESTS
-	def test_evaluate_basic_operations(self):
+	def test_evaluate_basic_operations(self) -> None:
 		# Mock row data with different scenarios
 		row_data = {
 			"INC001": [1000.0, 1200.0, 1500.0],
@@ -845,7 +847,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		expected = [800.0, 900.0, 1100.0]  # EXP001 is always smaller
 		self.assertEqual(result, expected)
 
-	def test_handle_division_by_zero(self):
+	def test_handle_division_by_zero(self) -> None:
 		row_data = {
 			"NUMERATOR": [100.0, 200.0, 300.0],
 			"ZERO_VAL": [0.0, 0.0, 0.0],
@@ -864,7 +866,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		self.assertEqual(result, expected)
 
 	# 2. DATA HANDLING TESTS
-	def test_handle_missing_values(self):
+	def test_handle_missing_values(self) -> None:
 		row_data = {
 			"SHORT_DATA": [100.0, 200.0],  # Only 2 periods instead of 3
 			"NORMAL_DATA": [50.0, 60.0, 70.0],
@@ -905,7 +907,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		expected = []  # No periods means no results
 		self.assertEqual(result, expected)
 
-	def test_handle_invalid_reference_codes(self):
+	def test_handle_invalid_reference_codes(self) -> None:
 		"""Test formula calculator handles invalid reference codes"""
 		row_data = {
 			"VALID_CODE": [100.0, 200.0, 300.0],
@@ -938,7 +940,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		expected = [0.0, 0.0, 0.0]  # Should fail since codes are case-sensitive
 		self.assertEqual(result, expected)
 
-	def test_handle_mismatched_period_data_lengths(self):
+	def test_handle_mismatched_period_data_lengths(self) -> None:
 		"""Test scenarios with mismatched period data"""
 		# Test when row_data has more values than periods
 		row_data_extra = {
@@ -975,7 +977,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		self.assertEqual(result, expected)
 
 	# 3. COMPLEX EXPRESSIONS
-	def test_evaluate_complex_expressions(self):
+	def test_evaluate_complex_expressions(self) -> None:
 		row_data = {
 			"REVENUE": [10000.0, 12000.0, 15000.0],
 			"COST": [6000.0, 7200.0, 9000.0],
@@ -1036,7 +1038,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		]
 		self.assertEqual(result, expected)
 
-	def test_evaluate_nested_function_combinations(self):
+	def test_evaluate_nested_function_combinations(self) -> None:
 		row_data = {
 			"BASE": [4.0],
 			"POSITIVE": [16.0],  # Use positive number for sqrt
@@ -1063,7 +1065,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		self.assertAlmostEqual(result[0], expected, places=2)
 
 	# 4. FINANCIAL DOMAIN
-	def test_calculate_financial_use_cases(self):
+	def test_calculate_financial_use_cases(self) -> None:
 		row_data = {
 			"REVENUE_Q1": [1000000.0],
 			"REVENUE_Q2": [1200000.0],
@@ -1104,7 +1106,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		)
 		self.assertEqual(result[0], 20.0)  # 20% profit margin
 
-	def test_calculate_common_financial_patterns(self):
+	def test_calculate_common_financial_patterns(self) -> None:
 		"""Test patterns commonly used in financial calculations"""
 		row_data = {
 			"ACTUAL": [100000.0],
@@ -1143,7 +1145,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		self.assertAlmostEqual(result[0], expected, places=2)
 
 	# 5. EDGE CASES
-	def test_handle_error_cases(self):
+	def test_handle_error_cases(self) -> None:
 		"""Test formula calculator error handling for various edge cases"""
 		row_data = {
 			"NORMAL": [100.0, 200.0, 300.0],
@@ -1192,7 +1194,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		expected = [0.0, 0.0, 0.0]
 		self.assertEqual(result, expected)
 
-	def test_evaluate_math_function_edge_cases(self):
+	def test_evaluate_math_function_edge_cases(self) -> None:
 		"""Test edge cases for mathematical functions"""
 		row_data = {
 			"ZERO": [0.0],
@@ -1213,7 +1215,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 		self.assertTrue(result[0] == 0.0 or abs(result[0] - expected) < 1e-6)
 
 	# 6. OTHER
-	def test_prevent_security_vulnerabilities(self):
+	def test_prevent_security_vulnerabilities(self) -> None:
 		row_data = {"TEST_VAL": [100.0]}
 		period_list = [{"key": "2023_q1", "from_date": "2023-01-01", "to_date": "2023-03-31"}]
 
@@ -1250,7 +1252,7 @@ class TestFormulaCalculator(FinancialReportTemplateTestCase):
 				self.assertNotEqual(result, [0.0], f"Safe expression '{expr}' should not return [0.0]")
 				self.assertIsInstance(result[0], float, f"Safe expression '{expr}' should return a float")
 
-	def test_build_context_validation(self):
+	def test_build_context_validation(self) -> None:
 		row_data = {
 			"TEST1": [100.0, 200.0, 300.0],
 			"TEST2": [10.0, 20.0, 30.0],
@@ -1288,7 +1290,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 
 	def _create_mock_report_row(self, formula: str, reference_code: str = "TEST_ROW"):
 		class MockReportRow:
-			def __init__(self, formula, ref_code):
+			def __init__(self, formula, ref_code) -> None:
 				self.calculation_formula = formula
 				self.reference_code = ref_code
 				self.data_source = "Account Data"
@@ -1299,7 +1301,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		return MockReportRow(formula, reference_code)
 
 	# 1. BASIC PARSING
-	def test_parse_simple_equality_condition(self):
+	def test_parse_simple_equality_condition(self) -> None:
 		parser = FilterExpressionParser()
 
 		# Test simple equality condition
@@ -1318,7 +1320,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		self.assertIn("account_type", condition_str)
 		self.assertIn("Income", condition_str)
 
-	def test_parse_logical_and_or_conditions(self):
+	def test_parse_logical_and_or_conditions(self) -> None:
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
 
@@ -1348,7 +1350,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		self.assertIn("OR", condition_str)
 
 	# 2. OPERATOR SUPPORT
-	def test_parse_valid_operators(self):
+	def test_parse_valid_operators(self) -> None:
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
 
@@ -1372,7 +1374,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 			condition = parser.build_condition(mock_row, account_table)
 			self.assertIsNotNone(condition, f"Failed to build condition for operator {expected_op}")
 
-	def test_build_logical_condition_with_reduce(self):
+	def test_build_logical_condition_with_reduce(self) -> None:
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
 
@@ -1394,7 +1396,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		condition_str = str(condition)
 		self.assertEqual(condition_str.count("OR"), 2)
 
-	def test_operator_value_compatibility(self):
+	def test_operator_value_compatibility(self) -> None:
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
 
@@ -1420,7 +1422,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 			self.assertIsNotNone(condition)
 
 	# 3. COMPLEX STRUCTURES
-	def test_parse_complex_nested_filters(self):
+	def test_parse_complex_nested_filters(self) -> None:
 		"""Test complex nested filter expressions"""
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
@@ -1456,7 +1458,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		self.assertIn("AND", condition_str)
 		self.assertIn("OR", condition_str)
 
-	def test_parse_deeply_nested_conditions(self):
+	def test_parse_deeply_nested_conditions(self) -> None:
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
 
@@ -1492,7 +1494,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		self.assertIn("OR", condition_str)
 
 	# 4. VALUE TYPES
-	def test_parse_different_value_types(self):
+	def test_parse_different_value_types(self) -> None:
 		"""Test different value types in conditions"""
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
@@ -1512,7 +1514,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 			self.assertIsNotNone(condition, f"Failed to build condition for {formula}")
 
 	# 5. EDGE CASES
-	def test_parse_special_characters_in_values(self):
+	def test_parse_special_characters_in_values(self) -> None:
 		"""Test special characters in filter values"""
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
@@ -1530,7 +1532,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 			condition = parser.build_condition(mock_row, account_table)
 			self.assertIsNotNone(condition, f"Failed to build condition for {_case_type} case")
 
-	def test_parse_logical_operator_edge_cases(self):
+	def test_parse_logical_operator_edge_cases(self) -> None:
 		"""Test edge cases for logical operators"""
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
@@ -1555,7 +1557,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		condition = parser.build_condition(mock_row_wrong, account_table)
 		self.assertIsNone(condition)  # Should return None due to invalid logical operator
 
-	def test_build_condition_accepts_document_instance(self):
+	def test_build_condition_accepts_document_instance(self) -> None:
 		parser = FilterExpressionParser()
 		account_table = frappe.qb.DocType("Account")
 		row_obj = frappe._dict(
@@ -1579,7 +1581,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		self.assertIsNotNone(cond)
 
 	# 6. ERROR HANDLING
-	def test_parse_invalid_filter_expressions(self):
+	def test_parse_invalid_filter_expressions(self) -> None:
 		"""Test handling of invalid filter expressions"""
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
@@ -1606,7 +1608,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 			condition = parser.build_condition(mock_row, account_table)
 			self.assertIsNone(condition, f"Expression {expr} should be invalid and return None")
 
-	def test_parse_malformed_logical_conditions(self):
+	def test_parse_malformed_logical_conditions(self) -> None:
 		"""Test malformed logical conditions"""
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
@@ -1631,7 +1633,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 		# Should return None because invalid sub-conditions cause validation to fail
 		self.assertIsNone(condition)
 
-	def test_handle_exception_robustness(self):
+	def test_handle_exception_robustness(self) -> None:
 		"""Test exception handling for various inputs"""
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
@@ -1649,7 +1651,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 			self.assertIsNone(condition, f"Input {test_input} should result in None")
 
 	# 7. BUILD CONDITIONS
-	def test_build_condition_field_validation(self):
+	def test_build_condition_field_validation(self) -> None:
 		"""Test field validation behavior"""
 		parser = FilterExpressionParser()
 		from frappe.query_builder import DocType
@@ -1670,7 +1672,7 @@ class TestFilterExpressionParser(FinancialReportTemplateTestCase):
 
 
 class TestFinancialQueryBuilder(FinancialReportTemplateTestCase):
-	def test_fetch_balances_with_journal_entries(self):
+	def test_fetch_balances_with_journal_entries(self) -> None:
 		company = "_Test Company"
 		cash_account = "_Test Cash - _TC"
 		bank_account = "_Test Bank - _TC"
@@ -1769,7 +1771,7 @@ class TestFinancialQueryBuilder(FinancialReportTemplateTestCase):
 			jv_nov.cancel()
 			jv_oct.cancel()
 
-	def test_opening_balance_from_previous_period_closing(self):
+	def test_opening_balance_from_previous_period_closing(self) -> None:
 		company = "_Test Company"
 		cash_account = "_Test Cash - _TC"
 		sales_account = "Sales - _TC"
@@ -1952,7 +1954,7 @@ class TestFinancialQueryBuilder(FinancialReportTemplateTestCase):
 			jv_2023.cancel()
 
 	@change_settings("Accounts Settings", {"use_legacy_controller_for_pcv": 1})
-	def test_opening_balance_sums_acb_rows_across_dimensions(self):
+	def test_opening_balance_sums_acb_rows_across_dimensions(self) -> None:
 		"""
 		Account Closing Balance stores one row per (account, cost_center,
 		project, finance_book). The closing-balance fetch must sum all rows.
@@ -2049,7 +2051,7 @@ class TestFinancialQueryBuilder(FinancialReportTemplateTestCase):
 		finally:
 			self.cancel_docs(docs)
 
-	def test_opening_entries_roll_into_opening_after_period_closing(self):
+	def test_opening_entries_roll_into_opening_after_period_closing(self) -> None:
 		"""
 		Sequence:
 		    1. is_opening JV of 3000 in current year (FY 2024)
@@ -2202,7 +2204,7 @@ class TestFinancialQueryBuilder(FinancialReportTemplateTestCase):
 			if jv_current_year and jv_current_year.docstatus == 1:
 				jv_current_year.cancel()
 
-	def test_account_with_gl_entries_but_no_prior_closing_balance(self):
+	def test_account_with_gl_entries_but_no_prior_closing_balance(self) -> None:
 		company = "_Test Company"
 		cash_account = "_Test Cash - _TC"
 		bank_account = "_Test Bank - _TC"
@@ -2276,7 +2278,7 @@ class TestFinancialQueryBuilder(FinancialReportTemplateTestCase):
 		finally:
 			jv.cancel()
 
-	def test_pl_pcv_exclusion_and_growth_view_year_over_year(self):
+	def test_pl_pcv_exclusion_and_growth_view_year_over_year(self) -> None:
 		"""
 		Sequence:
 		    1. Expense JV 2000 in FY 2024, PCV for FY 2024

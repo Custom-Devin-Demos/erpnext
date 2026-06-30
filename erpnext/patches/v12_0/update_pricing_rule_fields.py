@@ -2,12 +2,14 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 parentfield = {"item_code": "items", "item_group": "item_groups", "brand": "brands"}
 
 
-def execute():
+def execute() -> None:
 	if not frappe.get_all("Pricing Rule", limit=1):
 		return
 

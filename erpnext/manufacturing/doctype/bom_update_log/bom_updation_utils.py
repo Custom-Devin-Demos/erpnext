@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import copy
 import json
 from collections import defaultdict
@@ -43,7 +45,7 @@ def replace_bom(boms: dict, log_name: str) -> None:
 		bom_obj.save_version()
 
 
-def update_cost_in_level(doc: "BOMUpdateLog", bom_list: list[str], batch_name: int | str) -> None:
+def update_cost_in_level(doc: BOMUpdateLog, bom_list: list[str], batch_name: int | str) -> None:
 	"Updates Cost for BOMs within a given level. Runs via background jobs."
 
 	try:
@@ -127,7 +129,7 @@ def update_cost_in_boms(bom_list: list[str]) -> None:
 def get_next_higher_level_boms(child_boms: list[str], processed_boms: dict[str, bool]) -> list[str]:
 	"Generate immediate higher level dependants with no unresolved dependencies (children)."
 
-	def _all_children_are_processed(parent_bom):
+	def _all_children_are_processed(parent_bom: str) -> bool:
 		child_boms = dependency_map.get(parent_bom)
 		return all(processed_boms.get(bom) for bom in child_boms)
 
@@ -220,7 +222,7 @@ def set_values_in_log(log_name: str, values: dict[str, Any], commit: bool = Fals
 		frappe.db.commit()  # nosemgrep
 
 
-def handle_exception(doc: "BOMUpdateLog") -> None:
+def handle_exception(doc: BOMUpdateLog) -> None:
 	"Rolls back and fails BOM Update Log."
 
 	frappe.db.rollback()

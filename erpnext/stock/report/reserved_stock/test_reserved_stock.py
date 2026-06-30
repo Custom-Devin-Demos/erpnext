@@ -1,5 +1,7 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
+
 from random import randint
 
 from frappe.utils.data import today
@@ -28,7 +30,7 @@ class TestReservedStock(ERPNextTestSuite):
 			"pick_serial_and_batch_based_on": "FIFO",
 		},
 	)
-	def test_reserved_stock_report(self):
+	def test_reserved_stock_report(self) -> None:
 		items_details = create_items()
 		create_material_receipt(items_details, self.warehouse, qty=self.stock_qty)
 

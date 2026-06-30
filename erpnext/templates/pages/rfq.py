@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -9,7 +10,7 @@ from frappe.utils import formatdate
 from erpnext.controllers.website_list_for_contact import get_customers_suppliers
 
 
-def get_context(context):
+def get_context(context) -> None:
 	context.no_cache = 1
 	context.show_sidebar = True
 	context.doc = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.name)
@@ -21,7 +22,7 @@ def get_context(context):
 	context["title"] = frappe.form_dict.name
 
 
-def get_supplier():
+def get_supplier() -> str:
 	doctype = frappe.form_dict.doctype
 	parties_doctype = "Request for Quotation Supplier" if doctype == "Request for Quotation" else doctype
 	customers, suppliers = get_customers_suppliers(parties_doctype, frappe.session.user)
@@ -29,7 +30,7 @@ def get_supplier():
 	return suppliers[0] if suppliers else ""
 
 
-def check_supplier_has_docname_access(supplier):
+def check_supplier_has_docname_access(supplier: str) -> bool:
 	status = True
 	if frappe.form_dict.name not in frappe.get_all(
 		"Request for Quotation Supplier",
@@ -40,13 +41,13 @@ def check_supplier_has_docname_access(supplier):
 	return status
 
 
-def unauthorized_user(supplier):
+def unauthorized_user(supplier: str) -> None:
 	status = check_supplier_has_docname_access(supplier) or False
 	if status is False:
 		frappe.throw(_("Not Permitted"), frappe.PermissionError)
 
 
-def update_supplier_details(context):
+def update_supplier_details(context) -> None:
 	supplier_doc = frappe.get_doc("Supplier", context.doc.supplier)
 	context.doc.currency = supplier_doc.default_currency or frappe.get_cached_value(
 		"Company", context.doc.company, "default_currency"
@@ -58,7 +59,7 @@ def update_supplier_details(context):
 	context.doc.buying_price_list = supplier_doc.default_price_list or ""
 
 
-def get_link_quotation(supplier, rfq):
+def get_link_quotation(supplier: str, rfq: str) -> list | None:
 	sqi = frappe.qb.DocType("Supplier Quotation Item")
 	sq = frappe.qb.DocType("Supplier Quotation")
 	quotation = (

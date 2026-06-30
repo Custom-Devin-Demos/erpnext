@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import copy
 
 import frappe
@@ -9,7 +11,7 @@ from frappe import _
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns, data = [], []
 	columns = get_columns()
 	data = get_data(filters)
@@ -139,7 +141,7 @@ def get_stock_ledger_entries(report_filters):
 	)
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"label": _("Company"),

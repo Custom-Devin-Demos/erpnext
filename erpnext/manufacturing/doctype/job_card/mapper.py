@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -13,8 +15,8 @@ from erpnext.subcontracting.doctype.subcontracting_bom.subcontracting_bom import
 
 
 @frappe.whitelist()
-def make_subcontracting_po(source_name: str, target_doc: Document | str | None = None):
-	def set_missing_values(source, target):
+def make_subcontracting_po(source_name: str, target_doc: Document | str | None = None) -> Document:
+	def set_missing_values(source, target) -> None:
 		_item_details = get_subcontracting_boms_for_finished_goods(source.finished_good)
 
 		pending_qty = source.for_quantity - source.manufactured_qty
@@ -54,11 +56,11 @@ def make_subcontracting_po(source_name: str, target_doc: Document | str | None =
 
 
 @frappe.whitelist()
-def make_material_request(source_name: str, target_doc: Document | str | None = None):
-	def update_item(obj, target, source_parent):
+def make_material_request(source_name: str, target_doc: Document | str | None = None) -> Document:
+	def update_item(obj, target, source_parent) -> None:
 		target.warehouse = source_parent.wip_warehouse
 
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		target.material_request_type = "Material Transfer"
 
 	doclist = get_mapped_doc(
@@ -85,8 +87,8 @@ def make_material_request(source_name: str, target_doc: Document | str | None = 
 
 
 @frappe.whitelist()
-def make_stock_entry(source_name: str, target_doc: Document | str | None = None):
-	def update_item(source, target, source_parent):
+def make_stock_entry(source_name: str, target_doc: Document | str | None = None) -> Document:
+	def update_item(source, target, source_parent) -> None:
 		target.t_warehouse = source_parent.wip_warehouse
 
 		if not target.conversion_factor:
@@ -96,7 +98,7 @@ def make_stock_entry(source_name: str, target_doc: Document | str | None = None)
 		if pending_rm_qty > 0:
 			target.qty = pending_rm_qty
 
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		if source.finished_good and not source.target_warehouse:
 			frappe.throw(_("Please set the Target Warehouse in the Job Card"))
 
@@ -158,8 +160,8 @@ def make_corrective_job_card(
 	operation: str | None = None,
 	for_operation: str | None = None,
 	target_doc: Document | str | None = None,
-):
-	def set_missing_values(source, target):
+) -> Document:
+	def set_missing_values(source, target) -> None:
 		target.is_corrective_job_card = 1
 		target.operation = operation
 		target.for_operation = for_operation

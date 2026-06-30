@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, today
 
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestIssueSummary(ERPNextTestSuite):
-	def test_count_grouped_by_issue_priority(self):
+	def test_count_grouped_by_issue_priority(self) -> None:
 		# Unique Issue Priority so this group is isolated from any pre-existing data.
 		priority = "__Test Issue Summary Priority"
 		if not frappe.db.exists("Issue Priority", priority):

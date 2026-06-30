@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	from erpnext.stock.stock_balance import get_indented_qty, get_ordered_qty, update_bin_qty
 
 	count = 0

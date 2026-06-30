@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import click
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if "lending" in frappe.get_installed_apps():
 		return
 

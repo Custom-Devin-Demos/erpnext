@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from collections.abc import Iterator
 from operator import itemgetter
 
@@ -253,7 +255,7 @@ def get_chart_data(data: list, filters: Filters) -> dict:
 	}
 
 
-def setup_ageing_columns(filters: Filters, range_columns: list):
+def setup_ageing_columns(filters: Filters, range_columns: list) -> None:
 	prev_range_value = 0
 	ranges = []
 	for age_range in filters.ranges:
@@ -268,7 +270,9 @@ def setup_ageing_columns(filters: Filters, range_columns: list):
 		add_column(range_columns, label=_("Value ({0})").format(label), fieldname=fieldname + "value")
 
 
-def add_column(range_columns: list, label: str, fieldname: str, fieldtype: str = "Float", width: int = 140):
+def add_column(
+	range_columns: list, label: str, fieldname: str, fieldtype: str = "Float", width: int = 140
+) -> None:
 	range_columns.append(dict(label=label, fieldname=fieldname, fieldtype=fieldtype, width=width))
 
 
@@ -283,7 +287,7 @@ def is_qty_slot(slot: list) -> bool:
 class FIFOSlots:
 	"Returns FIFO computed slots of inwarded stock as per date."
 
-	def __init__(self, filters: dict | None = None, sle: list | None = None):
+	def __init__(self, filters: dict | None = None, sle: list | None = None) -> None:
 		self.item_details = {}
 		self.transferred_item_details = {}
 		self.serial_no_details = {}
@@ -435,7 +439,7 @@ class FIFOSlots:
 		elif len(fifo_queue) > qty_after:
 			fifo_queue[:] = fifo_queue[:qty_after]
 
-	def uppercase_serial_nos(self, serial_nos):
+	def uppercase_serial_nos(self, serial_nos) -> list:
 		"Convert serial nos to uppercase for uniformity."
 		return [sn.upper() for sn in serial_nos]
 
@@ -487,7 +491,7 @@ class FIFOSlots:
 
 	def _compute_incoming_stock(
 		self, row: dict, fifo_queue: list, transfer_key: tuple, serial_nos: list, batch_nos: list
-	):
+	) -> None:
 		"Update FIFO Queue on inward stock."
 		transfer_data = self.transferred_item_details.get(transfer_key)
 		if transfer_data:
@@ -590,7 +594,7 @@ class FIFOSlots:
 
 	def _compute_outgoing_stock(
 		self, row: dict, fifo_queue: list, transfer_key: tuple, serial_nos: list, batch_nos: list
-	):
+	) -> None:
 		"Update FIFO Queue on outward stock."
 		if serial_nos:
 			self._consume_serial_fifo_slots(fifo_queue, serial_nos)
@@ -710,7 +714,7 @@ class FIFOSlots:
 		row: dict,
 		batch_nos: list | None = None,
 		serial_nos: list | None = None,
-	):
+	) -> None:
 		"Add previously removed stock back to FIFO Queue."
 		transfer_qty_to_pop = flt(row.actual_qty)
 		stock_value = flt(row.stock_value_difference)
@@ -867,7 +871,7 @@ class FIFOSlots:
 			None,
 		)
 
-	def _update_balances(self, row: dict, key: tuple | str):
+	def _update_balances(self, row: dict, key: tuple | str) -> None:
 		self.item_details[key]["qty_after_transaction"] = row.qty_after_transaction
 		if "total_qty" not in self.item_details[key]:
 			self.item_details[key]["total_qty"] = row.actual_qty
@@ -1065,7 +1069,7 @@ class FIFOSlots:
 	def _get_warehouse_conditions(self, sle, sle_query) -> str:
 		return apply_warehouse_filter(sle_query, sle, self.filters)
 
-	def prepare_stock_reco_voucher_wise_count(self):
+	def prepare_stock_reco_voucher_wise_count(self) -> None:
 		self.stock_reco_voucher_wise_count = frappe._dict()
 
 		doctype = frappe.qb.DocType("Stock Ledger Entry")

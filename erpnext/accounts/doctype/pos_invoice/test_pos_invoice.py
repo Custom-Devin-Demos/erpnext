@@ -1,5 +1,7 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
+
 import copy
 
 import frappe
@@ -22,7 +24,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class POSInvoiceTestMixin(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile
 
 		self.load_test_records("Stock Entry")
@@ -40,13 +42,13 @@ class POSInvoiceTestMixin(ERPNextTestSuite):
 
 
 class TestPOSInvoice(POSInvoiceTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		super().setUp()
 		from erpnext.accounts.doctype.pos_opening_entry.test_pos_opening_entry import create_opening_entry
 
 		self.opening_entry = create_opening_entry(self.pos_profile, self.test_user.name)
 
-	def test_timestamp_change(self):
+	def test_timestamp_change(self) -> None:
 		w = create_pos_invoice(do_not_save=1)
 		w.docstatus = 0
 		w.insert()
@@ -63,13 +65,13 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		time.sleep(1)
 		self.assertRaises(frappe.TimestampMismatchError, w2.save)
 
-	def test_change_naming_series(self):
+	def test_change_naming_series(self) -> None:
 		inv = create_pos_invoice(do_not_submit=1)
 		inv.naming_series = "TEST-"
 
 		self.assertRaises(frappe.CannotChangeConstantError, inv.save)
 
-	def test_discount_and_inclusive_tax(self):
+	def test_discount_and_inclusive_tax(self) -> None:
 		inv = create_pos_invoice(qty=100, rate=50, do_not_save=1)
 		inv.append(
 			"taxes",
@@ -109,7 +111,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		self.assertEqual(inv.net_total, 4298.24)
 		self.assertEqual(inv.grand_total, 4900.00)
 
-	def test_tax_calculation_with_multiple_items(self):
+	def test_tax_calculation_with_multiple_items(self) -> None:
 		inv = create_pos_invoice(qty=84, rate=4.6, do_not_save=True)
 		item_row = inv.get("items")[0]
 		for qty in (54, 288, 144, 430):
@@ -137,7 +139,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 
 		self.assertEqual(inv.grand_total, 5474.0)
 
-	def test_tax_calculation_with_item_tax_template(self):
+	def test_tax_calculation_with_item_tax_template(self) -> None:
 		inv = create_pos_invoice(qty=84, rate=4.6, do_not_save=1)
 		item_row = inv.get("items")[0]
 
@@ -203,7 +205,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		self.assertEqual(inv.rounding_adjustment, 0.43)
 		self.assertEqual(inv.rounded_total, 5676.0)
 
-	def test_tax_calculation_with_multiple_items_and_discount(self):
+	def test_tax_calculation_with_multiple_items_and_discount(self) -> None:
 		inv = create_pos_invoice(qty=1, rate=75, do_not_save=True)
 		item_row = inv.get("items")[0]
 		for rate in (500, 200, 100, 50, 50):
@@ -236,7 +238,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 
 		self.assertEqual(inv.grand_total, 1116.0)
 
-	def test_pos_returns_with_repayment(self):
+	def test_pos_returns_with_repayment(self) -> None:
 		pos = create_pos_invoice(qty=10, do_not_save=True)
 
 		pos.set("payments", [])
@@ -253,7 +255,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		self.assertEqual(pos_return.get("payments")[0].amount, -500)
 		self.assertEqual(pos_return.get("payments")[1].amount, -500)
 
-	def test_pos_return_for_serialized_item(self):
+	def test_pos_return_for_serialized_item(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
 		se = make_serialized_item(
@@ -293,7 +295,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 			get_serial_nos_from_bundle(pos_return.get("items")[0].serial_and_batch_bundle)[0], serial_nos[0]
 		)
 
-	def test_partial_pos_returns(self):
+	def test_partial_pos_returns(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
 		se = make_serialized_item(
@@ -357,7 +359,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		serial_no = get_serial_nos_from_bundle(pos_return2.get("items")[0].serial_and_batch_bundle)[0]
 		self.assertEqual(serial_no, serial_nos[1])
 
-	def test_pos_change_amount(self):
+	def test_pos_change_amount(self) -> None:
 		pos = create_pos_invoice(
 			company="_Test Company",
 			debit_to="Debtors - _TC",
@@ -378,13 +380,13 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		self.assertEqual(pos.grand_total, 105.0)
 		self.assertEqual(pos.change_amount, 5.0)
 
-	def test_without_payment(self):
+	def test_without_payment(self) -> None:
 		inv = create_pos_invoice(do_not_save=1)
 		# Check that the invoice cannot be submitted without payments
 		inv.payments = []
 		self.assertRaises(frappe.ValidationError, inv.insert)
 
-	def test_partial_payment(self):
+	def test_partial_payment(self) -> None:
 		pos_inv = create_pos_invoice(rate=10000, do_not_save=1)
 		pos_inv.append(
 			"payments",
@@ -393,7 +395,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		pos_inv.insert()
 		self.assertRaises(PartialPaymentValidationError, pos_inv.submit)
 
-	def test_partly_paid_invoices(self):
+	def test_partly_paid_invoices(self) -> None:
 		set_allow_partial_payment(self.pos_profile, 1)
 
 		pos_inv = create_pos_invoice(pos_profile=self.pos_profile.name, rate=100, do_not_save=1)
@@ -413,7 +415,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 
 		set_allow_partial_payment(self.pos_profile, 0)
 
-	def test_multi_payment_for_partly_paid_invoices(self):
+	def test_multi_payment_for_partly_paid_invoices(self) -> None:
 		set_allow_partial_payment(self.pos_profile, 1)
 
 		pos_inv = create_pos_invoice(pos_profile=self.pos_profile.name, rate=100, do_not_save=1)
@@ -437,7 +439,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 
 		set_allow_partial_payment(self.pos_profile, 0)
 
-	def test_serialized_item_transaction(self):
+	def test_serialized_item_transaction(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
 		se = make_serialized_item(
@@ -488,7 +490,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		pos2.insert()
 		self.assertRaises(frappe.ValidationError, pos2.submit)
 
-	def test_delivered_serialized_item_transaction(self):
+	def test_delivered_serialized_item_transaction(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
 		se = make_serialized_item(
@@ -539,7 +541,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		pos2.insert()
 		self.assertRaises(frappe.ValidationError, pos2.submit)
 
-	def test_invalid_serial_no_validation(self):
+	def test_invalid_serial_no_validation(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
 		se = make_serialized_item(
@@ -570,7 +572,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 
 		self.assertRaises(frappe.ValidationError, pos.insert)
 
-	def test_value_error_on_serial_no_validation(self):
+	def test_value_error_on_serial_no_validation(self) -> None:
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
 		se = make_serialized_item(
@@ -630,7 +632,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		# Value error should not be triggered on validation
 		pos2.save()
 
-	def test_loyalty_points(self):
+	def test_loyalty_points(self) -> None:
 		from erpnext.accounts.doctype.loyalty_program.loyalty_program import (
 			get_loyalty_program_details_with_points,
 		)
@@ -666,7 +668,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		)
 		self.assertEqual(after_cancel_lp_details.loyalty_points, before_lp_details.loyalty_points)
 
-	def test_loyalty_points_redeemption(self):
+	def test_loyalty_points_redeemption(self) -> None:
 		from erpnext.accounts.doctype.loyalty_program.loyalty_program import (
 			get_loyalty_program_details_with_points,
 		)
@@ -701,7 +703,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		)
 		self.assertEqual(after_redeem_lp_details.loyalty_points, 9)
 
-	def test_pos_batch_reservation(self):
+	def test_pos_batch_reservation(self) -> None:
 		from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle import (
 			get_auto_batch_nos,
 		)
@@ -761,7 +763,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 			if batch.batch_no == batch_no and batch.warehouse == "_Test Warehouse - _TC":
 				self.assertEqual(batch.qty, 5)
 
-	def test_pos_batch_reservation_with_return_qty(self):
+	def test_pos_batch_reservation_with_return_qty(self) -> None:
 		"""
 		Test POS Invoice reserved qty for batch without bundle with return invoices.
 		"""
@@ -808,7 +810,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 			if batch.batch_no == batch_no and batch.warehouse == "_Test Warehouse - _TC":
 				self.assertEqual(batch.qty, 30)
 
-	def test_pos_batch_item_qty_validation(self):
+	def test_pos_batch_item_qty_validation(self) -> None:
 		from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle import (
 			BatchNegativeStockError,
 		)
@@ -864,7 +866,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		pos_inv2.delete()
 		se.cancel()
 
-	def test_ignore_pricing_rule(self):
+	def test_ignore_pricing_rule(self) -> None:
 		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
 
 		if not frappe.db.exists(
@@ -901,7 +903,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 		pos_inv.save()
 		self.assertEqual(pos_inv.items[0].rate, 300)
 
-	def test_delivered_serial_no_case(self):
+	def test_delivered_serial_no_case(self) -> None:
 		from erpnext.accounts.doctype.pos_invoice_merge_log.test_pos_invoice_merge_log import (
 			init_user_and_profile,
 		)
@@ -929,7 +931,7 @@ class TestPOSInvoice(POSInvoiceTestMixin):
 
 		self.assertRaises(frappe.ValidationError, pos_inv.submit)
 
-	def test_bundle_stock_availability_validation(self):
+	def test_bundle_stock_availability_validation(self) -> None:
 		from erpnext.accounts.doctype.pos_invoice.pos_invoice import ProductBundleStockValidationError
 		from erpnext.accounts.doctype.pos_invoice_merge_log.test_pos_invoice_merge_log import (
 			init_user_and_profile,
@@ -1117,7 +1119,7 @@ def create_pos_invoice(**args):
 	return pos_inv
 
 
-def set_allow_partial_payment(pos_profile, value):
+def set_allow_partial_payment(pos_profile, value) -> None:
 	pos_profile.reload()
 	pos_profile.allow_partial_payment = value
 	pos_profile.save()

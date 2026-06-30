@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import IfNull, Max
@@ -10,7 +12,7 @@ from frappe.utils import flt
 from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	if not filters:
 		filters = frappe._dict()
 
@@ -120,7 +122,7 @@ def get_columns():
 	return columns
 
 
-def get_items(filters):
+def get_items(filters) -> tuple:
 	pb_details = frappe._dict()
 	item_details = frappe._dict()
 

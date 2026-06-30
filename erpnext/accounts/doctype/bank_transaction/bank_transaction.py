@@ -1,6 +1,8 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.docstatus import DocStatus
@@ -50,19 +52,19 @@ class BankTransaction(Document):
 		withdrawal: DF.Currency
 	# end: auto-generated types
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.handle_excluded_fee()
 		self.update_allocated_amount()
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_included_fee()
 		self.validate_duplicate_references()
 		self.validate_currency()
 
-	def validate_currency(self):
+	def validate_currency(self) -> None:
 		"""
 		Bank Transaction should be on the same currency as the Bank Account.
 		"""
@@ -81,7 +83,7 @@ class BankTransaction(Document):
 						)
 					)
 
-	def set_status(self):
+	def set_status(self) -> None:
 		if self.docstatus == 2:
 			self.db_set("status", "Cancelled")
 		elif self.docstatus == 1:
@@ -90,7 +92,7 @@ class BankTransaction(Document):
 			elif self.unallocated_amount <= 0:
 				self.db_set("status", "Reconciled")
 
-	def validate_duplicate_references(self):
+	def validate_duplicate_references(self) -> None:
 		"""Make sure the same voucher is not allocated twice within the same Bank Transaction"""
 		if not self.payment_entries:
 			return
@@ -106,7 +108,7 @@ class BankTransaction(Document):
 				)
 			references.add(reference)
 
-	def update_allocated_amount(self):
+	def update_allocated_amount(self) -> None:
 		allocated_amount = (
 			sum(p.allocated_amount for p in self.payment_entries) if self.payment_entries else 0.0
 		)
@@ -115,7 +117,7 @@ class BankTransaction(Document):
 		self.allocated_amount = flt(allocated_amount, self.precision("allocated_amount"))
 		self.unallocated_amount = flt(unallocated_amount, self.precision("unallocated_amount"))
 
-	def delink_old_payment_entries(self):
+	def delink_old_payment_entries(self) -> None:
 		if self.flags.updating_linked_bank_transaction:
 			return
 
@@ -128,21 +130,21 @@ class BankTransaction(Document):
 
 			self.delink_payment_entry(old_pe)
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.allocate_payment_entries()
 		self.set_status()
 
 		if frappe.get_single_value("Accounts Settings", "enable_party_matching"):
 			self.auto_set_party()
 
-	def before_update_after_submit(self):
+	def before_update_after_submit(self) -> None:
 		self.validate_duplicate_references()
 		self.update_allocated_amount()
 		self.delink_old_payment_entries()
 		self.allocate_payment_entries()
 		self.set_status()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = ["GL Entry"]
 
 		for payment_entry in self.payment_entries:
@@ -150,7 +152,7 @@ class BankTransaction(Document):
 
 		self.set_status()
 
-	def add_payment_entries(self, vouchers, is_new_voucher: bool = False):
+	def add_payment_entries(self, vouchers, is_new_voucher: bool = False) -> None:
 		"""
 		Add the vouchers with zero allocation. Save() will perform the allocations and clearance
 
@@ -171,7 +173,7 @@ class BankTransaction(Document):
 				},
 			)
 
-	def allocate_payment_entries(self):
+	def allocate_payment_entries(self) -> None:
 		"""Refactored from bank reconciliation tool.
 		Non-zero allocations must be amended/cleared manually
 		Get the bank transaction amount (b) and remove as we allocate
@@ -236,24 +238,24 @@ class BankTransaction(Document):
 		self.update_allocated_amount()
 
 	@frappe.whitelist()
-	def remove_payment_entries(self):
+	def remove_payment_entries(self) -> None:
 		for payment_entry in self.payment_entries:
 			self.remove_payment_entry(payment_entry)
 
 		self.save()  # runs before_update_after_submit
 
-	def remove_payment_entry(self, payment_entry):
+	def remove_payment_entry(self, payment_entry) -> None:
 		"Clear payment entry and clearance"
 		self.delink_payment_entry(payment_entry)
 		self.remove(payment_entry)
 
-	def delink_payment_entry(self, payment_entry):
+	def delink_payment_entry(self, payment_entry) -> None:
 		if payment_entry.payment_document == "Bank Transaction":
 			self.update_linked_bank_transaction(payment_entry.payment_entry, allocated_amount=None)
 		else:
 			self.clear_linked_payment_entry(payment_entry, clearance_date=None)
 
-	def clear_linked_payment_entry(self, payment_entry, clearance_date=None):
+	def clear_linked_payment_entry(self, payment_entry, clearance_date=None) -> None:
 		doctype = payment_entry.payment_document
 		docname = payment_entry.payment_entry
 
@@ -272,7 +274,7 @@ class BankTransaction(Document):
 
 		frappe.db.set_value(doctype, docname, "clearance_date", clearance_date)
 
-	def update_linked_bank_transaction(self, bank_transaction_name, allocated_amount=None):
+	def update_linked_bank_transaction(self, bank_transaction_name, allocated_amount=None) -> None:
 		"""For when a second bank transaction has fixed another, e.g. refund"""
 
 		bt = frappe.get_doc(self.doctype, bank_transaction_name)
@@ -303,7 +305,7 @@ class BankTransaction(Document):
 
 		bt.save()
 
-	def auto_set_party(self):
+	def auto_set_party(self) -> None:
 		from erpnext.accounts.doctype.bank_transaction.auto_match_party import AutoMatchParty
 
 		if self.party_type and self.party:
@@ -326,7 +328,7 @@ class BankTransaction(Document):
 
 		self.party_type, self.party = result
 
-	def validate_included_fee(self):
+	def validate_included_fee(self) -> None:
 		"""
 		The included_fee is only handled for withdrawals. An included_fee for a deposit, is not credited to the account and is
 		therefore outside of the deposit value and can be larger than the deposit itself.
@@ -336,7 +338,7 @@ class BankTransaction(Document):
 			if self.included_fee > self.withdrawal:
 				frappe.throw(_("Included fee is bigger than the withdrawal itself."))
 
-	def handle_excluded_fee(self):
+	def handle_excluded_fee(self) -> None:
 		# Include the excluded fee on validate to handle all further processing the same
 		excluded_fee = flt(self.excluded_fee)
 		if excluded_fee <= 0:
@@ -368,7 +370,7 @@ def get_doctypes_for_bank_reconciliation():
 
 
 @frappe.whitelist()
-def unreconcile_transaction(transaction_name: str | int):
+def unreconcile_transaction(transaction_name: str | int) -> None:
 	"""
 	Unreconcile an entire bank transaction - this does not handle individual entries but clears the entire transaction
 
@@ -569,7 +571,7 @@ def get_reconciled_bank_transactions(doctype, docname):
 	)
 
 
-def remove_from_bank_transaction(doctype, docname):
+def remove_from_bank_transaction(doctype, docname) -> None:
 	"""Remove a (cancelled) voucher from all Bank Transactions."""
 	for bt_name in get_reconciled_bank_transactions(doctype, docname):
 		bt = frappe.get_doc("Bank Transaction", bt_name)

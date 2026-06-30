@@ -8,6 +8,8 @@ they can be called as module-level functions from any doctype, while keeping
 the AccountsController methods as thin shims.
 """
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import Criterion
@@ -509,7 +511,7 @@ def get_common_query(
 	return q
 
 
-def _set_je_amounts(entry, amount, default_amount=None, is_credit=True):
+def _set_je_amounts(entry, amount, default_amount=None, is_credit: bool = True) -> None:
 	if is_credit:
 		entry.credit_in_account_currency = amount
 		if default_amount is not None:

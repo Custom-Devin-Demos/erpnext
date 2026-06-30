@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Backfill the default for CRM Settings.close_opportunity_after_days.
 
 	The auto-close logic used to fall back to 15 days in code. Now that the fallback is removed,

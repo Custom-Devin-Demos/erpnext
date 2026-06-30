@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from frappe import _
 from pypika import Order
 

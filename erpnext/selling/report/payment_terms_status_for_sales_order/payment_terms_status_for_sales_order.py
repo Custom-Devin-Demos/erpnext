@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # License: MIT. See LICENSE
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb, query_builder
 from frappe.query_builder import Criterion
@@ -9,7 +11,7 @@ from frappe.utils import flt
 from frappe.utils.dateutils import getdate
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		{
 			"label": _("Sales Order"),
@@ -76,7 +78,7 @@ def get_columns():
 	return columns
 
 
-def get_descendants_of(doctype, group_name):
+def get_descendants_of(doctype: str, group_name: str) -> list:
 	group_doc = qb.DocType(doctype)
 	# get lft and rgt of group node
 	lft, rgt = (
@@ -97,7 +99,7 @@ def get_descendants_of(doctype, group_name):
 @frappe.validate_and_sanitize_search_inputs
 def get_customers_or_items(
 	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: list | None
-):
+) -> list:
 	filter_list = []
 	if isinstance(filters, list):
 		for item in filters:
@@ -115,7 +117,7 @@ def get_customers_or_items(
 					)
 
 	if searchfield and txt:
-		filter_list.append([doctype, searchfield, "like", "%%%s%%" % txt])
+		filter_list.append([doctype, searchfield, "like", f"%{txt}%"])
 
 	return frappe.desk.reportview.execute(
 		doctype,
@@ -127,7 +129,7 @@ def get_customers_or_items(
 	)
 
 
-def get_conditions(filters):
+def get_conditions(filters: dict) -> dict:
 	"""
 	Convert filter options to conditions used in query
 	"""
@@ -141,7 +143,7 @@ def get_conditions(filters):
 	return conditions
 
 
-def build_filter_criterions(filters):
+def build_filter_criterions(filters: dict) -> list:
 	filters = frappe._dict(filters) if filters else frappe._dict({})
 	qb_criterions = []
 
@@ -174,7 +176,7 @@ def build_filter_criterions(filters):
 	return qb_criterions
 
 
-def get_so_with_invoices(filters):
+def get_so_with_invoices(filters: dict) -> tuple:
 	"""
 	Get Sales Order with payment terms template with their associated Invoices
 	"""
@@ -250,7 +252,7 @@ def get_so_with_invoices(filters):
 	return sorders, invoices
 
 
-def allocate_invoice_amount_across_orders(invoices):
+def allocate_invoice_amount_across_orders(invoices: list) -> None:
 	"""Split each invoice's grand total across the Sales Orders it bills, proportional to each order's net
 	line amount. A single-order invoice keeps the full grand total (ratio 1). The last order (sorted, so
 	both engines agree) absorbs the rounding residual, so the shares always sum back to the grand total."""
@@ -273,7 +275,7 @@ def allocate_invoice_amount_across_orders(invoices):
 		rows[-1].invoice_amount = grand_total - allocated
 
 
-def set_payment_terms_statuses(sales_orders, invoices, filters):
+def set_payment_terms_statuses(sales_orders: list, invoices: list, filters: dict) -> tuple:
 	"""
 	compute status for payment terms with associated sales invoice using FIFO
 	"""
@@ -299,7 +301,7 @@ def set_payment_terms_statuses(sales_orders, invoices, filters):
 	return sales_orders, invoices
 
 
-def prepare_chart(s_orders):
+def prepare_chart(s_orders: list) -> dict | None:
 	if len(set([x.name for x in s_orders])) == 1:
 		chart = {
 			"data": {
@@ -320,13 +322,13 @@ def prepare_chart(s_orders):
 		return chart
 
 
-def filter_on_calculated_status(filters, sales_orders):
+def filter_on_calculated_status(filters: dict, sales_orders: list) -> list:
 	if filters.status and sales_orders:
 		return [x for x in sales_orders if x.status in filters.status]
 	return sales_orders
 
 
-def filter_for_immediate_upcoming_term(filters, sales_orders):
+def filter_for_immediate_upcoming_term(filters: dict, sales_orders: list) -> list:
 	if filters.only_immediate_upcoming_term and sales_orders:
 		immediate_term_found = set()
 		filtered_data = []
@@ -338,7 +340,7 @@ def filter_for_immediate_upcoming_term(filters, sales_orders):
 	return sales_orders
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns = get_columns()
 	sales_orders, so_invoices = get_so_with_invoices(filters)
 	sales_orders, so_invoices = set_payment_terms_statuses(sales_orders, so_invoices, filters)

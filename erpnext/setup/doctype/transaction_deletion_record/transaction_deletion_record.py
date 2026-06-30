@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import OrderedDict
 
 import frappe
@@ -68,14 +70,14 @@ PROTECTED_CORE_DOCTYPES = frozenset(
 
 
 @frappe.whitelist()
-def get_protected_doctypes():
+def get_protected_doctypes() -> list:
 	"""Get list of protected DocTypes that cannot be deleted (whitelisted for frontend)"""
 	frappe.only_for("System Manager")
 	return _get_protected_doctypes_internal()
 
 
 @frappe.whitelist()
-def get_company_link_fields(doctype_name: str):
+def get_company_link_fields(doctype_name: str) -> list:
 	"""Get all Company Link field names for a DocType (whitelisted for frontend autocomplete)
 
 	Args:
@@ -96,7 +98,7 @@ def get_company_link_fields(doctype_name: str):
 	)
 
 
-def _get_protected_doctypes_internal():
+def _get_protected_doctypes_internal() -> list:
 	"""Internal method to get protected doctypes"""
 	protected = []
 
@@ -145,7 +147,7 @@ class TransactionDeletionRecord(Document):
 		status: DF.Literal["Queued", "Running", "Failed", "Completed", "Cancelled"]
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.batch_size = 5000
 		# Tasks are listed by their execution order
@@ -160,16 +162,16 @@ class TransactionDeletionRecord(Document):
 			}
 		)
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate(self):
+	def validate(self) -> None:
 		frappe.only_for("System Manager")
 		if not self.doctypes_to_be_ignored:
 			self.populate_doctypes_to_be_ignored_table()
 		self.validate_to_delete_list()
 
-	def validate_to_delete_list(self):
+	def validate_to_delete_list(self) -> None:
 		"""Validate To Delete list: existence, protection status, child table exclusion, duplicates"""
 		if not self.doctypes_to_delete:
 			return
@@ -227,7 +229,7 @@ class TransactionDeletionRecord(Document):
 						title=_("Invalid Company Field"),
 					)
 
-	def _is_any_doctype_in_deletion_list(self, doctypes_list):
+	def _is_any_doctype_in_deletion_list(self, doctypes_list: list) -> bool:
 		"""Check if any DocType from the list is in the To Delete list"""
 		if not self.doctypes_to_delete:
 			return False
@@ -235,12 +237,12 @@ class TransactionDeletionRecord(Document):
 		deletion_doctypes = {d.doctype_name for d in self.doctypes_to_delete}
 		return any(doctype in deletion_doctypes for doctype in doctypes_list)
 
-	def generate_job_name_for_task(self, task=None):
+	def generate_job_name_for_task(self, task: str | None = None) -> str:
 		"""Generate unique job name for a specific task"""
 		method = self.task_to_internal_method_map[task]
 		return f"{self.name}_{method}"
 
-	def generate_job_name_for_next_tasks(self, task=None):
+	def generate_job_name_for_next_tasks(self, task: str | None = None) -> list:
 		"""Generate job names for all tasks following the specified task"""
 		job_names = []
 		current_task_idx = list(self.task_to_internal_method_map).index(task)
@@ -249,14 +251,14 @@ class TransactionDeletionRecord(Document):
 				job_names.append(self.generate_job_name_for_task(task))
 		return job_names
 
-	def generate_job_name_for_all_tasks(self):
+	def generate_job_name_for_all_tasks(self) -> list:
 		"""Generate job names for all tasks in the deletion workflow"""
 		job_names = []
 		for task in self.task_to_internal_method_map.keys():
 			job_names.append(self.generate_job_name_for_task(task))
 		return job_names
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		if queued_docs := frappe.db.get_all(
 			"Transaction Deletion Record",
 			filters={"status": ("in", ["Running", "Queued"]), "docstatus": 1},
@@ -274,7 +276,7 @@ class TransactionDeletionRecord(Document):
 		if not self.doctypes_to_be_ignored:
 			self.populate_doctypes_to_be_ignored_table()
 
-	def reset_task_flags(self):
+	def reset_task_flags(self) -> None:
 		self.clear_notifications_status = "Pending"
 		self.delete_bin_data_status = "Pending"
 		self.delete_leads_and_addresses_status = "Pending"
@@ -282,20 +284,20 @@ class TransactionDeletionRecord(Document):
 		self.initialize_doctypes_table_status = "Pending"
 		self.reset_company_default_values_status = "Pending"
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.status = ""
 		self.doctypes.clear()
 		self.reset_task_flags()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.db_set("status", "Queued")
 		self.start_deletion_tasks()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.db_set("status", "Cancelled")
 		self._clear_deletion_cache()
 
-	def _set_deletion_cache(self):
+	def _set_deletion_cache(self) -> None:
 		"""Set Redis cache flags for per-doctype validation"""
 		for item in self.doctypes_to_delete:
 			frappe.cache.set_value(
@@ -304,12 +306,12 @@ class TransactionDeletionRecord(Document):
 				expires_in_sec=DELETION_CACHE_TTL,
 			)
 
-	def _clear_deletion_cache(self):
+	def _clear_deletion_cache(self) -> None:
 		"""Clear Redis cache flags"""
 		for item in self.doctypes_to_delete:
 			frappe.cache.delete_value(f"deletion_running_doctype:{item.doctype_name}")
 
-	def _get_child_tables(self, doctype_name):
+	def _get_child_tables(self, doctype_name: str) -> list:
 		"""Get list of child table DocType names for a given DocType
 
 		Args:
@@ -335,7 +337,9 @@ class TransactionDeletionRecord(Document):
 
 		return child_tables
 
-	def _get_to_delete_row_infos(self, doctype_name, company_field=None, company=None):
+	def _get_to_delete_row_infos(
+		self, doctype_name: str, company_field: str | None = None, company: str | None = None
+	) -> dict:
 		"""Get child tables and document count for a To Delete list row
 
 		Args:
@@ -361,14 +365,14 @@ class TransactionDeletionRecord(Document):
 			"document_count": doc_count,
 		}
 
-	def _has_company_field(self, doctype_name):
+	def _has_company_field(self, doctype_name: str) -> str | None:
 		"""Check if DocType has a field specifically named 'company' linking to Company"""
 		return frappe.db.exists(
 			"DocField",
 			{"parent": doctype_name, "fieldname": "company", "fieldtype": "Link", "options": "Company"},
 		)
 
-	def _get_company_link_fields(self, doctype_name):
+	def _get_company_link_fields(self, doctype_name: str) -> list:
 		"""Get all Company Link field names for a DocType
 
 		Args:
@@ -386,7 +390,7 @@ class TransactionDeletionRecord(Document):
 		return company_fields or []
 
 	@frappe.whitelist()
-	def generate_to_delete_list(self):
+	def generate_to_delete_list(self) -> dict:
 		"""Generate To Delete list with one row per company field"""
 		self.doctypes_to_delete = []
 
@@ -441,7 +445,7 @@ class TransactionDeletionRecord(Document):
 	@frappe.whitelist()
 	def populate_doctype_details(
 		self, doctype_name: str, company: str | None = None, company_field: str | None = None
-	):
+	) -> dict:
 		"""Get child DocTypes and document count for specified DocType
 
 		Args:
@@ -479,7 +483,7 @@ class TransactionDeletionRecord(Document):
 				"error": _("Unable to fetch DocType details. Please contact system administrator."),
 			}
 
-	def export_to_delete_template_method(self):
+	def export_to_delete_template_method(self) -> None:
 		"""Export To Delete list as CSV template"""
 		if not self.doctypes_to_delete:
 			frappe.throw(_("Generate To Delete list first"))
@@ -500,7 +504,7 @@ class TransactionDeletionRecord(Document):
 			"doctype"
 		] = f"deletion_template_{self.company}_{frappe.utils.now_datetime().strftime('%Y%m%d')}"
 
-	def import_to_delete_template_method(self, csv_content):
+	def import_to_delete_template_method(self, csv_content: str) -> dict:
 		"""Import CSV template and regenerate counts"""
 		import csv
 		from io import StringIO
@@ -580,7 +584,7 @@ class TransactionDeletionRecord(Document):
 
 		return {"imported": imported_count, "skipped": len(skipped)}
 
-	def enqueue_task(self, task: str | None = None):
+	def enqueue_task(self, task: str | None = None) -> None:
 		"""Enqueue a deletion task for background execution"""
 		if task and task in self.task_to_internal_method_map:
 			job_names = self.generate_job_name_for_next_tasks(task=task)
@@ -602,7 +606,7 @@ class TransactionDeletionRecord(Document):
 					task_to_execute=task,
 				)
 
-	def execute_task(self, task_to_execute: str | None = None):
+	def execute_task(self, task_to_execute: str | None = None) -> None:
 		if task_to_execute:
 			method = self.task_to_internal_method_map[task_to_execute]
 			if task := getattr(self, method, None):
@@ -617,19 +621,19 @@ class TransactionDeletionRecord(Document):
 					frappe.db.set_value(self.doctype, self.name, "status", "Failed")
 					self._clear_deletion_cache()
 
-	def delete_notifications(self):
+	def delete_notifications(self) -> None:
 		self.validate_doc_status()
 		if self.clear_notifications_status == "Pending":
 			clear_notifications()
 			self.db_set("clear_notifications_status", "Completed")
 		self.enqueue_task(task="Initialize Summary Table")
 
-	def populate_doctypes_to_be_ignored_table(self):
+	def populate_doctypes_to_be_ignored_table(self) -> None:
 		doctypes_to_be_ignored_list = get_doctypes_to_be_ignored()
 		for doctype in doctypes_to_be_ignored_list:
 			self.append("doctypes_to_be_ignored", {"doctype_name": doctype})
 
-	def validate_running_task_for_doc(self, job_names: list | None = None):
+	def validate_running_task_for_doc(self, job_names: list | None = None) -> None:
 		# at most only one task should be runnning
 		running_tasks = []
 		for x in job_names:
@@ -643,7 +647,7 @@ class TransactionDeletionRecord(Document):
 				)
 			)
 
-	def validate_doc_status(self):
+	def validate_doc_status(self) -> None:
 		if self.status != "Running":
 			frappe.throw(
 				_("{0} is not running. Cannot trigger events for this document").format(
@@ -652,7 +656,7 @@ class TransactionDeletionRecord(Document):
 			)
 
 	@frappe.whitelist()
-	def start_deletion_tasks(self):
+	def start_deletion_tasks(self) -> None:
 		self.check_permission("write")
 
 		# This method is the entry point for the chain of events that follow
@@ -660,7 +664,7 @@ class TransactionDeletionRecord(Document):
 		self._set_deletion_cache()
 		self.enqueue_task(task="Delete Bins")
 
-	def delete_bins(self):
+	def delete_bins(self) -> None:
 		self.validate_doc_status()
 		if self.delete_bin_data_status == "Pending":
 			stock_related_doctypes = [
@@ -686,7 +690,7 @@ class TransactionDeletionRecord(Document):
 			self.db_set("delete_bin_data_status", "Completed")
 		self.enqueue_task(task="Delete Leads and Addresses")
 
-	def delete_lead_addresses(self):
+	def delete_lead_addresses(self) -> None:
 		"""Delete addresses to which leads are linked"""
 		self.validate_doc_status()
 		if self.delete_leads_and_addresses_status == "Pending":
@@ -732,7 +736,7 @@ class TransactionDeletionRecord(Document):
 			self.db_set("delete_leads_and_addresses_status", "Completed")
 		self.enqueue_task(task="Reset Company Values")
 
-	def reset_company_values(self):
+	def reset_company_values(self) -> None:
 		self.validate_doc_status()
 		if self.reset_company_default_values_status == "Pending":
 			sales_related_doctypes = [
@@ -755,7 +759,7 @@ class TransactionDeletionRecord(Document):
 			self.db_set("reset_company_default_values_status", "Completed")
 		self.enqueue_task(task="Clear Notifications")
 
-	def initialize_doctypes_to_be_deleted_table(self):
+	def initialize_doctypes_to_be_deleted_table(self) -> None:
 		"""Initialize deletion table from To Delete list or fall back to original logic"""
 		self.validate_doc_status()
 		if self.initialize_doctypes_table_status == "Pending":
@@ -778,7 +782,7 @@ class TransactionDeletionRecord(Document):
 			self.db_set("initialize_doctypes_table_status", "Completed")
 		self.enqueue_task(task="Delete Transactions")
 
-	def delete_company_transactions(self):
+	def delete_company_transactions(self) -> None:
 		self.validate_doc_status()
 		if self.delete_transactions_status == "Pending":
 			protected_doctypes = _get_protected_doctypes_internal()
@@ -864,7 +868,7 @@ class TransactionDeletionRecord(Document):
 				self.db_set("error_log", None)
 				self._clear_deletion_cache()
 
-	def get_doctypes_to_be_ignored_list(self):
+	def get_doctypes_to_be_ignored_list(self) -> list:
 		doctypes_to_be_ignored_list = frappe.get_all(
 			"DocType", or_filters=[["issingle", "=", 1], ["is_virtual", "=", 1]], pluck="name"
 		)
@@ -873,7 +877,7 @@ class TransactionDeletionRecord(Document):
 
 		return doctypes_to_be_ignored_list
 
-	def get_doctypes_with_company_field(self, doctypes_to_be_ignored_list):
+	def get_doctypes_with_company_field(self, doctypes_to_be_ignored_list: list) -> list:
 		docfields = frappe.get_all(
 			"DocField",
 			filters={
@@ -886,13 +890,13 @@ class TransactionDeletionRecord(Document):
 
 		return docfields
 
-	def get_all_child_doctypes(self):
+	def get_all_child_doctypes(self) -> list:
 		return frappe.get_all("DocType", filters={"istable": 1}, pluck="name")
 
-	def get_number_of_docs_linked_with_specified_company(self, doctype, company_fieldname):
+	def get_number_of_docs_linked_with_specified_company(self, doctype: str, company_fieldname: str) -> int:
 		return frappe.db.count(doctype, {company_fieldname: self.company})
 
-	def get_company_field(self, doctype_name):
+	def get_company_field(self, doctype_name: str) -> str | None:
 		"""Get company field name for a DocType"""
 		return frappe.db.get_value(
 			"DocField",
@@ -900,7 +904,9 @@ class TransactionDeletionRecord(Document):
 			"fieldname",
 		)
 
-	def populate_doctypes_table(self, tables, doctype, company_field, no_of_docs):
+	def populate_doctypes_table(
+		self, tables: list, doctype: str, company_field: str | None, no_of_docs: int
+	) -> None:
 		"""Add doctype to processing tracker
 
 		Args:
@@ -917,13 +923,13 @@ class TransactionDeletionRecord(Document):
 			)
 		self.save(ignore_permissions=True)
 
-	def delete_child_tables(self, doctype, reference_doc_names):
+	def delete_child_tables(self, doctype: str, reference_doc_names: list) -> None:
 		child_tables = self._get_child_tables(doctype)
 
 		for table in child_tables:
 			frappe.db.delete(table, {"parent": ["in", reference_doc_names]})
 
-	def delete_docs_linked_with_specified_company(self, doctype, reference_doc_names):
+	def delete_docs_linked_with_specified_company(self, doctype: str, reference_doc_names: list) -> None:
 		frappe.db.delete(doctype, {"name": ("in", reference_doc_names)})
 
 	@staticmethod
@@ -953,7 +959,7 @@ class TransactionDeletionRecord(Document):
 
 		return prefix
 
-	def update_naming_series(self, naming_series, doctype_name):
+	def update_naming_series(self, naming_series: str, doctype_name: str) -> None:
 		# Derive a static prefix from the autoname pattern
 		prefix = self.get_naming_series_prefix(naming_series, doctype_name)
 
@@ -973,13 +979,13 @@ class TransactionDeletionRecord(Document):
 
 		frappe.db.set_value("Series", prefix, "current", last, update_modified=False)
 
-	def delete_version_log(self, doctype, docnames):
+	def delete_version_log(self, doctype: str, docnames: list) -> None:
 		versions = qb.DocType("Version")
 		qb.from_(versions).delete().where(
 			(versions.ref_doctype == doctype) & (versions.docname.isin(docnames))
 		).run()
 
-	def delete_communications(self, doctype, reference_doc_names):
+	def delete_communications(self, doctype: str, reference_doc_names: list) -> None:
 		communications = frappe.get_all(
 			"Communication",
 			filters={"reference_doctype": doctype, "reference_name": ["in", reference_doc_names]},
@@ -992,14 +998,14 @@ class TransactionDeletionRecord(Document):
 		for batch in create_batch(communication_names, self.batch_size):
 			frappe.delete_doc("Communication", batch, ignore_permissions=True)
 
-	def delete_comments(self, doctype, reference_doc_names):
+	def delete_comments(self, doctype: str, reference_doc_names: list) -> None:
 		if reference_doc_names:
 			comment = qb.DocType("Comment")
 			qb.from_(comment).delete().where(
 				(comment.reference_doctype == doctype) & (comment.reference_name.isin(reference_doc_names))
 			).run()
 
-	def unlink_attachments(self, doctype, reference_doc_names):
+	def unlink_attachments(self, doctype: str, reference_doc_names: list) -> None:
 		files = frappe.get_all(
 			"File",
 			filters={"attached_to_doctype": doctype, "attached_to_name": ["in", reference_doc_names]},
@@ -1018,7 +1024,7 @@ class TransactionDeletionRecord(Document):
 
 
 @frappe.whitelist()
-def get_doctypes_to_be_ignored():
+def get_doctypes_to_be_ignored() -> list:
 	doctypes_to_be_ignored = [
 		"Account",
 		"Cost Center",
@@ -1047,7 +1053,7 @@ def get_doctypes_to_be_ignored():
 
 
 @frappe.whitelist()
-def export_to_delete_template(name: str):
+def export_to_delete_template(name: str) -> None:
 	"""Export To Delete list as CSV via URL access"""
 	frappe.only_for("System Manager")
 	doc = frappe.get_doc("Transaction Deletion Record", name)
@@ -1056,7 +1062,7 @@ def export_to_delete_template(name: str):
 
 
 @frappe.whitelist()
-def process_import_template(transaction_deletion_record_name: str, file_url: str):
+def process_import_template(transaction_deletion_record_name: str, file_url: str) -> dict:
 	"""Import CSV template and populate To Delete list"""
 	import os
 
@@ -1093,7 +1099,7 @@ def process_import_template(transaction_deletion_record_name: str, file_url: str
 
 @frappe.whitelist()
 @request_cache
-def is_deletion_doc_running(company: str | None = None, err_msg: str | None = None):
+def is_deletion_doc_running(company: str | None = None, err_msg: str | None = None) -> None:
 	"""Check if any deletion is running globally
 
 	The company parameter is kept for backwards compatibility but is now ignored.
@@ -1115,7 +1121,7 @@ def is_deletion_doc_running(company: str | None = None, err_msg: str | None = No
 	)
 
 
-def check_for_running_deletion_job(doc, method=None):
+def check_for_running_deletion_job(doc, method=None) -> None:
 	"""Hook function called on document validate - checks Redis cache for running deletions"""
 	if doc.doctype in LEDGER_ENTRY_DOCTYPES:
 		return

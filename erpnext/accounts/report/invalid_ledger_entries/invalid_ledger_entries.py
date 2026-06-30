@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb
 from frappe.query_builder import Criterion
@@ -69,7 +71,7 @@ def identify_cancelled_vouchers(active_vouchers: list[dict] | list | None = None
 	return cancelled_vouchers
 
 
-def validate_filters(filters: dict | None = None):
+def validate_filters(filters: dict | None = None) -> None:
 	if not filters:
 		frappe.throw(_("Filters missing"))
 

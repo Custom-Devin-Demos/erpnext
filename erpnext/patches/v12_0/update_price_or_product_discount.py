@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("accounts", "doctype", "pricing_rule")
 
 	frappe.db.sql(

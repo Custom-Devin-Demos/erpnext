@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -65,7 +67,7 @@ class Timesheet(Document):
 		user: DF.Link | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_status()
 		self.validate_dates()
 		self.calculate_hours()
@@ -75,22 +77,22 @@ class Timesheet(Document):
 		self.calculate_percentage_billed()
 		self.set_dates()
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def on_update_after_submit(self):
+	def on_update_after_submit(self) -> None:
 		self.validate_mandatory_fields()
 		self.update_task_and_project()
 		self.validate_time_logs()
 
-	def calculate_hours(self):
+	def calculate_hours(self) -> None:
 		for row in self.time_logs:
 			if row.to_time and row.from_time:
 				row.calculate_hours()
 				row.validate_billing_hours()
 				row.update_billing_hours()
 
-	def calculate_total_amounts(self):
+	def calculate_total_amounts(self) -> None:
 		self.total_hours = 0.0
 		self.total_billable_hours = 0.0
 		self.total_billed_hours = 0.0
@@ -113,7 +115,7 @@ class Timesheet(Document):
 				self.base_total_billed_amount += flt(d.base_billing_amount) if d.sales_invoice else 0.0
 				self.total_billed_hours += flt(d.billing_hours) if d.sales_invoice else 0.0
 
-	def calculate_percentage_billed(self):
+	def calculate_percentage_billed(self) -> None:
 		self.per_billed = 0
 		if self.total_billed_amount > 0 and self.total_billable_amount > 0:
 			self.per_billed = (self.total_billed_amount * 100) / self.total_billable_amount
@@ -121,10 +123,10 @@ class Timesheet(Document):
 			self.per_billed = (self.total_billed_hours * 100) / self.total_billable_hours
 
 	@deprecated
-	def update_billing_hours(self, args: "TimesheetDetail"):
+	def update_billing_hours(self, args: TimesheetDetail) -> None:
 		args.update_billing_hours()
 
-	def set_status(self):
+	def set_status(self) -> None:
 		self.status = {"0": "Draft", "1": "Submitted", "2": "Cancelled"}[str(self.docstatus or 0)]
 
 		if flt(self.per_billed, self.precision("per_billed")) >= 100.0:
@@ -136,7 +138,7 @@ class Timesheet(Document):
 		if self.sales_invoice:
 			self.status = "Completed"
 
-	def set_dates(self):
+	def set_dates(self) -> None:
 		if self.docstatus < 2 and self.time_logs:
 			start_date = min(getdate(d.from_time) for d in self.time_logs)
 			end_date = max(getdate(d.to_time) for d in self.time_logs)
@@ -145,17 +147,17 @@ class Timesheet(Document):
 				self.start_date = getdate(start_date)
 				self.end_date = getdate(end_date)
 
-	def before_cancel(self):
+	def before_cancel(self) -> None:
 		self.set_status()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_task_and_project()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.validate_mandatory_fields()
 		self.update_task_and_project()
 
-	def validate_mandatory_fields(self):
+	def validate_mandatory_fields(self) -> None:
 		for data in self.time_logs:
 			if not data.from_time and not data.to_time:
 				frappe.throw(_("Row {0}: From Time and To Time is mandatory.").format(data.idx))
@@ -166,7 +168,7 @@ class Timesheet(Document):
 			if flt(data.hours) == 0.0:
 				frappe.throw(_("Row {0}: Hours value must be greater than zero.").format(data.idx))
 
-	def update_task_and_project(self):
+	def update_task_and_project(self) -> None:
 		tasks, projects = [], []
 
 		for data in self.time_logs:
@@ -190,11 +192,11 @@ class Timesheet(Document):
 			project_doc.update_project()
 			project_doc.save(ignore_permissions=True)
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		for time_log in self.time_logs:
 			time_log.validate_dates()
 
-	def validate_time_logs(self):
+	def validate_time_logs(self) -> None:
 		for time_log in self.time_logs:
 			time_log.set_to_time()
 			self.validate_overlap(time_log)
@@ -202,20 +204,20 @@ class Timesheet(Document):
 			time_log.validate_parent_project(self.parent_project)
 			time_log.validate_task_project()
 
-	def validate_overlap(self, data):
+	def validate_overlap(self, data) -> None:
 		settings = frappe.get_single("Projects Settings")
 		self.validate_overlap_for("user", data, self.user, settings.ignore_user_time_overlap)
 		self.validate_overlap_for("employee", data, self.employee, settings.ignore_employee_time_overlap)
 
 	@deprecated
-	def set_project(self, data: "TimesheetDetail"):
+	def set_project(self, data: TimesheetDetail) -> None:
 		data.set_project()
 
 	@deprecated
-	def validate_project(self, data: "TimesheetDetail"):
+	def validate_project(self, data: TimesheetDetail) -> None:
 		data.validate_parent_project(self.parent_project)
 
-	def validate_overlap_for(self, fieldname, args, value, ignore_validation=False):
+	def validate_overlap_for(self, fieldname: str, args, value, ignore_validation: bool = False) -> None:
 		if not value or ignore_validation:
 			return
 
@@ -228,7 +230,7 @@ class Timesheet(Document):
 				OverlapError,
 			)
 
-	def get_overlap_for(self, fieldname, args, value):
+	def get_overlap_for(self, fieldname: str, args, value):
 		timesheet = frappe.qb.DocType("Timesheet")
 		timelog = frappe.qb.DocType("Timesheet Detail")
 
@@ -260,7 +262,7 @@ class Timesheet(Document):
 
 		return existing[0] if existing else None
 
-	def check_internal_overlap(self, fieldname, args):
+	def check_internal_overlap(self, fieldname: str, args) -> bool:
 		for time_log in self.time_logs:
 			if not (time_log.from_time and time_log.to_time and args.from_time and args.to_time):
 				continue
@@ -282,15 +284,15 @@ class Timesheet(Document):
 				return True
 		return False
 
-	def update_cost(self):
+	def update_cost(self) -> None:
 		for time_log in self.time_logs:
 			time_log.update_cost(self.employee)
 
-	def update_time_rates(self, ts_detail):
+	def update_time_rates(self, ts_detail) -> None:
 		if not ts_detail.is_billable:
 			ts_detail.billing_rate = 0.0
 
-	def unlink_sales_invoice(self, sales_invoice: str):
+	def unlink_sales_invoice(self, sales_invoice: str) -> None:
 		"""Remove link to Sales Invoice from all time logs."""
 		for time_log in self.time_logs:
 			if time_log.sales_invoice == sales_invoice:
@@ -307,7 +309,7 @@ def get_projectwise_timesheet_data(
 	parent: str | None = None,
 	from_time: str | None = None,
 	to_time: str | None = None,
-):
+) -> list:
 	tsd = frappe.qb.DocType("Timesheet Detail")
 	ts = frappe.qb.DocType("Timesheet")
 
@@ -346,7 +348,7 @@ def get_projectwise_timesheet_data(
 
 
 @frappe.whitelist()
-def get_timesheet_detail_rate(timelog: str, currency: str):
+def get_timesheet_detail_rate(timelog: str, currency: str) -> float:
 	ts = frappe.qb.DocType("Timesheet")
 	ts_detail = frappe.qb.DocType("Timesheet Detail")
 
@@ -368,7 +370,7 @@ def get_timesheet_detail_rate(timelog: str, currency: str):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_timesheet(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_timesheet(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict) -> list:
 	if not filters:
 		filters = {}
 
@@ -396,7 +398,7 @@ def get_timesheet(doctype: str, txt: str, searchfield: str, start: int, page_len
 
 
 @frappe.whitelist()
-def get_timesheet_data(name: str, project: str):
+def get_timesheet_data(name: str, project: str) -> dict:
 	data = None
 	if project and project != "":
 		data = get_projectwise_timesheet_data(project, name)
@@ -419,7 +421,7 @@ def get_timesheet_data(name: str, project: str):
 @frappe.whitelist()
 def make_sales_invoice(
 	source_name: str, item_code: str | None = None, customer: str | None = None, currency: str | None = None
-):
+) -> Document:
 	target = frappe.new_doc("Sales Invoice")
 	timesheet = frappe.get_doc("Timesheet", source_name)
 
@@ -473,7 +475,7 @@ def make_sales_invoice(
 @frappe.whitelist()
 def get_activity_cost(
 	employee: str | None = None, activity_type: str | None = None, currency: str | None = None
-):
+) -> dict:
 	base_currency = frappe.defaults.get_global_default("currency")
 	rate = frappe.db.get_values(
 		"Activity Cost",
@@ -497,7 +499,7 @@ def get_activity_cost(
 
 
 @frappe.whitelist()
-def get_events(start: str, end: str, filters: str | list | dict | None = None):
+def get_events(start: str, end: str, filters: str | list | dict | None = None) -> list:
 	"""Returns events for Gantt / Calendar view rendering.
 	:param start: Start date-time.
 	:param end: End date-time.
@@ -535,7 +537,14 @@ def get_events(start: str, end: str, filters: str | list | dict | None = None):
 	return query.run(as_dict=True, update={"allDay": 0})
 
 
-def get_timesheets_list(doctype, txt, filters, limit_start, limit_page_length=20, order_by="creation"):
+def get_timesheets_list(
+	doctype: str,
+	txt: str,
+	filters,
+	limit_start: int,
+	limit_page_length: int = 20,
+	order_by: str = "creation",
+) -> list | dict:
 	user = frappe.session.user
 	# find customer name from contact.
 	customer = ""
@@ -586,7 +595,7 @@ def get_timesheets_list(doctype, txt, filters, limit_start, limit_page_length=20
 		return {}
 
 
-def get_list_context(context=None):
+def get_list_context(context=None) -> dict:
 	return {
 		"show_sidebar": True,
 		"show_search": True,

@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, flt, now_datetime, nowdate
 
@@ -15,7 +17,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestDeliveryTrip(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		super().setUp()
 		driver = create_driver()
 		create_vehicle()
@@ -24,7 +26,7 @@ class TestDeliveryTrip(ERPNextTestSuite):
 
 		self.delivery_trip = create_delivery_trip(driver, address, company="_Test Company")
 
-	def test_delivery_trip_notify_customers(self):
+	def test_delivery_trip_notify_customers(self) -> None:
 		# set default outgoing
 		outgoing = frappe.get_doc(
 			{
@@ -46,14 +48,14 @@ class TestDeliveryTrip(ERPNextTestSuite):
 		self.delivery_trip.load_from_db()
 		self.assertEqual(self.delivery_trip.email_notification_sent, 1)
 
-	def test_unoptimized_route_list_without_locks(self):
+	def test_unoptimized_route_list_without_locks(self) -> None:
 		route_list = self.delivery_trip.form_route_list(optimize=False)
 
 		# Return a single list of destinations, from home address and back
 		self.assertEqual(len(route_list), 1)
 		self.assertEqual(len(route_list[0]), 4)
 
-	def test_unoptimized_route_list_with_locks(self):
+	def test_unoptimized_route_list_with_locks(self) -> None:
 		self.delivery_trip.delivery_stops[0].locked = 1
 		self.delivery_trip.save()
 		route_list = self.delivery_trip.form_route_list(optimize=False)
@@ -64,7 +66,7 @@ class TestDeliveryTrip(ERPNextTestSuite):
 		self.assertEqual(len(route_list), 1)
 		self.assertEqual(len(route_list[0]), 4)
 
-	def test_optimized_route_list_without_locks(self):
+	def test_optimized_route_list_without_locks(self) -> None:
 		route_list = self.delivery_trip.form_route_list(optimize=True)
 
 		# Return a single list of destinations, from home address and back,
@@ -72,7 +74,7 @@ class TestDeliveryTrip(ERPNextTestSuite):
 		self.assertEqual(len(route_list), 1)
 		self.assertEqual(len(route_list[0]), 4)
 
-	def test_optimized_route_list_with_locks(self):
+	def test_optimized_route_list_with_locks(self) -> None:
 		self.delivery_trip.delivery_stops[0].locked = 1
 		self.delivery_trip.save()
 		route_list = self.delivery_trip.form_route_list(optimize=True)
@@ -82,25 +84,25 @@ class TestDeliveryTrip(ERPNextTestSuite):
 		self.assertEqual(len(route_list[0]), 2)  # [home_address, locked_stop]
 		self.assertEqual(len(route_list[1]), 3)  # [locked_stop, second_stop, home_address]
 
-	def test_delivery_trip_status_draft(self):
+	def test_delivery_trip_status_draft(self) -> None:
 		self.assertEqual(self.delivery_trip.status, "Draft")
 
-	def test_delivery_trip_status_scheduled(self):
+	def test_delivery_trip_status_scheduled(self) -> None:
 		self.delivery_trip.submit()
 		self.assertEqual(self.delivery_trip.status, "Scheduled")
 
-	def test_delivery_trip_status_cancelled(self):
+	def test_delivery_trip_status_cancelled(self) -> None:
 		self.delivery_trip.submit()
 		self.delivery_trip.cancel()
 		self.assertEqual(self.delivery_trip.status, "Cancelled")
 
-	def test_delivery_trip_status_in_transit(self):
+	def test_delivery_trip_status_in_transit(self) -> None:
 		self.delivery_trip.submit()
 		self.delivery_trip.delivery_stops[0].visited = 1
 		self.delivery_trip.save()
 		self.assertEqual(self.delivery_trip.status, "In Transit")
 
-	def test_delivery_trip_status_completed(self):
+	def test_delivery_trip_status_completed(self) -> None:
 		self.delivery_trip.submit()
 
 		for stop in self.delivery_trip.delivery_stops:
@@ -109,7 +111,7 @@ class TestDeliveryTrip(ERPNextTestSuite):
 		self.delivery_trip.save()
 		self.assertEqual(self.delivery_trip.status, "Completed")
 
-	def test_get_contact_and_address_returns_linked_contact_and_address(self):
+	def test_get_contact_and_address_returns_linked_contact_and_address(self) -> None:
 		"""get_contact_and_address (the converted Dynamic Link queries) must return a real Contact
 		and Address that are actually linked to the customer — pins the converted query's output."""
 		out = get_contact_and_address("_Test Customer")
@@ -142,7 +144,7 @@ class TestDeliveryTrip(ERPNextTestSuite):
 			)
 		)
 
-	def test_get_default_contact_keeps_orphaned_dynamic_link(self):
+	def test_get_default_contact_keeps_orphaned_dynamic_link(self) -> None:
 		"""The converted get_default_contact uses a LEFT join, matching the original correlated
 		subquery: a Dynamic Link whose parent Contact no longer exists must STILL be returned
 		(is_primary_contact NULL). An inner join would silently drop it and return None."""
@@ -213,7 +215,7 @@ def create_driver():
 	return frappe.get_doc("Driver", {"full_name": "Newton Scmander"})
 
 
-def create_delivery_notification():
+def create_delivery_notification() -> None:
 	if not frappe.db.exists("Email Template", "Delivery Notification"):
 		dispatch_template = frappe.get_doc(
 			{
@@ -231,7 +233,7 @@ def create_delivery_notification():
 	delivery_settings.save()
 
 
-def create_vehicle():
+def create_vehicle() -> None:
 	if not frappe.db.exists("Vehicle", "JB 007"):
 		vehicle = frappe.get_doc(
 			{

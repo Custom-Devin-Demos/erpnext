@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 from collections import OrderedDict
 
 import frappe
@@ -173,7 +175,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_data_when_grouped_by_invoice(columns, gross_profit_data, filters, group_wise_columns, data):
+def get_data_when_grouped_by_invoice(columns, gross_profit_data, filters, group_wise_columns, data) -> None:
 	column_names = get_column_names()
 
 	# to display item as Item Code: Item Name
@@ -232,7 +234,7 @@ def get_data_when_grouped_by_invoice(columns, gross_profit_data, filters, group_
 	)
 
 
-def get_data_when_not_grouped_by_invoice(gross_profit_data, filters, group_wise_columns, data):
+def get_data_when_not_grouped_by_invoice(gross_profit_data, filters, group_wise_columns, data) -> None:
 	total_base_amount = 0
 	total_buying_amount = 0
 
@@ -502,7 +504,7 @@ def get_column_names():
 
 
 class GrossProfitGenerator:
-	def __init__(self, filters=None):
+	def __init__(self, filters=None) -> None:
 		self.sle = {}
 		self.data = []
 		self.average_buying_rate = {}
@@ -518,7 +520,7 @@ class GrossProfitGenerator:
 		self.get_returned_invoice_items()
 		self.process()
 
-	def process(self):
+	def process(self) -> None:
 		self.grouped = {}
 		self.grouped_data = []
 
@@ -616,7 +618,7 @@ class GrossProfitGenerator:
 		if self.grouped:
 			self.get_average_rate_based_on_group_by()
 
-	def update_return_invoices(self, row):
+	def update_return_invoices(self, row) -> None:
 		if row.parent in self.returned_invoices and row.item_code in self.returned_invoices[row.parent]:
 			returned_item_rows = self.returned_invoices[row.parent][row.item_code]
 			for returned_item_row in returned_item_rows:
@@ -637,7 +639,7 @@ class GrossProfitGenerator:
 			if not row.delivered_by_supplier:
 				row.buying_amount = flt(flt(row.qty) * flt(row.buying_rate), self.currency_precision)
 
-	def get_average_rate_based_on_group_by(self):
+	def get_average_rate_based_on_group_by(self) -> None:
 		for key in list(self.grouped):
 			if self.filters.get("group_by") == "Payment Term":
 				for i, row in enumerate(self.grouped[key]):
@@ -678,7 +680,9 @@ class GrossProfitGenerator:
 				new_row = self.set_average_rate(new_row)
 				self.grouped_data.append(new_row)
 
-	def set_average_based_on_payment_term_portion(self, new_row, row, invoice_portion, aggr=False):
+	def set_average_based_on_payment_term_portion(
+		self, new_row, row, invoice_portion, aggr: bool = False
+	) -> None:
 		cols = ["base_amount", "buying_amount", "gross_profit"]
 		for col in cols:
 			if aggr:
@@ -699,7 +703,7 @@ class GrossProfitGenerator:
 		new_row.base_rate = flt(new_row.base_amount / new_row.qty, self.float_precision) if new_row.qty else 0
 		return new_row
 
-	def set_average_gross_profit(self, new_row):
+	def set_average_gross_profit(self, new_row) -> None:
 		new_row.gross_profit = flt(
 			new_row.base_amount + abs(new_row.buying_amount)
 			if new_row.buying_amount < 0
@@ -712,7 +716,7 @@ class GrossProfitGenerator:
 			else 0
 		)
 
-	def get_returned_invoice_items(self):
+	def get_returned_invoice_items(self) -> None:
 		si = frappe.qb.DocType("Sales Invoice")
 		si_item = frappe.qb.DocType("Sales Invoice Item")
 		returned_invoices = (
@@ -767,7 +771,7 @@ class GrossProfitGenerator:
 				and parent == sle.voucher_no
 				and sle.voucher_detail_no == item_row
 			):
-				previous_stock_value = len(my_sle) > i + 1 and flt(my_sle[i + 1].stock_value) or 0.0
+				previous_stock_value = (len(my_sle) > i + 1 and flt(my_sle[i + 1].stock_value)) or 0.0
 
 				if previous_stock_value:
 					return abs(previous_stock_value - flt(sle.stock_value)) * flt(row.qty) / abs(flt(sle.qty))
@@ -904,7 +908,7 @@ class GrossProfitGenerator:
 
 		return flt(last_purchase_rate[0][0]) if last_purchase_rate else 0
 
-	def load_invoice_items(self):
+	def load_invoice_items(self) -> None:
 		self.si_list = []
 
 		SalesInvoice = frappe.qb.DocType("Sales Invoice")
@@ -1071,10 +1075,10 @@ class GrossProfitGenerator:
 
 		return query
 
-	def prepare_vouchers_to_ignore(self):
+	def prepare_vouchers_to_ignore(self) -> None:
 		self.vouchers_to_ignore = tuple(row["parent"] for row in self.si_list)
 
-	def get_delivery_notes(self):
+	def get_delivery_notes(self) -> None:
 		self.delivery_notes = frappe._dict({})
 		if self.si_list:
 			from frappe.query_builder.functions import Sum
@@ -1101,7 +1105,7 @@ class GrossProfitGenerator:
 			for entry in delivery_notes:
 				self.delivery_notes[entry.si_detail] = entry
 
-	def group_items_by_invoice(self):
+	def group_items_by_invoice(self) -> None:
 		"""
 		Turns list of Sales Invoice Items to a tree of Sales Invoices with their Items as children.
 		"""
@@ -1222,7 +1226,7 @@ class GrossProfitGenerator:
 			return self.sle[(item_code, warehouse)]
 		return []
 
-	def load_product_bundle(self):
+	def load_product_bundle(self) -> None:
 		self.product_bundles = {}
 
 		pki = qb.DocType("Packed Item")
@@ -1249,5 +1253,5 @@ class GrossProfitGenerator:
 				d.parent, frappe._dict()
 			).setdefault(d.parent_item, []).append(d)
 
-	def load_non_stock_items(self):
+	def load_non_stock_items(self) -> None:
 		self.non_stock_items = frappe.get_all("Item", filters={"is_stock_item": 0}, pluck="name")

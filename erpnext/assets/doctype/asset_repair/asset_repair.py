@@ -1,6 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import DocType
@@ -57,7 +59,7 @@ class AssetRepair(AccountsController):
 		total_repair_cost: DF.Currency
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.asset_doc = frappe.get_lazy_doc("Asset", self.asset)
 		self.validate_asset()
 		self.validate_dates()
@@ -68,7 +70,7 @@ class AssetRepair(AccountsController):
 		self.calculate_total_repair_cost()
 		self.check_repair_status()
 
-	def validate_asset(self):
+	def validate_asset(self) -> None:
 		if self.asset_doc.status in ("Sold", "Fully Depreciated", "Scrapped"):
 			frappe.throw(
 				_("Asset {0} is in {1} status and cannot be repaired.").format(
@@ -76,13 +78,13 @@ class AssetRepair(AccountsController):
 				)
 			)
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		if self.completion_date and (getdate(self.failure_date) > getdate(self.completion_date)):
 			frappe.throw(
 				_("Completion Date can not be before Failure Date. Please adjust the dates accordingly.")
 			)
 
-	def validate_purchase_invoices(self):
+	def validate_purchase_invoices(self) -> None:
 		self.validate_duplicate_purchase_invoices()
 		self.validate_purchase_invoice_status()
 
@@ -90,7 +92,7 @@ class AssetRepair(AccountsController):
 			self.validate_expense_account(d)
 			self.validate_purchase_invoice_repair_cost(d)
 
-	def validate_duplicate_purchase_invoices(self):
+	def validate_duplicate_purchase_invoices(self) -> None:
 		# account wise duplicate check
 		purchase_invoices = set()
 		duplicates = []
@@ -111,7 +113,7 @@ class AssetRepair(AccountsController):
 			msg = _("The following rows are duplicates:") + f"<br><ul>{duplicate_links}</ul>"
 			frappe.throw(msg)
 
-	def validate_purchase_invoice_status(self):
+	def validate_purchase_invoice_status(self) -> None:
 		pi_names = [row.purchase_invoice for row in self.invoices]
 		docstatus = frappe._dict(
 			frappe.db.get_all(
@@ -137,7 +139,7 @@ class AssetRepair(AccountsController):
 			msg = _("The following Purchase Invoices are not submitted:") + f"<br><ul>{invoice_links}</ul>"
 			frappe.throw(msg)
 
-	def validate_expense_account(self, row):
+	def validate_expense_account(self, row) -> None:
 		"""Validate that the expense account exists in the purchase invoice for non-stock items."""
 		valid_accounts = _get_expense_accounts_for_purchase_invoice(row.purchase_invoice)
 		if row.expense_account not in valid_accounts:
@@ -152,7 +154,7 @@ class AssetRepair(AccountsController):
 				)
 			)
 
-	def validate_purchase_invoice_repair_cost(self, row):
+	def validate_purchase_invoice_repair_cost(self, row) -> None:
 		"""Validate that repair cost doesn't exceed available amount."""
 		available_amount = get_unallocated_repair_cost(
 			row.purchase_invoice, row.expense_account, exclude_asset_repair=self.name
@@ -171,7 +173,7 @@ class AssetRepair(AccountsController):
 				)
 			)
 
-	def update_status(self):
+	def update_status(self) -> None:
 		if self.repair_status == "Pending" and self.asset_doc.status != "Out of Order":
 			frappe.db.set_value("Asset", self.asset, "status", "Out of Order")
 			self.add_asset_activity(
@@ -182,20 +184,20 @@ class AssetRepair(AccountsController):
 		else:
 			self.asset_doc.set_status()
 
-	def calculate_consumed_items_cost(self):
+	def calculate_consumed_items_cost(self) -> None:
 		consumed_items_cost = 0.0
 		for item in self.get("stock_items"):
 			item.total_value = flt(item.valuation_rate) * flt(item.consumed_quantity)
 			consumed_items_cost += item.total_value
 		self.consumed_items_cost = consumed_items_cost
 
-	def calculate_repair_cost(self):
+	def calculate_repair_cost(self) -> None:
 		self.repair_cost = sum(flt(pi.repair_cost) for pi in self.invoices)
 
-	def calculate_total_repair_cost(self):
+	def calculate_total_repair_cost(self) -> None:
 		self.total_repair_cost = flt(self.repair_cost) + flt(self.consumed_items_cost)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.decrease_stock_quantity()
 
 		if self.get("capitalize_repair_cost"):
@@ -208,14 +210,14 @@ class AssetRepair(AccountsController):
 
 			self.make_gl_entries()
 
-	def cancel_sabb(self):
+	def cancel_sabb(self) -> None:
 		for row in self.stock_items:
 			if sabb := row.serial_and_batch_bundle:
 				row.db_set("serial_and_batch_bundle", None)
 				doc = frappe.get_doc("Serial and Batch Bundle", sabb)
 				doc.cancel()
 
-	def on_cancel(self):  # nosemgrep
+	def on_cancel(self) -> None:  # nosemgrep
 		if self.get("capitalize_repair_cost"):
 			self.ignore_linked_doctypes = ("GL Entry", "Stock Ledger Entry")
 			self.asset_doc = frappe.get_lazy_doc("Asset", self.asset)
@@ -229,14 +231,14 @@ class AssetRepair(AccountsController):
 
 		self.cancel_sabb()
 
-	def after_delete(self):
+	def after_delete(self) -> None:
 		frappe.get_lazy_doc("Asset", self.asset).set_status()
 
-	def check_repair_status(self):
+	def check_repair_status(self) -> None:
 		if self.repair_status == "Pending" and self.docstatus == 1:
 			frappe.throw(_("Please update Repair Status."))
 
-	def update_asset_value(self):
+	def update_asset_value(self) -> None:
 		total_repair_cost = self.total_repair_cost if self.docstatus == 1 else -1 * self.total_repair_cost
 
 		self.asset_doc.total_asset_cost += flt(total_repair_cost)
@@ -249,10 +251,10 @@ class AssetRepair(AccountsController):
 		self.asset_doc.flags.ignore_validate_update_after_submit = True
 		self.asset_doc.save()
 
-	def get_total_value_of_stock_consumed(self):
+	def get_total_value_of_stock_consumed(self) -> float:
 		return sum([flt(item.total_value) for item in self.get("stock_items")])
 
-	def decrease_stock_quantity(self):
+	def decrease_stock_quantity(self) -> None:
 		if not self.get("stock_items"):
 			return
 
@@ -289,7 +291,7 @@ class AssetRepair(AccountsController):
 		stock_entry.insert()
 		stock_entry.submit()
 
-	def validate_serial_no(self, stock_item):
+	def validate_serial_no(self, stock_item) -> None:
 		if not stock_item.serial_and_batch_bundle and frappe.get_cached_value(
 			"Item", stock_item.item_code, "has_serial_no"
 		):
@@ -306,17 +308,17 @@ class AssetRepair(AccountsController):
 				"Serial and Batch Bundle", stock_item.serial_and_batch_bundle, values_to_update
 			)
 
-	def make_gl_entries(self, cancel=False):
+	def make_gl_entries(self, cancel: bool = False) -> None:
 		if flt(self.total_repair_cost) > 0:
 			gl_entries = self.get_gl_entries()
 			make_gl_entries(gl_entries, cancel)
 
-	def get_gl_entries(self):
+	def get_gl_entries(self) -> list:
 		from erpnext.assets.doctype.asset_repair.services.gl_composer import AssetRepairGLComposer
 
 		return AssetRepairGLComposer(self).compose()
 
-	def set_increase_in_asset_life(self):
+	def set_increase_in_asset_life(self) -> None:
 		if self.asset_doc.calculate_depreciation and cint(self.increase_in_asset_life) > 0:
 			for row in self.asset_doc.finance_books:
 				row.increase_in_asset_life = cint(row.increase_in_asset_life) + (
@@ -324,13 +326,13 @@ class AssetRepair(AccountsController):
 				)
 				row.db_update()
 
-	def get_depreciation_note(self):
+	def get_depreciation_note(self) -> str:
 		return _("This schedule was created when Asset {0} was repaired through Asset Repair {1}.").format(
 			get_link_to_form(self.asset_doc.doctype, self.asset_doc.name),
 			get_link_to_form(self.doctype, self.name),
 		)
 
-	def add_asset_activity(self, subject=None):
+	def add_asset_activity(self, subject: str | None = None) -> None:
 		if not subject:
 			subject = _("Asset updated due to Asset Repair {0} {1}.").format(
 				get_link_to_form(self.doctype, self.name),
@@ -341,7 +343,7 @@ class AssetRepair(AccountsController):
 
 
 @frappe.whitelist()
-def get_downtime(failure_date: DateTimeLikeObject, completion_date: DateTimeLikeObject):
+def get_downtime(failure_date: DateTimeLikeObject, completion_date: DateTimeLikeObject) -> float:
 	downtime = time_diff_in_hours(completion_date, failure_date)
 	return round(downtime, 2)
 
@@ -355,7 +357,7 @@ def get_purchase_invoice(
 	start: int,
 	page_len: int,
 	filters: dict,
-):
+) -> list:
 	"""
 	Get Purchase Invoices that have expense accounts for non-stock items.
 	Only returns invoices with at least one non-stock, non-fixed-asset item with an expense account.
@@ -397,7 +399,7 @@ def get_expense_accounts(
 	start: int,
 	page_len: int,
 	filters: dict,
-):
+) -> list:
 	"""
 	Get expense accounts for non-stock (service) items from the purchase invoice.
 	Used as a query function for link fields.
@@ -455,7 +457,7 @@ def _get_expense_accounts_for_purchase_invoice(purchase_invoice: str) -> list[st
 @frappe.whitelist()
 def get_unallocated_repair_cost(
 	purchase_invoice: str, expense_account: str, exclude_asset_repair: str | None = None
-):
+) -> float:
 	"""
 	Calculate the unused repair cost for a purchase invoice and expense account.
 	"""

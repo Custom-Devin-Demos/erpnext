@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt
 
 
-def execute():
+def execute() -> None:
 	budgets = frappe.get_all("Budget", filters={"docstatus": ["in", [0, 1]]}, fields=["name"])
 
 	for b in budgets:

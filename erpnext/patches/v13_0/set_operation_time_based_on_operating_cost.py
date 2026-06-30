@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("manufacturing", "doctype", "bom")
 	frappe.reload_doc("manufacturing", "doctype", "bom_operation")
 

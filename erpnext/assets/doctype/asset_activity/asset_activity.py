@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 from frappe.utils import now_datetime
@@ -24,7 +26,7 @@ class AssetActivity(Document):
 	pass
 
 
-def add_asset_activity(asset, subject):
+def add_asset_activity(asset: str, subject: str) -> None:
 	frappe.get_doc(
 		{
 			"doctype": "Asset Activity",

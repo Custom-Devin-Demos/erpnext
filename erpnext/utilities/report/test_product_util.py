@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt
 
@@ -23,7 +25,7 @@ class TestProductUtil(ERPNextTestSuite):
 	SALES_UOM_FACTOR = 10.0
 	PRICE_LIST_RATE = 200.0
 
-	def setUp(self):
+	def setUp(self) -> None:
 		# _Test Item bootstrap ships uoms [_Test UOM (1.0), _Test UOM 1 (10.0)].
 		# Point its sales_uom at the 10x conversion so the joined query returns a
 		# factor != 1; assert against the bootstrapped conversion_factor to keep
@@ -51,7 +53,7 @@ class TestProductUtil(ERPNextTestSuite):
 				}
 			).insert()
 
-	def test_sales_uom_conversion_factor_applied(self):
+	def test_sales_uom_conversion_factor_applied(self) -> None:
 		price = get_price(
 			item_code=self.ITEM_CODE,
 			price_list=self.PRICE_LIST,
@@ -83,7 +85,7 @@ class TestProductUtil(ERPNextTestSuite):
 			msg="formatted_price_sales_uom equals formatted_price; conversion factor was not picked up",
 		)
 
-	def test_factor_defaults_to_one_without_matching_sales_uom(self):
+	def test_factor_defaults_to_one_without_matching_sales_uom(self) -> None:
 		# When sales_uom has no matching UOM Conversion Detail row, the join
 		# returns nothing and the factor falls back to 1 (price unchanged).
 		frappe.db.set_value("Item", self.ITEM_CODE, "sales_uom", None)

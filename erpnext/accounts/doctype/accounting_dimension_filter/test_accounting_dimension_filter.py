@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
@@ -9,11 +11,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccountingDimensionFilter(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		create_accounting_dimension_filter()
 		self.invoice_list = []
 
-	def test_allowed_dimension_validation(self):
+	def test_allowed_dimension_validation(self) -> None:
 		si = create_sales_invoice(do_not_save=1)
 		si.items[0].cost_center = "Main - _TC"
 		si.department = "Accounts - _TC"
@@ -23,7 +25,7 @@ class TestAccountingDimensionFilter(ERPNextTestSuite):
 		self.assertRaises(InvalidAccountDimensionError, si.submit)
 		self.invoice_list.append(si)
 
-	def test_mandatory_dimension_validation(self):
+	def test_mandatory_dimension_validation(self) -> None:
 		si = create_sales_invoice(do_not_save=1)
 		si.department = ""
 		si.location = "Block 1"
@@ -37,7 +39,7 @@ class TestAccountingDimensionFilter(ERPNextTestSuite):
 		self.invoice_list.append(si)
 
 
-def create_accounting_dimension_filter():
+def create_accounting_dimension_filter() -> None:
 	if not frappe.db.get_value("Accounting Dimension Filter", {"accounting_dimension": "Cost Center"}):
 		frappe.get_doc(
 			{
@@ -79,7 +81,7 @@ def create_accounting_dimension_filter():
 		doc.save()
 
 
-def disable_dimension_filter():
+def disable_dimension_filter() -> None:
 	doc = frappe.get_doc("Accounting Dimension Filter", {"accounting_dimension": "Cost Center"})
 	doc.disabled = 1
 	doc.save()

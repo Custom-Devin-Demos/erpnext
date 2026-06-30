@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, getdate, today
 
@@ -15,7 +17,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestProcessStatementOfAccounts(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.db.set_single_value("Selling Settings", "validate_selling_price", 0)
 		frappe.db.set_value(
 			"Letter Head",
@@ -30,7 +32,7 @@ class TestProcessStatementOfAccounts(ERPNextTestSuite, AccountsTestMixin):
 		self.si = create_sales_invoice()
 		create_sales_invoice(customer="Other Customer")
 
-	def test_process_soa_for_gl(self):
+	def test_process_soa_for_gl(self) -> None:
 		"""Tests the utils for Statement of Accounts(General Ledger)"""
 		process_soa = create_process_soa(
 			name="_Test Process SOA for GL",
@@ -51,7 +53,7 @@ class TestProcessStatementOfAccounts(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(receivable_entries[1].voucher_no, self.si.name)
 		self.assertEqual(receivable_entries[1].balance, 100)
 
-	def test_process_soa_for_ar(self):
+	def test_process_soa_for_ar(self) -> None:
 		"""Tests the utils for Statement of Accounts(Accounts Receivable)"""
 		process_soa = create_process_soa(name="_Test Process SOA for AR", report="Accounts Receivable")
 		statement_dict = get_statement_dict(process_soa, get_statement_dict=True)
@@ -79,7 +81,7 @@ class TestProcessStatementOfAccounts(ERPNextTestSuite, AccountsTestMixin):
 		)
 		self.check_ageing_summary(ageing_summary, expected_summary)
 
-	def test_auto_email_for_process_soa_ar(self):
+	def test_auto_email_for_process_soa_ar(self) -> None:
 		process_soa = create_process_soa(
 			name="_Test Process SOA", enable_auto_email=1, report="Accounts Receivable"
 		)
@@ -88,7 +90,7 @@ class TestProcessStatementOfAccounts(ERPNextTestSuite, AccountsTestMixin):
 		process_soa.load_from_db()
 		self.assertEqual(process_soa.posting_date, getdate(add_days(today(), 7)))
 
-	def check_ageing_summary(self, ageing, expected_ageing):
+	def check_ageing_summary(self, ageing, expected_ageing) -> None:
 		for age_range in expected_ageing:
 			self.assertEqual(expected_ageing[age_range], ageing.get(age_range))
 

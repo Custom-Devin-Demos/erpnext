@@ -1,13 +1,15 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	columns = get_columns()
 	data = get_data(filters)
@@ -15,7 +17,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_data(report_filters):
+def get_data(report_filters: dict) -> list:
 	fields = get_fields()
 	filters = get_filter_condition(report_filters)
 
@@ -48,7 +50,7 @@ def get_data(report_filters):
 	return data
 
 
-def get_returned_materials(work_orders):
+def get_returned_materials(work_orders: list) -> None:
 	raw_materials_qty = defaultdict(float)
 
 	raw_materials = frappe.get_all(
@@ -76,7 +78,7 @@ def get_returned_materials(work_orders):
 			row.returned_qty = raw_materials_qty.get(key)
 
 
-def get_fields():
+def get_fields() -> list:
 	return [
 		"`tabWork Order Item`.`parent`",
 		"`tabWork Order Item`.`item_code` as raw_material_item_code",
@@ -93,7 +95,7 @@ def get_fields():
 	]
 
 
-def get_filter_condition(report_filters):
+def get_filter_condition(report_filters: dict) -> dict:
 	filters = {
 		"docstatus": 1,
 		"status": ("in", ["In Process", "Completed", "Stopped"]),
@@ -109,7 +111,7 @@ def get_filter_condition(report_filters):
 	return filters
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"label": _("Id"),

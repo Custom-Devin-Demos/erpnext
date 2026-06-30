@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.account.chart_of_accounts.chart_of_accounts import get_chart_metadata_fields
@@ -10,7 +12,7 @@ from erpnext.accounts.doctype.financial_report_template.financial_report_templat
 )
 
 
-def execute():
+def execute() -> None:
 	"""
 	Patch to create default account categories and update existing accounts
 	with appropriate account categories based on standard chart of accounts mapping
@@ -19,7 +21,7 @@ def execute():
 	update_account_categories()
 
 
-def update_account_categories():
+def update_account_categories() -> None:
 	account_mapping = get_standard_account_category_mapping()
 	companies = frappe.get_all("Company", pluck="name")
 
@@ -34,10 +36,10 @@ def update_account_categories():
 	frappe.db.bulk_update("Account", mapped_account_categories)
 
 
-def get_standard_account_category_mapping():
+def get_standard_account_category_mapping() -> dict:
 	account_mapping = {}
 
-	def _extract_account_mapping(chart_data, prefix=""):
+	def _extract_account_mapping(chart_data, prefix="") -> None:
 		for account_name, account_details in chart_data.items():
 			if account_name in get_chart_metadata_fields():
 				continue
@@ -54,7 +56,9 @@ def get_standard_account_category_mapping():
 	return account_mapping
 
 
-def map_account_categories_for_company(company, account_mapping, mapped_account_categories):
+def map_account_categories_for_company(
+	company: str, account_mapping: dict, mapped_account_categories: dict
+) -> None:
 	accounts = frappe.get_all(
 		"Account",
 		filters={"company": company, "account_category": ["is", "not set"]},

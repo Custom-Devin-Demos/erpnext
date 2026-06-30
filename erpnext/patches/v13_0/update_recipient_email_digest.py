@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("setup", "doctype", "Email Digest")
 	frappe.reload_doc("setup", "doctype", "Email Digest Recipient")
 	email_digests = frappe.db.get_list("Email Digest", fields=["name", "recipient_list"])

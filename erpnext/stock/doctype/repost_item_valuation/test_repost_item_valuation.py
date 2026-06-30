@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 from unittest.mock import MagicMock, call
 
 import frappe
@@ -22,7 +24,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
-	def test_repost_time_slot(self):
+	def test_repost_time_slot(self) -> None:
 		repost_settings = frappe.get_doc("Stock Reposting Settings")
 
 		positive_cases = [
@@ -82,7 +84,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 				msg=f"Exepcted false from : {case}",
 			)
 
-	def test_clear_old_logs(self):
+	def test_clear_old_logs(self) -> None:
 		# create 10 logs
 		for i in range(1, 20):
 			repost_doc = frappe.get_doc(
@@ -109,7 +111,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		logs = frappe.get_all("Repost Item Valuation", filters={"status": "Skipped"})
 		self.assertEqual(len(logs), 0)
 
-	def test_create_item_wise_repost_item_valuation_entries(self):
+	def test_create_item_wise_repost_item_valuation_entries(self) -> None:
 		pr = make_purchase_receipt(
 			company="_Test Company with perpetual inventory",
 			warehouse="Stores - TCP1",
@@ -124,8 +126,8 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 			self.assertEqual(riv.company, "_Test Company with perpetual inventory")
 			self.assertEqual(riv.warehouse, "Stores - TCP1")
 
-	def test_deduplication(self):
-		def _assert_status(doc, status):
+	def test_deduplication(self) -> None:
+		def _assert_status(doc, status) -> None:
 			doc.load_from_db()
 			self.assertEqual(doc.status, status)
 
@@ -171,7 +173,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		riv4.set_status("Skipped")
 		riv3.set_status("Skipped")
 
-	def test_stock_freeze_validation(self):
+	def test_stock_freeze_validation(self) -> None:
 		today = nowdate()
 
 		riv = frappe.get_doc(
@@ -193,7 +195,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		riv.set_status("Skipped")
 
 	@ERPNextTestSuite.change_settings("Stock Reposting Settings", {"item_based_reposting": 0})
-	def test_prevention_of_cancelled_transaction_riv(self):
+	def test_prevention_of_cancelled_transaction_riv(self) -> None:
 		frappe.flags.dont_execute_stock_reposts = True
 		self.addCleanup(frappe.flags.pop, "dont_execute_stock_reposts")
 
@@ -213,14 +215,14 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		riv.reload()
 		riv.cancel()  # it should cancel now
 
-	def test_queue_progress_serialization(self):
+	def test_queue_progress_serialization(self) -> None:
 		# Make sure set/tuple -> list behaviour is retained.
 		self.assertEqual(
 			[["a", "b"], ["c", "d"]],
 			sorted(frappe.parse_json(frappe.as_json(set([("a", "b"), ("c", "d")])))),
 		)
 
-	def test_gl_repost_progress(self):
+	def test_gl_repost_progress(self) -> None:
 		from erpnext.accounts import utils
 
 		# lower numbers to simplify test
@@ -248,7 +250,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 
 		self.assertNotIn(call("gl_reposting_index", 1), doc.db_set.mock_calls)
 
-	def test_gl_complete_gl_reposting(self):
+	def test_gl_complete_gl_reposting(self) -> None:
 		from erpnext.accounts import utils
 
 		# lower numbers to simplify test
@@ -294,7 +296,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 			gle_filters={"account": "Stock In Hand - TCP1"},
 		)
 
-	def test_duplicate_ple_on_repost(self):
+	def test_duplicate_ple_on_repost(self) -> None:
 		from erpnext.accounts import utils
 
 		# lower numbers to simplify test
@@ -348,7 +350,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		sinv.reload()
 		self.assertEqual(sinv.outstanding_amount, 100)
 
-	def test_account_freeze_validation(self):
+	def test_account_freeze_validation(self) -> None:
 		today = nowdate()
 
 		riv = frappe.get_doc(
@@ -373,7 +375,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		company.save()
 
 	@ERPNextTestSuite.change_settings("Stock Reposting Settings", {"item_based_reposting": 0})
-	def test_create_repost_entry_for_cancelled_document(self):
+	def test_create_repost_entry_for_cancelled_document(self) -> None:
 		pr = make_purchase_receipt(
 			company="_Test Company with perpetual inventory",
 			warehouse="Stores - TCP1",
@@ -389,7 +391,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(pr.docstatus, 2)
 		self.assertTrue(frappe.db.exists("Repost Item Valuation", {"voucher_no": pr.name}))
 
-	def test_repost_item_valuation_for_closing_stock_balance(self):
+	def test_repost_item_valuation_for_closing_stock_balance(self) -> None:
 		from erpnext.stock.doctype.stock_closing_entry.stock_closing_entry import (
 			prepare_closing_stock_balance,
 		)
@@ -420,7 +422,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		self.assertRaises(frappe.ValidationError, riv.save)
 		doc.cancel()
 
-	def test_recalculate_valuation_rate_for_purchase_receipt(self):
+	def test_recalculate_valuation_rate_for_purchase_receipt(self) -> None:
 		item = self.make_item().name
 
 		# receive item at rate 100
@@ -451,7 +453,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		# incoming rate after reposting should be 150
 		self.assertSLEs(pr, [{"incoming_rate": 150}])
 
-	def test_recalculate_valuation_rate_for_stock_entry(self):
+	def test_recalculate_valuation_rate_for_stock_entry(self) -> None:
 		item = self.make_item().name
 
 		# receive item at rate 100
@@ -476,7 +478,7 @@ class TestRepostItemValuation(ERPNextTestSuite, StockTestMixin):
 		# incoming rate after reposting should be 150
 		self.assertSLEs(se, [{"incoming_rate": 150}])
 
-	def test_remove_attached_file(self):
+	def test_remove_attached_file(self) -> None:
 		item_code = make_item("_Test Remove Attached File Item", properties={"is_stock_item": 1})
 
 		make_purchase_receipt(

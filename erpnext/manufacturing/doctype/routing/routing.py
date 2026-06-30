@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -24,14 +26,14 @@ class Routing(Document):
 		routing_name: DF.Data | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.calculate_operating_cost()
 		self.set_routing_id()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.calculate_operating_cost()
 
-	def calculate_operating_cost(self):
+	def calculate_operating_cost(self) -> None:
 		for operation in self.operations:
 			if not operation.hour_rate:
 				operation.hour_rate = frappe.db.get_value("Workstation", operation.workstation, "hour_rate")
@@ -40,7 +42,7 @@ class Routing(Document):
 				operation.precision("operating_cost"),
 			)
 
-	def set_routing_id(self):
+	def set_routing_id(self) -> None:
 		sequence_id = 0
 		for row in self.operations:
 			if not row.sequence_id:
@@ -57,7 +59,9 @@ class Routing(Document):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_operations(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_operations(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	query_filters = {}
 
 	if txt:

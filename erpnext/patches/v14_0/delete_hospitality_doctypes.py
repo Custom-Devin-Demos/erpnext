@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	modules = ["Hotels", "Restaurant"]
 
 	for module in modules:

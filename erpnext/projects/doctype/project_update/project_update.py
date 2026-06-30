@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 from frappe.utils import add_days, today
@@ -31,7 +33,7 @@ class ProjectUpdate(Document):
 
 
 @frappe.whitelist()
-def daily_reminder():
+def daily_reminder() -> None:
 	# This endpoint emails every Project User across every Project, so restrict it to managers.
 	frappe.only_for("Projects Manager")
 
@@ -81,16 +83,16 @@ def daily_reminder():
 
 
 def email_sending(
-	project_id,
-	project_name,
+	project_id: str,
+	project_name: str,
 	frequency,
 	date_start,
 	date_end,
 	progress,
-	number_of_drafts,
-	update,
+	number_of_drafts: int,
+	update: list,
 	holiday_today,
-):
+) -> None:
 	msg = (
 		"<p>Project Name: "
 		+ project_name

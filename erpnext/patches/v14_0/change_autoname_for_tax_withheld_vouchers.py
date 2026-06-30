@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if (
 		frappe.db.sql(
 			"""select data_type FROM information_schema.columns

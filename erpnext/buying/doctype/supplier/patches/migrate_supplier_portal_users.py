@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 import frappe
@@ -5,7 +7,7 @@ import frappe
 in_ci = os.environ.get("CI")
 
 
-def execute():
+def execute() -> None:
 	try:
 		contacts = get_portal_user_contacts()
 		add_portal_users(contacts)
@@ -17,7 +19,7 @@ def execute():
 			raise
 
 
-def get_portal_user_contacts():
+def get_portal_user_contacts() -> list:
 	contact = frappe.qb.DocType("Contact")
 	dynamic_link = frappe.qb.DocType("Dynamic Link")
 
@@ -37,7 +39,7 @@ def get_portal_user_contacts():
 	).run(as_dict=True)
 
 
-def add_portal_users(contacts):
+def add_portal_users(contacts: list) -> None:
 	for contact in contacts:
 		user = frappe.db.get_value("User", {"email": contact.portal_user}, "name")
 		if not user:

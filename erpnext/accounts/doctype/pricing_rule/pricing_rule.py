@@ -3,6 +3,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import copy
 import json
 import re
@@ -127,7 +129,7 @@ class PricingRule(Document):
 		warehouse: DF.Link | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_mandatory()
 		self.validate_duplicate_apply_on()
 		self.validate_applicable_for_selling_or_buying()
@@ -145,7 +147,7 @@ class PricingRule(Document):
 		if not self.margin_type:
 			self.margin_rate_or_amount = 0.0
 
-	def validate_duplicate_apply_on(self):
+	def validate_duplicate_apply_on(self) -> None:
 		if self.apply_on != "Transaction":
 			apply_on_table = apply_on_dict.get(self.apply_on)
 			if not apply_on_table:
@@ -156,7 +158,7 @@ class PricingRule(Document):
 			if len(values) != len(set(values)):
 				frappe.throw(_("Duplicate {0} found in the table").format(self.apply_on))
 
-	def validate_mandatory(self):
+	def validate_mandatory(self) -> None:
 		if self.has_priority and not self.priority:
 			throw(_("Priority is mandatory"), frappe.MandatoryError, _("Please Set Priority"))
 
@@ -199,7 +201,7 @@ class PricingRule(Document):
 					).format(frappe.bold(_("Apply Discount on Discounted Rate")), frappe.bold(_("Priority")))
 				)
 
-	def validate_applicable_for_selling_or_buying(self):
+	def validate_applicable_for_selling_or_buying(self) -> None:
 		if not self.selling and not self.buying:
 			throw(_("At least one of the Selling or Buying must be selected"))
 
@@ -219,15 +221,15 @@ class PricingRule(Document):
 				_("Buying must be checked, if Applicable For is selected as {0}").format(self.applicable_for)
 			)
 
-	def validate_min_max_qty(self):
+	def validate_min_max_qty(self) -> None:
 		if self.min_qty and self.max_qty and flt(self.min_qty) > flt(self.max_qty):
 			throw(_("Min Qty can not be greater than Max Qty"))
 
-	def validate_min_max_amt(self):
+	def validate_min_max_amt(self) -> None:
 		if self.min_amt and self.max_amt and flt(self.min_amt) > flt(self.max_amt):
 			throw(_("Min Amt can not be greater than Max Amt"))
 
-	def validate_recursion(self):
+	def validate_recursion(self) -> None:
 		if self.price_or_product_discount != "Product":
 			return
 		if self.free_item or self.same_item:
@@ -239,7 +241,7 @@ class PricingRule(Document):
 			if flt(self.apply_recursion_over) < 0:
 				throw(_("Recurse Over Qty cannot be less than 0"))
 
-	def cleanup_fields_value(self):
+	def cleanup_fields_value(self) -> None:
 		for logic_field in ["apply_on", "applicable_for", "rate_or_discount"]:
 			fieldname = frappe.scrub(self.get(logic_field) or "")
 
@@ -273,7 +275,7 @@ class PricingRule(Document):
 		for other_field in cleanup_other_fields:
 			self.set(other_field, None)
 
-	def validate_rate_or_discount(self):
+	def validate_rate_or_discount(self) -> None:
 		for field in ["Rate"]:
 			if flt(self.get(frappe.scrub(field))) < 0:
 				throw(_("{0} can not be negative").format(field))
@@ -284,26 +286,26 @@ class PricingRule(Document):
 			else:
 				self.same_item = 1
 
-	def validate_max_discount(self):
+	def validate_max_discount(self) -> None:
 		if self.rate_or_discount == "Discount Percentage" and self.get("items"):
 			for d in self.items:
 				max_discount = frappe.get_cached_value("Item", d.item_code, "max_discount")
 				if max_discount and flt(self.discount_percentage) > flt(max_discount):
 					throw(_("Max discount allowed for item: {0} is {1}%").format(d.item_code, max_discount))
 
-	def validate_price_list_with_currency(self):
+	def validate_price_list_with_currency(self) -> None:
 		if self.currency and self.for_price_list:
 			price_list_currency = frappe.db.get_value("Price List", self.for_price_list, "currency", True)
 			if self.currency != price_list_currency:
 				throw(_("Currency should be same as Price List Currency: {0}").format(price_list_currency))
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		if self.is_cumulative and not (self.valid_from and self.valid_upto):
 			frappe.throw(_("Valid from and valid upto fields are mandatory for the cumulative"))
 
 		self.validate_from_to_dates("valid_from", "valid_upto")
 
-	def validate_condition(self):
+	def validate_condition(self) -> None:
 		if (
 			self.condition
 			and ("=" in self.condition)
@@ -311,7 +313,7 @@ class PricingRule(Document):
 		):
 			frappe.throw(_("Invalid condition expression"))
 
-	def validate_mixed_with_recursion(self):
+	def validate_mixed_with_recursion(self) -> None:
 		if self.mixed_conditions and self.is_recursive:
 			frappe.throw(_("Recursive Discounts with Mixed condition is not supported by the system"))
 
@@ -376,7 +378,7 @@ def apply_pricing_rule(args: str | dict, doc: str | dict | Document | None = Non
 	return out
 
 
-def update_pricing_rule_uom(pricing_rule, args):
+def update_pricing_rule_uom(pricing_rule, args) -> None:
 	child_doc = {"Item Code": "items", "Item Group": "item_groups", "Brand": "brands"}.get(
 		pricing_rule.apply_on
 	)
@@ -388,7 +390,7 @@ def update_pricing_rule_uom(pricing_rule, args):
 			pricing_rule.uom = row.uom
 
 
-def get_pricing_rule_for_item(args, doc=None, for_validate=False):
+def get_pricing_rule_for_item(args, doc=None, for_validate: bool = False):
 	from erpnext.accounts.doctype.pricing_rule.utils import (
 		get_applied_pricing_rules,
 		get_pricing_rule_items,
@@ -511,7 +513,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 	return item_details
 
 
-def update_args_for_pricing_rule(args):
+def update_args_for_pricing_rule(args) -> None:
 	if not (args.item_group and args.brand):
 		item = frappe.get_cached_value("Item", args.item_code, ("item_group", "brand"))
 		if not item:
@@ -551,7 +553,7 @@ def get_pricing_rule_details(args, pricing_rule):
 	)
 
 
-def apply_price_discount_rule(pricing_rule, item_details, args):
+def apply_price_discount_rule(pricing_rule, item_details, args) -> None:
 	item_details.pricing_rule_for = pricing_rule.rate_or_discount
 
 	if (pricing_rule.margin_type in ["Amount", "Percentage"] and pricing_rule.currency == args.currency) or (

@@ -1,7 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
-def set_default_role(doc, method):
+
+def set_default_role(doc, method: str) -> None:
 	"""Set customer, supplier, student, guardian based on email"""
 	if frappe.flags.setting_role or frappe.flags.in_migrate:
 		return
@@ -19,7 +26,7 @@ def set_default_role(doc, method):
 				doc.add_roles("Supplier")
 
 
-def create_customer_or_supplier():
+def create_customer_or_supplier() -> Document | None:
 	"""Based on the default Role (Customer, Supplier), create a Customer / Supplier.
 	Called on_session_creation hook.
 	"""
@@ -59,7 +66,7 @@ def create_customer_or_supplier():
 	return party
 
 
-def create_party(doctype, fullname):
+def create_party(doctype: str, fullname: str) -> Document:
 	party = frappe.new_doc(doctype)
 	# Can't set parent party as group
 
@@ -76,7 +83,7 @@ def create_party(doctype, fullname):
 	return party
 
 
-def create_party_contact(doctype, fullname, user, party_name):
+def create_party_contact(doctype: str, fullname: str, user: str, party_name: str) -> None:
 	contact = frappe.new_doc("Contact")
 	contact.update({"first_name": fullname, "email_id": user})
 	contact.append("links", dict(link_doctype=doctype, link_name=party_name))
@@ -85,7 +92,7 @@ def create_party_contact(doctype, fullname, user, party_name):
 	contact.insert(ignore_permissions=True)
 
 
-def party_exists(doctype, user):
+def party_exists(doctype: str, user: str) -> bool:
 	# check if contact exists against party and if it is linked to the doctype
 	contact_name = frappe.db.get_value("Contact", {"email_id": user})
 	if contact_name:

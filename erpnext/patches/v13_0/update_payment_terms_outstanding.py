@@ -2,10 +2,12 @@
 # MIT License. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("accounts", "doctype", "Payment Schedule")
 	if frappe.db.count("Payment Schedule"):
 		frappe.db.sql(

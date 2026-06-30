@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import random
 
 
-def get_random_quote():
+def get_random_quote() -> tuple:
 	quotes = [
 		(
 			"Start by doing what's necessary; then do what's possible; and suddenly you are doing the impossible.",

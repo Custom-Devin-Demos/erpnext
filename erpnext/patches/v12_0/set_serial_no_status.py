@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import getdate, nowdate
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "serial_no")
 
 	serial_no_list = frappe.db.sql(

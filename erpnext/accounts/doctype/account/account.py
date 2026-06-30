@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, throw
 from frappe.utils import add_to_date, cint, cstr, pretty_date
@@ -87,25 +89,25 @@ class Account(NestedSet):
 
 	nsm_parent_field = "parent_account"
 
-	def on_update(self):
+	def on_update(self) -> None:
 		if frappe.local.flags.ignore_update_nsm:
 			return
 		else:
 			super().on_update()
 
-	def onload(self):
+	def onload(self) -> None:
 		role_allowed_for_frozen_entries = frappe.db.get_value(
 			"Company", self.company, "role_allowed_for_frozen_entries"
 		)
 		if not role_allowed_for_frozen_entries or role_allowed_for_frozen_entries in frappe.get_roles():
 			self.set_onload("can_freeze_account", True)
 
-	def autoname(self):
+	def autoname(self) -> None:
 		from erpnext.accounts.utils import get_autoname_with_number
 
 		self.name = get_autoname_with_number(self.account_number, self.account_name, self.company)
 
-	def validate(self):
+	def validate(self) -> None:
 		if frappe.local.flags.allow_unverified_charts:
 			return
 		self.validate_parent()
@@ -122,7 +124,7 @@ class Account(NestedSet):
 		self.validate_root_company_and_sync_account_to_children()
 		self.validate_receivable_payable_account_type()
 
-	def validate_parent_child_account_type(self):
+	def validate_parent_child_account_type(self) -> None:
 		if self.parent_account:
 			if self.account_type in [
 				"Direct Income",
@@ -136,7 +138,7 @@ class Account(NestedSet):
 				if parent_account_type == self.account_type:
 					throw(_("Only Parent can be of type {0}").format(self.account_type))
 
-	def validate_parent(self):
+	def validate_parent(self) -> None:
 		"""Fetch Parent Details and validate parent account"""
 		if self.parent_account:
 			par = frappe.get_cached_value(
@@ -161,7 +163,7 @@ class Account(NestedSet):
 					)
 				)
 
-	def set_root_and_report_type(self):
+	def set_root_and_report_type(self) -> None:
 		if self.parent_account:
 			par = frappe.get_cached_value(
 				"Account", self.parent_account, ["report_type", "root_type"], as_dict=1
@@ -194,7 +196,7 @@ class Account(NestedSet):
 				"Balance Sheet" if self.root_type in ("Asset", "Liability", "Equity") else "Profit and Loss"
 			)
 
-	def validate_receivable_payable_account_type(self):
+	def validate_receivable_payable_account_type(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		receivable_payable_types = ["Receivable", "Payable"]
 		if (
@@ -212,7 +214,7 @@ class Account(NestedSet):
 				frappe.msgprint(msg)
 				self.add_comment("Comment", msg)
 
-	def validate_root_details(self):
+	def validate_root_details(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 
 		if doc_before_save and not doc_before_save.parent_account:
@@ -221,7 +223,7 @@ class Account(NestedSet):
 		if not self.parent_account and not cint(self.is_group):
 			throw(_("The root account {0} must be a group").format(frappe.bold(self.name)))
 
-	def validate_root_company_and_sync_account_to_children(self):
+	def validate_root_company_and_sync_account_to_children(self) -> None:
 		# ignore validation while creating new compnay or while syncing to child companies
 		if frappe.local.flags.ignore_root_company_validation or self.flags.ignore_root_company_validation:
 			return
@@ -260,7 +262,7 @@ class Account(NestedSet):
 
 			self.create_account_for_child_company(parent_acc_name_map, descendants, parent_acc_name)
 
-	def validate_disabled(self):
+	def validate_disabled(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if not doc_before_save or cint(doc_before_save.disabled) == cint(self.disabled):
 			return
@@ -268,7 +270,7 @@ class Account(NestedSet):
 		if cint(self.disabled):
 			self.validate_default_accounts_in_company()
 
-	def validate_group_or_ledger(self):
+	def validate_group_or_ledger(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if not doc_before_save or cint(doc_before_save.is_group) == cint(self.is_group):
 			return
@@ -282,7 +284,7 @@ class Account(NestedSet):
 		elif self.check_if_child_exists():
 			throw(_("Account with child nodes cannot be set as ledger"))
 
-	def validate_default_accounts_in_company(self):
+	def validate_default_accounts_in_company(self) -> None:
 		default_account_fields = get_company_default_account_fields()
 
 		company_default_accounts = frappe.db.get_value(
@@ -304,7 +306,7 @@ class Account(NestedSet):
 					)
 				)
 
-	def validate_frozen_accounts_modifier(self):
+	def validate_frozen_accounts_modifier(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if not doc_before_save or doc_before_save.freeze_account == self.freeze_account:
 			return
@@ -315,7 +317,7 @@ class Account(NestedSet):
 		if not role_allowed_for_frozen_entries or role_allowed_for_frozen_entries not in frappe.get_roles():
 			throw(_("You are not authorized to set Frozen value"))
 
-	def validate_balance_must_be_debit_or_credit(self):
+	def validate_balance_must_be_debit_or_credit(self) -> None:
 		from erpnext.accounts.utils import get_balance_on
 
 		if not self.get("__islocal") and self.balance_must_be:
@@ -334,7 +336,7 @@ class Account(NestedSet):
 					)
 				)
 
-	def validate_account_currency(self):
+	def validate_account_currency(self) -> None:
 		self.currency_explicitly_specified = True
 
 		if not self.account_currency:
@@ -349,7 +351,7 @@ class Account(NestedSet):
 			if frappe.db.get_value("GL Entry", {"account": self.name}):
 				frappe.throw(_("Currency can not be changed after making entries using some other currency"))
 
-	def validate_account_number(self, account_number=None):
+	def validate_account_number(self, account_number=None) -> None:
 		if not account_number:
 			account_number = self.account_number
 
@@ -365,7 +367,7 @@ class Account(NestedSet):
 					)
 				)
 
-	def create_account_for_child_company(self, parent_acc_name_map, descendants, parent_acc_name):
+	def create_account_for_child_company(self, parent_acc_name_map, descendants, parent_acc_name) -> None:
 		for company in descendants:
 			company_bold = frappe.bold(company)
 			parent_acc_name_bold = frappe.bold(parent_acc_name)
@@ -454,14 +456,14 @@ class Account(NestedSet):
 	def check_if_child_exists(self):
 		return frappe.db.exists("Account", {"parent_account": self.name, "docstatus": ["!=", 2]})
 
-	def validate_mandatory(self):
+	def validate_mandatory(self) -> None:
 		if not self.root_type:
 			throw(_("Root Type is mandatory"))
 
 		if not self.report_type:
 			throw(_("Report Type is mandatory"))
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		# checks gl entries and if child exists
 		if self.check_gle_exists():
 			throw(_("Account with existing transaction can not be deleted"))
@@ -508,7 +510,7 @@ def get_account_currency(account):
 	return frappe.local_cache("account_currency", account, generator)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Account", ["lft", "rgt"])
 
 
@@ -637,7 +639,7 @@ def get_root_company(company: str):
 
 def sync_update_account_number_in_child(
 	descendants, old_acc_name, account_name, account_number=None, old_acc_number=None
-):
+) -> None:
 	filters = {
 		"company": ["in", descendants],
 		"account_name": old_acc_name,
@@ -649,7 +651,7 @@ def sync_update_account_number_in_child(
 		update_account_number(d["name"], account_name, account_number, from_descendant=True)
 
 
-def _ensure_idle_system():
+def _ensure_idle_system() -> None:
 	# Don't allow renaming if accounting entries are actively being updated, there are two main reasons:
 	# 1. Correctness: It's next to impossible to ensure that renamed account is not being used *right now*.
 	# 2. Performance: Renaming requires locking out many tables entirely and severely degrades performance.

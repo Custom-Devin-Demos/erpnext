@@ -1,13 +1,15 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestBankTransactionFees(ERPNextTestSuite):
-	def test_included_fee_throws(self):
+	def test_included_fee_throws(self) -> None:
 		"""A fee that's part of a withdrawal cannot be bigger than the
 		withdrawal itself."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -16,7 +18,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, bt.validate_included_fee)
 
-	def test_included_fee_allows_equal(self):
+	def test_included_fee_allows_equal(self) -> None:
 		"""A fee that's part of a withdrawal may be equal to the withdrawal
 		amount (only the fee was deducted from the account)."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -25,7 +27,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 
 		bt.validate_included_fee()
 
-	def test_included_fee_allows_for_deposit(self):
+	def test_included_fee_allows_for_deposit(self) -> None:
 		"""For deposits, a fee may be recorded separately without limiting the
 		received amount."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -34,7 +36,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 
 		bt.validate_included_fee()
 
-	def test_excluded_fee_noop_when_zero(self):
+	def test_excluded_fee_noop_when_zero(self) -> None:
 		"""When there is no excluded fee to apply, the amounts should remain
 		unchanged."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -50,7 +52,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 		self.assertEqual(bt.included_fee, 5)
 		self.assertEqual(bt.excluded_fee, 0)
 
-	def test_excluded_fee_throws_when_exceeds_deposit(self):
+	def test_excluded_fee_throws_when_exceeds_deposit(self) -> None:
 		"""A fee deducted from an incoming payment must not exceed the incoming
 		amount (else it would be a withdrawal, a conversion we don't support)."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -59,7 +61,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, bt.handle_excluded_fee)
 
-	def test_excluded_fee_throws_when_both_deposit_and_withdrawal_are_set(self):
+	def test_excluded_fee_throws_when_both_deposit_and_withdrawal_are_set(self) -> None:
 		"""A transaction must be either incoming or outgoing when applying a
 		fee, not both."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -69,7 +71,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, bt.handle_excluded_fee)
 
-	def test_excluded_fee_deducts_from_deposit(self):
+	def test_excluded_fee_deducts_from_deposit(self) -> None:
 		"""When a fee is deducted from an incoming payment, the net received
 		amount decreases and the fee is tracked as included."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -85,7 +87,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 		self.assertEqual(bt.included_fee, 7)
 		self.assertEqual(bt.excluded_fee, 0)
 
-	def test_excluded_fee_can_reduce_an_incoming_payment_to_zero(self):
+	def test_excluded_fee_can_reduce_an_incoming_payment_to_zero(self) -> None:
 		"""A separately-deducted fee may reduce an incoming payment to zero,
 		while still tracking the fee."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -101,7 +103,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 		self.assertEqual(bt.included_fee, 5)
 		self.assertEqual(bt.excluded_fee, 0)
 
-	def test_excluded_fee_increases_outgoing_payment(self):
+	def test_excluded_fee_increases_outgoing_payment(self) -> None:
 		"""When a separately-deducted fee is provided for an outgoing payment,
 		the total money leaving increases and the fee is tracked."""
 		bt = frappe.new_doc("Bank Transaction")
@@ -117,7 +119,7 @@ class TestBankTransactionFees(ERPNextTestSuite):
 		self.assertEqual(bt.included_fee, 7)
 		self.assertEqual(bt.excluded_fee, 0)
 
-	def test_excluded_fee_turns_zero_amount_into_withdrawal(self):
+	def test_excluded_fee_turns_zero_amount_into_withdrawal(self) -> None:
 		"""If only an excluded fee is provided, it should be treated as an
 		outgoing payment and the fee is then tracked as included."""
 		bt = frappe.new_doc("Bank Transaction")

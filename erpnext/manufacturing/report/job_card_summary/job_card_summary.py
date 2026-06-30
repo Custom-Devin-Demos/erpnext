@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import getdate
@@ -9,7 +11,7 @@ from frappe.utils import getdate
 from erpnext.stock.report.stock_analytics.stock_analytics import get_period, get_period_date_ranges
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	data = get_data(filters)
 	columns = get_columns(filters)
@@ -17,7 +19,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	query_filters = {
 		"docstatus": ("<", 2),
 		"posting_date": ("between", [filters.from_date, filters.to_date]),
@@ -79,7 +81,7 @@ def get_data(filters):
 	return res
 
 
-def get_chart_data(job_card_details, filters):
+def get_chart_data(job_card_details: list, filters: dict) -> dict:
 	labels, periodic_data = prepare_chart_data(job_card_details, filters)
 
 	open_job_cards, completed = [], []
@@ -97,7 +99,7 @@ def get_chart_data(job_card_details, filters):
 	return chart
 
 
-def prepare_chart_data(job_card_details, filters):
+def prepare_chart_data(job_card_details: list, filters: dict) -> tuple:
 	labels = []
 
 	periodic_data = {"Open": {}, "Completed": {}}
@@ -122,7 +124,7 @@ def prepare_chart_data(job_card_details, filters):
 	return labels, periodic_data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	columns = [
 		{
 			"label": _("Id"),

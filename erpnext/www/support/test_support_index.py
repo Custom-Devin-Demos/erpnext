@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import random_string
 
@@ -9,7 +11,7 @@ from erpnext.www.support.index import get_favorite_articles_by_page_view
 
 
 class TestSupportIndex(ERPNextTestSuite):
-	def make_help_category(self):
+	def make_help_category(self) -> str:
 		category_name = "_Test Support Category " + random_string(8)
 		category = frappe.get_doc(
 			{
@@ -20,7 +22,9 @@ class TestSupportIndex(ERPNextTestSuite):
 		).insert(ignore_permissions=True)
 		return category.name
 
-	def make_help_article(self, category, route, title, content, published=1):
+	def make_help_article(
+		self, category: str, route: str, title: str, content: str, published: int = 1
+	) -> str:
 		article = frappe.get_doc(
 			{
 				"doctype": "Help Article",
@@ -33,7 +37,7 @@ class TestSupportIndex(ERPNextTestSuite):
 		).insert(ignore_permissions=True)
 		return article.name
 
-	def seed_page_views(self, path, count):
+	def seed_page_views(self, path: str, count: int) -> None:
 		# Web Page View is in_create/read_only; insert the minimal row the
 		# converted JOIN reads (path == Help Article.route) directly.
 		for _ in range(count):
@@ -44,7 +48,7 @@ class TestSupportIndex(ERPNextTestSuite):
 			view.name = frappe.generate_hash("wpv", 12)
 			view.db_insert()
 
-	def test_favorite_articles_ordered_by_page_view_count(self):
+	def test_favorite_articles_ordered_by_page_view_count(self) -> None:
 		category = self.make_help_category()
 
 		# Distinct, collision-free routes so other published articles in the DB

@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # MIT License. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils.data import today
 
@@ -12,7 +14,7 @@ COMPANY_SHORT_NAME = "_TC6"
 
 
 class TestBalanceSheet(ERPNextTestSuite):
-	def test_balance_sheet(self):
+	def test_balance_sheet(self) -> None:
 		create_account("VAT Liabilities", f"Duties and Taxes - {COMPANY_SHORT_NAME}", COMPANY)
 		create_account("Advance VAT Paid", f"Duties and Taxes - {COMPANY_SHORT_NAME}", COMPANY)
 		create_account("My Bank", f"Bank Accounts - {COMPANY_SHORT_NAME}", COMPANY)
@@ -107,7 +109,7 @@ class TestBalanceSheet(ERPNextTestSuite):
 		self.assertEqual(name_and_total["'Provisional Profit / Loss (Credit)'"], 100)
 
 
-def make_journal_entry(rows):
+def make_journal_entry(rows) -> None:
 	jv = frappe.new_doc("Journal Entry")
 	jv.posting_date = today()
 	jv.company = COMPANY
@@ -121,7 +123,7 @@ def make_journal_entry(rows):
 	jv.submit()
 
 
-def create_account(account_name: str, parent_account: str, company: str):
+def create_account(account_name: str, parent_account: str, company: str) -> None:
 	if frappe.db.exists("Account", {"account_name": account_name, "company": company}):
 		return
 

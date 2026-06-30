@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
@@ -8,21 +10,21 @@ from .stock_entry_base import BaseStockEntry
 
 
 class BaseMaterialTransferStockEntry(BaseStockEntry):
-	def set_default_warehouse(self):
+	def set_default_warehouse(self) -> None:
 		for row in self.doc.items:
 			if not row.t_warehouse and self.doc.to_warehouse:
 				row.t_warehouse = self.doc.to_warehouse
 			if not row.s_warehouse and self.doc.from_warehouse:
 				row.s_warehouse = self.doc.from_warehouse
 
-	def validate_warehouse(self):
+	def validate_warehouse(self) -> None:
 		for row in self.doc.items:
 			if not row.t_warehouse:
 				frappe.throw(_("Target Warehouse is required for item {0}").format(row.item_code))
 			if not row.s_warehouse:
 				frappe.throw(_("Source Warehouse is required for item {0}").format(row.item_code))
 
-	def validate_same_source_target_warehouse(self):
+	def validate_same_source_target_warehouse(self) -> None:
 		"""
 		Raises: frappe.ValidationError: If warehouses are same and no inventory dimensions differ
 		"""
@@ -65,7 +67,7 @@ class BaseMaterialTransferStockEntry(BaseStockEntry):
 							title=_("Invalid Source and Target Warehouse"),
 						)
 
-	def update_transferred_qty(self):
+	def update_transferred_qty(self) -> None:
 		if not self.doc.outgoing_stock_entry:
 			return
 
@@ -89,7 +91,7 @@ class BaseMaterialTransferStockEntry(BaseStockEntry):
 		).run(as_dict=True)
 		return result[0].qty if result and result[0].qty else 0.0
 
-	def _validate_item_transferred_qty(self, item, transferred_qty):
+	def _validate_item_transferred_qty(self, item, transferred_qty) -> None:
 		if item.docstatus != 1:
 			return
 
@@ -101,7 +103,7 @@ class BaseMaterialTransferStockEntry(BaseStockEntry):
 				)
 			)
 
-	def _collect_transferred_qtys(self):
+	def _collect_transferred_qtys(self) -> tuple:
 		stock_entries, child_list = {}, []
 		for item in self.doc.items:
 			if not (item.against_stock_entry and item.ste_detail):
@@ -113,7 +115,7 @@ class BaseMaterialTransferStockEntry(BaseStockEntry):
 			stock_entries[(item.against_stock_entry, item.ste_detail)] = transferred_qty
 		return stock_entries, child_list
 
-	def _bulk_update_transferred_qty(self, stock_entries, child_list):
+	def _bulk_update_transferred_qty(self, stock_entries, child_list) -> None:
 		sed = frappe.qb.DocType("Stock Entry Detail")
 		case_expr = self._build_case_expr(sed, stock_entries)
 		(
@@ -130,10 +132,10 @@ class BaseMaterialTransferStockEntry(BaseStockEntry):
 			case_expr = case_expr.when((sed.parent == parent) & (sed.name == name), qty)
 		return case_expr
 
-	def _update_per_transferred_field(self):
+	def _update_per_transferred_field(self) -> None:
 		self.doc._update_percent_field_in_targets(self._get_per_transferred_config(), update_modified=True)
 
-	def _get_per_transferred_config(self):
+	def _get_per_transferred_config(self) -> dict:
 		return {
 			"source_dt": "Stock Entry Detail",
 			"target_field": "transferred_qty",
@@ -148,22 +150,22 @@ class BaseMaterialTransferStockEntry(BaseStockEntry):
 
 
 class MaterialTransferStockEntry(BaseMaterialTransferStockEntry):
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_default_warehouse()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_warehouse()
 		self.validate_same_source_target_warehouse()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_transferred_qty()
 		self.update_subcontract_order_supplied_items()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_transferred_qty()
 		self.update_subcontract_order_supplied_items()
 
-	def update_subcontract_order_supplied_items(self):
+	def update_subcontract_order_supplied_items(self) -> None:
 		if not self.doc.get(self.doc.subcontract_data.order_field):
 			return
 
@@ -173,15 +175,15 @@ class MaterialTransferStockEntry(BaseMaterialTransferStockEntry):
 
 
 class MaterialTransferForManufactureStockEntry(BaseMaterialTransferStockEntry):
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_default_warehouse()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_warehouse()
 		self.validate_component_and_quantities()
 		self.validate_same_source_target_warehouse()
 
-	def validate_component_and_quantities(self):
+	def validate_component_and_quantities(self) -> None:
 		if self.doc.fg_completed_qty:
 			if frappe.db.get_single_value("Manufacturing Settings", "validate_components_quantities_per_bom"):
 				_check_bom_component_qty(
@@ -190,7 +192,7 @@ class MaterialTransferForManufactureStockEntry(BaseMaterialTransferStockEntry):
 		elif self.doc.work_order:
 			self._validate_no_excess_transfer()
 
-	def _validate_no_excess_transfer(self):
+	def _validate_no_excess_transfer(self) -> None:
 		if self.doc.is_return:
 			return
 
@@ -243,7 +245,7 @@ class MaterialTransferForManufactureStockEntry(BaseMaterialTransferStockEntry):
 					title=_("Excess Material Transfer"),
 				)
 
-	def add_items(self):
+	def add_items(self) -> None:
 		item_dict = self.get_pending_raw_materials()
 
 		for item in item_dict.values():
@@ -275,7 +277,7 @@ class MaterialTransferForManufactureStockEntry(BaseMaterialTransferStockEntry):
 
 		return item_dict
 
-	def _is_overproduction_allowed(self, max_qty):
+	def _is_overproduction_allowed(self, max_qty) -> bool:
 		overproduction_pct = flt(
 			frappe.db.get_single_value("Manufacturing Settings", "overproduction_percentage_for_work_order")
 		)
@@ -322,7 +324,7 @@ class MaterialTransferForManufactureStockEntry(BaseMaterialTransferStockEntry):
 
 	def _add_required_item(
 		self, item_dict, d, consider_job_card, job_card_items, wip_warehouse, extra_pct, work_order
-	):
+	) -> None:
 		if consider_job_card and d.item_code not in job_card_items:
 			return
 		additional_qty = extra_pct * flt(d.required_qty) / 100 if extra_pct else 0.0
@@ -336,7 +338,7 @@ class MaterialTransferForManufactureStockEntry(BaseMaterialTransferStockEntry):
 			return
 		self._build_required_item_row(item_dict, d, consider_job_card, wip_warehouse, work_order)
 
-	def _build_required_item_row(self, item_dict, d, consider_job_card, wip_warehouse, work_order):
+	def _build_required_item_row(self, item_dict, d, consider_job_card, wip_warehouse, work_order) -> None:
 		item_row = d.as_dict()
 		item_row["idx"] = len(item_dict) + 1
 		if consider_job_card:
@@ -362,13 +364,13 @@ class MaterialTransferForManufactureStockEntry(BaseMaterialTransferStockEntry):
 			"Job Card Item", filters={"parent": self.doc.get("job_card")}, pluck="item_code", distinct=True
 		)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_job_card_and_work_order()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_job_card_and_work_order()
 
-	def update_job_card_and_work_order(self):
+	def update_job_card_and_work_order(self) -> None:
 		if self.doc.job_card:
 			job_doc = frappe.get_doc("Job Card", self.doc.job_card)
 			job_doc.set_transferred_qty(update_status=True)
@@ -391,14 +393,14 @@ class MaterialTransferForManufactureStockEntry(BaseMaterialTransferStockEntry):
 
 
 class MaterialRequestStockEntry(BaseMaterialTransferStockEntry):
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_default_warehouse()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_warehouse()
 		self.validate_material_request()
 
-	def get_material_request(self, item_row):
+	def get_material_request(self, item_row) -> tuple:
 		material_request = item_row.material_request or None
 		material_request_item = item_row.material_request_item or None
 
@@ -415,7 +417,7 @@ class MaterialRequestStockEntry(BaseMaterialTransferStockEntry):
 
 		return material_request, material_request_item
 
-	def validate_material_request(self):
+	def validate_material_request(self) -> None:
 		for row in self.doc.items:
 			material_request, material_request_item = self.get_material_request(row)
 			if not material_request:
@@ -434,7 +436,7 @@ class MaterialRequestStockEntry(BaseMaterialTransferStockEntry):
 					frappe.MappingMismatchError,
 				)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_transferred_qty()
 		if self.doc.add_to_transit:
 			self.set_material_request_transfer_status("In Transit")
@@ -442,7 +444,7 @@ class MaterialRequestStockEntry(BaseMaterialTransferStockEntry):
 		if self.doc.outgoing_stock_entry:
 			self.set_material_request_transfer_status("Completed")
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_transferred_qty()
 		if self.doc.add_to_transit:
 			self.set_material_request_transfer_status("Not Started")
@@ -450,7 +452,7 @@ class MaterialRequestStockEntry(BaseMaterialTransferStockEntry):
 		if self.doc.outgoing_stock_entry:
 			self.set_material_request_transfer_status("In Transit")
 
-	def set_material_request_transfer_status(self, status):
+	def set_material_request_transfer_status(self, status) -> None:
 		material_requests = []
 		parent_se = (
 			frappe.get_value("Stock Entry", self.doc.outgoing_stock_entry, "add_to_transit")

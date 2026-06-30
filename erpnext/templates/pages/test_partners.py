@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.templates.pages.partners import get_context, page_title
@@ -8,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPartnersPage(ERPNextTestSuite):
-	def _make_partner(self, name, show_in_website):
+	def _make_partner(self, name: str, show_in_website: int) -> str:
 		if not frappe.db.exists("Sales Partner", name):
 			frappe.get_doc(
 				{
@@ -21,7 +23,7 @@ class TestPartnersPage(ERPNextTestSuite):
 			).insert(ignore_permissions=True)
 		return name
 
-	def test_get_context_lists_only_website_partners(self):
+	def test_get_context_lists_only_website_partners(self) -> None:
 		"""partners.py builds the /partners list via
 		frappe.get_all("Sales Partner", filters={"show_in_website": 1}, ...).
 		Seed one website-visible partner and one hidden control partner, then assert the

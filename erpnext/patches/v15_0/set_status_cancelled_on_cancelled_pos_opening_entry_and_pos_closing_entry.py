@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import DocType
 
 
-def execute():
+def execute() -> None:
 	POSOpeningEntry = DocType("POS Opening Entry")
 	POSClosingEntry = DocType("POS Closing Entry")
 

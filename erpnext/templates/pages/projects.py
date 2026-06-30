@@ -1,11 +1,12 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 
 
-def get_context(context):
+def get_context(context) -> None:
 	project_user = frappe.db.get_value(
 		"Project User",
 		{"parent": frappe.form_dict.project, "user": frappe.session.user},
@@ -34,7 +35,9 @@ def get_context(context):
 	context.doc = project
 
 
-def get_tasks(project, start=0, search=None, item_status=None):
+def get_tasks(
+	project: str, start: int = 0, search: str | None = None, item_status: str | None = None
+) -> list:
 	filters = {"project": project}
 	if search:
 		filters["subject"] = ("like", f"%{search}%")
@@ -64,7 +67,7 @@ def get_tasks(project, start=0, search=None, item_status=None):
 	return list(filter(lambda x: not x.parent_task, tasks))
 
 
-def get_timesheets(project, start=0, search=None):
+def get_timesheets(project: str, start: int = 0, search: str | None = None) -> list:
 	filters = {"project": project}
 	if search:
 		filters["activity_type"] = ("like", f"%{search}%")
@@ -89,7 +92,7 @@ def get_timesheets(project, start=0, search=None):
 	return timesheets
 
 
-def get_attachments(project):
+def get_attachments(project: str) -> list:
 	return frappe.get_all(
 		"File",
 		filters={"attached_to_name": project, "attached_to_doctype": "Project", "is_private": 0},

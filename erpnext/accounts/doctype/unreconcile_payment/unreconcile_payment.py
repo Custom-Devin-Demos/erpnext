@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -37,7 +39,7 @@ class UnreconcilePayment(Document):
 		voucher_type: DF.Link | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.supported_types = ["Payment Entry", "Journal Entry"]
 		if self.voucher_type not in self.supported_types:
 			frappe.throw(_("Only {0} are supported").format(comma_and(self.supported_types)))
@@ -50,13 +52,13 @@ class UnreconcilePayment(Document):
 			docname=self.voucher_no,
 		)
 
-	def add_references(self):
+	def add_references(self) -> None:
 		allocations = self.get_allocations_from_payment()
 
 		for alloc in allocations:
 			self.append("allocations", alloc)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		# todo: more granular unreconciliation
 		for alloc in self.allocations:
 			doc = frappe.get_doc(alloc.reference_doctype, alloc.reference_name)
@@ -201,7 +203,7 @@ def get_linked_advances(company, docname):
 
 
 @frappe.whitelist()
-def create_unreconcile_doc_for_selection(selections: str | list | None = None):
+def create_unreconcile_doc_for_selection(selections: str | list | None = None) -> None:
 	if selections:
 		selections = frappe.parse_json(selections)
 		# assuming each row is a unique voucher

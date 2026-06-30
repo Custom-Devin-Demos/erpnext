@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from frappe import _
 
 
-def get_data():
+def get_data() -> dict:
 	return {
 		"fieldname": "supplier_quotation",
 		"non_standard_fieldnames": {"Auto Repeat": "reference_document"},

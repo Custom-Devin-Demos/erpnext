@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 import requests
 from frappe import _
@@ -7,7 +9,7 @@ from frappe.utils.global_search import search
 from jinja2 import utils
 
 
-def get_context(context):
+def get_context(context) -> None:
 	context.no_cache = 1
 	if frappe.form_dict.q:
 		query = str(utils.escape(sanitize_html(frappe.form_dict.q)))
@@ -23,7 +25,7 @@ def get_context(context):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_help_results_sections(text: str):
+def get_help_results_sections(text: str) -> list:
 	out = []
 	settings = frappe.get_doc("Support Settings", "Support Settings")
 
@@ -46,14 +48,14 @@ def get_help_results_sections(text: str):
 	return out
 
 
-def get_response(api, text):
+def get_response(api, text: str) -> dict:
 	response = requests.get(api.base_url + "/" + api.query_route, data={api.search_term_param_name: text})
 
 	response.raise_for_status()
 	return response.json()
 
 
-def get_topics_data(api, response_json):
+def get_topics_data(api, response_json: dict) -> list:
 	if not response_json:
 		response_json = {}
 	topics_data = {}  # it will actually be an array
@@ -65,7 +67,7 @@ def get_topics_data(api, response_json):
 	return topics_data or []
 
 
-def prepare_api_results(api, topics_data):
+def prepare_api_results(api, topics_data: list) -> list:
 	if not topics_data:
 		topics_data = []
 
@@ -87,7 +89,7 @@ def prepare_api_results(api, topics_data):
 	return results[:5]
 
 
-def prepare_doctype_results(api, raw):
+def prepare_doctype_results(api, raw: list) -> list:
 	results = []
 	for r in raw:
 		prepared_result = {}

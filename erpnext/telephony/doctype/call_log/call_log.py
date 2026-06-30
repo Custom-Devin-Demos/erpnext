@@ -1,6 +1,7 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -46,10 +47,10 @@ class CallLog(Document):
 		type_of_call: DF.Link | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		deduplicate_dynamic_links(self)
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		"""Add lead(third party person) links to the document."""
 		lead_number = self.get("from") if self.is_incoming_call() else self.get("to")
 		lead_number = strip_number(lead_number)
@@ -64,15 +65,15 @@ class CallLog(Document):
 		if self.is_incoming_call():
 			self.update_received_by()
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		self.trigger_call_popup()
 
-	def on_update(self):
-		def _is_call_missed(doc_before_save, doc_after_save):
+	def on_update(self) -> None:
+		def _is_call_missed(doc_before_save, doc_after_save) -> bool:
 			# FIXME: This works for Exotel but not for all telepony providers
 			return doc_before_save.to != doc_after_save.to and doc_after_save.status not in END_CALL_STATUSES
 
-		def _is_call_ended(doc_before_save, doc_after_save):
+		def _is_call_ended(doc_before_save, doc_after_save) -> bool:
 			return doc_before_save.status not in END_CALL_STATUSES and self.status in END_CALL_STATUSES
 
 		doc_before_save = self.get_doc_before_save()
@@ -89,13 +90,13 @@ class CallLog(Document):
 		if _is_call_ended(doc_before_save, self):
 			frappe.publish_realtime(f"call_{self.id}_ended", self)
 
-	def is_incoming_call(self):
+	def is_incoming_call(self) -> bool:
 		return self.type == "Incoming"
 
-	def add_link(self, link_type, link_name):
+	def add_link(self, link_type: str, link_name: str) -> None:
 		self.append("links", {"link_doctype": link_type, "link_name": link_name})
 
-	def trigger_call_popup(self):
+	def trigger_call_popup(self) -> None:
 		if not self.is_incoming_call():
 			return
 
@@ -121,21 +122,21 @@ class CallLog(Document):
 		for email in emails:
 			frappe.publish_realtime("show_call_popup", self, user=email)
 
-	def update_received_by(self):
+	def update_received_by(self) -> None:
 		if employees := get_employees_with_number(self.get("to")):
 			self.call_received_by = employees[0].get("name")
 			self.employee_user_id = employees[0].get("user_id")
 
 
 @frappe.whitelist()
-def add_call_summary_and_call_type(call_log: str, summary: str, call_type: str):
+def add_call_summary_and_call_type(call_log: str, summary: str, call_type: str) -> None:
 	doc = frappe.get_doc("Call Log", call_log)
 	doc.type_of_call = call_type
 	doc.save()
 	doc.add_comment("Comment", frappe.bold(_("Call Summary")) + "<br><br>" + summary)
 
 
-def get_employees_with_number(number):
+def get_employees_with_number(number: str | None) -> list:
 	number = strip_number(number)
 	if not number:
 		return []
@@ -155,7 +156,7 @@ def get_employees_with_number(number):
 	return employee_doc_name_and_emails
 
 
-def link_existing_conversations(doc, state):
+def link_existing_conversations(doc: Document, state) -> None:
 	"""
 	Called from hooks on creation of Contact or Lead to link all the existing conversations.
 	"""
@@ -201,7 +202,7 @@ def link_existing_conversations(doc, state):
 		frappe.log_error(title=_("Error during caller information update"))
 
 
-def get_linked_call_logs(doctype, docname):
+def get_linked_call_logs(doctype: str, docname: str) -> list:
 	# content will be shown in timeline
 	logs = frappe.get_all(
 		"Dynamic Link",

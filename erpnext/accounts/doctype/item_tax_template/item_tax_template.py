@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -26,22 +28,22 @@ class ItemTaxTemplate(Document):
 		title: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_zero_rate_for_not_applicable_tax()
 		self.validate_tax_accounts()
 
-	def set_zero_rate_for_not_applicable_tax(self):
+	def set_zero_rate_for_not_applicable_tax(self) -> None:
 		"""Ensure tax_rate is 0 for any row marked as not applicable."""
 		for row in self.get("taxes"):
 			if row.not_applicable:
 				row.tax_rate = 0
 
-	def autoname(self):
+	def autoname(self) -> None:
 		if self.company and self.title:
 			abbr = frappe.get_cached_value("Company", self.company, "abbr")
 			self.name = f"{self.title} - {abbr}"
 
-	def validate_tax_accounts(self):
+	def validate_tax_accounts(self) -> None:
 		"""Check whether Tax Rate is not entered twice for same Tax Type"""
 		check_list = []
 		for d in self.get("taxes"):

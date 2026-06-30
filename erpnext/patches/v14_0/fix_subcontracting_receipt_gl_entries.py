@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.report.stock_and_account_value_comparison.stock_and_account_value_comparison import (
@@ -8,7 +10,7 @@ from erpnext.stock.report.stock_and_account_value_comparison.stock_and_account_v
 )
 
 
-def execute():
+def execute() -> None:
 	data = []
 
 	for company in frappe.db.get_list("Company", pluck="name"):

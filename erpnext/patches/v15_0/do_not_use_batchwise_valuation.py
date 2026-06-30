@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	valuation_method = frappe.db.get_single_value("Stock Settings", "valuation_method")
 	if valuation_method in ["FIFO", "LIFO"]:
 		return

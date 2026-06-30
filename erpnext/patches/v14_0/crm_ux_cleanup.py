@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 from frappe.utils import add_months, cstr, today
 
 
-def execute():
+def execute() -> None:
 	for doctype in ("CRM Note", "Lead", "Opportunity", "Prospect", "Prospect Lead"):
 		frappe.reload_doc("crm", "doctype", doctype)
 
@@ -26,7 +28,7 @@ def execute():
 	add_calendar_event_for_opportunities()
 
 
-def add_calendar_event_for_leads():
+def add_calendar_event_for_leads() -> None:
 	# create events based on next contact date
 	leads = frappe.db.sql(
 		"""
@@ -59,7 +61,7 @@ def add_calendar_event_for_leads():
 		event.insert(ignore_permissions=True)
 
 
-def add_calendar_event_for_opportunities():
+def add_calendar_event_for_opportunities() -> None:
 	# create events based on next contact date
 	opportunities = frappe.db.sql(
 		"""

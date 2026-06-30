@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt, getdate, now_datetime, nowdate
@@ -43,12 +45,12 @@ def execute(filters: dict | None = None):
 	return columns, data
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	validate_companies(filters)
 	tb_validate_filters(filters)
 
 
-def validate_companies(filters):
+def validate_companies(filters) -> None:
 	if not filters.company:
 		return
 
@@ -74,7 +76,7 @@ def validate_companies(filters):
 	sort_companies(filters)
 
 
-def sort_companies(filters):
+def sort_companies(filters) -> None:
 	companies = frappe.db.get_all(
 		"Company", {"name": ["in", filters.company]}, "name", order_by="lft", pluck="name"
 	)
@@ -252,7 +254,7 @@ def prepare_companywise_tb_data(accounts, filters, parent_children_map, reportin
 	return data
 
 
-def calculate_foreign_currency_translation_reserve(total_row, data, filters):
+def calculate_foreign_currency_translation_reserve(total_row, data, filters) -> None:
 	if not data or not total_row:
 		return
 	opening_dr_cr_diff = total_row["opening_debit"] - total_row["opening_credit"]
@@ -310,7 +312,7 @@ def get_fctr_root_row_index(data):
 	return equity_idx
 
 
-def consolidate_trial_balance_data(data, tb_data):
+def consolidate_trial_balance_data(data, tb_data) -> None:
 	if not data:
 		data.extend(list(tb_data))
 		return
@@ -334,7 +336,7 @@ def get_reporting_currency(filters):
 	return (default_currency, True)
 
 
-def consolidate_gle_data(data, entry, tb_data):
+def consolidate_gle_data(data, entry, tb_data) -> None:
 	entry_gle_exists = False
 	for gle in data:
 		if gle and gle["account_name"] == entry["account_name"]:
@@ -367,7 +369,9 @@ def consolidate_gle_data(data, entry, tb_data):
 			data.append(entry)
 
 
-def update_to_presentation_currency(data, from_currency, to_currency, date, ignore_reporting_currency):
+def update_to_presentation_currency(
+	data, from_currency, to_currency, date, ignore_reporting_currency
+) -> None:
 	if from_currency == to_currency:
 		return
 
@@ -381,7 +385,7 @@ def update_to_presentation_currency(data, from_currency, to_currency, date, igno
 		d.update(currency=to_currency)
 
 
-def prepare_opening_closing_for_ctb(data):
+def prepare_opening_closing_for_ctb(data) -> None:
 	for d in data:
 		prepare_opening_closing(d)
 

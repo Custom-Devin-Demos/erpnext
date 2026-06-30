@@ -1,13 +1,14 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Avg, Date
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns = [
 		{"fieldname": "creation_date", "label": _("Date"), "fieldtype": "Date", "width": 300},
 		{

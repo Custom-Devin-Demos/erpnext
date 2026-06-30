@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 from datetime import timedelta
@@ -62,7 +63,7 @@ class Issue(Document):
 		via_customer_portal: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.is_new() and self.via_customer_portal:
 			self.flags.create_communication = True
 
@@ -71,13 +72,13 @@ class Issue(Document):
 
 		self.set_lead_contact(self.raised_by)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		# Add a communication in the issue timeline
 		if self.flags.create_communication and self.via_customer_portal:
 			self.create_communication()
 			self.flags.communication_created = None
 
-	def set_lead_contact(self, email_id):
+	def set_lead_contact(self, email_id: str) -> None:
 		import email.utils
 
 		email_id = email.utils.parseaddr(email_id)[1]
@@ -97,7 +98,7 @@ class Issue(Document):
 					"Company"
 				)
 
-	def create_communication(self):
+	def create_communication(self) -> None:
 		communication = frappe.new_doc("Communication")
 		communication.update(
 			{
@@ -118,7 +119,7 @@ class Issue(Document):
 		communication.save()
 
 	@frappe.whitelist()
-	def split_issue(self, subject: str, communication_id: str):
+	def split_issue(self, subject: str, communication_id: str) -> str:
 		from copy import deepcopy
 
 		self.check_permission("write")
@@ -172,12 +173,12 @@ class Issue(Document):
 
 		return replicated_issue.name
 
-	def reset_issue_metrics(self):
+	def reset_issue_metrics(self) -> None:
 		self.db_set("resolution_time", None)
 		self.db_set("user_resolution_time", None)
 
 
-def get_list_context(context=None):
+def get_list_context(context=None) -> dict:
 	return {
 		"title": _("Issues"),
 		"get_list": get_issue_list,
@@ -188,7 +189,14 @@ def get_list_context(context=None):
 	}
 
 
-def get_issue_list(doctype, txt, filters, limit_start, limit_page_length=20, order_by=None):
+def get_issue_list(
+	doctype: str,
+	txt: str,
+	filters: dict | None,
+	limit_start: int,
+	limit_page_length: int = 20,
+	order_by: str | None = None,
+) -> list:
 	from frappe.www.list import get_list
 
 	user = frappe.session.user
@@ -217,18 +225,18 @@ def get_issue_list(doctype, txt, filters, limit_start, limit_page_length=20, ord
 
 
 @frappe.whitelist()
-def set_multiple_status(names: str | list, status: str):
+def set_multiple_status(names: str | list, status: str) -> None:
 	for name in frappe.parse_json(names):
 		set_status(name, status)
 
 
 @frappe.whitelist()
-def set_status(name: str, status: str):
+def set_status(name: str, status: str) -> None:
 	frappe.has_permission("Issue", "write", name, throw=True)
 	frappe.db.set_value("Issue", name, "status", status)
 
 
-def auto_close_tickets():
+def auto_close_tickets() -> None:
 	"""
 	Auto-close replied support tickets as defined on `close_issue_after_days` in Support Settings.
 	Disables the feature if `close_issue_after_days` is set to 0.
@@ -255,7 +263,7 @@ def auto_close_tickets():
 		doc.save()
 
 
-def has_website_permission(doc, ptype, user, verbose=False):
+def has_website_permission(doc, ptype: str, user: str, verbose: bool = False) -> bool:
 	from erpnext.controllers.website_list_for_contact import has_website_permission
 
 	permission_based_on_customer = has_website_permission(doc, ptype, user, verbose)
@@ -263,18 +271,18 @@ def has_website_permission(doc, ptype, user, verbose=False):
 	return permission_based_on_customer or doc.raised_by == user
 
 
-def update_issue(contact, method):
+def update_issue(contact, method: str) -> None:
 	"""Called when Contact is deleted"""
 	frappe.db.set_value("Issue", {"contact": contact.name}, "contact", "")
 
 
 @frappe.whitelist()
-def make_task(source_name: str, target_doc: str | Document | None = None):
+def make_task(source_name: str, target_doc: str | Document | None = None) -> Document:
 	return get_mapped_doc("Issue", source_name, {"Issue": {"doctype": "Task"}}, target_doc)
 
 
 @frappe.whitelist()
-def make_issue_from_communication(communication: str, ignore_communication_links: bool = False):
+def make_issue_from_communication(communication: str, ignore_communication_links: bool = False) -> str:
 	"""raise a issue from email"""
 
 	doc = frappe.get_doc("Communication", communication)
@@ -293,14 +301,14 @@ def make_issue_from_communication(communication: str, ignore_communication_links
 	return issue.name
 
 
-def get_time_in_timedelta(time):
+def get_time_in_timedelta(time) -> timedelta:
 	"""
 	Converts datetime.time(10, 36, 55, 961454) to datetime.timedelta(seconds=38215)
 	"""
 	return timedelta(hours=time.hour, minutes=time.minute, seconds=time.second)
 
 
-def set_first_response_time(communication, method):
+def set_first_response_time(communication, method: str) -> None:
 	if communication.get("reference_doctype") == "Issue":
 		issue = get_parent_doc(communication)
 		if is_first_response(issue) and issue.service_level_agreement:
@@ -308,7 +316,7 @@ def set_first_response_time(communication, method):
 			issue.db_set("first_response_time", first_response_time)
 
 
-def is_first_response(issue):
+def is_first_response(issue) -> bool:
 	responses = frappe.get_all(
 		"Communication", filters={"reference_name": issue.name, "sent_or_received": "Sent"}
 	)
@@ -317,7 +325,7 @@ def is_first_response(issue):
 	return False
 
 
-def calculate_first_response_time(issue, first_responded_on):
+def calculate_first_response_time(issue, first_responded_on) -> float:
 	issue_creation_date = get_datetime(issue.service_level_agreement_creation or issue.creation)
 	issue_creation_time = get_time_in_seconds(issue_creation_date)
 	first_responded_on_in_seconds = get_time_in_seconds(first_responded_on)
@@ -383,11 +391,11 @@ def calculate_first_response_time(issue, first_responded_on):
 			return 1.0
 
 
-def get_time_in_seconds(date):
+def get_time_in_seconds(date) -> timedelta:
 	return timedelta(hours=date.hour, minutes=date.minute, seconds=date.second)
 
 
-def get_working_hours(date, support_hours):
+def get_working_hours(date, support_hours) -> tuple | None:
 	if is_work_day(date, support_hours):
 		weekday = frappe.utils.get_weekday(date)
 		for day in support_hours:
@@ -395,7 +403,7 @@ def get_working_hours(date, support_hours):
 				return day.start_time, day.end_time
 
 
-def is_work_day(date, support_hours):
+def is_work_day(date, support_hours) -> bool:
 	weekday = frappe.utils.get_weekday(date)
 	for day in support_hours:
 		if day.workday == weekday:
@@ -403,7 +411,7 @@ def is_work_day(date, support_hours):
 	return False
 
 
-def is_during_working_hours(date, support_hours):
+def is_during_working_hours(date, support_hours) -> bool:
 	start_time, end_time = get_working_hours(date, support_hours)
 	time = get_time_in_seconds(date)
 	if time >= start_time and time <= end_time:
@@ -411,11 +419,11 @@ def is_during_working_hours(date, support_hours):
 	return False
 
 
-def get_elapsed_time(start_time, end_time):
+def get_elapsed_time(start_time, end_time) -> float:
 	return round(time_diff_in_seconds(end_time, start_time), 2)
 
 
-def calculate_initial_frt(issue_creation_date, days_in_between, support_hours):
+def calculate_initial_frt(issue_creation_date, days_in_between, support_hours) -> float:
 	initial_frt = 0
 	for i in range(days_in_between):
 		date = issue_creation_date + timedelta(days=(i + 1))
@@ -426,7 +434,7 @@ def calculate_initial_frt(issue_creation_date, days_in_between, support_hours):
 	return initial_frt
 
 
-def is_before_working_hours(date, support_hours):
+def is_before_working_hours(date, support_hours) -> bool:
 	start_time, end_time = get_working_hours(date, support_hours)
 	time = get_time_in_seconds(date)
 	if time < start_time:
@@ -434,7 +442,7 @@ def is_before_working_hours(date, support_hours):
 	return False
 
 
-def get_holidays(holiday_list_name):
+def get_holidays(holiday_list_name) -> list:
 	holiday_list = frappe.get_cached_doc("Holiday List", holiday_list_name)
 	holidays = [holiday.holiday_date for holiday in holiday_list.holidays]
 	return holidays

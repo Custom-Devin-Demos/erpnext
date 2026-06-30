@@ -2,20 +2,22 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import IfNull, Max, Sum
 from frappe.utils import cint
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	wo_list = get_work_orders()
 	data = get_item_list(wo_list, filters)
 	columns = get_columns()
 	return columns, data
 
 
-def get_item_list(wo_list, filters):
+def get_item_list(wo_list: list, filters: dict) -> list:
 	out = []
 
 	if wo_list:
@@ -95,7 +97,7 @@ def get_item_list(wo_list, filters):
 	return out
 
 
-def get_work_orders():
+def get_work_orders() -> list:
 	out = frappe.get_all(
 		"Work Order",
 		filters={"docstatus": 1, "status": ("!=", "Completed")},
@@ -106,7 +108,7 @@ def get_work_orders():
 	return out
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		{
 			"fieldname": "work_order",

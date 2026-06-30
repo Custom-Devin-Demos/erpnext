@@ -2,17 +2,19 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestStockSettings(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		super().setUp()
 		frappe.db.set_single_value("Stock Settings", "clean_description_html", 0)
 
-	def test_settings(self):
+	def test_settings(self) -> None:
 		item = frappe.get_doc(
 			doctype="Item",
 			item_code="Item for description test",
@@ -33,7 +35,7 @@ class TestStockSettings(ERPNextTestSuite):
 
 		item.delete()
 
-	def test_clean_html(self):
+	def test_clean_html(self) -> None:
 		settings = frappe.get_single("Stock Settings")
 		settings.clean_description_html = 1
 		settings.save()

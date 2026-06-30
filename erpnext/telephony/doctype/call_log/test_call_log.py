@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import random
 import string
 
@@ -11,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestCallLog(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		# A fresh, unused 8-digit suffix guarantees the controller's before_insert
 		# auto-linking (Contact/Lead lookup) finds nothing, so the only Dynamic Link
 		# rows present are the ones this test creates.
@@ -45,23 +47,23 @@ class TestCallLog(ERPNextTestSuite):
 		# this log and return the other when link_existing_conversations runs.
 		self._add_link(self.linked_log, "Contact", self.contact.name)
 
-	def _make_call_log(self, **kwargs):
+	def _make_call_log(self, **kwargs) -> str:
 		doc = frappe.get_doc({"doctype": "Call Log", "id": frappe.generate_hash(length=10), **kwargs})
 		doc.insert(ignore_permissions=True)
 		return doc.name
 
-	def _add_link(self, call_log, link_doctype, link_name):
+	def _add_link(self, call_log: str, link_doctype: str, link_name: str) -> None:
 		doc = frappe.get_doc("Call Log", call_log)
 		doc.append("links", {"link_doctype": link_doctype, "link_name": link_name})
 		doc.save(ignore_permissions=True)
 
-	def _run_linker(self):
+	def _run_linker(self) -> None:
 		# Clear the flag set during insert so the explicit call actually runs the
 		# converted LEFT JOIN / GROUP BY / HAVING query path.
 		self.contact.flags.ignore_auto_link_call_log = False
 		link_existing_conversations(self.contact, "Open")
 
-	def _contact_links_of(self, call_log):
+	def _contact_links_of(self, call_log: str) -> list:
 		return frappe.get_all(
 			"Dynamic Link",
 			filters={"parenttype": "Call Log", "parent": call_log, "link_doctype": "Contact"},
@@ -69,7 +71,7 @@ class TestCallLog(ERPNextTestSuite):
 			pluck="link_name",
 		)
 
-	def test_links_previously_unlinked_log(self):
+	def test_links_previously_unlinked_log(self) -> None:
 		"""The converted query's HAVING == 0 returns the log NOT yet linked to the
 		contact, so link_existing_conversations adds the Contact link to it."""
 		self.assertEqual(self._contact_links_of(self.unlinked_log), [], "precondition")
@@ -82,7 +84,7 @@ class TestCallLog(ERPNextTestSuite):
 			"Previously-unlinked log matching the number must gain the Contact link",
 		)
 
-	def test_already_linked_log_is_not_relinked(self):
+	def test_already_linked_log_is_not_relinked(self) -> None:
 		"""The HAVING SUM(CASE ...) == 0 must EXCLUDE the already-linked log from the returned set,
 		so link_existing_conversations never re-saves it. Asserting only the link count is not enough
 		(validate() -> deduplicate_dynamic_links strips a duplicate either way), so pin the HAVING by
@@ -102,7 +104,7 @@ class TestCallLog(ERPNextTestSuite):
 		)
 		self.assertEqual(self._contact_links_of(self.linked_log), [self.contact.name])
 
-	def test_log_not_matching_number_is_untouched(self):
+	def test_log_not_matching_number_is_untouched(self) -> None:
 		"""A log whose from/to does not contain the number is excluded by the
 		from/to LIKE predicate and must stay unlinked."""
 		other = self._make_call_log(**{"from": "+919999999999", "to": "+918888888888", "type": "Outgoing"})

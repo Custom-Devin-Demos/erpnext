@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	from erpnext.setup.setup_wizard.operations.install_fixtures import read_lines
 
 	frappe.reload_doc("selling", "doctype", "sales_partner_type")
@@ -28,6 +30,6 @@ def execute():
 			frappe.delete_doc("Property Setter", p.name)
 
 
-def insert_sales_partner_type(s):
+def insert_sales_partner_type(s) -> None:
 	if not frappe.db.exists("Sales Partner Type", s):
 		frappe.get_doc(doctype="Sales Partner Type", sales_partner_type=s).insert()

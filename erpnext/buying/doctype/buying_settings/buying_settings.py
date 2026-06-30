@@ -3,6 +3,7 @@
 
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.model.document import Document
@@ -49,7 +50,7 @@ class BuyingSettings(Document):
 		validate_consumed_qty: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		for key in ["supplier_group", "supp_master_name", "maintain_same_rate", "buying_price_list"]:
 			frappe.db.set_default(key, self.get(key, ""))
 
@@ -65,9 +66,9 @@ class BuyingSettings(Document):
 		if not self.bill_for_rejected_quantity_in_purchase_invoice:
 			self.set_valuation_rate_for_rejected_materials = 0
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.check_maintain_same_rate()
 
-	def check_maintain_same_rate(self):
+	def check_maintain_same_rate(self) -> None:
 		if self.maintain_same_rate:
 			self.set_landed_cost_based_on_purchase_invoice_rate = 0

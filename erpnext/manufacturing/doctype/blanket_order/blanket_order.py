@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -40,17 +42,17 @@ class BlanketOrder(Document):
 		to_date: DF.Date
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_dates()
 		self.validate_duplicate_items()
 		self.validate_item_qty()
 		self.set_party_item_code()
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		if getdate(self.from_date) > getdate(self.to_date):
 			frappe.throw(_("From date cannot be greater than To date"))
 
-	def set_party_item_code(self):
+	def set_party_item_code(self) -> None:
 		item_ref = {}
 		if self.blanket_order_type == "Selling":
 			item_ref = self.get_customer_items_ref()
@@ -63,7 +65,7 @@ class BlanketOrder(Document):
 		for row in self.items:
 			row.party_item_code = item_ref.get(row.item_code)
 
-	def get_customer_items_ref(self):
+	def get_customer_items_ref(self) -> dict:
 		items = [d.item_code for d in self.items]
 
 		return frappe._dict(
@@ -75,7 +77,7 @@ class BlanketOrder(Document):
 			)
 		)
 
-	def get_supplier_items_ref(self):
+	def get_supplier_items_ref(self) -> dict:
 		items = [d.item_code for d in self.items]
 
 		return frappe._dict(
@@ -87,14 +89,14 @@ class BlanketOrder(Document):
 			)
 		)
 
-	def validate_duplicate_items(self):
+	def validate_duplicate_items(self) -> None:
 		item_list = []
 		for item in self.items:
 			if item.item_code in item_list:
 				frappe.throw(_("Note: Item {0} added multiple times").format(frappe.bold(item.item_code)))
 			item_list.append(item.item_code)
 
-	def update_ordered_qty(self):
+	def update_ordered_qty(self) -> None:
 		ref_doctype = "Sales Order" if self.blanket_order_type == "Selling" else "Purchase Order"
 
 		trans = frappe.qb.DocType(ref_doctype)
@@ -118,22 +120,22 @@ class BlanketOrder(Document):
 		for d in self.items:
 			d.db_set("ordered_qty", item_ordered_qty.get(d.item_code, 0))
 
-	def validate_item_qty(self):
+	def validate_item_qty(self) -> None:
 		for d in self.items:
 			if flt(d.qty) < 0:
 				frappe.throw(_("Row {0}: Quantity cannot be negative.").format(d.idx))
 
 
 @frappe.whitelist()
-def make_order(source_name: str):
+def make_order(source_name: str) -> Document:
 	doctype = frappe.flags.args.doctype
 
-	def update_doc(source_doc, target_doc, source_parent):
+	def update_doc(source_doc, target_doc, source_parent) -> None:
 		if doctype == "Quotation":
 			target_doc.quotation_to = "Customer"
 			target_doc.party_name = source_doc.customer
 
-	def update_item(source, target, source_parent):
+	def update_item(source, target, source_parent) -> None:
 		target_qty = source.get("qty") - source.get("ordered_qty")
 		target.qty = target_qty if flt(target_qty) >= 0 else 0
 		target.rate = source.get("rate")
@@ -165,7 +167,7 @@ def make_order(source_name: str):
 	return target_doc
 
 
-def validate_against_blanket_order(order_doc):
+def validate_against_blanket_order(order_doc) -> None:
 	if order_doc.doctype in ("Sales Order", "Purchase Order"):
 		order_data = {}
 

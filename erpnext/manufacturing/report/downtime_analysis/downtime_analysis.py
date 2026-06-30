@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	data = get_data(filters)
 	columns = get_columns(filters)
@@ -15,7 +17,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	query_filters = {}
 
 	fields = [
@@ -43,7 +45,7 @@ def get_data(filters):
 	return data
 
 
-def get_chart_data(data, columns):
+def get_chart_data(data: list, columns: dict) -> dict:
 	labels = sorted(list(set([d.workstation for d in data])))
 
 	workstation_wise_data = {}
@@ -65,7 +67,7 @@ def get_chart_data(data, columns):
 	return chart
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	return [
 		{
 			"label": _("ID"),

@@ -1,12 +1,14 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import Case
 
 
-def execute(filters: dict | None = None):
+def execute(filters: dict | None = None) -> tuple:
 	report = ReportData(filters)
 	report.validate_filters()
 	data = report.get_data()
@@ -16,7 +18,7 @@ def execute(filters: dict | None = None):
 	return columns, data
 
 
-def check_has_serial_no_in_data(data):
+def check_has_serial_no_in_data(data) -> tuple:
 	has_serial_no = False
 	has_batch_no = False
 
@@ -33,11 +35,11 @@ def check_has_serial_no_in_data(data):
 
 
 class ReportData:
-	def __init__(self, filters):
+	def __init__(self, filters) -> None:
 		self.filters = filters
 		self.doctype_name = self.get_doctype()
 
-	def validate_filters(self):
+	def validate_filters(self) -> None:
 		if not self.filters.item_code and not self.filters.batches and not self.filters.serial_nos:
 			frappe.throw(
 				_("Please select at least one filter: Item Code, Batch, or Serial No."),
@@ -257,7 +259,7 @@ class ReportData:
 
 		return query.run(as_dict=True)
 
-	def get_doctype(self):
+	def get_doctype(self) -> str:
 		if self.filters.item_code:
 			item_details = frappe.get_cached_value(
 				"Item",
@@ -320,7 +322,7 @@ class ReportData:
 
 		return query.run(as_dict=True)
 
-	def set_forward_data(self, value, sabb_data):
+	def set_forward_data(self, value, sabb_data) -> None:
 		outward_entries = self.get_sabb_entries(value)
 
 		for row in outward_entries:
@@ -329,7 +331,7 @@ class ReportData:
 			else:
 				self.add_direct_outward_entry(row, sabb_data)
 
-	def add_direct_outward_entry(self, row, batch_details):
+	def add_direct_outward_entry(self, row, batch_details) -> None:
 		key = (row.item_code, row.reference_name, row.serial_no, row.batch_no)
 		if key not in batch_details:
 			row["indent"] = 0
@@ -369,7 +371,7 @@ class ReportData:
 
 		return query.run(as_dict=True)
 
-	def process_manufacture_or_repack_entry(self, row, batch_details):
+	def process_manufacture_or_repack_entry(self, row, batch_details) -> None:
 		ste = frappe.db.get_value("Stock Entry", row.reference_name, ["purpose", "work_order"], as_dict=True)
 
 		if ste and ste.purpose in ["Manufacture", "Repack"]:

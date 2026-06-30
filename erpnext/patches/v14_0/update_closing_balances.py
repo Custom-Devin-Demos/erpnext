@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # License: MIT. See LICENSE
 
+from __future__ import annotations
+
 import itertools
 
 import frappe
@@ -13,7 +15,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 
 
-def execute():
+def execute() -> None:
 	# clear balances, they will be recalculated
 	frappe.db.truncate("Account Closing Balance")
 
@@ -26,7 +28,7 @@ def execute():
 			process_grouped_pcvs(list(pcvs), gl_entries)
 
 
-def process_grouped_pcvs(pcvs, gl_entries):
+def process_grouped_pcvs(pcvs: list, gl_entries: list) -> None:
 	pl_account_entries = []
 	closing_account_entries = []
 	first_pcv = pcvs[0]
@@ -76,7 +78,7 @@ def process_grouped_pcvs(pcvs, gl_entries):
 	make_closing_entries(closing_entries, pcv_doc.name, pcv_doc.company, pcv_doc.period_end_date)
 
 
-def get_period_closing_vouchers():
+def get_period_closing_vouchers() -> list:
 	return frappe.db.get_all(
 		"Period Closing Voucher",
 		fields=["name", "closing_account_head", "period_start_date", "period_end_date", "company"],
@@ -85,7 +87,7 @@ def get_period_closing_vouchers():
 	)
 
 
-def get_gl_entries(pcv_list):
+def get_gl_entries(pcv_list: list) -> dict:
 	gl_entries = frappe.get_all(
 		"GL Entry",
 		filters={"voucher_no": ("in", [pcv.name for pcv in pcv_list]), "is_cancelled": 0},
@@ -96,7 +98,7 @@ def get_gl_entries(pcv_list):
 	return {k: list(v) for k, v in itertools.groupby(gl_entries, key=lambda gle: gle.voucher_no)}
 
 
-def get_gle_fields():
+def get_gle_fields() -> list:
 	return [
 		"name",
 		"company",

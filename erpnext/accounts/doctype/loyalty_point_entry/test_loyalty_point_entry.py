@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import Sum
 from frappe.utils import today
@@ -10,7 +12,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestLoyaltyPointEntry(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		# Create test records
 		self.loyalty_program_name = "Test Single Loyalty"
 		self.customer_name = "Test Loyalty Customer"
@@ -28,12 +30,12 @@ class TestLoyaltyPointEntry(ERPNextTestSuite):
 			si = create_sales_invoice(customer=self.customer_name, qty=10, rate=1000, do_not_save=True)
 			return si.insert().submit()
 
-	def test_add_loyalty_points(self):
+	def test_add_loyalty_points(self) -> None:
 		self.create_test_invoice()
 		doc = frappe.get_last_doc("Loyalty Point Entry")
 		self.assertEqual(doc.loyalty_points, 10)
 
-	def test_add_loyalty_points_with_discretionary_reason(self):
+	def test_add_loyalty_points_with_discretionary_reason(self) -> None:
 		doc = frappe.get_doc(
 			{
 				"doctype": "Loyalty Point Entry",
@@ -57,7 +59,7 @@ class TestLoyaltyPointEntry(ERPNextTestSuite):
 		self.assertEqual(entry.loyalty_points, 75)
 		self.assertEqual(entry.discretionary_reason, "Customer Appreciation")
 
-	def test_redeem_loyalty_points(self):
+	def test_redeem_loyalty_points(self) -> None:
 		self.create_test_invoice()
 		self.create_test_invoice(redeem=7)
 		doc = frappe.get_last_doc("Loyalty Point Entry")

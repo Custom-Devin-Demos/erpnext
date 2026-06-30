@@ -2,17 +2,19 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Concat_ws, Date, NullIf
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = get_columns(), get_data(filters)
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		{
 			"label": _("Lead"),
@@ -70,7 +72,7 @@ def get_columns():
 	return columns
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	lead = frappe.qb.DocType("Lead")
 	address = frappe.qb.DocType("Address")
 	dynamic_link = frappe.qb.DocType("Dynamic Link")

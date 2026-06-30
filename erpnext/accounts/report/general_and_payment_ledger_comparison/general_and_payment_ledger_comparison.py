@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb
 from frappe.query_builder import Criterion
@@ -12,12 +14,12 @@ class General_Payment_Ledger_Comparison:
 	A Utility report to compare Voucher-wise balance between General and Payment Ledger
 	"""
 
-	def __init__(self, filters=None):
+	def __init__(self, filters=None) -> None:
 		self.filters = filters
 		self.gle = []
 		self.ple = []
 
-	def get_accounts(self):
+	def get_accounts(self) -> None:
 		receivable_accounts = [
 			x[0]
 			for x in frappe.db.get_all(
@@ -40,7 +42,7 @@ class General_Payment_Ledger_Comparison:
 			}
 		)
 
-	def generate_filters(self):
+	def generate_filters(self) -> None:
 		if self.filters.account:
 			self.account_types.receivable.accounts = []
 			self.account_types.payable.accounts = []
@@ -53,7 +55,7 @@ class General_Payment_Ledger_Comparison:
 				else:
 					self.account_types.payable.accounts.append(acc.name)
 
-	def get_gle(self):
+	def get_gle(self) -> None:
 		gle = qb.DocType("GL Entry")
 
 		for acc_type, val in self.account_types.items():
@@ -102,7 +104,7 @@ class General_Payment_Ledger_Comparison:
 					.run()
 				)
 
-	def get_ple(self):
+	def get_ple(self) -> None:
 		ple = qb.DocType("Payment Ledger Entry")
 
 		for acc_type, val in self.account_types.items():
@@ -146,7 +148,7 @@ class General_Payment_Ledger_Comparison:
 					.run()
 				)
 
-	def compare(self):
+	def compare(self) -> None:
 		self.gle_balances = set()
 		self.ple_balances = set()
 
@@ -167,7 +169,7 @@ class General_Payment_Ledger_Comparison:
 				(x[0], x[1], x[2], x[3], x[4], x[5]), frappe._dict({"gl_balance": 0.0})
 			).update(frappe._dict({"pl_balance": x[6]}))
 
-	def generate_data(self):
+	def generate_data(self) -> None:
 		self.data = []
 		for key, val in self.diff.items():
 			self.data.append(
@@ -185,7 +187,7 @@ class General_Payment_Ledger_Comparison:
 				)
 			)
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = []
 		self.columns.append(
 			dict(

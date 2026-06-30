@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 
@@ -22,7 +24,7 @@ class Incoterm(Document):
 	pass
 
 
-def create_incoterms():
+def create_incoterms() -> None:
 	"""Create Incoterm records from incoterms.csv."""
 	import os
 	from csv import DictReader

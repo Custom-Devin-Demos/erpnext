@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import Case
 
 
-def execute():
+def execute() -> None:
 	Asset = frappe.qb.DocType("Asset")
 
 	frappe.qb.update(Asset).set(

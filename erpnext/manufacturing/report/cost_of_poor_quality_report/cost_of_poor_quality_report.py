@@ -1,15 +1,17 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	return get_columns(filters), get_data(filters)
 
 
-def get_data(report_filters):
+def get_data(report_filters: dict) -> list:
 	data = []
 	operations = frappe.get_all("Operation", filters={"is_corrective_operation": 1})
 	if operations:
@@ -47,7 +49,7 @@ def get_data(report_filters):
 	return data
 
 
-def append_filters(query, report_filters, operations, job_card):
+def append_filters(query, report_filters: dict, operations: list, job_card):
 	"""Append optional filters to query builder."""
 
 	for field in (
@@ -80,7 +82,7 @@ def append_filters(query, report_filters, operations, job_card):
 	return query
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	return [
 		{
 			"label": _("Job Card"),

@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
@@ -10,7 +12,7 @@ from erpnext.accounts.doctype.payment_request.payment_request import (
 )
 
 
-def get_context(context):
+def get_context(context) -> None:
 	context.no_cache = 1
 	context.show_sidebar = True
 	context.doc = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.name)
@@ -58,7 +60,7 @@ def get_context(context):
 		context.show_make_pi_button = frappe.has_permission("Purchase Invoice", "create")
 
 
-def get_attachments(dt, dn):
+def get_attachments(dt: str, dn: str) -> list:
 	return frappe.get_all(
 		"File",
 		fields=["name", "file_name", "file_url", "is_private"],
@@ -66,7 +68,7 @@ def get_attachments(dt, dn):
 	)
 
 
-def get_payment_details(doc):
+def get_payment_details(doc) -> tuple:
 	show_pay_button, amount = (
 		(
 			"payments" in frappe.get_installed_apps()

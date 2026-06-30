@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 import erpnext
@@ -12,11 +14,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestWarehouse(ERPNextTestSuite):
-	def test_parent_warehouse(self):
+	def test_parent_warehouse(self) -> None:
 		parent_warehouse = frappe.get_doc("Warehouse", "_Test Warehouse Group - _TC")
 		self.assertEqual(parent_warehouse.is_group, 1)
 
-	def test_warehouse_hierarchy(self):
+	def test_warehouse_hierarchy(self) -> None:
 		p_warehouse = frappe.get_doc("Warehouse", "_Test Warehouse Group - _TC")
 
 		child_warehouses = frappe.get_all(
@@ -29,7 +31,7 @@ class TestWarehouse(ERPNextTestSuite):
 			self.assertEqual(p_warehouse.name, child_warehouse.parent_warehouse)
 			self.assertEqual(child_warehouse.is_group, 0)
 
-	def test_naming(self):
+	def test_naming(self) -> None:
 		company = "Wind Power LLC"
 		warehouse_name = "Named Warehouse - WP"
 		wh = frappe.get_doc(doctype="Warehouse", warehouse_name=warehouse_name, company=company).insert()
@@ -39,7 +41,7 @@ class TestWarehouse(ERPNextTestSuite):
 		wh = frappe.get_doc(doctype="Warehouse", warehouse_name=warehouse_name, company=company).insert()
 		self.assertIn(warehouse_name, wh.name)
 
-	def test_unlinking_warehouse_from_item_defaults(self):
+	def test_unlinking_warehouse_from_item_defaults(self) -> None:
 		company = "_Test Company"
 
 		warehouse_names = [f"_Test Warehouse {i} for Unlinking" for i in range(2)]
@@ -68,7 +70,7 @@ class TestWarehouse(ERPNextTestSuite):
 					f"{item} linked to {item_default.default_warehouse} in {warehouse_ids}.",
 				)
 
-	def test_group_non_group_conversion(self):
+	def test_group_non_group_conversion(self) -> None:
 		warehouse = frappe.get_doc("Warehouse", create_warehouse("TestGroupConversion"))
 
 		convert_to_group_or_ledger(warehouse.name)
@@ -88,7 +90,7 @@ class TestWarehouse(ERPNextTestSuite):
 		# SLE exists
 		self.assertRaises(frappe.ValidationError, convert_to_group_or_ledger, warehouse.name)
 
-	def test_get_children(self):
+	def test_get_children(self) -> None:
 		company = "_Test Company"
 
 		children = get_children("Warehouse", parent=company, company=company, is_root=True)

@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, scrub
 from frappe.utils import getdate, today
@@ -15,21 +17,21 @@ from erpnext.stock.report.stock_analytics.stock_analytics import (
 WORK_ORDER_STATUS_LIST = ["Not Started", "Overdue", "Pending", "Completed", "Closed", "Stopped"]
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	period_columns = get_period_columns(filters)
 	columns = get_columns(period_columns)
 	data, chart = get_data(filters, period_columns)
 	return columns, data, None, chart
 
 
-def get_columns(period_columns):
+def get_columns(period_columns: list) -> list:
 	columns = [{"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 140}]
 	columns.extend(period_columns)
 
 	return columns
 
 
-def get_work_orders(filters):
+def get_work_orders(filters: dict) -> list:
 	from_date = filters.get("from_date")
 	to_date = filters.get("to_date")
 
@@ -50,7 +52,7 @@ def get_work_orders(filters):
 	)
 
 
-def get_data(filters, period_columns):
+def get_data(filters: dict, period_columns: list) -> tuple:
 	ranges = build_ranges(filters)
 	period_labels = [scrub(pd) for _fd, _td, pd in ranges]
 	periodic_data = {status: {pd: 0 for pd in period_labels} for status in WORK_ORDER_STATUS_LIST}
@@ -89,14 +91,14 @@ def get_data(filters, period_columns):
 	return data, chart
 
 
-def get_period_for_date(date, ranges):
+def get_period_for_date(date, ranges: list) -> str | None:
 	for from_date, to_date, period in ranges:
 		if from_date <= date <= to_date:
 			return period
 	return None
 
 
-def build_ranges(filters):
+def build_ranges(filters: dict) -> list:
 	ranges = []
 	for from_date, end_date in get_period_date_ranges(filters):
 		period = get_period(end_date, filters)
@@ -104,7 +106,7 @@ def build_ranges(filters):
 	return ranges
 
 
-def get_chart_data(periodic_data, period_columns):
+def get_chart_data(periodic_data: dict, period_columns: list) -> dict:
 	period_labels = [col.get("label") for col in period_columns]
 	period_fieldnames = [col.get("fieldname") for col in period_columns]
 

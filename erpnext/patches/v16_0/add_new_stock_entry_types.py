@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	for stock_entry_type in [
 		"Receive from Customer",
 		"Return Raw Material to Customer",

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	active_sla_documents = [
 		sla.document_type for sla in frappe.get_all("Service Level Agreement", fields=["document_type"])
 	]

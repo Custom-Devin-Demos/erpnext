@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import nowdate
 
@@ -12,12 +14,12 @@ IBAN_2 = "DE02500105170137075030"
 
 
 class TestAutoMatchParty(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		create_bank_account()
 		frappe.db.set_single_value("Accounts Settings", "enable_party_matching", 1)
 		frappe.db.set_single_value("Accounts Settings", "enable_fuzzy_matching", 1)
 
-	def test_match_by_account_number(self):
+	def test_match_by_account_number(self) -> None:
 		create_supplier_for_match(account_no=IBAN_1[11:])
 		doc = create_bank_transaction(
 			withdrawal=1200,
@@ -29,7 +31,7 @@ class TestAutoMatchParty(ERPNextTestSuite):
 		self.assertEqual(doc.party_type, "Supplier")
 		self.assertEqual(doc.party, "John Doe & Co.")
 
-	def test_match_by_iban(self):
+	def test_match_by_iban(self) -> None:
 		create_supplier_for_match(iban=IBAN_1)
 		doc = create_bank_transaction(
 			withdrawal=1200,
@@ -41,7 +43,7 @@ class TestAutoMatchParty(ERPNextTestSuite):
 		self.assertEqual(doc.party_type, "Supplier")
 		self.assertEqual(doc.party, "John Doe & Co.")
 
-	def test_match_by_party_name(self):
+	def test_match_by_party_name(self) -> None:
 		create_supplier_for_match(supplier_name="Jackson Ella W.")
 		doc = create_bank_transaction(
 			withdrawal=1200,
@@ -52,7 +54,7 @@ class TestAutoMatchParty(ERPNextTestSuite):
 		self.assertEqual(doc.party_type, "Supplier")
 		self.assertEqual(doc.party, "Jackson Ella W.")
 
-	def test_match_by_description(self):
+	def test_match_by_description(self) -> None:
 		create_supplier_for_match(supplier_name="Microsoft")
 		doc = create_bank_transaction(
 			description="Auftraggeber: microsoft payments Buchungstext: msft ..e3006b5hdy. ref. j375979555927627/5536",
@@ -63,7 +65,7 @@ class TestAutoMatchParty(ERPNextTestSuite):
 		self.assertEqual(doc.party_type, "Supplier")
 		self.assertEqual(doc.party, "Microsoft")
 
-	def test_skip_match_if_multiple_close_results(self):
+	def test_skip_match_if_multiple_close_results(self) -> None:
 		create_supplier_for_match(supplier_name="Adithya Medical & General Stores")
 		create_supplier_for_match(supplier_name="Adithya Medical And General Stores")
 
@@ -79,7 +81,7 @@ class TestAutoMatchParty(ERPNextTestSuite):
 		self.assertEqual(doc.party, None)
 
 
-def create_supplier_for_match(supplier_name="John Doe & Co.", iban=None, account_no=None):
+def create_supplier_for_match(supplier_name: str = "John Doe & Co.", iban=None, account_no=None) -> None:
 	if frappe.db.exists("Supplier", {"supplier_name": supplier_name}):
 		# Update related Bank Account details
 		if not (iban or account_no):
@@ -117,8 +119,8 @@ def create_supplier_for_match(supplier_name="John Doe & Co.", iban=None, account
 
 def create_bank_transaction(
 	description=None,
-	withdrawal=0,
-	deposit=0,
+	withdrawal: int = 0,
+	deposit: int = 0,
 	transaction_id=None,
 	party_name=None,
 	account_no=None,

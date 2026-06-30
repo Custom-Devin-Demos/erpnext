@@ -1,22 +1,24 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 
-def setup(company=None, patch=True):
+def setup(company: str | None = None, patch: bool = True) -> None:
 	# Company independent fixtures should be called only once at the first company setup
 	if frappe.db.count("Company", {"country": "United States"}) <= 1:
 		setup_company_independent_fixtures(patch=patch)
 
 
-def setup_company_independent_fixtures(company=None, patch=True):
+def setup_company_independent_fixtures(company: str | None = None, patch: bool = True) -> None:
 	make_custom_fields()
 	add_print_formats()
 
 
-def make_custom_fields(update=True):
+def make_custom_fields(update: bool = True) -> None:
 	custom_fields = {
 		"Supplier": [
 			dict(
@@ -62,6 +64,6 @@ def make_custom_fields(update=True):
 	create_custom_fields(custom_fields, update=update)
 
 
-def add_print_formats():
+def add_print_formats() -> None:
 	frappe.reload_doc("regional", "print_format", "irs_1099_form")
 	frappe.db.set_value("Print Format", "IRS 1099 Form", "disabled", 0)

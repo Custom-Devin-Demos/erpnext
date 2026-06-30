@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 import frappe.defaults
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_column("Material Request", "buying_price_list") and (
 		default_buying_price_list := frappe.defaults.get_defaults().buying_price_list
 	):

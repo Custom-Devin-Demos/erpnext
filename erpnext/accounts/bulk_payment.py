@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -13,7 +15,7 @@ from erpnext.utilities.bulk_transaction import transaction_processing
 def create_payment_entries(
 	grouped_invoices: str | list | None = None,
 	ungrouped_invoices: str | list | None = None,
-):
+) -> None:
 	"""Create draft Payment Entries from AP report invoice selection."""
 	frappe.has_permission("Payment Entry", "create", throw=True)
 
@@ -46,7 +48,7 @@ def create_payment_entries(
 		)
 
 
-def make_grouped_payment_entries(groups):
+def make_grouped_payment_entries(groups) -> None:
 	created, failed = 0, 0
 
 	for group in groups:

@@ -1,5 +1,7 @@
 ## temp utility
 
+from __future__ import annotations
+
 from contextlib import contextmanager
 
 import frappe
@@ -9,7 +11,7 @@ from frappe.utils import cstr
 from erpnext.utilities.activation import get_level
 
 
-def update_doctypes():
+def update_doctypes() -> None:
 	df = frappe.qb.DocType("DocField")
 	dt_table = frappe.qb.DocType("DocType")
 	for d in (
@@ -29,7 +31,7 @@ def update_doctypes():
 				break
 
 
-def get_site_info(site_info):
+def get_site_info(site_info: dict) -> dict:
 	# called via hook
 	company = frappe.db.get_single_value("Global Defaults", "default_company")
 	domain = None
@@ -45,7 +47,7 @@ def get_site_info(site_info):
 
 
 @contextmanager
-def payment_app_import_guard():
+def payment_app_import_guard() -> None:
 	marketplace_link = '<a href="https://frappecloud.com/marketplace/apps/payments">Marketplace</a>'
 	github_link = '<a href="https://github.com/frappe/payments/">GitHub</a>'
 	msg = _("payments app is not installed. Please install it from {0} or {1}").format(

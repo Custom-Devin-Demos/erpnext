@@ -1,12 +1,13 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	columns = get_columns(filters)
 	data = get_data(filters)
@@ -14,7 +15,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_data(report_filters):
+def get_data(report_filters: dict) -> list:
 	data = []
 	orders = get_subcontracted_orders(report_filters)
 
@@ -26,7 +27,7 @@ def get_data(report_filters):
 	return data
 
 
-def get_subcontracted_orders(report_filters):
+def get_subcontracted_orders(report_filters: dict) -> list:
 	fields = [
 		"`tabSubcontracting Order Item`.`parent` as order_id",
 		"`tabSubcontracting Order Item`.`item_code`",
@@ -42,7 +43,7 @@ def get_subcontracted_orders(report_filters):
 	return frappe.get_all("Subcontracting Order", fields=fields, filters=filters) or []
 
 
-def get_filters(report_filters):
+def get_filters(report_filters: dict) -> list:
 	filters = [
 		["Subcontracting Order", "docstatus", "=", 1],
 		[
@@ -60,7 +61,7 @@ def get_filters(report_filters):
 	return filters
 
 
-def get_supplied_items(orders, report_filters):
+def get_supplied_items(orders: list, report_filters: dict) -> dict | list:
 	if not orders:
 		return []
 
@@ -87,7 +88,7 @@ def get_supplied_items(orders, report_filters):
 	return supplied_items
 
 
-def prepare_subcontracted_data(orders, supplied_items):
+def prepare_subcontracted_data(orders: list, supplied_items: dict) -> dict:
 	order_details = {}
 	for row in orders:
 		key = (row.order_id, row.name, row.item_code)
@@ -103,7 +104,7 @@ def prepare_subcontracted_data(orders, supplied_items):
 	return order_details
 
 
-def get_subcontracted_data(order_details, data):
+def get_subcontracted_data(order_details: dict, data: list) -> None:
 	for _key, details in order_details.items():
 		res = details.order_item
 		for index, row in enumerate(details.supplied_items):
@@ -114,7 +115,7 @@ def get_subcontracted_data(order_details, data):
 			data.append(res)
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	return [
 		{
 			"label": _("Subcontract Order"),

@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 class TestAvailableBatchReport(ERPNextTestSuite):
 	@staticmethod
-	def _cancel_and_delete_stock_entry(name):
+	def _cancel_and_delete_stock_entry(name) -> None:
 		if not frappe.db.exists("Stock Entry", name):
 			return
 		doc = frappe.get_doc("Stock Entry", name)
@@ -17,7 +19,7 @@ class TestAvailableBatchReport(ERPNextTestSuite):
 			doc.cancel()
 		frappe.delete_doc("Stock Entry", name, force=1)
 
-	def test_report_runs_and_lists_batch_qty(self):
+	def test_report_runs_and_lists_batch_qty(self) -> None:
 		# The report selects Batch columns (expiry_date, and item_name when show_item_name is set)
 		# while grouping by SLE columns; the Batch PK must be in the GROUP BY for the report to run
 		# on Postgres. show_item_name=1 forces the extra Batch column to be selected.

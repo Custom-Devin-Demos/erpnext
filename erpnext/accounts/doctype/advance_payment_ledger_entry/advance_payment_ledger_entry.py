@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 
@@ -29,7 +31,7 @@ class AdvancePaymentLedgerEntry(Document):
 		voucher_type: DF.Link | None
 	# end: auto-generated types
 
-	def on_update(self):
+	def on_update(self) -> None:
 		if (
 			self.against_voucher_type in get_advance_payment_doctypes()
 			and self.flags.update_outstanding == "Yes"
@@ -38,7 +40,7 @@ class AdvancePaymentLedgerEntry(Document):
 			update_voucher_outstanding(self.against_voucher_type, self.against_voucher_no, None, None, None)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index(
 		"Advance Payment Ledger Entry",
 		["against_voucher_type", "against_voucher_no"],

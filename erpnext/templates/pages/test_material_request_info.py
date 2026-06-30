@@ -1,11 +1,18 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe.utils import now, today
 
 from erpnext.templates.pages.material_request_info import get_more_items_info
 from erpnext.tests.utils import ERPNextTestSuite
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 
 class TestMaterialRequestInfo(ERPNextTestSuite):
@@ -15,7 +22,7 @@ class TestMaterialRequestInfo(ERPNextTestSuite):
 	feeds ``item.delivered_qty``.
 	"""
 
-	def setUp(self):
+	def setUp(self) -> None:
 		self.item_code = "_Test Item"
 		self.company = "_Test Company"
 
@@ -26,7 +33,7 @@ class TestMaterialRequestInfo(ERPNextTestSuite):
 		# The converted query joins Work Order Item -> Work Order on this item.
 		self.work_order = self._make_linked_work_order(self.material_request.name)
 
-	def _make_material_request(self):
+	def _make_material_request(self) -> Document:
 		mr = frappe.new_doc("Material Request")
 		mr.material_request_type = "Manufacture"
 		mr.company = self.company
@@ -45,7 +52,7 @@ class TestMaterialRequestInfo(ERPNextTestSuite):
 		mr.submit()
 		return mr
 
-	def _make_linked_work_order(self, material_request):
+	def _make_linked_work_order(self, material_request: str) -> Document:
 		"""Insert a Work Order + Work Order Item row directly.
 
 		We avoid the BOM-driven Work Order controller (heavy, needs a default
@@ -84,7 +91,7 @@ class TestMaterialRequestInfo(ERPNextTestSuite):
 
 		return wo
 
-	def _make_stock_entry_detail(self, transfer_qty, docstatus=1):
+	def _make_stock_entry_detail(self, transfer_qty: float, docstatus: int = 1) -> Document:
 		"""Insert a Stock Entry Detail row directly (parentless) for this MR + item.
 
 		The converted ``delivered_qty`` aggregate reads the child table alone
@@ -110,7 +117,7 @@ class TestMaterialRequestInfo(ERPNextTestSuite):
 		sed.db_insert()
 		return sed
 
-	def test_delivered_qty_sums_submitted_stock_entry_details(self):
+	def test_delivered_qty_sums_submitted_stock_entry_details(self) -> None:
 		# Two submitted rows for this MR + item must sum; a draft (docstatus 0) row must
 		# be excluded by the converted SUM(transfer_qty) aggregate.
 		self._make_stock_entry_detail(transfer_qty=3, docstatus=1)
@@ -122,14 +129,14 @@ class TestMaterialRequestInfo(ERPNextTestSuite):
 
 		self.assertEqual(result[0].delivered_qty, 7.0)
 
-	def test_delivered_qty_is_zero_when_no_stock_entry(self):
+	def test_delivered_qty_is_zero_when_no_stock_entry(self) -> None:
 		# No matching Stock Entry Detail -> SUM is NULL -> flt(None) must coerce to 0.0.
 		items = [frappe._dict({"item_code": self.item_code})]
 		result = get_more_items_info(items, self.material_request.name)
 
 		self.assertEqual(result[0].delivered_qty, 0.0)
 
-	def test_converted_query_returns_linked_work_order(self):
+	def test_converted_query_returns_linked_work_order(self) -> None:
 		items = [frappe._dict({"item_code": self.item_code})]
 
 		result = get_more_items_info(items, self.material_request.name)
@@ -151,7 +158,7 @@ class TestMaterialRequestInfo(ERPNextTestSuite):
 		# Selected columns are exactly those projected by the query.
 		self.assertEqual(set(seeded.keys()), {"name", "status", "consumed_qty"})
 
-	def test_excluded_status_work_order_is_filtered_out(self):
+	def test_excluded_status_work_order_is_filtered_out(self) -> None:
 		# Flip the seeded Work Order to an excluded status; the query must drop it.
 		frappe.db.set_value("Work Order", self.work_order.name, "status", "Completed")
 

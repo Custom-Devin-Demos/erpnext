@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cint
 
 
-def execute():
+def execute() -> None:
 	frappe.db.set_single_value(
 		"Stock Settings",
 		"update_price_list_based_on",

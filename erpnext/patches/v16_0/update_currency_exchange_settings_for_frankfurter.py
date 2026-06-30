@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	settings_meta = frappe.get_meta("Currency Exchange Settings")
 	settings = frappe.get_doc("Currency Exchange Settings")
 

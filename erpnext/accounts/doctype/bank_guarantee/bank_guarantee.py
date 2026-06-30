@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -42,11 +44,11 @@ class BankGuarantee(Document):
 		validity: DF.Int
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if not (self.customer or self.supplier):
 			frappe.throw(_("Select the customer or supplier."))
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		if not self.bank_guarantee_number:
 			frappe.throw(_("Enter the Bank Guarantee Number before submitting."))
 		if not self.name_of_beneficiary:

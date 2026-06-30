@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 
@@ -92,7 +93,7 @@ class Opportunity(TransactionBase, CRMNote):
 		whatsapp: DF.Data | None
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		ref_doc = frappe.get_doc(self.opportunity_from, self.party_name)
 
 		load_address_and_contact(ref_doc)
@@ -116,7 +117,7 @@ class Opportunity(TransactionBase, CRMNote):
 
 		self.set("__onload", ref_doc.get("__onload"))
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		if self.opportunity_from == "Lead":
 			frappe.get_doc("Lead", self.party_name).set_status(update=True)
 
@@ -126,7 +127,7 @@ class Opportunity(TransactionBase, CRMNote):
 				copy_comments(self.opportunity_from, self.party_name, self)
 				link_communications(self.opportunity_from, self.party_name, self)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_opportunity_type()
 		self.make_new_lead_if_required()
 		self.validate_item_details()
@@ -140,10 +141,10 @@ class Opportunity(TransactionBase, CRMNote):
 
 		self.calculate_totals()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.update_prospect()
 
-	def map_fields(self):
+	def map_fields(self) -> None:
 		for field in self.meta.get_valid_columns():
 			if not self.get(field) and frappe.db.field_exists(self.opportunity_from, field):
 				try:
@@ -152,11 +153,11 @@ class Opportunity(TransactionBase, CRMNote):
 				except Exception:
 					continue
 
-	def set_opportunity_type(self):
+	def set_opportunity_type(self) -> None:
 		if self.is_new() and not self.opportunity_type:
 			self.opportunity_type = _("Sales")
 
-	def set_exchange_rate(self):
+	def set_exchange_rate(self) -> None:
 		company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
 		if self.currency == company_currency:
 			self.conversion_rate = 1.0
@@ -165,7 +166,7 @@ class Opportunity(TransactionBase, CRMNote):
 		if not self.conversion_rate or self.conversion_rate == 1.0:
 			self.conversion_rate = get_exchange_rate(self.currency, company_currency, self.transaction_date)
 
-	def calculate_totals(self):
+	def calculate_totals(self) -> None:
 		total = base_total = 0
 		for item in self.get("items"):
 			item.amount = flt(item.rate) * flt(item.qty)
@@ -177,7 +178,7 @@ class Opportunity(TransactionBase, CRMNote):
 		self.total = flt(total)
 		self.base_total = flt(base_total)
 
-	def update_prospect(self):
+	def update_prospect(self) -> None:
 		prospect_name = None
 		if self.opportunity_from == "Prospect" and self.party_name:
 			prospect_name = self.party_name
@@ -211,7 +212,7 @@ class Opportunity(TransactionBase, CRMNote):
 				prospect.flags.ignore_mandatory = True
 				prospect.save()
 
-	def make_new_lead_if_required(self):
+	def make_new_lead_if_required(self) -> None:
 		"""Set lead against new opportunity"""
 		if (not self.get("party_name")) and self.contact_email:
 			# check if customer is already created agains the self.contact_email
@@ -262,7 +263,7 @@ class Opportunity(TransactionBase, CRMNote):
 	@frappe.whitelist()
 	def declare_enquiry_lost(
 		self, lost_reasons_list: list, competitors: list, detailed_reason: str | None = None
-	):
+	) -> None:
 		if not self.has_active_quotation():
 			self.status = "Lost"
 			self.lost_reasons = []
@@ -282,7 +283,7 @@ class Opportunity(TransactionBase, CRMNote):
 		else:
 			frappe.throw(_("Cannot declare as lost, because Quotation has been made."))
 
-	def has_active_quotation(self):
+	def has_active_quotation(self) -> list:
 		if not self.get("items", []):
 			return frappe.get_all(
 				"Quotation",
@@ -305,7 +306,7 @@ class Opportunity(TransactionBase, CRMNote):
 				.run()
 			)
 
-	def has_ordered_quotation(self):
+	def has_ordered_quotation(self) -> list:
 		if not self.get("items", []):
 			return frappe.get_all(
 				"Quotation", {"opportunity": self.name, "status": "Ordered", "docstatus": 1}, "name"
@@ -322,7 +323,7 @@ class Opportunity(TransactionBase, CRMNote):
 				.run()
 			)
 
-	def has_lost_quotation(self):
+	def has_lost_quotation(self) -> bool | None:
 		lost_quotation = frappe.get_all(
 			"Quotation", filters={"docstatus": 1, "opportunity": self.name, "status": "Lost"}
 		)
@@ -331,7 +332,7 @@ class Opportunity(TransactionBase, CRMNote):
 				return False
 			return True
 
-	def validate_cust_name(self):
+	def validate_cust_name(self) -> None:
 		if self.party_name:
 			if self.opportunity_from == "Customer":
 				self.customer_name = frappe.db.get_value("Customer", self.party_name, "customer_name")
@@ -347,7 +348,7 @@ class Opportunity(TransactionBase, CRMNote):
 			elif self.opportunity_from == "Prospect":
 				self.customer_name = self.party_name
 
-	def validate_item_details(self):
+	def validate_item_details(self) -> None:
 		if not self.get("items"):
 			return
 
@@ -363,7 +364,7 @@ class Opportunity(TransactionBase, CRMNote):
 				if not d.get(key):
 					d.set(key, item.get(key))
 
-	def get_notification_email(self):
+	def get_notification_email(self) -> str | None:
 		"""Hook to return the target email address for notifications."""
 		if self.opportunity_owner:
 			return frappe.db.get_value("User", self.opportunity_owner, "email")
@@ -372,7 +373,7 @@ class Opportunity(TransactionBase, CRMNote):
 
 
 @frappe.whitelist()
-def get_item_details(item_code: str):
+def get_item_details(item_code: str) -> dict:
 	item = frappe.db.get_value(
 		"Item",
 		item_code,
@@ -390,7 +391,7 @@ def get_item_details(item_code: str):
 
 
 @frappe.whitelist()
-def set_multiple_status(names: str | list[str], status: str):
+def set_multiple_status(names: str | list[str], status: str) -> None:
 	names = frappe.parse_json(names)
 	for name in names:
 		opp = frappe.get_doc("Opportunity", name)
@@ -398,7 +399,7 @@ def set_multiple_status(names: str | list[str], status: str):
 		opp.save()
 
 
-def auto_close_opportunity():
+def auto_close_opportunity() -> None:
 	"""Auto close `Replied` Opportunities inactive for the days configured in CRM Settings."""
 	auto_close_after_days = frappe.db.get_single_value("CRM Settings", "close_opportunity_after_days")
 

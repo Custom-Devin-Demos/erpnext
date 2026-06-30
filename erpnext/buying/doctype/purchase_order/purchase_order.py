@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 
@@ -162,7 +163,7 @@ class PurchaseOrder(BuyingController):
 		transaction_time: DF.Time | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.status_updater = [
 			{
@@ -181,18 +182,18 @@ class PurchaseOrder(BuyingController):
 			}
 		]
 
-	def onload(self):
+	def onload(self) -> None:
 		self.set_onload("can_update_items", self.can_update_items())
 		self.set_onload("has_pending_receivable_qty", self.has_pending_receivable_qty())
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_has_unit_price_items()
 		self.flags.allow_zero_qty = self.has_unit_price_items
 
 		if self.is_subcontracted:
 			self.status_updater[0]["source_field"] = "fg_item_qty"
 
-	def validate(self):
+	def validate(self) -> None:
 		super().validate()
 
 		self.set_status()
@@ -219,7 +220,7 @@ class PurchaseOrder(BuyingController):
 		)
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 
-	def set_has_unit_price_items(self):
+	def set_has_unit_price_items(self) -> None:
 		"""
 		If permitted in settings and any item has 0 qty, the PO has unit price items.
 		"""
@@ -230,7 +231,7 @@ class PurchaseOrder(BuyingController):
 			not row.qty for row in self.get("items") if (row.item_code and not row.qty)
 		)
 
-	def validate_with_previous_doc(self):
+	def validate_with_previous_doc(self) -> None:
 		mri_compare_fields = [["project", "="], ["item_code", "="]]
 		if self.is_subcontracted:
 			mri_compare_fields = [["project", "="]]
@@ -268,7 +269,7 @@ class PurchaseOrder(BuyingController):
 				[["Supplier Quotation", "supplier_quotation", "supplier_quotation_item"]]
 			)
 
-	def validate_supplier(self):
+	def validate_supplier(self) -> None:
 		prevent_po = frappe.db.get_value("Supplier", self.supplier, "prevent_pos")
 		if prevent_po:
 			standing = frappe.db.get_value("Supplier Scorecard", self.supplier, "status")
@@ -292,7 +293,7 @@ class PurchaseOrder(BuyingController):
 
 		self.party_account_currency = get_party_account_currency("Supplier", self.supplier, self.company)
 
-	def validate_minimum_order_qty(self):
+	def validate_minimum_order_qty(self) -> None:
 		"""Check if total ordered quantities meet the Item's minimum order requirement."""
 		if not self.get("items"):
 			return
@@ -317,7 +318,7 @@ class PurchaseOrder(BuyingController):
 					).format(item_code, qty, itemwise_min_order_qty.get(item_code))
 				)
 
-	def get_schedule_dates(self):
+	def get_schedule_dates(self) -> None:
 		for d in self.get("items"):
 			if d.material_request_item and not d.schedule_date:
 				d.schedule_date = frappe.db.get_value(
@@ -325,7 +326,7 @@ class PurchaseOrder(BuyingController):
 				)
 
 	@frappe.whitelist()
-	def get_last_purchase_rate(self):
+	def get_last_purchase_rate(self) -> None:
 		"""get last purchase rates for all items"""
 
 		conversion_rate = flt(self.get("conversion_rate")) or 1.0
@@ -350,7 +351,7 @@ class PurchaseOrder(BuyingController):
 							d.base_rate
 						) = d.price_list_rate = d.rate = d.last_purchase_rate = item_last_purchase_rate
 
-	def update_ordered_qty(self, po_item_rows=None):
+	def update_ordered_qty(self, po_item_rows: list | None = None) -> None:
 		"""update requested qty (before ordered_qty is updated)"""
 		item_wh_list = []
 		for d in self.get("items"):
@@ -365,10 +366,10 @@ class PurchaseOrder(BuyingController):
 		for item_code, warehouse in item_wh_list:
 			update_bin_qty(item_code, warehouse, {"ordered_qty": get_ordered_qty(item_code, warehouse)})
 
-	def update_status(self, status):
+	def update_status(self, status: str) -> None:
 		StatusService(self).update_status(status)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		super().on_submit()
 
 		if self.is_against_so():
@@ -394,7 +395,7 @@ class PurchaseOrder(BuyingController):
 
 		SubcontractingService(self).auto_create_subcontracting_order()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = (
 			"GL Entry",
 			"Payment Ledger Entry",
@@ -433,7 +434,7 @@ class PurchaseOrder(BuyingController):
 
 		unlink_inter_company_doc(self.doctype, self.name, self.inter_company_order_reference)
 
-	def update_status_updater(self):
+	def update_status_updater(self) -> None:
 		self.status_updater.append(
 			{
 				"source_dt": "Purchase Order Item",
@@ -459,7 +460,7 @@ class PurchaseOrder(BuyingController):
 			}
 		)
 
-	def update_status_updater_if_from_pp(self):
+	def update_status_updater_if_from_pp(self) -> None:
 		self.status_updater.append(
 			{
 				"source_dt": "Purchase Order Item",
@@ -474,19 +475,19 @@ class PurchaseOrder(BuyingController):
 		)
 
 	@frappe.whitelist()
-	def update_dropship_received_qty(self, data: list[dict]):
+	def update_dropship_received_qty(self, data: list[dict]) -> None:
 		DropShipService(self).update_dropship_received_qty(data)
 
-	def is_against_so(self):
+	def is_against_so(self) -> bool:
 		return any(d.sales_order for d in self.items if d.sales_order)
 
-	def is_against_pp(self):
+	def is_against_pp(self) -> bool:
 		return any(d.production_plan for d in self.items if d.production_plan)
 
-	def update_receiving_percentage(self):
+	def update_receiving_percentage(self) -> None:
 		StatusService(self).update_receiving_percentage()
 
-	def set_service_items_for_finished_goods(self):
+	def set_service_items_for_finished_goods(self) -> None:
 		SubcontractingService(self).set_service_items_for_finished_goods()
 
 	def can_update_items(self) -> bool:
@@ -505,7 +506,7 @@ class PurchaseOrder(BuyingController):
 				return True
 		return False
 
-	def update_ordered_qty_in_so_for_removed_items(self, removed_items):
+	def update_ordered_qty_in_so_for_removed_items(self, removed_items: list) -> None:
 		"""
 		Updates ordered_qty in linked SO when item rows are removed using Update Items
 		"""
@@ -531,7 +532,9 @@ class PurchaseOrder(BuyingController):
 
 
 @frappe.request_cache
-def item_last_purchase_rate(name, conversion_rate, item_code, conversion_factor=1.0):
+def item_last_purchase_rate(
+	name: str, conversion_rate: float, item_code: str, conversion_factor: float = 1.0
+) -> float | None:
 	"""get last purchase rate for an item"""
 
 	conversion_rate = flt(conversion_rate) or 1.0
@@ -549,7 +552,7 @@ def item_last_purchase_rate(name, conversion_rate, item_code, conversion_factor=
 
 
 @frappe.whitelist()
-def close_or_unclose_purchase_orders(names: str | list, status: str):
+def close_or_unclose_purchase_orders(names: str | list, status: str) -> None:
 	if not frappe.has_permission("Purchase Order", "write"):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
@@ -587,7 +590,7 @@ def get_list_context(context=None):
 
 
 @frappe.whitelist()
-def update_status(status: str, name: str):
+def update_status(status: str, name: str) -> None:
 	po = frappe.get_lazy_doc("Purchase Order", name, check_permission="submit")
 	po.update_status(status)
 	DropShipService(po).update_delivered_qty_in_sales_order()

@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 import requests
 from frappe import _
@@ -34,14 +36,14 @@ class CurrencyExchangeSettings(Document):
 		use_http: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_parameters_and_result()
 		if frappe.in_test or frappe.flags.in_install or frappe.flags.in_setup_wizard:
 			return
 		response, value = self.validate_parameters()
 		self.validate_result(response, value)
 
-	def set_parameters_and_result(self):
+	def set_parameters_and_result(self) -> None:
 		if self.service_provider == "exchangerate.host":
 			if not self.access_key:
 				frappe.throw(
@@ -97,7 +99,7 @@ class CurrencyExchangeSettings(Document):
 
 		return response, value
 
-	def validate_result(self, response, value):
+	def validate_result(self, response, value) -> None:
 		try:
 			for key in self.result_key:
 				value = value[

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import datetime
 import json
 
@@ -335,7 +337,7 @@ def get_incoming_rate(args: dict | str, raise_error_if_no_rate: bool = True, fal
 	return flt(in_rate)
 
 
-def get_avg_purchase_rate(serial_nos):
+def get_avg_purchase_rate(serial_nos) -> float:
 	"""get average value of serial numbers"""
 
 	serial_nos = get_valid_serial_nos(serial_nos)
@@ -383,7 +385,7 @@ def _get_fifo_lifo_rate(previous_stock_queue, qty, method):
 		return total_value / total_qty if total_qty else 0.0
 
 
-def get_valid_serial_nos(sr_nos, qty=0, item_code=""):
+def get_valid_serial_nos(sr_nos, qty=0, item_code: str = ""):
 	"""split serial nos, validate and return list of valid serial nos"""
 	# TODO: remove duplicates in client side
 	serial_nos = cstr(sr_nos).strip().replace(",", "\n").split("\n")
@@ -403,7 +405,7 @@ def get_valid_serial_nos(sr_nos, qty=0, item_code=""):
 	return valid_serial_nos
 
 
-def validate_warehouse_company(warehouse, company):
+def validate_warehouse_company(warehouse, company) -> None:
 	warehouse_company = frappe.db.get_value("Warehouse", warehouse, "company", cache=True)
 	if warehouse_company and warehouse_company != company:
 		frappe.throw(
@@ -412,12 +414,12 @@ def validate_warehouse_company(warehouse, company):
 		)
 
 
-def is_group_warehouse(warehouse):
+def is_group_warehouse(warehouse) -> None:
 	if frappe.db.get_value("Warehouse", warehouse, "is_group", cache=True):
 		frappe.throw(_("Group node warehouse is not allowed to select for transactions"))
 
 
-def validate_disabled_warehouse(warehouse):
+def validate_disabled_warehouse(warehouse) -> None:
 	if frappe.db.get_value("Warehouse", warehouse, "disabled", cache=True):
 		frappe.throw(
 			_("Disabled Warehouse {0} cannot be used for this transaction.").format(
@@ -426,7 +428,7 @@ def validate_disabled_warehouse(warehouse):
 		)
 
 
-def update_included_uom_in_report(columns, result, include_uom, conversion_factors):
+def update_included_uom_in_report(columns, result, include_uom, conversion_factors) -> None:
 	if not include_uom or not conversion_factors:
 		return
 
@@ -476,7 +478,7 @@ def update_included_uom_in_report(columns, result, include_uom, conversion_facto
 		row[key] = value
 
 
-def add_additional_uom_columns(columns, result, include_uom, conversion_factors):
+def add_additional_uom_columns(columns, result, include_uom, conversion_factors) -> None:
 	if not include_uom or not conversion_factors:
 		return
 
@@ -529,7 +531,7 @@ def get_incoming_outgoing_rate_for_cancel(item_code, voucher_type, voucher_no, v
 	return outgoing_rate
 
 
-def is_reposting_item_valuation_in_progress():
+def is_reposting_item_valuation_in_progress() -> None:
 	reposting_in_progress = frappe.db.exists(
 		"Repost Item Valuation", {"docstatus": 1, "status": ["in", ["Queued", "In Progress"]]}
 	)
@@ -572,7 +574,7 @@ def check_pending_reposting(posting_date: str, company: str | None = None, throw
 
 @frappe.whitelist()
 def scan_barcode(search_value: str, ctx: dict | str | None = None) -> BarcodeScanResult:
-	def set_cache(data: BarcodeScanResult):
+	def set_cache(data: BarcodeScanResult) -> None:
 		frappe.cache().set_value(f"erpnext:barcode_scan:{search_value}", data, expires_in_sec=120)
 		_update_item_info(data, ctx)
 

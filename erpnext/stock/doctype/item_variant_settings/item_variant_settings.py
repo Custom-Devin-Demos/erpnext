@@ -1,5 +1,7 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+from __future__ import annotations
+
 import typing
 
 import frappe
@@ -26,7 +28,7 @@ class ItemVariantSettings(Document):
 
 	invalid_fields_for_copy_fields_in_variants: typing.ClassVar[list] = ["barcodes"]
 
-	def set_default_fields(self):
+	def set_default_fields(self) -> None:
 		self.fields = []
 		fields = frappe.get_meta("Item").fields
 		exclude_fields = {
@@ -53,7 +55,7 @@ class ItemVariantSettings(Document):
 			):
 				self.append("fields", {"field_name": d.fieldname})
 
-	def remove_invalid_fields_for_copy_fields_in_variants(self):
+	def remove_invalid_fields_for_copy_fields_in_variants(self) -> None:
 		fields = [
 			row
 			for row in self.fields
@@ -62,7 +64,7 @@ class ItemVariantSettings(Document):
 		self.fields = fields
 		self.save()
 
-	def validate(self):
+	def validate(self) -> None:
 		for d in self.fields:
 			if d.field_name in self.invalid_fields_for_copy_fields_in_variants:
 				frappe.throw(

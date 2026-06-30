@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from frappe.contacts.address_and_contact import (
 	delete_contact_and_address,
 	load_address_and_contact,
@@ -29,13 +31,13 @@ class Shareholder(Document):
 		title: DF.Data
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		delete_contact_and_address("Shareholder", self.name)
 
-	def before_save(self):
+	def before_save(self) -> None:
 		for entry in self.share_balance:
 			entry.amount = entry.no_of_shares * entry.rate

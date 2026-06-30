@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	install_apps = frappe.get_installed_apps()
 	if "erpnext_datev_uo" in install_apps or "erpnext_datev" in install_apps:
 		return

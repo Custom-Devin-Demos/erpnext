@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
@@ -12,7 +14,7 @@ from erpnext.accounts.report.financial_statements import get_period_list
 from erpnext.accounts.utils import get_fiscal_year
 
 
-def get_data_column(filters, partner_doctype):
+def get_data_column(filters: dict, partner_doctype: str) -> tuple:
 	data = []
 	period_list = get_period_list(
 		filters.fiscal_year,
@@ -38,7 +40,7 @@ def get_data_column(filters, partner_doctype):
 	return columns, data
 
 
-def get_data(filters, period_list, partner_doctype):
+def get_data(filters: dict, period_list: list, partner_doctype: str) -> dict | None:
 	sales_field = frappe.scrub(partner_doctype)
 	sales_users_data = get_parents_data(filters, partner_doctype)
 
@@ -70,7 +72,7 @@ def get_data(filters, period_list, partner_doctype):
 	)
 
 
-def get_columns(filters, period_list, partner_doctype):
+def get_columns(filters: dict, period_list: list, partner_doctype: str) -> list:
 	fieldtype, options = "Currency", "currency"
 
 	if filters.get("target_on") == "Quantity":
@@ -153,14 +155,14 @@ def get_columns(filters, period_list, partner_doctype):
 
 
 def prepare_data(
-	filters,
-	sales_users_data,
-	sales_user_wise_item_groups,
-	actual_data,
-	date_field,
-	period_list,
-	sales_field,
-):
+	filters: dict,
+	sales_users_data: list,
+	sales_user_wise_item_groups: dict,
+	actual_data: list,
+	date_field: str,
+	period_list: list,
+	sales_field: str,
+) -> dict:
 	rows = {}
 
 	target_qty_amt_field = "target_qty" if filters.get("target_on") == "Quantity" else "target_amount"
@@ -209,7 +211,7 @@ def prepare_data(
 	return rows
 
 
-def get_item_group_parent_child_map():
+def get_item_group_parent_child_map() -> dict:
 	"""
 	Returns a dict of all item group parents and leaf children associated with them.
 	"""
@@ -228,7 +230,9 @@ def get_item_group_parent_child_map():
 	return item_group_parent_child_map
 
 
-def get_actual_data(filters, sales_users_or_territory_data, date_field, sales_field):
+def get_actual_data(
+	filters: dict, sales_users_or_territory_data: list, date_field: str, sales_field: str
+) -> list:
 	fiscal_year = get_fiscal_year(fiscal_year=filters.get("fiscal_year"), as_dict=1)
 
 	parent_doc = frappe.qb.DocType(filters.get("doctype"))
@@ -263,7 +267,7 @@ def get_actual_data(filters, sales_users_or_territory_data, date_field, sales_fi
 	return query.run(as_dict=True)
 
 
-def get_parents_data(filters, partner_doctype):
+def get_parents_data(filters: dict, partner_doctype: str) -> list:
 	filters_dict = {"parenttype": partner_doctype}
 
 	target_qty_amt_field = "target_qty" if filters.get("target_on") == "Quantity" else "target_amount"

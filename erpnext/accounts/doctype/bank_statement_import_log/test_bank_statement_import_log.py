@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.utils import getdate
@@ -25,7 +27,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
 		self.bank = "HDFC - _TC"
@@ -33,7 +35,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		qb.from_(bank_dt).delete().where(bank_dt.name == "HDFC").run()
 		self.create_bank_account()
 
-	def create_bank_account(self):
+	def create_bank_account(self) -> None:
 		bank = frappe.get_doc(
 			{
 				"doctype": "Bank",
@@ -73,7 +75,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 			column_map[column.maps_to] = column.index
 		return column_map
 
-	def _check_output(self, doc: BankStatementImportLog, expected_output: dict):
+	def _check_output(self, doc: BankStatementImportLog, expected_output: dict) -> None:
 		fields_to_check = [
 			"number_of_transactions",
 			"detected_date_format",
@@ -97,7 +99,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		for field, column_index in expected_output["column_mapping"].items():
 			self.assertEqual(column_map[field], column_index)
 
-	def test_sample_statement_import_log(self):
+	def test_sample_statement_import_log(self) -> None:
 		test_data = [
 			[test_hdfc_sample_statement_data, test_hdfc_expected_output],
 			[test_icici_sample_statement_data, test_icici_expected_output],
@@ -108,7 +110,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 			doc = self._create_bank_statement_import_log(data)
 			self._check_output(doc, expected_output)
 
-	def test_amount_parser(self):
+	def test_amount_parser(self) -> None:
 		# Parse numeric strings after removing all characters except digits, decimal point, and minus sign
 		self.assertEqual(get_float_amount("100.27"), 100.27)
 		self.assertEqual(get_float_amount("100.20 INR"), 100.20)
@@ -162,7 +164,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		table["included"] = True
 		return table
 
-	def test_pdf_multi_page_kept_separate_and_unioned(self):
+	def test_pdf_multi_page_kept_separate_and_unioned(self) -> None:
 		"""Tables on separate pages must NOT be merged; transactions are the union."""
 		html = """
 		<html><body>
@@ -191,13 +193,13 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(len(union), 3)
 		self.assertEqual(sorted(t["date"] for t in union), ["2024-04-01", "2024-04-03", "2024-04-05"])
 
-	def test_pdf_junk_table_excluded(self):
+	def test_pdf_junk_table_excluded(self) -> None:
 		"""A non-transactions table (ad/summary) should yield zero transactions."""
 		ad_table = self._auto_map({"rows": [["Open a new account!", "Call 1800-XYZ"]]})
 		final, _df, _af = build_table_transactions(ad_table)
 		self.assertEqual(final, [])
 
-	def test_headerless_content_mapping(self):
+	def test_headerless_content_mapping(self) -> None:
 		"""Without a header row, columns are guessed from their contents."""
 		rows = [
 			["01/04/2024", "UPI PAYMENT", "500.00"],
@@ -212,7 +214,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(mapping.get("Description"), 1)
 		self.assertEqual(mapping.get("Amount"), 2)
 
-	def test_pdf_password_protected(self):
+	def test_pdf_password_protected(self) -> None:
 		"""Encrypted PDFs error without a password and succeed with the right one."""
 		html = """
 		<html><body><table border="1">
@@ -229,7 +231,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		tables = extract_pdf_tables(encrypted, "secret123")
 		self.assertTrue(tables)
 
-	def test_pdf_no_tables_detected(self):
+	def test_pdf_no_tables_detected(self) -> None:
 		"""A PDF with no detectable tables raises a clear error (e.g. scanned PDFs)."""
 		html = "<html><body><p>Just some prose with no tabular data at all.</p></body></html>"
 		self.assertRaises(frappe.ValidationError, extract_pdf_tables, self._make_pdf(html))
@@ -255,7 +257,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		)
 		return doc.insert()
 
-	def test_pdf_full_lifecycle(self):
+	def test_pdf_full_lifecycle(self) -> None:
 		"""End-to-end doc lifecycle: insert -> rasterize -> preview -> edit -> import."""
 		html = """
 		<html><body>
@@ -307,7 +309,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		)
 		self.assertEqual(len(created), 3)
 
-	def test_pdf_reextract_table_from_bbox(self):
+	def test_pdf_reextract_table_from_bbox(self) -> None:
 		"""Re-extracting a table from an adjusted bbox updates its rows and stores the bbox."""
 		html = """
 		<html><body>
@@ -328,7 +330,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(updated["bbox"], [round(float(v), 2) for v in bbox])
 		self.assertEqual(updated["rows"], table["rows"])
 
-	def test_pdf_reextract_changed_bbox_updates_rows_and_transactions(self):
+	def test_pdf_reextract_changed_bbox_updates_rows_and_transactions(self) -> None:
 		"""Shrinking a table's bbox must drop rows and update the transaction count end-to-end."""
 		html = """
 		<html><body>
@@ -356,7 +358,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		self.assertLess(doc.number_of_transactions, original_txns)
 		self.assertEqual(len(details["final_transactions"]), doc.number_of_transactions)
 
-	def test_pdf_set_table_header(self):
+	def test_pdf_set_table_header(self) -> None:
 		"""User can clear a table's header (no header row) or set a specific header row."""
 		html = """
 		<html><body>
@@ -414,7 +416,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		)
 		return doc.insert()
 
-	def test_csv_update_column_mapping(self):
+	def test_csv_update_column_mapping(self) -> None:
 		"""Overriding the column mapping recomputes the transaction count."""
 		csv_text = "Date,Narration,Amount\n01/04/2024,UPI PAYMENT,500.00\n03/04/2024,SALARY,20000.00\n"
 		doc = self._create_csv_import_log(csv_text)
@@ -430,7 +432,7 @@ class TestBankStatementImportLog(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(doc.number_of_transactions, 0)
 		self.assertEqual(len(details["final_transactions"]), 0)
 
-	def test_csv_set_header_index_preserves_mapping(self):
+	def test_csv_set_header_index_preserves_mapping(self) -> None:
 		"""Clearing the header keeps the user's mapping; it is not re-guessed."""
 		csv_text = "Date,Narration,Amount\n01/04/2024,UPI PAYMENT,500.00\n03/04/2024,SALARY,20000.00\n"
 		doc = self._create_csv_import_log(csv_text)

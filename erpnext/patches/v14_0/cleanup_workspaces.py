@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	for ws in ["Retail", "Utilities"]:
 		frappe.delete_doc_if_exists("Workspace", ws)
 

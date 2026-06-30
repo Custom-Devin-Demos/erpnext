@@ -1,6 +1,10 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe.utils import format_date
 from frappe.utils.data import add_days, formatdate, today
@@ -13,13 +17,16 @@ from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 from erpnext.tests.utils import ERPNextTestSuite
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class TestMaintenanceSchedule(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.load_test_records("Stock Entry")
 
 	@classmethod
-	def make_sales_person(cls):
+	def make_sales_person(cls) -> None:
 		records = [
 			{
 				"doctype": "Sales Person",
@@ -37,7 +44,7 @@ class TestMaintenanceSchedule(ERPNextTestSuite):
 					frappe.get_doc("Sales Person", {"sales_person_name": x.get("sales_person_name")})
 				)
 
-	def test_events_should_be_created_and_deleted(self):
+	def test_events_should_be_created_and_deleted(self) -> None:
 		ms = make_maintenance_schedule()
 		ms.generate_schedule()
 		ms.submit()
@@ -49,7 +56,7 @@ class TestMaintenanceSchedule(ERPNextTestSuite):
 		events_after_cancel = get_events(ms)
 		self.assertEqual(len(events_after_cancel), 0)
 
-	def test_make_schedule(self):
+	def test_make_schedule(self) -> None:
 		ms = make_maintenance_schedule()
 		ms.save()
 		i = ms.items[0]
@@ -116,7 +123,7 @@ class TestMaintenanceSchedule(ERPNextTestSuite):
 		self.assertTrue(ms.schedules[1].completion_status, "Pending")
 		self.assertEqual(ms.schedules[1].actual_date, None)
 
-	def test_serial_no_filters(self):
+	def test_serial_no_filters(self) -> None:
 		# Without serial no. set in schedule -> returns None
 		item_code = "_Test Serial Item"
 		make_serial_item_with_serial(self, item_code)
@@ -140,7 +147,7 @@ class TestMaintenanceSchedule(ERPNextTestSuite):
 		serial_nos = get_serial_nos_from_schedule(mvi.item_name, ms.name)
 		self.assertEqual(serial_nos, ["TEST001", "TEST002"])
 
-	def test_schedule_with_serials(self):
+	def test_schedule_with_serials(self) -> None:
 		# Checks whether serials are automatically updated when changing in items table.
 		# Also checks if other fields trigger generate schdeule if changed in items table.
 		item_code = "_Test Serial Item"
@@ -168,7 +175,7 @@ class TestMaintenanceSchedule(ERPNextTestSuite):
 		ms.save()
 		self.assertEqual(len(ms.schedules), 2)
 
-	def test_validate_sales_order_duplicate_throws(self):
+	def test_validate_sales_order_duplicate_throws(self) -> None:
 		# validate_sales_order joins Maintenance Schedule + its item filtering the PARENT schedule's
 		# docstatus=1; a second schedule against a Sales Order already used by a submitted schedule
 		# must be rejected.
@@ -181,7 +188,7 @@ class TestMaintenanceSchedule(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, make_maintenance_schedule, sales_order=so.name)
 
-	def test_validate_schedule_date_skips_holiday(self):
+	def test_validate_schedule_date_skips_holiday(self) -> None:
 		# validate_schedule_date_for_holiday_list reads the holiday list via the converted
 		# get_all("Holiday", {"parent": <list>}, pluck="holiday_date") and shifts a schedule date
 		# that lands on a holiday back by a day; a non-holiday date is returned unchanged.
@@ -214,7 +221,7 @@ class TestMaintenanceSchedule(ERPNextTestSuite):
 		self.assertEqual(getdate(unchanged), getdate(non_holiday))
 
 
-def make_serial_item_with_serial(self, item_code):
+def make_serial_item_with_serial(self, item_code: str) -> None:
 	serial_item_doc = create_item(item_code, is_stock_item=1)
 	if not serial_item_doc.has_serial_no or not serial_item_doc.serial_no_series:
 		serial_item_doc.has_serial_no = 1
@@ -225,14 +232,14 @@ def make_serial_item_with_serial(self, item_code):
 		make_serialized_item(self, item_code=item_code)
 
 
-def get_events(ms):
+def get_events(ms) -> list:
 	return frappe.get_all(
 		"Event Participants",
 		filters={"reference_doctype": ms.doctype, "reference_docname": ms.name, "parenttype": "Event"},
 	)
 
 
-def make_maintenance_schedule(**args):
+def make_maintenance_schedule(**args) -> Document:
 	ms = frappe.new_doc("Maintenance Schedule")
 	ms.company = "_Test Company"
 	ms.customer = "_Test Customer"

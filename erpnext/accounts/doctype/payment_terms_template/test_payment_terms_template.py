@@ -1,6 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, getdate
 
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPaymentTermsTemplate(ERPNextTestSuite):
-	def test_create_template(self):
+	def test_create_template(self) -> None:
 		template = frappe.get_doc(
 			{
 				"doctype": "Payment Terms Template",
@@ -39,7 +41,7 @@ class TestPaymentTermsTemplate(ERPNextTestSuite):
 
 		template.insert()
 
-	def test_credit_days(self):
+	def test_credit_days(self) -> None:
 		template = frappe.get_doc(
 			{
 				"doctype": "Payment Terms Template",
@@ -57,7 +59,7 @@ class TestPaymentTermsTemplate(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, template.insert)
 
-	def test_no_discount_date_without_discount(self):
+	def test_no_discount_date_without_discount(self) -> None:
 		posting_date = "2026-05-29"
 		term = frappe._dict(
 			{
@@ -80,7 +82,7 @@ class TestPaymentTermsTemplate(ERPNextTestSuite):
 		self.assertEqual(getdate(details.due_date), getdate(posting_date))
 		self.assertIsNone(details.discount_date)
 
-	def test_discount_date_generated_with_discount(self):
+	def test_discount_date_generated_with_discount(self) -> None:
 		posting_date = "2026-05-29"
 		term = frappe._dict(
 			{
@@ -103,7 +105,7 @@ class TestPaymentTermsTemplate(ERPNextTestSuite):
 		self.assertEqual(getdate(details.due_date), getdate(add_days(posting_date, 30)))
 		self.assertEqual(getdate(details.discount_date), getdate(add_days(posting_date, 10)))
 
-	def test_duplicate_terms(self):
+	def test_duplicate_terms(self) -> None:
 		template = frappe.get_doc(
 			{
 				"doctype": "Payment Terms Template",

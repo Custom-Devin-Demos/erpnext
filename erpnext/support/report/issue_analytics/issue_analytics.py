@@ -1,6 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import json
 
@@ -11,24 +12,24 @@ from frappe.utils import add_days, add_to_date, flt, getdate
 from erpnext.accounts.utils import get_fiscal_year
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	return IssueAnalytics(filters).run()
 
 
 class IssueAnalytics:
-	def __init__(self, filters=None):
+	def __init__(self, filters: dict | None = None) -> None:
 		"""Issue Analytics Report"""
 		self.filters = frappe._dict(filters or {})
 		self.get_period_date_ranges()
 
-	def run(self):
+	def run(self) -> tuple:
 		self.get_columns()
 		self.get_data()
 		self.get_chart_data()
 
 		return self.columns, self.data, None, self.chart
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = []
 
 		if self.filters.based_on == "Customer":
@@ -83,11 +84,11 @@ class IssueAnalytics:
 
 		self.columns.append({"label": _("Total"), "fieldname": "total", "fieldtype": "Int", "width": 120})
 
-	def get_data(self):
+	def get_data(self) -> None:
 		self.get_issues()
 		self.get_rows()
 
-	def get_period(self, date):
+	def get_period(self, date) -> str:
 		months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 		if self.filters.range == "Weekly":
@@ -108,7 +109,7 @@ class IssueAnalytics:
 
 		return period
 
-	def get_period_date_ranges(self):
+	def get_period_date_ranges(self) -> None:
 		from dateutil.relativedelta import MO, relativedelta
 
 		from_date, to_date = getdate(self.filters.from_date), getdate(self.filters.to_date)
@@ -138,7 +139,7 @@ class IssueAnalytics:
 			if period_end_date == to_date:
 				break
 
-	def get_issues(self):
+	def get_issues(self) -> None:
 		filters = self.get_common_filters()
 		self.field_map = {
 			"Customer": "customer",
@@ -153,7 +154,7 @@ class IssueAnalytics:
 			filters=filters,
 		)
 
-	def get_common_filters(self):
+	def get_common_filters(self) -> dict:
 		filters = {}
 		filters["opening_date"] = ("between", [self.filters.from_date, self.filters.to_date])
 
@@ -166,7 +167,7 @@ class IssueAnalytics:
 
 		return filters
 
-	def get_rows(self):
+	def get_rows(self) -> None:
 		self.data = []
 		self.get_periodic_data()
 
@@ -191,7 +192,7 @@ class IssueAnalytics:
 
 			self.data.append(row)
 
-	def get_periodic_data(self):
+	def get_periodic_data(self) -> None:
 		self.issue_periodic_data = frappe._dict()
 
 		for d in self.entries:
@@ -212,7 +213,7 @@ class IssueAnalytics:
 				self.issue_periodic_data.setdefault(value, frappe._dict()).setdefault(period, 0.0)
 				self.issue_periodic_data[value][period] += 1
 
-	def get_chart_data(self):
+	def get_chart_data(self) -> None:
 		length = len(self.columns)
 		labels = [d.get("label") for d in self.columns[1 : length - 1]]
 		self.chart = {"data": {"labels": labels, "datasets": []}, "type": "line"}

@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import Sum
 from frappe.utils import add_days, today
@@ -18,7 +20,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestCostCenterAllocation(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		cost_centers = [
 			"Main Cost Center 1",
 			"Main Cost Center 2",
@@ -30,7 +32,7 @@ class TestCostCenterAllocation(ERPNextTestSuite):
 		for cc in cost_centers:
 			create_cost_center(cost_center_name=cc, company="_Test Company")
 
-	def test_gle_based_on_cost_center_allocation(self):
+	def test_gle_based_on_cost_center_allocation(self) -> None:
 		cca = create_cost_center_allocation(
 			"_Test Company",
 			"Main Cost Center 1 - _TC",
@@ -63,7 +65,7 @@ class TestCostCenterAllocation(ERPNextTestSuite):
 		cca.cancel()
 		jv.cancel()
 
-	def test_main_cost_center_cant_be_child(self):
+	def test_main_cost_center_cant_be_child(self) -> None:
 		# Main cost center itself cannot be entered in child table
 		cca = create_cost_center_allocation(
 			"_Test Company",
@@ -74,7 +76,7 @@ class TestCostCenterAllocation(ERPNextTestSuite):
 
 		self.assertRaises(MainCostCenterCantBeChild, cca.save)
 
-	def test_invalid_main_cost_center(self):
+	def test_invalid_main_cost_center(self) -> None:
 		# If main cost center is used for allocation under any other cost center,
 		# allocation cannot be done against it
 		cca1 = create_cost_center_allocation(
@@ -91,7 +93,7 @@ class TestCostCenterAllocation(ERPNextTestSuite):
 
 		cca1.cancel()
 
-	def test_if_child_cost_center_has_any_allocation_record(self):
+	def test_if_child_cost_center_has_any_allocation_record(self) -> None:
 		# Check if any child cost center is used as main cost center in any other existing allocation
 		cca1 = create_cost_center_allocation(
 			"_Test Company",
@@ -110,7 +112,7 @@ class TestCostCenterAllocation(ERPNextTestSuite):
 
 		cca1.cancel()
 
-	def test_total_percentage(self):
+	def test_total_percentage(self) -> None:
 		cca = create_cost_center_allocation(
 			"_Test Company",
 			"Main Cost Center 1 - _TC",
@@ -119,7 +121,7 @@ class TestCostCenterAllocation(ERPNextTestSuite):
 		)
 		self.assertRaises(WrongPercentageAllocation, cca.save)
 
-	def test_valid_from_based_on_existing_gle(self):
+	def test_valid_from_based_on_existing_gle(self) -> None:
 		# GLE posted against Sub Cost Center 1 on today
 		jv = make_journal_entry(
 			"Cash - _TC",
@@ -143,7 +145,7 @@ class TestCostCenterAllocation(ERPNextTestSuite):
 
 		jv.cancel()
 
-	def test_multiple_cost_center_allocation_on_same_main_cost_center(self):
+	def test_multiple_cost_center_allocation_on_same_main_cost_center(self) -> None:
 		coa1 = create_cost_center_allocation(
 			"_Test Company",
 			"Main Cost Center 3 - _TC",
@@ -191,7 +193,7 @@ class TestCostCenterAllocation(ERPNextTestSuite):
 		jv.cancel()
 
 	@ERPNextTestSuite.change_settings("System Settings", {"rounding_method": "Commercial Rounding"})
-	def test_debit_credit_on_cost_center_allocation_for_commercial_rounding(self):
+	def test_debit_credit_on_cost_center_allocation_for_commercial_rounding(self) -> None:
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 
 		cca = create_cost_center_allocation(
@@ -222,8 +224,8 @@ def create_cost_center_allocation(
 	allocation_percentages,
 	valid_from=None,
 	valid_upto=None,
-	save=True,
-	submit=True,
+	save: bool = True,
+	submit: bool = True,
 ):
 	doc = frappe.new_doc("Cost Center Allocation")
 	doc.main_cost_center = main_cost_center

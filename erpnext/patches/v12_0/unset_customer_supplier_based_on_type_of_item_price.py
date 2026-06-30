@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	set proper customer and supplier details for item price
 	based on selling and buying values

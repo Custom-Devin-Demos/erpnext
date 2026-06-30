@@ -2,13 +2,15 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, msgprint
 from frappe.query_builder.functions import Count, Date
 from frappe.utils import date_diff, flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -49,7 +51,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"label": _("Customer"),
@@ -74,7 +76,7 @@ def get_columns():
 	]
 
 
-def get_communication_details(filters):
+def get_communication_details(filters: dict) -> list:
 	communication_count = None
 	communication_list = []
 	opportunities = frappe.db.get_values(

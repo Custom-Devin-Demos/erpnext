@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -12,10 +14,10 @@ from .stock_entry_base import BaseStockEntry
 
 
 class SendToSubcontractorStockEntry(BaseStockEntry):
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_subcontract_order()
 
-	def validate_subcontract_order(self):
+	def validate_subcontract_order(self) -> None:
 		"""Throw exception if more raw material is transferred against Subcontract Order than in
 		the raw materials supplied table"""
 		backflush_raw_materials_based_on = frappe.db.get_single_value(
@@ -33,7 +35,7 @@ class SendToSubcontractorStockEntry(BaseStockEntry):
 			for row in self.doc.items:
 				self.validate_subcontracting_order_for_transfer(row)
 
-	def validate_subcontracting_order_for_bom(self, child_row, subcontract_order):
+	def validate_subcontracting_order_for_bom(self, child_row, subcontract_order) -> None:
 		item_code = child_row.original_item or child_row.item_code
 		required_qty = self._get_required_qty_for_bom(item_code, child_row, subcontract_order)
 		qty_allowance = flt(frappe.db.get_single_value("Buying Settings", "over_transfer_allowance"))
@@ -64,7 +66,7 @@ class SendToSubcontractorStockEntry(BaseStockEntry):
 			)
 		return required_qty
 
-	def _validate_transfer_qty(self, child_row, item_code, total_allowed):
+	def _validate_transfer_qty(self, child_row, item_code, total_allowed) -> None:
 		total_supplied = self.get_total_supplied_qty(child_row)
 		total_returned = (
 			self.get_total_returned_qty(child_row)
@@ -84,7 +86,7 @@ class SendToSubcontractorStockEntry(BaseStockEntry):
 				)
 			)
 
-	def _link_rm_detail_if_missing(self, child_row, item_code):
+	def _link_rm_detail_if_missing(self, child_row, item_code) -> None:
 		if not child_row.get(self.doc.subcontract_data.rm_detail_field):
 			order_rm_detail = self.get_order_rm_detail(child_row)
 			if order_rm_detail:
@@ -99,7 +101,7 @@ class SendToSubcontractorStockEntry(BaseStockEntry):
 					)
 				)
 
-	def validate_subcontracting_order_for_transfer(self, child_row):
+	def validate_subcontracting_order_for_transfer(self, child_row) -> None:
 		if not child_row.subcontracted_item:
 			frappe.throw(
 				_("Row {0}: Subcontracted Item is mandatory for the raw material {1}").format(
@@ -163,13 +165,13 @@ class SendToSubcontractorStockEntry(BaseStockEntry):
 
 		return frappe.db.get_value(self.doc.subcontract_data.order_supplied_items_field, filters, "name")
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_subcontract_order_supplied_items()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_subcontract_order_supplied_items()
 
-	def update_subcontract_order_supplied_items(self):
+	def update_subcontract_order_supplied_items(self) -> None:
 		if not self.doc.get(self.doc.subcontract_data.order_field):
 			return
 		order_supplied_items = self._get_order_supplied_items()
@@ -191,7 +193,7 @@ class SendToSubcontractorStockEntry(BaseStockEntry):
 			self.doc.subcontract_data.order_field,
 		)
 
-	def _update_supplied_items_in_order(self, order_supplied_items, supplied_items):
+	def _update_supplied_items_in_order(self, order_supplied_items, supplied_items) -> None:
 		for row in order_supplied_items:
 			item = supplied_items.get(row.name) or {
 				"supplied_qty": 0,
@@ -200,7 +202,7 @@ class SendToSubcontractorStockEntry(BaseStockEntry):
 			}
 			frappe.db.set_value(self.doc.subcontract_data.order_supplied_items_field, row.name, item)
 
-	def _update_reserved_qty_for_subcontracting(self, order_supplied_items):
+	def _update_reserved_qty_for_subcontracting(self, order_supplied_items) -> None:
 		item_wh = {x.get("rm_item_code"): x.get("reserve_warehouse") for x in order_supplied_items}
 		for d in self.doc.get("items"):
 			item_code = d.get("original_item") or d.get("item_code")
@@ -212,7 +214,9 @@ class SendToSubcontractorStockEntry(BaseStockEntry):
 
 
 def get_supplied_items(
-	subcontract_order, rm_detail_field="sco_rm_detail", subcontract_order_field="subcontracting_order"
+	subcontract_order,
+	rm_detail_field: str = "sco_rm_detail",
+	subcontract_order_field: str = "subcontracting_order",
 ):
 	fields = [
 		"`tabStock Entry Detail`.`transfer_qty`",

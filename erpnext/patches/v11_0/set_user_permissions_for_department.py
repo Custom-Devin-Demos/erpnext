@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	user_permissions = frappe.db.sql(
 		"""select name, for_value from `tabUser Permission`
         where allow='Department'""",

@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -25,7 +27,7 @@ class TestStockLedgerInvariantCheck(ERPNextTestSuite):
 		make_stock_entry(item_code=ITEM, from_warehouse=WAREHOUSE, qty=4, rate=0, posting_date="2026-06-03")
 		return ITEM
 
-	def test_diagnostic_rows_have_no_discrepancy(self):
+	def test_diagnostic_rows_have_no_discrepancy(self) -> None:
 		item = self.make_movements()
 
 		data = self.run_report(item_code=item)
@@ -36,7 +38,7 @@ class TestStockLedgerInvariantCheck(ERPNextTestSuite):
 			self.assertLess(abs(row.fifo_qty_diff), 0.01)
 			self.assertLess(abs(row.diff_value_diff), 0.01)
 
-	def test_running_balance_matches(self):
+	def test_running_balance_matches(self) -> None:
 		item = self.make_movements()
 
 		data = self.run_report(item_code=item)

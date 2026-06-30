@@ -1,10 +1,16 @@
 # Copyright (c) 2018, Frappe and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe import _
 from frappe.utils.nestedset import NestedSet
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 
 class QualityProcedure(NestedSet):
@@ -33,27 +39,27 @@ class QualityProcedure(NestedSet):
 
 	nsm_parent_field = "parent_quality_procedure"
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.check_for_incorrect_child()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		NestedSet.on_update(self)
 		self.set_parent()
 		self.remove_parent_from_old_child()
 		self.add_child_to_parent()
 		self.remove_child_from_old_parent()
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		self.set_parent()
 		self.add_child_to_parent()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		# clear from child table (sub procedures)
 		qpp = frappe.qb.DocType("Quality Procedure Process")
 		frappe.qb.update(qpp).set(qpp["procedure"], "").where(qpp["procedure"] == self.name).run()
 		NestedSet.on_trash(self, allow_root_deletion=True)
 
-	def check_for_incorrect_child(self):
+	def check_for_incorrect_child(self) -> None:
 		for process in self.processes:
 			if process.procedure:
 				self.is_group = 1
@@ -69,7 +75,7 @@ class QualityProcedure(NestedSet):
 						title=_("Invalid Child Procedure"),
 					)
 
-	def set_parent(self):
+	def set_parent(self) -> None:
 		"""Set `Parent Procedure` in `Child Procedures`"""
 
 		for process in self.processes:
@@ -81,7 +87,7 @@ class QualityProcedure(NestedSet):
 						"Quality Procedure", process.procedure, "parent_quality_procedure", self.name
 					)
 
-	def remove_parent_from_old_child(self):
+	def remove_parent_from_old_child(self) -> None:
 		"""Remove `Parent Procedure` from `Old Child Procedures`"""
 
 		if old_doc := self.get_doc_before_save():
@@ -96,7 +102,7 @@ class QualityProcedure(NestedSet):
 							"Quality Procedure", child_procedure, "parent_quality_procedure", None
 						)
 
-	def add_child_to_parent(self):
+	def add_child_to_parent(self) -> None:
 		"""Add `Child Procedure` to `Parent Procedure`"""
 
 		if self.parent_quality_procedure:
@@ -105,7 +111,7 @@ class QualityProcedure(NestedSet):
 				parent.append("processes", {"procedure": self.name, "process_description": self.name})
 				parent.save()
 
-	def remove_child_from_old_parent(self):
+	def remove_child_from_old_parent(self) -> None:
 		"""Remove `Child Procedure` from `Old Parent Procedure`"""
 
 		if old_doc := self.get_doc_before_save():
@@ -124,7 +130,7 @@ def get_children(
 	parent: str | None = None,
 	parent_quality_procedure: str | None = None,
 	is_root: bool = False,
-):
+) -> list:
 	if parent is None or parent == "All Quality Procedures":
 		parent = ""
 
@@ -149,7 +155,7 @@ def get_children(
 
 
 @frappe.whitelist()
-def add_node():
+def add_node() -> Document:
 	from frappe.desk.treeview import make_tree_args
 
 	args = frappe.form_dict

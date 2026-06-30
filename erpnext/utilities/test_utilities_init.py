@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
@@ -5,7 +7,7 @@ from erpnext.utilities import update_doctypes
 
 
 class TestUtilitiesInit(ERPNextTestSuite):
-	def test_description_child_field_query_finds_core_child_fields(self):
+	def test_description_child_field_query_finds_core_child_fields(self) -> None:
 		"""The converted query in update_doctypes() joins DocField + DocType to find
 		description-bearing fields on child tables (istable=1). Reproduce the exact
 		query and assert known core child-doctype description fields are returned."""
@@ -53,7 +55,7 @@ class TestUtilitiesInit(ERPNextTestSuite):
 				msg=f"{parent} returned by description-child query but is not a child table",
 			)
 
-	def test_update_doctypes_is_importable_and_callable(self):
+	def test_update_doctypes_is_importable_and_callable(self) -> None:
 		"""update_doctypes() is the public entry point exercising the converted
 		query; ensure it imports and runs without error against real schema."""
 		self.assertTrue(callable(update_doctypes))

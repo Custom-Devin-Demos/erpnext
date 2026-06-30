@@ -1,15 +1,22 @@
 # Copyright (c) 2018, Frappe and Contributors
 # See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
 
 from .quality_procedure import add_node
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class TestQualityProcedure(ERPNextTestSuite):
-	def test_add_node(self):
+	def test_add_node(self) -> None:
 		procedure = create_procedure(
 			{
 				"quality_procedure_name": "Test Procedure 1",
@@ -40,7 +47,7 @@ class TestQualityProcedure(ERPNextTestSuite):
 		# child unset
 		self.assertFalse([d for d in procedure.processes if d.name == node.name])
 
-	def test_remove_parent_from_old_child(self):
+	def test_remove_parent_from_old_child(self) -> None:
 		child_qp = create_procedure(
 			{
 				"quality_procedure_name": "Test Child 1",
@@ -65,7 +72,7 @@ class TestQualityProcedure(ERPNextTestSuite):
 		child_qp.reload()
 		self.assertEqual(child_qp.parent_quality_procedure, None)
 
-	def test_on_trash_clears_referencing_process(self):
+	def test_on_trash_clears_referencing_process(self) -> None:
 		# Build a parent group with a sub-procedure. The parent's child table gets a
 		# `Quality Procedure Process` row whose `procedure` field points at the child.
 		child_qp = create_procedure(
@@ -99,7 +106,7 @@ class TestQualityProcedure(ERPNextTestSuite):
 				"",
 			)
 
-	def remove_child_from_old_parent(self):
+	def remove_child_from_old_parent(self) -> None:
 		child_qp = create_procedure(
 			{
 				"quality_procedure_name": "Test Child 1",
@@ -127,7 +134,7 @@ class TestQualityProcedure(ERPNextTestSuite):
 		self.assertFalse([d for d in group_qp.processes if d.procedure == child_qp.name])
 
 
-def create_procedure(kwargs=None):
+def create_procedure(kwargs: dict | None = None) -> Document:
 	kwargs = frappe._dict(kwargs or {})
 
 	doc = frappe.new_doc("Quality Procedure")

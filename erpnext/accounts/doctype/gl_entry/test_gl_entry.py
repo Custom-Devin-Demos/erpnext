@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.naming import parse_naming_series
 
@@ -10,7 +12,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestGLEntry(ERPNextTestSuite):
-	def test_round_off_entry(self):
+	def test_round_off_entry(self) -> None:
 		frappe.db.set_value("Company", "_Test Company", "round_off_account", "_Test Write Off - _TC")
 		frappe.db.set_value("Company", "_Test Company", "round_off_cost_center", "_Test Cost Center - _TC")
 
@@ -41,7 +43,7 @@ class TestGLEntry(ERPNextTestSuite):
 
 		self.assertTrue(round_off_entry)
 
-	def test_rename_entries(self):
+	def test_rename_entries(self) -> None:
 		je = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC", "_Test Bank - _TC", 100, submit=True
 		)
@@ -84,7 +86,7 @@ class TestGLEntry(ERPNextTestSuite):
 		)[0][0]
 		self.assertEqual(old_naming_series_current_value + 2, new_naming_series_current_value)
 
-	def test_validate_account_party_type(self):
+	def test_validate_account_party_type(self) -> None:
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
@@ -129,7 +131,7 @@ class TestGLEntry(ERPNextTestSuite):
 				"Party Type and Party can only be set for Receivable / Payable account_Test Account Cost for Goods Sold - _TC",
 			)
 
-	def test_validate_account_party_type_shareholder(self):
+	def test_validate_account_party_type_shareholder(self) -> None:
 		jv = make_journal_entry(
 			"Opening Balance Equity - _TC",
 			"Cash - _TC",

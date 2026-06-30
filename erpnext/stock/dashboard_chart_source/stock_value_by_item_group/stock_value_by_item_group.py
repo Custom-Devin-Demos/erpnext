@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
@@ -22,7 +24,7 @@ def get(
 	timespan: Any = None,
 	time_interval: Any = None,
 	heatmap_year: Any = None,
-):
+) -> dict:
 	if filters and isinstance(filters, str):
 		filters = frappe.parse_json(filters)
 
@@ -38,7 +40,7 @@ def get(
 	}
 
 
-def get_stock_value_by_item_group(company):
+def get_stock_value_by_item_group(company) -> tuple:
 	doctype = frappe.qb.DocType("Bin")
 	item_doctype = frappe.qb.DocType("Item")
 

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, msgprint
 from frappe.model.meta import get_field_precision
@@ -181,7 +183,7 @@ def _execute(filters, additional_table_columns=None):
 	return columns, res, None, None, None, include_payments
 
 
-def get_columns(invoice_list, additional_table_columns, include_payments=False):
+def get_columns(invoice_list, additional_table_columns, include_payments: bool = False):
 	"""return columns based on filters"""
 	columns = [
 		{
@@ -556,7 +558,7 @@ def get_internal_invoice_map(invoice_list):
 	return internal_invoice_map
 
 
-def get_invoice_tax_map(invoice_list, invoice_income_map, income_accounts, include_payments=False):
+def get_invoice_tax_map(invoice_list, invoice_income_map, income_accounts, include_payments: bool = False):
 	tax_details = frappe.get_all(
 		"Sales Taxes and Charges",
 		filters={"parent": ["in", [inv.name for inv in invoice_list]], "parenttype": "Sales Invoice"},

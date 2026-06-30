@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.batch.test_batch import make_new_batch
@@ -17,7 +19,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPutawayRule(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		if not frappe.db.exists("Item", "_Rice"):
 			make_item(
 				"_Rice", {"is_stock_item": 1, "has_batch_no": 1, "create_new_batch": 1, "stock_uom": "Kg"}
@@ -36,7 +38,7 @@ class TestPutawayRule(ERPNextTestSuite):
 			new_uom.uom_name = "Bag"
 			new_uom.save()
 
-	def assertUnchangedItemsOnResave(self, doc):
+	def assertUnchangedItemsOnResave(self, doc) -> None:
 		"""Check if same items remain even after reapplication of rules.
 
 		This is required since some business logic like subcontracting
@@ -48,7 +50,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		new_items = {d.name for d in doc.items}
 		self.assertSetEqual(old_items, new_items)
 
-	def test_putaway_rules_priority(self):
+	def test_putaway_rules_priority(self) -> None:
 		"""Test if rule is applied by priority, irrespective of free space."""
 		rule_1 = create_putaway_rule(item_code="_Rice", warehouse=self.warehouse_1, capacity=200, uom="Kg")
 		rule_2 = create_putaway_rule(
@@ -68,7 +70,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_putaway_rules_with_same_priority(self):
+	def test_putaway_rules_with_same_priority(self) -> None:
 		"""Test if rule with more free space is applied,
 		among two rules with same priority and capacity."""
 		rule_1 = create_putaway_rule(item_code="_Rice", warehouse=self.warehouse_1, capacity=500, uom="Kg")
@@ -91,7 +93,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_putaway_rules_with_insufficient_capacity(self):
+	def test_putaway_rules_with_insufficient_capacity(self) -> None:
 		"""Test if qty exceeding capacity, is handled."""
 		rule_1 = create_putaway_rule(item_code="_Rice", warehouse=self.warehouse_1, capacity=100, uom="Kg")
 		rule_2 = create_putaway_rule(item_code="_Rice", warehouse=self.warehouse_2, capacity=200, uom="Kg")
@@ -108,7 +110,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_putaway_rules_multi_uom(self):
+	def test_putaway_rules_multi_uom(self) -> None:
 		"""Test rules applied on uom other than stock uom."""
 		item = frappe.get_doc("Item", "_Rice")
 		if not frappe.db.get_value("UOM Conversion Detail", {"parent": "_Rice", "uom": "Bag"}):
@@ -143,7 +145,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_putaway_rules_multi_uom_whole_uom(self):
+	def test_putaway_rules_multi_uom_whole_uom(self) -> None:
 		"""Test if whole UOMs are handled."""
 		item = frappe.get_doc("Item", "_Rice")
 		if not frappe.db.get_value("UOM Conversion Detail", {"parent": "_Rice", "uom": "Bag"}):
@@ -181,7 +183,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_putaway_rules_with_reoccurring_item(self):
+	def test_putaway_rules_with_reoccurring_item(self) -> None:
 		"""Test rules on same item entered multiple times with different rate."""
 		rule_1 = create_putaway_rule(item_code="_Rice", warehouse=self.warehouse_1, capacity=200, uom="Kg")
 		# total capacity is 200 Kg
@@ -217,7 +219,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		pr.delete()
 		rule_1.delete()
 
-	def test_validate_over_receipt_in_warehouse(self):
+	def test_validate_over_receipt_in_warehouse(self) -> None:
 		"""Test if overreceipt is blocked in the presence of putaway rules."""
 		rule_1 = create_putaway_rule(item_code="_Rice", warehouse=self.warehouse_1, capacity=200, uom="Kg")
 
@@ -236,7 +238,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		pr.delete()
 		rule_1.delete()
 
-	def test_putaway_rule_on_stock_entry_material_transfer(self):
+	def test_putaway_rule_on_stock_entry_material_transfer(self) -> None:
 		"""Test if source warehouse is considered while applying rules."""
 		rule_1 = create_putaway_rule(
 			item_code="_Rice", warehouse=self.warehouse_1, capacity=200, uom="Kg"
@@ -269,7 +271,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_putaway_rule_on_stock_entry_material_transfer_reoccuring_item(self):
+	def test_putaway_rule_on_stock_entry_material_transfer_reoccuring_item(self) -> None:
 		"""Test if reoccuring item is correctly considered."""
 		rule_1 = create_putaway_rule(item_code="_Rice", warehouse=self.warehouse_1, capacity=300, uom="Kg")
 		rule_2 = create_putaway_rule(
@@ -335,7 +337,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_putaway_rule_on_stock_entry_material_transfer_batch_serial_item(self):
+	def test_putaway_rule_on_stock_entry_material_transfer_batch_serial_item(self) -> None:
 		"""Test if batch and serial items are split correctly."""
 		if not frappe.db.exists("Item", "Water Bottle"):
 			make_item(
@@ -414,7 +416,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_putaway_rule_on_stock_entry_material_receipt(self):
+	def test_putaway_rule_on_stock_entry_material_receipt(self) -> None:
 		"""Test if rules are applied in Stock Entry of type Receipt."""
 		rule_1 = create_putaway_rule(
 			item_code="_Rice", warehouse=self.warehouse_1, capacity=200, uom="Kg"
@@ -442,7 +444,7 @@ class TestPutawayRule(ERPNextTestSuite):
 		rule_1.delete()
 		rule_2.delete()
 
-	def test_warehouse_capacity_dashbord(self):
+	def test_warehouse_capacity_dashbord(self) -> None:
 		from erpnext.stock.dashboard.warehouse_capacity_dashboard import get_data
 
 		item = "_Rice"

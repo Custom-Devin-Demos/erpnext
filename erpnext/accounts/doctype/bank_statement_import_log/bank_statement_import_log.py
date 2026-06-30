@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import io
 import json
 import re
@@ -60,14 +62,14 @@ class BankStatementImportLog(Document):
 		total_debits: DF.Currency
 	# end: auto-generated types
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_currency()
 
-	def set_currency(self):
+	def set_currency(self) -> None:
 		account = frappe.get_cached_value("Bank Account", self.bank_account, "account")
 		self.currency = frappe.get_cached_value("Account", account, "account_currency")
 
-	def validate(self):
+	def validate(self) -> None:
 		if not frappe.has_permission("Bank Transaction", "write"):
 			frappe.throw(
 				_("You do not have permission to import bank transactions"), title=_("Permission Denied")
@@ -97,7 +99,7 @@ class BankStatementImportLog(Document):
 				_("The bank account is disabled. Please enable it"), title=_("Disabled Bank Account")
 			)
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		if self.is_pdf():
 			tables = self.prepare_pdf_tables()
 			self.set_pdf_summary(tables)
@@ -105,19 +107,19 @@ class BankStatementImportLog(Document):
 			data = self.get_data()
 			self.set_file_properties(data)
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		# Page images are attached here (not in before_insert) because the final docname is
 		# only assigned after before_insert runs - attaching earlier links them to the
 		# temporary name the client sends.
 		if self.is_pdf():
 			self.attach_pdf_page_images()
 
-	def set_file_properties(self, raw_data: list[list]):
+	def set_file_properties(self, raw_data: list[list]) -> None:
 		self.set_header_row_index(raw_data)
 		self.set_column_mapping(raw_data)
 		self.recompute_properties(raw_data)
 
-	def recompute_properties(self, raw_data: list[list]):
+	def recompute_properties(self, raw_data: list[list]) -> None:
 		"""
 		Recompute everything that depends on the header row and column mapping: transaction
 		row range, date/amount format, closing balance and totals. Called both during initial
@@ -141,7 +143,7 @@ class BankStatementImportLog(Document):
 
 		self.set_total_debits_and_credits(transaction_rows=transaction_rows)
 
-	def set_total_debits_and_credits(self, transaction_rows: list):
+	def set_total_debits_and_credits(self, transaction_rows: list) -> None:
 		"""
 		Given the transaction rows, try to set the total debits and credits
 		"""
@@ -216,21 +218,21 @@ class BankStatementImportLog(Document):
 
 		return data
 
-	def set_header_row_index(self, data: list[list[str]]):
+	def set_header_row_index(self, data: list[list[str]]) -> None:
 		"""
 		Given the data, try to get the row index of the header row.
 		"""
 
 		self.detected_header_index, _ = detect_header_row(data)
 
-	def set_column_mapping(self, data: list[list[str]]):
+	def set_column_mapping(self, data: list[list[str]]) -> None:
 		"""
 		Given the header row, try to map each column index to a standard variable, or set it to "Do not import"
 		"""
 
 		self.set_column_mapping_from_columns(detect_column_mapping(data[self.detected_header_index]))
 
-	def set_column_mapping_from_columns(self, columns: list[dict]):
+	def set_column_mapping_from_columns(self, columns: list[dict]) -> None:
 		"""Replace the column_mapping child table from a list of column dicts."""
 		self.column_mapping = []
 
@@ -248,12 +250,12 @@ class BankStatementImportLog(Document):
 				},
 			)
 
-	def apply_column_mapping(self, columns: list[dict]):
+	def apply_column_mapping(self, columns: list[dict]) -> None:
 		"""Persist a user-overridden column mapping and recompute the derived properties."""
 		self.set_column_mapping_from_columns(columns)
 		self.recompute_properties(self.get_data())
 
-	def apply_header_index(self, header_index: int):
+	def apply_header_index(self, header_index: int) -> None:
 		"""
 		Set (or clear, with -1) the header row for a tabular statement.
 
@@ -285,7 +287,7 @@ class BankStatementImportLog(Document):
 
 		return extract_transaction_rows(data, column_mapping, self.detected_header_index)
 
-	def set_closing_balance(self, transactions: list):
+	def set_closing_balance(self, transactions: list) -> None:
 		"""
 		Given the transactions and date format, try to get the statement start date, end date and closing balance
 		"""
@@ -381,7 +383,7 @@ class BankStatementImportLog(Document):
 		self.pdf_tables = json.dumps(tables)
 		return tables
 
-	def attach_pdf_page_images(self):
+	def attach_pdf_page_images(self) -> None:
 		"""Persist the rendered page images (rendered in `prepare_pdf_tables`) as private
 		Files attached to this log, and write their URLs back into `pdf_tables`."""
 		pending = getattr(self.flags, "_pending_page_images", None)
@@ -477,7 +479,7 @@ class BankStatementImportLog(Document):
 
 		return final_transactions
 
-	def apply_pdf_tables(self, tables: list[dict]):
+	def apply_pdf_tables(self, tables: list[dict]) -> None:
 		"""
 		Persist the user's per-table edits (column mapping, include/exclude) and
 		recompute the summary so the preview stays in sync.
@@ -487,7 +489,7 @@ class BankStatementImportLog(Document):
 		self.save()
 
 	@frappe.whitelist(methods=["POST"])
-	def insert_transactions(self):
+	def insert_transactions(self) -> None:
 		if self.status == "Completed":
 			return
 

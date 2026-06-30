@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -189,7 +191,7 @@ class BaseStockGLComposer(BaseGLComposer):
 
 			return details
 
-	def check_expense_account(self, item):
+	def check_expense_account(self, item) -> None:
 		if not item.get("expense_account"):
 			msg = _("Please set an Expense Account in the Items table")
 			frappe.throw(

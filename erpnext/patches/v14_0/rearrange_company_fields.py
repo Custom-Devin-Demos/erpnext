@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 
-def execute():
+def execute() -> None:
 	custom_fields = {
 		"Company": [
 			dict(

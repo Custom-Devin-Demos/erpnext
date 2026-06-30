@@ -2,11 +2,13 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns = get_columns()
 	data = get_data(filters)
 
@@ -58,7 +60,7 @@ def get_data(filters):
 	return query.run(as_dict=True)
 
 
-def get_chart_data(data):
+def get_chart_data(data) -> dict:
 	labels, datapoints = [], []
 
 	for row in data:

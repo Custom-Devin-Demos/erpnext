@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.query_builder.functions import Sum
@@ -16,11 +18,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestRepostAccountingLedger(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.db.set_single_value("Selling Settings", "validate_selling_price", 0)
 		update_repost_settings()
 
-	def test_01_basic_functions(self):
+	def test_01_basic_functions(self) -> None:
 		si = create_sales_invoice(
 			item="_Test Item",
 			company="_Test Company",
@@ -90,7 +92,7 @@ class TestRepostAccountingLedger(ERPNextTestSuite):
 		# Ledger should reflect correct amount post repost
 		self.assertEqual(res[0], (si.name, 100, 100))
 
-	def test_02_deferred_accounting_valiations(self):
+	def test_02_deferred_accounting_valiations(self) -> None:
 		si = create_sales_invoice(
 			item="_Test Item",
 			company="_Test Company",
@@ -113,7 +115,7 @@ class TestRepostAccountingLedger(ERPNextTestSuite):
 		self.assertRaises(frappe.ValidationError, ral.save)
 
 	@ERPNextTestSuite.change_settings("Accounts Settings", {"delete_linked_ledger_entries": 1})
-	def test_04_pcv_validation(self):
+	def test_04_pcv_validation(self) -> None:
 		# Clear old GL entries so PCV can be submitted.
 		gl = frappe.qb.DocType("GL Entry")
 		qb.from_(gl).delete().where(gl.company == "_Test Company").run()
@@ -152,7 +154,7 @@ class TestRepostAccountingLedger(ERPNextTestSuite):
 		pcv.cancel()
 		pcv.delete()
 
-	def test_03_deletion_flag_and_preview_function(self):
+	def test_03_deletion_flag_and_preview_function(self) -> None:
 		si = create_sales_invoice(
 			item="_Test Item",
 			company="_Test Company",
@@ -177,7 +179,7 @@ class TestRepostAccountingLedger(ERPNextTestSuite):
 		self.assertIsNone(frappe.db.exists("GL Entry", {"voucher_no": si.name, "is_cancelled": 1}))
 		self.assertIsNone(frappe.db.exists("GL Entry", {"voucher_no": pe.name, "is_cancelled": 1}))
 
-	def test_05_without_deletion_flag(self):
+	def test_05_without_deletion_flag(self) -> None:
 		si = create_sales_invoice(
 			item="_Test Item",
 			company="_Test Company",
@@ -202,7 +204,7 @@ class TestRepostAccountingLedger(ERPNextTestSuite):
 		self.assertIsNotNone(frappe.db.exists("GL Entry", {"voucher_no": si.name, "is_cancelled": 1}))
 		self.assertIsNotNone(frappe.db.exists("GL Entry", {"voucher_no": pe.name, "is_cancelled": 1}))
 
-	def test_06_repost_purchase_receipt(self):
+	def test_06_repost_purchase_receipt(self) -> None:
 		from erpnext.accounts.doctype.account.test_account import create_account
 
 		if not frappe.db.set_value("Company", "_Test Company", "service_expense_account"):
@@ -274,7 +276,7 @@ class TestRepostAccountingLedger(ERPNextTestSuite):
 		company.save()
 
 
-def update_repost_settings():
+def update_repost_settings() -> None:
 	allowed_types = [
 		"Sales Invoice",
 		"Purchase Invoice",

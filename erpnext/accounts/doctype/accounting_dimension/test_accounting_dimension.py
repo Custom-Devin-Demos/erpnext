@@ -1,6 +1,8 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccountingDimension(ERPNextTestSuite):
-	def test_dimension_against_sales_invoice(self):
+	def test_dimension_against_sales_invoice(self) -> None:
 		si = create_sales_invoice(do_not_save=1)
 
 		si.location = "Block 1"
@@ -35,7 +37,7 @@ class TestAccountingDimension(ERPNextTestSuite):
 
 		self.assertEqual(gle.get("department"), "_Test Department - _TC")
 
-	def test_dimension_against_journal_entry(self):
+	def test_dimension_against_journal_entry(self) -> None:
 		je = make_journal_entry("Sales - _TC", "Sales Expenses - _TC", 500, save=False)
 		je.accounts[0].update({"department": "_Test Department - _TC"})
 		je.accounts[1].update({"department": "_Test Department - _TC"})
@@ -51,7 +53,7 @@ class TestAccountingDimension(ERPNextTestSuite):
 		self.assertEqual(gle.get("department"), "_Test Department - _TC")
 		self.assertEqual(gle1.get("department"), "_Test Department - _TC")
 
-	def test_mandatory(self):
+	def test_mandatory(self) -> None:
 		location = frappe.get_doc("Accounting Dimension", "Location")
 		location.dimension_defaults[0].mandatory_for_bs = True
 		location.save()

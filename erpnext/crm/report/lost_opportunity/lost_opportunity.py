@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import DocType
@@ -11,12 +13,12 @@ Opportunity = DocType("Opportunity")
 OpportunityLostReasonDetail = DocType("Opportunity Lost Reason Detail")
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = get_columns(), get_data(filters)
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		{
 			"label": _("Opportunity"),
@@ -70,7 +72,7 @@ def get_columns():
 	return columns
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	# db-aware GROUP_CONCAT (MariaDB) / STRING_AGG (postgres) with a ", " separator
 	lost_reasons = GroupConcat(OpportunityLostReasonDetail.lost_reason, ", ", alias="lost_reason")
 
@@ -105,7 +107,7 @@ def get_data(filters):
 	return query.run(as_dict=1)
 
 
-def get_conditions(filters, query):
+def get_conditions(filters: dict, query):
 	if filters.get("territory"):
 		query = query.where(Opportunity.territory == filters.get("territory"))
 

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from dateutil.relativedelta import relativedelta
 from frappe import _, cint
@@ -29,17 +31,17 @@ class FiscalYear(Document):
 		year_start_date: DF.Date
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_dates()
 		self.validate_overlap()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		frappe.cache().delete_key("fiscal_years")
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		frappe.cache().delete_key("fiscal_years")
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		self.validate_from_to_dates("year_start_date", "year_end_date")
 		if self.is_short_year:
 			# Fiscal Year can be shorter than one year, in some jurisdictions
@@ -54,7 +56,7 @@ class FiscalYear(Document):
 				frappe.exceptions.InvalidDates,
 			)
 
-	def validate_overlap(self):
+	def validate_overlap(self) -> None:
 		fy = frappe.qb.DocType("Fiscal Year")
 
 		name = self.name or self.year
@@ -93,7 +95,7 @@ class FiscalYear(Document):
 					)
 
 
-def auto_create_fiscal_year():
+def auto_create_fiscal_year() -> None:
 	fy = frappe.qb.DocType("Fiscal Year")
 
 	# Skipped auto-creating Short Year, as it has very rare use case.

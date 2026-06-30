@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -46,16 +47,16 @@ class MaintenanceVisit(TransactionBase):
 		territory: DF.Link | None
 	# end: auto-generated types
 
-	def validate_serial_no(self):
+	def validate_serial_no(self) -> None:
 		for d in self.get("purposes"):
 			if d.serial_no and not frappe.db.exists("Serial No", d.serial_no):
 				frappe.throw(_("Serial No {0} does not exist").format(d.serial_no))
 
-	def validate_purpose_table(self):
+	def validate_purpose_table(self) -> None:
 		if not self.purposes:
 			frappe.throw(_("Add Items in the Purpose Table"), title=_("Purposes Required"))
 
-	def validate_maintenance_date(self):
+	def validate_maintenance_date(self) -> None:
 		if self.maintenance_type == "Scheduled":
 			if self.maintenance_schedule_detail:
 				item_ref = frappe.db.get_value(
@@ -94,12 +95,12 @@ class MaintenanceVisit(TransactionBase):
 									)
 								)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_serial_no()
 		self.validate_maintenance_date()
 		self.validate_purpose_table()
 
-	def update_status_and_actual_date(self, cancel=False):
+	def update_status_and_actual_date(self, cancel: bool = False) -> None:
 		status = "Pending"
 		actual_date = None
 		if not cancel:
@@ -129,7 +130,7 @@ class MaintenanceVisit(TransactionBase):
 						actual_date,
 					)
 
-	def update_customer_issue(self, flag):
+	def update_customer_issue(self, flag: int) -> None:
 		if not self.maintenance_schedule:
 			for d in self.get("purposes"):
 				if d.prevdoc_docname and d.prevdoc_doctype == "Warranty Claim":
@@ -184,7 +185,7 @@ class MaintenanceVisit(TransactionBase):
 
 					wc_doc.db_update()
 
-	def check_if_last_visit(self):
+	def check_if_last_visit(self) -> None:
 		"""check if last maintenance visit against same sales order/ Warranty Claim"""
 		check_for_docname = None
 		for d in self.get("purposes"):
@@ -221,15 +222,15 @@ class MaintenanceVisit(TransactionBase):
 			else:
 				self.update_customer_issue(0)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_customer_issue(1)
 		self.db_set("status", "Submitted")
 		self.update_status_and_actual_date()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.check_if_last_visit()
 		self.db_set("status", "Cancelled")
 		self.update_status_and_actual_date(cancel=True)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		pass

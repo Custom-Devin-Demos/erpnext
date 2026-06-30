@@ -1,6 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import copy
 
@@ -10,7 +11,7 @@ from frappe.query_builder.functions import Coalesce, Max, Sum
 from frappe.utils import cint, date_diff, flt, getdate
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		return [], []
 
@@ -25,7 +26,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def validate_filters(filters):
+def validate_filters(filters: dict) -> None:
 	from_date, to_date = filters.get("from_date"), filters.get("to_date")
 
 	if not from_date and to_date:
@@ -34,7 +35,7 @@ def validate_filters(filters):
 		frappe.throw(_("To Date cannot be before From Date."))
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	mr = frappe.qb.DocType("Material Request")
 	mr_item = frappe.qb.DocType("Material Request Item")
 
@@ -79,7 +80,7 @@ def get_data(filters):
 	return data
 
 
-def get_conditions(filters, query, mr, mr_item):
+def get_conditions(filters: dict, query, mr, mr_item):
 	if filters.get("from_date") and filters.get("to_date"):
 		query = query.where(
 			(mr.transaction_date >= filters.get("from_date"))
@@ -97,13 +98,13 @@ def get_conditions(filters, query, mr, mr_item):
 	return query
 
 
-def update_qty_columns(row_to_update, data_row):
+def update_qty_columns(row_to_update: dict, data_row: dict) -> None:
 	fields = ["qty", "stock_qty", "ordered_qty", "received_qty", "qty_to_receive", "qty_to_order"]
 	for field in fields:
 		row_to_update[field] += flt(data_row[field])
 
 
-def prepare_data(data, filters):
+def prepare_data(data: list, filters: dict) -> tuple:
 	"""Prepare consolidated Report data and Chart data"""
 	material_request_map, item_qty_map = {}, {}
 	precision = cint(frappe.db.get_default("float_precision")) or 2
@@ -149,7 +150,7 @@ def prepare_data(data, filters):
 	return data, chart_data
 
 
-def prepare_chart_data(item_data):
+def prepare_chart_data(item_data: dict) -> dict:
 	labels, qty_to_order, ordered_qty, received_qty, qty_to_receive = [], [], [], [], []
 
 	if len(item_data) > 30:
@@ -180,7 +181,7 @@ def prepare_chart_data(item_data):
 	return chart_data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	columns = [
 		{
 			"label": _("Material Request"),

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import copy
 
 import frappe
@@ -19,7 +21,7 @@ from erpnext.stock.utils import (
 )
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	is_reposting_item_valuation_in_progress()
 	include_uom = filters.get("include_uom")
 	columns = get_columns(filters)
@@ -141,7 +143,7 @@ def execute(filters=None):
 
 def set_opening_row_for_inv_dimension(
 	inv_dimension_wise_dict, filters, inv_dimension_key=None, opening_row=None
-):
+) -> None:
 	if (
 		not inv_dimension_key
 		or not opening_row
@@ -164,7 +166,7 @@ def set_opening_row_for_inv_dimension(
 		}
 
 
-def set_balance_value_for_inv_dimesion(inv_dimension_key, inv_dimension_wise_dict, sle):
+def set_balance_value_for_inv_dimesion(inv_dimension_key, inv_dimension_wise_dict, sle) -> None:
 	new_key = copy.deepcopy(inv_dimension_key)
 	new_key.extend([sle.item_code, sle.warehouse])
 	new_key = tuple(new_key)
@@ -254,7 +256,7 @@ def get_serial_batch_bundle_details(sl_entries, filters=None):
 	return _bundle_details
 
 
-def update_available_serial_nos(available_serial_nos, sle):
+def update_available_serial_nos(available_serial_nos, sle) -> None:
 	serial_nos = get_serial_nos(sle.serial_no)
 	key = (sle.item_code, sle.warehouse)
 	if key not in available_serial_nos:
@@ -531,7 +533,7 @@ def get_serial_and_batch_bundles(filters):
 	return query.run(pluck=SBE.parent)
 
 
-def get_inventory_dimension_fields():
+def get_inventory_dimension_fields() -> list:
 	return [dimension.fieldname for dimension in get_inventory_dimensions()]
 
 
@@ -614,7 +616,7 @@ def get_sle_conditions(filters):
 	return "and {}".format(" and ".join(conditions)) if conditions else ""
 
 
-def get_opening_balance_from_batch(filters, columns, sl_entries):
+def get_opening_balance_from_batch(filters, columns, sl_entries) -> dict:
 	query_filters = {
 		"batch_no": filters.batch_no,
 		"docstatus": 1,
@@ -731,7 +733,7 @@ def get_opening_balance(filters, columns, sl_entries, inv_dimension_wise_value=N
 	return row
 
 
-def get_warehouse_condition(warehouses):
+def get_warehouse_condition(warehouses) -> str:
 	if not warehouses:
 		return ""
 
@@ -780,7 +782,7 @@ def get_item_group_condition(item_group, item_table=None):
 				where ig.lft >= {item_group_details.lft} and ig.rgt <= {item_group_details.rgt} and item.item_group = ig.name)"
 
 
-def get_opening_balance_for_inv_dimension(filters, inv_dimension_wise_value):
+def get_opening_balance_for_inv_dimension(filters, inv_dimension_wise_value) -> dict | None:
 	if not filters.item_code or not filters.warehouse or not filters.from_date:
 		return
 

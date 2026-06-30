@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.report.stock_ageing.stock_ageing import FIFOSlots, format_report_data, get_average_age
@@ -11,7 +13,7 @@ class TestStockAgeing(ERPNextTestSuite):
 	def setUp(self) -> None:
 		self.filters = frappe._dict(company="_Test Company", to_date="2021-12-10", ranges=["30", "60", "90"])
 
-	def test_normal_inward_outward_queue(self):
+	def test_normal_inward_outward_queue(self) -> None:
 		"Reference: Case 1 in stock_ageing_fifo_logic.md (same wh)"
 		sle = [
 			frappe._dict(
@@ -63,7 +65,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		data = format_report_data(self.filters, slots, self.filters["to_date"])
 		self.assertEqual(data[0][8], 40.0)  # valuating for stock value between age 0-30
 
-	def test_insufficient_balance(self):
+	def test_insufficient_balance(self) -> None:
 		"Reference: Case 3 in stock_ageing_fifo_logic.md (same wh)"
 		sle = [
 			frappe._dict(
@@ -125,7 +127,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertEqual(queue[0][0], 10.0)
 		self.assertEqual(queue[1][0], 10.0)
 
-	def test_item_filter_supports_multi_select_values(self):
+	def test_item_filter_supports_multi_select_values(self) -> None:
 		bundle = frappe.qb.DocType("Serial and Batch Bundle")
 		query = frappe.qb.from_(bundle).select(bundle.name)
 
@@ -137,7 +139,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertIn(" IN ", sql)
 		self.assertNotIn("=[", sql)
 
-	def test_basic_stock_reconciliation(self):
+	def test_basic_stock_reconciliation(self) -> None:
 		"""
 		Ledger (same wh): [+30, reco reset >> 50, -10]
 		Bal: 40
@@ -191,7 +193,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertEqual(queue[0][0], 20.0)
 		self.assertEqual(queue[1][0], 20.0)
 
-	def test_non_serial_stock_reco_decrease_preserves_ageing(self):
+	def test_non_serial_stock_reco_decrease_preserves_ageing(self) -> dict:
 		"""
 		Non-serial stock reconciliation should adjust FIFO by the balance delta.
 		Decreasing stock consumes old slots; increasing stock adds only the new qty.
@@ -205,7 +207,7 @@ class TestStockAgeing(ERPNextTestSuite):
 			qty_after,
 			voucher_detail_no=None,
 			stock_value_difference=None,
-		):
+		) -> dict:
 			stock_value_difference = actual_qty if stock_value_difference is None else stock_value_difference
 
 			return frappe._dict(
@@ -240,7 +242,7 @@ class TestStockAgeing(ERPNextTestSuite):
 
 		fifo_slots = FIFOSlots(filters, sle)
 
-		def prepare_stock_reco_voucher_wise_count():
+		def prepare_stock_reco_voucher_wise_count() -> None:
 			fifo_slots.stock_reco_voucher_wise_count = frappe._dict({"SRI-DECREASE": 100, "SRI-INCREASE": 60})
 
 		fifo_slots.prepare_stock_reco_voucher_wise_count = prepare_stock_reco_voucher_wise_count
@@ -252,7 +254,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertEqual(queue, [[60.0, "2025-11-30", 60.0], [30.0, "2026-01-31", 30.0]])
 		self.assertEqual(report_data[0][7:15], [30.0, 30.0, 0.0, 0.0, 60.0, 60.0, 0.0, 0.0])
 
-	def test_sequential_stock_reco_same_warehouse(self):
+	def test_sequential_stock_reco_same_warehouse(self) -> None:
 		"""
 		Test back to back stock recos (same warehouse).
 		Ledger: [reco opening >> +1000, reco reset >> 400, -10]
@@ -305,7 +307,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertEqual(result["total_qty"], 390.0)
 		self.assertEqual(queue[0][0], 390.0)
 
-	def test_sequential_stock_reco_different_warehouse(self):
+	def test_sequential_stock_reco_different_warehouse(self) -> None:
 		"""
 		Ledger:
 		WH	| Voucher | Qty
@@ -374,7 +376,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		]
 		self.assertEqual(sum(item_wh_balances), item_result["qty_after_transaction"])
 
-	def test_repack_entry_same_item_split_rows(self):
+	def test_repack_entry_same_item_split_rows(self) -> None:
 		"""
 		Split consumption rows and have single repacked item row (same warehouse).
 		Ledger:
@@ -448,7 +450,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		# check if time buckets add up to balance qty
 		self.assertEqual(sum([i[0] for i in queue]), 500.0)
 
-	def test_repack_entry_same_item_overconsume(self):
+	def test_repack_entry_same_item_overconsume(self) -> None:
 		"""
 		Over consume item and have less repacked item qty (same warehouse).
 		Ledger:
@@ -508,7 +510,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		# check if time buckets add up to balance qty
 		self.assertEqual(sum([i[0] for i in queue]), 450.0)
 
-	def test_repack_entry_same_item_overconsume_with_split_rows(self):
+	def test_repack_entry_same_item_overconsume_with_split_rows(self) -> None:
 		"""
 		Over consume item and have less repacked item qty (same warehouse).
 		Ledger:
@@ -581,7 +583,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		transfer_bucket = fifo_slots.transferred_item_details[("002", "Flask Item", "WH 1")]
 		self.assertEqual(transfer_bucket[0][0], 50)
 
-	def test_repack_entry_same_item_overproduce(self):
+	def test_repack_entry_same_item_overproduce(self) -> None:
 		"""
 		Under consume item and have more repacked item qty (same warehouse).
 		Ledger:
@@ -642,7 +644,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		# check if time buckets add up to balance qty
 		self.assertEqual(sum([i[0] for i in queue]), 550.0)
 
-	def test_repack_entry_same_item_overproduce_with_split_rows(self):
+	def test_repack_entry_same_item_overproduce_with_split_rows(self) -> None:
 		"""
 		Over consume item and have less repacked item qty (same warehouse).
 		Ledger:
@@ -716,7 +718,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		transfer_bucket = fifo_slots.transferred_item_details[("002", "Flask Item", "WH 1")]
 		self.assertFalse(transfer_bucket)
 
-	def test_negative_stock_same_voucher(self):
+	def test_negative_stock_same_voucher(self) -> None:
 		"""
 		Test negative stock scenario in transfer bucket via repack entry (same wh).
 		Ledger:
@@ -797,7 +799,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertFalse(transfer_bucket)
 		self.assertEqual(item_result["fifo_queue"][0][0], 10.0)
 
-	def test_precision(self):
+	def test_precision(self) -> None:
 		"Test if final balance qty is rounded off correctly."
 		sle = [
 			frappe._dict(  # stock up item
@@ -834,7 +836,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertEqual(bal_qty, 0.9)
 		self.assertEqual(bal_qty, range_qty_sum)
 
-	def test_ageing_stock_valuation(self):
+	def test_ageing_stock_valuation(self) -> None:
 		"Test stock valuation for each time bucket."
 		sle = [
 			frappe._dict(
@@ -941,7 +943,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		range_valuations = range_values[1::2]
 		self.assertEqual(range_valuations, [15, 7.5, 20, 5])
 
-	def test_batch_item_report_formatting_preserves_mixed_fifo_slots(self):
+	def test_batch_item_report_formatting_preserves_mixed_fifo_slots(self) -> None:
 		item_details = {
 			"Batch Mixed Item": {
 				"details": frappe._dict(
@@ -966,12 +968,12 @@ class TestStockAgeing(ERPNextTestSuite):
 
 		self.assertEqual(report_data[0][7:15], [8.0, 80.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-	def test_average_age_accepts_batchwise_valuation_slots(self):
+	def test_average_age_accepts_batchwise_valuation_slots(self) -> None:
 		fifo_queue = [["SA-BATCH-SLOT", 1, 5.0, "2021-12-01", 50.0]]
 
 		self.assertEqual(get_average_age(fifo_queue, "2021-12-10"), 9.0)
 
-	def test_serial_transfer_replay_preserves_serial_slots(self):
+	def test_serial_transfer_replay_preserves_serial_slots(self) -> None:
 		fifo_slots = FIFOSlots(self.filters, [])
 		transfer_key = ("001", "Serial Item", "WH 1")
 		fifo_slots.transferred_item_details[transfer_key] = [[2, "2021-12-01", 20]]
@@ -990,7 +992,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertEqual(fifo_queue, [["SN-A", "2021-12-01", 10.0], ["SN-B", "2021-12-01", 10.0]])
 		self.assertFalse(fifo_slots.transferred_item_details[transfer_key])
 
-	def test_batch_transfer_replay_removes_zeroed_negative_slot(self):
+	def test_batch_transfer_replay_removes_zeroed_negative_slot(self) -> None:
 		fifo_slots = FIFOSlots(self.filters, [])
 		fifo_queue = [["SA-ZERO-BATCH", 1, -4, "2021-12-01", -40]]
 
@@ -998,7 +1000,7 @@ class TestStockAgeing(ERPNextTestSuite):
 
 		self.assertEqual(fifo_queue, [])
 
-	def test_batchwise_valuation(self):
+	def test_batchwise_valuation(self) -> dict:
 		from erpnext.stock.doctype.item.test_item import make_item
 
 		item_code = make_item(
@@ -1010,7 +1012,7 @@ class TestStockAgeing(ERPNextTestSuite):
 			},
 		).name
 
-		def make_batch(batch_id, use_batchwise_valuation):
+		def make_batch(batch_id, use_batchwise_valuation) -> None:
 			if not frappe.db.exists("Batch", batch_id):
 				frappe.get_doc(
 					{
@@ -1045,7 +1047,7 @@ class TestStockAgeing(ERPNextTestSuite):
 
 		qty_after_transaction = 0
 
-		def make_sle(posting_date, voucher_no, batch_no, actual_qty, stock_value_difference):
+		def make_sle(posting_date, voucher_no, batch_no, actual_qty, stock_value_difference) -> dict:
 			nonlocal qty_after_transaction
 
 			qty_after_transaction += actual_qty
@@ -1106,7 +1108,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		range_values = report_data[0][7:15]
 		self.assertEqual(range_values, [44.0, 440.0, 62.0, 620.0, 75.0, 750.0, 40.0, 400.0])
 
-	def test_batchwise_valuation_same_voucher_transfer(self):
+	def test_batchwise_valuation_same_voucher_transfer(self) -> None:
 		from erpnext.stock.doctype.item.test_item import make_item
 
 		item_code = make_item(
@@ -1118,7 +1120,7 @@ class TestStockAgeing(ERPNextTestSuite):
 			},
 		).name
 
-		def make_batch(batch_id):
+		def make_batch(batch_id) -> None:
 			if not frappe.db.exists("Batch", batch_id):
 				frappe.get_doc(
 					{
@@ -1200,7 +1202,7 @@ class TestStockAgeing(ERPNextTestSuite):
 			[[5.0, "2021-09-01", 50.0]],
 		)
 
-	def test_batchwise_valuation_negative_stock_same_voucher(self):
+	def test_batchwise_valuation_negative_stock_same_voucher(self) -> None:
 		from erpnext.stock.doctype.item.test_item import make_item
 
 		item_code = make_item(
@@ -1279,7 +1281,7 @@ class TestStockAgeing(ERPNextTestSuite):
 			[[4.0, "2021-12-01", 40.0]],
 		)
 
-	def test_batchwise_valuation_neutralizes_non_head_negative_batch(self):
+	def test_batchwise_valuation_neutralizes_non_head_negative_batch(self) -> None:
 		from erpnext.stock.doctype.item.test_item import make_item
 
 		item_code = make_item(
@@ -1370,7 +1372,7 @@ class TestStockAgeing(ERPNextTestSuite):
 			[[4.0, "2021-12-01", 40.0]],
 		)
 
-	def test_batchwise_valuation_negative_stock_later_voucher(self):
+	def test_batchwise_valuation_negative_stock_later_voucher(self) -> None:
 		from erpnext.stock.doctype.item.test_item import make_item
 
 		item_code = make_item(
@@ -1434,7 +1436,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertEqual(item_result["total_qty"], -4.0)
 		self.assertEqual(item_result["fifo_queue"], [[batch_no, 1, -4.0, "2021-11-10", -40.0]])
 
-	def test_batchwise_valuation_stock_reconciliation_with_bundle(self):
+	def test_batchwise_valuation_stock_reconciliation_with_bundle(self) -> None:
 		from frappe.utils import add_days, getdate, nowdate
 
 		from erpnext.stock.doctype.item.test_item import make_item
@@ -1495,7 +1497,7 @@ class TestStockAgeing(ERPNextTestSuite):
 			item_result["fifo_queue"], [[batch_no.upper(), 1, 5.0, getdate(add_days(base_date, -2)), 50.0]]
 		)
 
-	def test_legacy_batch_no_sle_with_streaming_cursor(self):
+	def test_legacy_batch_no_sle_with_streaming_cursor(self) -> None:
 		"""SLEs carrying the legacy batch_no field must not trigger nested
 		queries while entries stream through an unbuffered cursor."""
 		from unittest.mock import patch
@@ -1570,7 +1572,7 @@ class TestStockAgeing(ERPNextTestSuite):
 		self.assertEqual(slots[item_code]["total_qty"], 5.0)
 
 
-def generate_item_and_item_wh_wise_slots(filters, sle):
+def generate_item_and_item_wh_wise_slots(filters, sle) -> tuple:
 	"Return results with and without 'show_warehouse_wise_stock'"
 	item_wise_slots = FIFOSlots(filters, sle).generate()
 

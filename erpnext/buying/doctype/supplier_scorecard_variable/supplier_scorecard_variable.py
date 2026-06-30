@@ -1,6 +1,7 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import sys
 
@@ -31,10 +32,10 @@ class SupplierScorecardVariable(Document):
 		variable_label: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_path_exists()
 
-	def validate_path_exists(self):
+	def validate_path_exists(self) -> None:
 		if "." in self.path:
 			try:
 				from erpnext.buying.doctype.supplier_scorecard_period.supplier_scorecard_period import (
@@ -50,13 +51,13 @@ class SupplierScorecardVariable(Document):
 				frappe.throw(_("Could not find path for {0}").format(self.path), VariablePathNotFound)
 
 
-def get_total_workdays(scorecard):
+def get_total_workdays(scorecard) -> int:
 	"""Gets the number of days in this period"""
 	delta = getdate(scorecard.end_date) - getdate(scorecard.start_date)
 	return delta.days
 
 
-def get_item_workdays(scorecard):
+def get_item_workdays(scorecard) -> float:
 	"""Gets the number of days in this period"""
 
 	from frappe.query_builder.functions import Sum
@@ -79,7 +80,7 @@ def get_item_workdays(scorecard):
 	return total_item_days
 
 
-def get_total_cost_of_shipments(scorecard):
+def get_total_cost_of_shipments(scorecard) -> float:
 	"""Gets the total cost of all shipments in the period (based on Purchase Orders)"""
 
 	from frappe.query_builder.functions import Sum
@@ -102,12 +103,12 @@ def get_total_cost_of_shipments(scorecard):
 	return total_cost
 
 
-def get_cost_of_delayed_shipments(scorecard):
+def get_cost_of_delayed_shipments(scorecard) -> float:
 	"""Gets the total cost of all delayed shipments in the period (based on Purchase Receipts - POs)"""
 	return get_total_cost_of_shipments(scorecard) - get_cost_of_on_time_shipments(scorecard)
 
 
-def get_cost_of_on_time_shipments(scorecard):
+def get_cost_of_on_time_shipments(scorecard) -> float:
 	"""Gets the total cost of all on_time shipments in the period (based on Purchase Receipts)"""
 
 	from frappe.query_builder.functions import Sum
@@ -137,7 +138,7 @@ def get_cost_of_on_time_shipments(scorecard):
 	return total_costs
 
 
-def get_total_days_late(scorecard):
+def get_total_days_late(scorecard) -> float:
 	"""Gets the number of item days late in the period (based on Purchase Receipts vs POs)"""
 
 	PO = frappe.qb.DocType("Purchase Order")
@@ -183,7 +184,7 @@ def get_total_days_late(scorecard):
 	return total_missed_late_days + total_delivered_late_days
 
 
-def get_on_time_shipments(scorecard):
+def get_on_time_shipments(scorecard) -> int:
 	"""Counts PO lines (scheduled in the period) fully received on or before their schedule date.
 
 	Counting in PO-line units keeps this consistent with get_total_shipments so that
@@ -214,12 +215,12 @@ def get_on_time_shipments(scorecard):
 	return sum(1 for row in rows if flt(row.received_on_time) >= flt(row.qty))
 
 
-def get_late_shipments(scorecard):
+def get_late_shipments(scorecard) -> int:
 	"""Gets the number of late shipments (counting each item) in the period (based on Purchase Receipts vs POs)"""
 	return get_total_shipments(scorecard) - get_on_time_shipments(scorecard)
 
 
-def get_total_received(scorecard):
+def get_total_received(scorecard) -> int:
 	"""Gets the total number of received shipments in the period (based on Purchase Receipts)"""
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
@@ -238,7 +239,7 @@ def get_total_received(scorecard):
 	return result[0][0] if result and result[0][0] else 0
 
 
-def get_total_received_amount(scorecard):
+def get_total_received_amount(scorecard) -> float:
 	"""Gets the total amount (in company currency) received in the period (based on Purchase Receipts)"""
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
@@ -257,7 +258,7 @@ def get_total_received_amount(scorecard):
 	return frappe.utils.flt(result[0][0]) if result else 0.0
 
 
-def get_total_received_items(scorecard):
+def get_total_received_items(scorecard) -> float:
 	"""Gets the total number of received shipments in the period (based on Purchase Receipts)"""
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
@@ -276,7 +277,7 @@ def get_total_received_items(scorecard):
 	return frappe.utils.flt(result[0][0]) if result else 0.0
 
 
-def get_total_rejected_amount(scorecard):
+def get_total_rejected_amount(scorecard) -> float:
 	"""Gets the total amount (in company currency) rejected in the period (based on Purchase Receipts)"""
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
@@ -295,7 +296,7 @@ def get_total_rejected_amount(scorecard):
 	return frappe.utils.flt(result[0][0]) if result else 0.0
 
 
-def get_total_rejected_items(scorecard):
+def get_total_rejected_items(scorecard) -> float:
 	"""Gets the total number of rejected items in the period (based on Purchase Receipts)"""
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
@@ -314,7 +315,7 @@ def get_total_rejected_items(scorecard):
 	return frappe.utils.flt(result[0][0]) if result else 0.0
 
 
-def get_total_accepted_amount(scorecard):
+def get_total_accepted_amount(scorecard) -> float:
 	"""Gets the total amount (in company currency) accepted in the period (based on Purchase Receipts)"""
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
@@ -333,7 +334,7 @@ def get_total_accepted_amount(scorecard):
 	return frappe.utils.flt(result[0][0]) if result else 0.0
 
 
-def get_total_accepted_items(scorecard):
+def get_total_accepted_items(scorecard) -> float:
 	"""Gets the total number of rejected items in the period (based on Purchase Receipts)"""
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
@@ -352,7 +353,7 @@ def get_total_accepted_items(scorecard):
 	return frappe.utils.flt(result[0][0]) if result else 0.0
 
 
-def get_total_shipments(scorecard):
+def get_total_shipments(scorecard) -> int:
 	"""Gets the total number of ordered shipments to arrive in the period (based on Purchase Receipts)"""
 	po = frappe.qb.DocType("Purchase Order")
 	po_item = frappe.qb.DocType("Purchase Order Item")
@@ -371,7 +372,7 @@ def get_total_shipments(scorecard):
 	return frappe.utils.cint(result[0][0]) if result else 0
 
 
-def get_ordered_qty(scorecard):
+def get_ordered_qty(scorecard) -> float:
 	"""Returns the total number of ordered quantity (based on Purchase Orders)"""
 
 	po = frappe.qb.DocType("Purchase Order")
@@ -388,7 +389,7 @@ def get_ordered_qty(scorecard):
 	).run(as_list=True)[0][0] or 0
 
 
-def get_invoiced_qty(scorecard):
+def get_invoiced_qty(scorecard) -> float:
 	"""Returns the total number of invoiced quantity (based on Purchase Invoice)"""
 
 	pi = frappe.qb.DocType("Purchase Invoice")
@@ -405,7 +406,7 @@ def get_invoiced_qty(scorecard):
 	).run(as_list=True)[0][0] or 0
 
 
-def get_rfq_total_number(scorecard):
+def get_rfq_total_number(scorecard) -> int:
 	"""Gets the total number of RFQs sent to supplier"""
 	rfq = frappe.qb.DocType("Request for Quotation")
 	rfq_item = frappe.qb.DocType("Request for Quotation Item")
@@ -427,7 +428,7 @@ def get_rfq_total_number(scorecard):
 	return frappe.utils.cint(result[0][0]) if result else 0
 
 
-def get_rfq_total_items(scorecard):
+def get_rfq_total_items(scorecard) -> int:
 	"""Gets the total number of RFQ items sent to supplier"""
 	rfq = frappe.qb.DocType("Request for Quotation")
 	rfq_item = frappe.qb.DocType("Request for Quotation Item")
@@ -449,7 +450,7 @@ def get_rfq_total_items(scorecard):
 	return frappe.utils.cint(result[0][0]) if result else 0
 
 
-def get_sq_total_number(scorecard):
+def get_sq_total_number(scorecard) -> int:
 	"""Gets the total number of RFQ items sent to supplier"""
 	rfq = frappe.qb.DocType("Request for Quotation")
 	rfq_item = frappe.qb.DocType("Request for Quotation Item")
@@ -479,7 +480,7 @@ def get_sq_total_number(scorecard):
 	return frappe.utils.cint(result[0][0]) if result else 0
 
 
-def get_sq_total_items(scorecard):
+def get_sq_total_items(scorecard) -> int:
 	"""Gets the total number of RFQ items sent to supplier"""
 	rfq = frappe.qb.DocType("Request for Quotation")
 	rfq_item = frappe.qb.DocType("Request for Quotation Item")
@@ -509,7 +510,7 @@ def get_sq_total_items(scorecard):
 	return frappe.utils.cint(result[0][0]) if result else 0
 
 
-def get_rfq_response_days(scorecard):
+def get_rfq_response_days(scorecard) -> int:
 	"""Gets the total number of days it has taken a supplier to respond to rfqs in the period"""
 	rfq = frappe.qb.DocType("Request for Quotation")
 	rfq_item = frappe.qb.DocType("Request for Quotation Item")

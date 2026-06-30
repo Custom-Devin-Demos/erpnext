@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import json
 import re
 import sys
@@ -63,7 +65,7 @@ payment_method = [
 
 
 class TestPaymentRequest(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		for payment_gateway in payment_gateways:
 			if not frappe.db.get_value("Payment Gateway", payment_gateway["gateway"], "name"):
 				frappe.get_doc(payment_gateway).insert(ignore_permissions=True)
@@ -99,7 +101,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		self._get_payment_gateway_controller = _get_payment_gateway_controller.start()
 		self.addCleanup(_get_payment_gateway_controller.stop)
 
-	def test_payment_request_linkings(self):
+	def test_payment_request_linkings(self) -> None:
 		so_inr = make_sales_order(currency="INR", do_not_save=True)
 		so_inr.disable_rounded_total = 1
 		so_inr.save()
@@ -129,7 +131,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		self.assertEqual(pr.reference_name, si_usd.name)
 		self.assertEqual(pr.currency, "USD")
 
-	def test_payment_channels(self):
+	def test_payment_channels(self) -> None:
 		so = make_sales_order(currency="USD")
 
 		pr = make_payment_request(
@@ -222,7 +224,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		self.assertEqual(self._get_payment_gateway_controller.call_count, 5)
 		pr.cancel()
 
-	def test_payment_entry_against_purchase_invoice(self):
+	def test_payment_entry_against_purchase_invoice(self) -> None:
 		si_usd = make_purchase_invoice(
 			supplier="_Test Supplier USD",
 			debit_to="_Test Payable USD - _TC",
@@ -247,7 +249,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 
 		self.assertEqual(pr.status, "Paid")
 
-	def test_multiple_payment_entry_against_purchase_invoice(self):
+	def test_multiple_payment_entry_against_purchase_invoice(self) -> None:
 		purchase_invoice = make_purchase_invoice(
 			supplier="_Test Supplier USD",
 			debit_to="_Test Payable USD - _TC",
@@ -292,7 +294,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		purchase_invoice.load_from_db()
 		self.assertEqual(purchase_invoice.status, "Paid")
 
-	def test_payment_entry(self):
+	def test_payment_entry(self) -> None:
 		frappe.db.set_value(
 			"Company", "_Test Company", "exchange_gain_loss_account", "_Test Exchange Gain/Loss - _TC"
 		)
@@ -362,7 +364,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 			self.assertEqual(expected_gle[gle.account][2], gle.credit)
 			self.assertEqual(expected_gle[gle.account][3], gle.against_voucher)
 
-	def test_status(self):
+	def test_status(self) -> None:
 		si_usd = create_sales_invoice(
 			customer="_Test Customer USD",
 			debit_to="_Test Receivable USD - _TC",
@@ -390,7 +392,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 
 		self.assertEqual(pr.status, "Requested")
 
-	def test_multiple_payment_entries_against_sales_order(self):
+	def test_multiple_payment_entries_against_sales_order(self) -> None:
 		# Make Sales Order, grand_total = 1000
 		so = make_sales_order()
 
@@ -412,7 +414,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		pr2.grand_total = 900
 		self.assertRaises(frappe.ValidationError, pr2.save)
 
-	def test_conversion_on_foreign_currency_accounts(self):
+	def test_conversion_on_foreign_currency_accounts(self) -> None:
 		po_doc = create_purchase_order(supplier="_Test Supplier USD", currency="USD", do_not_submit=1)
 		po_doc.conversion_rate = 80
 		po_doc.items[0].qty = 1
@@ -433,7 +435,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		self.assertEqual(pe.base_received_amount, 800)
 		self.assertEqual(pe.received_amount, 10)
 
-	def test_multiple_payment_if_partially_paid_for_same_currency(self):
+	def test_multiple_payment_if_partially_paid_for_same_currency(self) -> None:
 		so = make_sales_order(currency="INR", qty=1, rate=1000)
 
 		self.assertEqual(so.advance_payment_status, "Not Requested")
@@ -511,7 +513,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 	@ERPNextTestSuite.change_settings(
 		"Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1}
 	)
-	def test_multiple_payment_if_partially_paid_for_multi_currency(self):
+	def test_multiple_payment_if_partially_paid_for_multi_currency(self) -> None:
 		pi = make_purchase_invoice(currency="USD", conversion_rate=50, qty=1, rate=100, do_not_save=1)
 		pi.credit_to = "Creditors - _TC"
 		pi.submit()
@@ -579,7 +581,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 			return_doc=1,
 		)
 
-	def test_single_payment_with_payment_term_for_same_currency(self):
+	def test_single_payment_with_payment_term_for_same_currency(self) -> None:
 		create_payment_terms_template()
 
 		po = create_purchase_order(do_not_save=1, currency="INR", qty=1, rate=20000)
@@ -629,7 +631,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 	@ERPNextTestSuite.change_settings(
 		"Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1}
 	)
-	def test_single_payment_with_payment_term_for_multi_currency(self):
+	def test_single_payment_with_payment_term_for_multi_currency(self) -> None:
 		create_payment_terms_template()
 
 		si = create_sales_invoice(
@@ -672,7 +674,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		self.assertEqual(pr.outstanding_amount, 0)
 		self.assertEqual(pr.grand_total, 200)
 
-	def test_payment_cancel_process(self):
+	def test_payment_cancel_process(self) -> None:
 		so = make_sales_order(currency="INR", qty=1, rate=1000)
 		self.assertEqual(so.advance_payment_status, "Not Requested")
 
@@ -717,7 +719,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		so.load_from_db()
 		self.assertEqual(so.advance_payment_status, "Requested")
 
-	def test_partial_paid_invoice_with_payment_request(self):
+	def test_partial_paid_invoice_with_payment_request(self) -> None:
 		si = create_sales_invoice(currency="INR", qty=1, rate=5000)
 		si.save()
 		si.submit()
@@ -735,7 +737,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 
 		self.assertEqual(pr.grand_total, si.outstanding_amount)
 
-	def test_partial_paid_invoice_with_more_payment_entry(self):
+	def test_partial_paid_invoice_with_more_payment_entry(self) -> None:
 		pi = make_purchase_invoice(currency="INR", qty=1, rate=500)
 		pi.submit()
 		pi_1 = make_purchase_invoice(currency="INR", qty=1, rate=300)
@@ -774,7 +776,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		pi.load_from_db()
 		self.assertEqual(pr_2.grand_total, pi.outstanding_amount)
 
-	def test_consider_journal_entry_and_return_invoice(self):
+	def test_consider_journal_entry_and_return_invoice(self) -> None:
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 
 		si = create_sales_invoice(currency="INR", qty=5, rate=500)
@@ -802,7 +804,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		pr = make_payment_request(dt="Sales Invoice", dn=si.name, mute_email=1)
 		self.assertEqual(pr.grand_total, si.outstanding_amount)
 
-	def test_partial_paid_invoice_with_submitted_payment_entry(self):
+	def test_partial_paid_invoice_with_submitted_payment_entry(self) -> None:
 		pi = make_purchase_invoice(currency="INR", qty=1, rate=5000)
 		pi.save()
 		pi.submit()
@@ -828,7 +830,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		pr = make_payment_request(dt="Purchase Invoice", dn=pi.name, mute_email=1)
 		self.assertEqual(pr.grand_total, pi.outstanding_amount)
 
-	def test_payment_request_on_unreconcile(self):
+	def test_payment_request_on_unreconcile(self) -> None:
 		pi = make_purchase_invoice(currency="INR", qty=1, rate=500)
 		pi.submit()
 
@@ -858,7 +860,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 
 		self.assertEqual(pr.grand_total, pi.outstanding_amount)
 
-	def test_payment_request_grand_total_from_selected_schedules(self):
+	def test_payment_request_grand_total_from_selected_schedules(self) -> None:
 		po = create_purchase_order(do_not_save=1, currency="INR", qty=1, rate=100)
 		po.payment_schedule = []
 
@@ -895,7 +897,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		self.assertEqual(pr.grand_total, 70)
 		self.assertEqual(len(pr.payment_reference), 2)
 
-	def test_draft_pr_reuse_merges_payment_references(self):
+	def test_draft_pr_reuse_merges_payment_references(self) -> None:
 		from frappe.utils import add_days, nowdate
 
 		po = create_purchase_order(do_not_save=1, currency="INR", qty=1, rate=100)
@@ -952,7 +954,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 		self.assertEqual(pr_reused.grand_total, 100)
 		self.assertEqual(len(pr_reused.payment_reference), 2)
 
-	def test_schedule_pr_not_allowed_if_payment_entry_exists(self):
+	def test_schedule_pr_not_allowed_if_payment_entry_exists(self) -> None:
 		po = create_purchase_order(do_not_save=1, currency="INR", qty=1, rate=100)
 		po.payment_schedule = []
 		row = po.append("payment_schedule", {"due_date": nowdate(), "payment_amount": 100})
@@ -989,7 +991,7 @@ class TestPaymentRequest(ERPNextTestSuite):
 class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 	"""Tests for PaymentController v2 gateway integration."""
 
-	def setUp(self):
+	def setUp(self) -> None:
 		"""Set up payment gateway fixtures for flow tests."""
 		for payment_gateway in payment_gateways:
 			if not frappe.db.get_value("Payment Gateway", payment_gateway["gateway"], "name"):
@@ -1014,7 +1016,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		mock_payments.utils = mock_utils
 		return {"payments": mock_payments, "payments.utils": mock_utils}, mock_utils
 
-	def test_is_v2_gateway_returns_false_for_none(self):
+	def test_is_v2_gateway_returns_false_for_none(self) -> None:
 		"""_is_v2_gateway returns False for None input."""
 		from erpnext.accounts.doctype.payment_request.payment_request import _is_v2_gateway
 
@@ -1026,7 +1028,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			self.assertFalse(result)
 			mock_utils.is_v2_gateway.assert_called_once_with(None)
 
-	def test_is_v2_gateway_returns_false_for_empty_string(self):
+	def test_is_v2_gateway_returns_false_for_empty_string(self) -> None:
 		"""_is_v2_gateway returns False for empty string input."""
 		from erpnext.accounts.doctype.payment_request.payment_request import _is_v2_gateway
 
@@ -1037,7 +1039,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			self.assertFalse(result)
 			mock_utils.is_v2_gateway.assert_called_once_with("")
 
-	def test_is_v2_gateway_returns_false_for_nonexistent_gateway(self):
+	def test_is_v2_gateway_returns_false_for_nonexistent_gateway(self) -> None:
 		"""_is_v2_gateway returns False for nonexistent gateway."""
 		from erpnext.accounts.doctype.payment_request.payment_request import _is_v2_gateway
 
@@ -1048,7 +1050,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			self.assertFalse(result)
 			mock_utils.is_v2_gateway.assert_called_once_with("NonExistentGateway12345")
 
-	def test_is_v2_gateway_delegates_to_payments_util(self):
+	def test_is_v2_gateway_delegates_to_payments_util(self) -> None:
 		"""_is_v2_gateway delegates to payments.utils.is_v2_gateway."""
 		from erpnext.accounts.doctype.payment_request.payment_request import _is_v2_gateway
 
@@ -1059,7 +1061,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			self.assertTrue(result)
 			mock_utils.is_v2_gateway.assert_called_once_with("_Test Gateway")
 
-	def test_is_v2_gateway_returns_false_when_payments_util_returns_false(self):
+	def test_is_v2_gateway_returns_false_when_payments_util_returns_false(self) -> None:
 		"""_is_v2_gateway returns False when payments.utils.is_v2_gateway returns False."""
 		from erpnext.accounts.doctype.payment_request.payment_request import _is_v2_gateway
 
@@ -1069,7 +1071,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			result = _is_v2_gateway("_Test Gateway")
 			self.assertFalse(result)
 
-	def test_is_v2_gateway_catches_unexpected_exceptions(self):
+	def test_is_v2_gateway_catches_unexpected_exceptions(self) -> None:
 		"""_is_v2_gateway catches unexpected exceptions and returns False."""
 		from erpnext.accounts.doctype.payment_request.payment_request import _is_v2_gateway
 
@@ -1084,7 +1086,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			result = _is_v2_gateway("_Test Gateway")
 			self.assertFalse(result)
 
-	def test_get_tx_data_returns_required_fields(self):
+	def test_get_tx_data_returns_required_fields(self) -> None:
 		"""get_tx_data returns all fields required by TxData."""
 		so = make_sales_order(currency="INR")
 
@@ -1116,7 +1118,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		self.assertEqual(tx_data.reference_doctype, "Payment Request")
 		self.assertEqual(tx_data.reference_docname, pr.name)
 
-	def test_get_tx_data_uses_request_amount_not_grand_total(self):
+	def test_get_tx_data_uses_request_amount_not_grand_total(self) -> None:
 		"""get_tx_data should use get_request_amount() to support partial payments."""
 		so = make_sales_order(currency="INR", qty=1, rate=1000)
 
@@ -1137,7 +1139,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			self.assertEqual(tx_data.amount, 500.0)
 			self.assertNotEqual(tx_data.amount, pr.grand_total)
 
-	def test_get_party_contact_and_address_returns_whitelisted_fields_only(self):
+	def test_get_party_contact_and_address_returns_whitelisted_fields_only(self) -> None:
 		"""_get_party_contact_and_address should only return payment-relevant fields."""
 		# Create a customer with contact and address to ensure assertions run
 		customer = frappe.get_doc("Customer", "_Test Customer")
@@ -1203,7 +1205,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		self.assertNotIn("modified", address)
 		self.assertNotIn("doctype", address)
 
-	def test_get_party_contact_and_address_handles_missing_party(self):
+	def test_get_party_contact_and_address_handles_missing_party(self) -> None:
 		"""_get_party_contact_and_address returns empty dicts for missing party."""
 		pr = frappe.new_doc("Payment Request")
 		pr.party_type = None
@@ -1214,7 +1216,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		self.assertEqual(contact, {})
 		self.assertEqual(address, {})
 
-	def test_get_party_contact_and_address_handles_deleted_party(self):
+	def test_get_party_contact_and_address_handles_deleted_party(self) -> None:
 		"""_get_party_contact_and_address handles deleted party gracefully."""
 		pr = frappe.new_doc("Payment Request")
 		pr.party_type = "Customer"
@@ -1225,7 +1227,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		self.assertEqual(contact, {})
 		self.assertEqual(address, {})
 
-	def test_v2_gateway_uses_process_v2_gateway(self):
+	def test_v2_gateway_uses_process_v2_gateway(self) -> None:
 		"""v2 gateways should use _process_v2_gateway flow, not legacy flow."""
 		so = make_sales_order(currency="INR")
 
@@ -1257,7 +1259,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 						# Legacy flow should NOT be called
 						mock_set_url.assert_not_called()
 
-	def test_v1_gateway_uses_legacy_flow(self):
+	def test_v1_gateway_uses_legacy_flow(self) -> None:
 		"""v1 gateways should use set_payment_request_url flow, not v2 flow."""
 		so = make_sales_order(currency="INR")
 
@@ -1300,7 +1302,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 	# Codecov Gap Tests
 	# ============================================================================
 
-	def test_is_v2_gateway_returns_false_when_payments_not_installed(self):
+	def test_is_v2_gateway_returns_false_when_payments_not_installed(self) -> None:
 		"""_is_v2_gateway returns False when payments app raises ValidationError."""
 		from erpnext.accounts.doctype.payment_request.payment_request import _is_v2_gateway
 
@@ -1312,7 +1314,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			result = _is_v2_gateway("_Test Gateway")
 			self.assertFalse(result)
 
-	def test_process_v2_gateway_handles_initiate_failure(self):
+	def test_process_v2_gateway_handles_initiate_failure(self) -> None:
 		"""_process_v2_gateway shows user-friendly error on initiate failure."""
 		so = make_sales_order(currency="INR")
 
@@ -1346,7 +1348,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 				self.assertIn("Failed to initiate payment", str(context.exception))
 				self.assertIn("_Test Gateway", str(context.exception))
 
-	def test_process_v2_gateway_handles_none_psl(self):
+	def test_process_v2_gateway_handles_none_psl(self) -> None:
 		"""_process_v2_gateway throws when PaymentController returns None PSL."""
 		so = make_sales_order(currency="INR")
 
@@ -1377,7 +1379,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 
 				self.assertIn("failed to create a payment session", str(context.exception))
 
-	def test_process_v2_gateway_sets_payment_session_log(self):
+	def test_process_v2_gateway_sets_payment_session_log(self) -> None:
 		"""_process_v2_gateway sets payment_session_log field when it exists."""
 		so = make_sales_order(currency="INR")
 
@@ -1411,7 +1413,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 				self.assertEqual(pr.payment_session_log, "PSL-00001")
 				self.assertEqual(pr.payment_url, "https://pay.example.com/xyz")
 
-	def test_get_party_contact_and_address_supplier(self):
+	def test_get_party_contact_and_address_supplier(self) -> None:
 		"""_get_party_contact_and_address works for Supplier party type."""
 		# Get or create test supplier
 		supplier_name = "_Test Supplier"
@@ -1488,7 +1490,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			frappe.delete_doc("Contact", test_contact.name, force=True)
 			frappe.delete_doc("Address", test_address.name, force=True)
 
-	def test_get_party_contact_and_address_unsupported_party_type(self):
+	def test_get_party_contact_and_address_unsupported_party_type(self) -> None:
 		"""_get_party_contact_and_address returns empty dicts for unsupported party types."""
 		pr = frappe.new_doc("Payment Request")
 		pr.party_type = "Lead"  # Not in field_map (only Customer/Supplier supported)
@@ -1501,7 +1503,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		self.assertEqual(contact, {})
 		self.assertEqual(address, {})
 
-	def test_get_party_contact_and_address_deleted_contact(self):
+	def test_get_party_contact_and_address_deleted_contact(self) -> None:
 		"""_get_party_contact_and_address handles deleted contact gracefully."""
 		customer = frappe.get_doc("Customer", "_Test Customer")
 
@@ -1522,7 +1524,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			# Restore original contact
 			customer.db_set("customer_primary_contact", original_contact, update_modified=False)
 
-	def test_get_party_contact_and_address_deleted_address(self):
+	def test_get_party_contact_and_address_deleted_address(self) -> None:
 		"""_get_party_contact_and_address handles deleted address gracefully."""
 		customer = frappe.get_doc("Customer", "_Test Customer")
 
@@ -1547,7 +1549,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 	# before_submit Flow Gap Tests
 	# ============================================================================
 
-	def test_v2_gateway_sends_email_when_not_muted(self):
+	def test_v2_gateway_sends_email_when_not_muted(self) -> None:
 		"""v2 gateways should send email when mute_email is False."""
 		so = make_sales_order(currency="INR")
 
@@ -1577,7 +1579,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 						mock_send_email.assert_called_once()
 						mock_make_comm.assert_called_once()
 
-	def test_v1_phone_payment_skips_email(self):
+	def test_v1_phone_payment_skips_email(self) -> None:
 		"""Phone payment channel should skip email sending entirely."""
 		so = make_sales_order(currency="INR")
 
@@ -1612,7 +1614,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 						mock_send_email.assert_not_called()
 						mock_make_comm.assert_not_called()
 
-	def test_no_payment_gateway_skips_payment_processing(self):
+	def test_no_payment_gateway_skips_payment_processing(self) -> None:
 		"""Payment request without gateway should skip all payment processing."""
 		so = make_sales_order(currency="INR")
 
@@ -1641,7 +1643,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 					mock_v2.assert_not_called()
 					mock_v1.assert_not_called()
 
-	def test_outward_payment_request_skips_gateway_processing(self):
+	def test_outward_payment_request_skips_gateway_processing(self) -> None:
 		"""Outward payment requests should not trigger v1/v2 gateway flows."""
 		po = create_purchase_order()
 
@@ -1668,7 +1670,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 					self.assertEqual(pr.payment_request_type, "Outward")
 					self.assertEqual(pr.status, "Initiated")
 
-	def test_flags_mute_email_suppresses_communication(self):
+	def test_flags_mute_email_suppresses_communication(self) -> None:
 		"""flags.mute_email should suppress email even when mute_email field is False."""
 		so = make_sales_order(currency="INR")
 
@@ -1701,7 +1703,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 	# _get_party_contact_and_address Edge Case Tests
 	# ============================================================================
 
-	def test_contact_uses_mobile_no_fallback(self):
+	def test_contact_uses_mobile_no_fallback(self) -> None:
 		"""Contact with mobile_no but no phone should use mobile_no as fallback."""
 		customer = frappe.get_doc("Customer", "_Test Customer")
 
@@ -1739,7 +1741,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			customer.db_set("customer_primary_contact", original_contact, update_modified=False)
 			frappe.delete_doc("Contact", test_contact.name, force=True)
 
-	def test_contact_with_no_email_returns_empty_string(self):
+	def test_contact_with_no_email_returns_empty_string(self) -> None:
 		"""Contact without email_id should return empty string, not None."""
 		customer = frappe.get_doc("Customer", "_Test Customer")
 
@@ -1777,7 +1779,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			customer.db_set("customer_primary_contact", original_contact, update_modified=False)
 			frappe.delete_doc("Contact", test_contact.name, force=True)
 
-	def test_address_with_missing_optional_fields(self):
+	def test_address_with_missing_optional_fields(self) -> None:
 		"""Address missing optional fields should return empty strings."""
 		customer = frappe.get_doc("Customer", "_Test Customer")
 
@@ -1821,7 +1823,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 			customer.db_set("customer_primary_address", original_address, update_modified=False)
 			frappe.delete_doc("Address", test_address.name, force=True)
 
-	def test_customer_without_primary_contact(self):
+	def test_customer_without_primary_contact(self) -> None:
 		"""Customer without primary_contact set should return empty contact dict."""
 		customer = frappe.get_doc("Customer", "_Test Customer")
 
@@ -1839,7 +1841,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		finally:
 			customer.db_set("customer_primary_contact", original_contact, update_modified=False)
 
-	def test_customer_without_primary_address(self):
+	def test_customer_without_primary_address(self) -> None:
 		"""Customer without primary_address set should return empty address dict."""
 		customer = frappe.get_doc("Customer", "_Test Customer")
 
@@ -1861,7 +1863,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 	# get_tx_data Edge Case Tests
 	# ============================================================================
 
-	def test_get_tx_data_multi_currency(self):
+	def test_get_tx_data_multi_currency(self) -> None:
 		"""get_tx_data handles multi-currency payment requests correctly."""
 		# Create USD sales order
 		so = make_sales_order(currency="USD", qty=1, rate=100)
@@ -1881,7 +1883,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		self.assertEqual(tx_data.currency, "USD")
 		self.assertGreater(tx_data.amount, 0)
 
-	def test_get_tx_data_without_party(self):
+	def test_get_tx_data_without_party(self) -> None:
 		"""get_tx_data returns empty contact/address when party is not set."""
 		so = make_sales_order(currency="INR")
 
@@ -1902,7 +1904,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 		self.assertEqual(tx_data.payer_contact, {})
 		self.assertEqual(tx_data.payer_address, {})
 
-	def test_get_tx_data_loyalty_and_discount_are_none(self):
+	def test_get_tx_data_loyalty_and_discount_are_none(self) -> None:
 		"""get_tx_data sets loyalty_points and discount_amount to None."""
 		so = make_sales_order(currency="INR")
 
@@ -1925,7 +1927,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 	# _process_v2_gateway Success Path Tests
 	# ============================================================================
 
-	def test_process_v2_gateway_sets_payment_url(self):
+	def test_process_v2_gateway_sets_payment_url(self) -> None:
 		"""_process_v2_gateway sets payment_url from PaymentController."""
 		so = make_sales_order(currency="INR")
 
@@ -1957,7 +1959,7 @@ class TestPaymentRequestV2Gateway(ERPNextTestSuite):
 				self.assertEqual(pr.payment_url, expected_url)
 				mock_controller_class.get_payment_url.assert_called_once_with("PSL-00001")
 
-	def test_process_v2_gateway_logs_error_on_failure(self):
+	def test_process_v2_gateway_logs_error_on_failure(self) -> None:
 		"""_process_v2_gateway logs error with frappe.log_error on initiate failure."""
 		so = make_sales_order(currency="INR")
 

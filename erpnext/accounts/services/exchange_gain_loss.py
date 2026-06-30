@@ -3,6 +3,8 @@
 
 """Exchange gain/loss journal helpers."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb
 from frappe.utils import flt, get_link_to_form

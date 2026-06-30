@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -30,13 +32,13 @@ class AssetMovement(Document):
 		transaction_date: DF.Datetime
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		for d in self.assets:
 			self.validate_asset(d)
 			self.validate_movement(d)
 			self.validate_transaction_date(d)
 
-	def validate_asset(self, d):
+	def validate_asset(self, d) -> None:
 		status, company = frappe.db.get_value("Asset", d.asset, ["status", "company"])
 		if self.purpose == "Transfer" and status in ("Draft", "Scrapped", "Sold"):
 			frappe.throw(_("{0} asset cannot be transferred").format(status))
@@ -44,7 +46,7 @@ class AssetMovement(Document):
 		if company != self.company:
 			frappe.throw(_("Asset {0} does not belong to company {1}").format(d.asset, self.company))
 
-	def validate_movement(self, d):
+	def validate_movement(self, d) -> None:
 		if self.purpose == "Transfer and Issue":
 			self.validate_location_and_employee(d)
 		elif self.purpose in ["Receipt", "Transfer"]:
@@ -52,7 +54,7 @@ class AssetMovement(Document):
 		else:
 			self.validate_employee(d)
 
-	def validate_transaction_date(self, d):
+	def validate_transaction_date(self, d) -> None:
 		previous_movement_date = frappe.db.get_value(
 			"Asset Movement",
 			[["Asset Movement Item", "asset", "=", d.asset], ["docstatus", "=", 1]],
@@ -64,11 +66,11 @@ class AssetMovement(Document):
 		):
 			frappe.throw(_("Transaction date can't be earlier than previous movement date"))
 
-	def validate_location_and_employee(self, d):
+	def validate_location_and_employee(self, d) -> None:
 		self.validate_location(d)
 		self.validate_employee(d)
 
-	def validate_location(self, d):
+	def validate_location(self, d) -> None:
 		if self.purpose in ["Transfer", "Transfer and Issue"]:
 			current_location = frappe.db.get_value("Asset", d.asset, "location")
 			if d.source_location:
@@ -92,7 +94,7 @@ class AssetMovement(Document):
 					_("Employee {0} does not belong to the company {1}").format(d.to_employee, self.company)
 				)
 
-	def validate_employee(self, d):
+	def validate_employee(self, d) -> None:
 		if self.purpose == "Transfer and Issue":
 			if not d.from_employee:
 				frappe.throw(_("From Employee is required while issuing Asset {0}").format(d.asset))
@@ -113,19 +115,19 @@ class AssetMovement(Document):
 				_("Employee {0} does not belong to the company {1}").format(d.to_employee, self.company)
 			)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.set_latest_location_and_custodian_in_asset()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.set_latest_location_and_custodian_in_asset()
 
-	def set_latest_location_and_custodian_in_asset(self):
+	def set_latest_location_and_custodian_in_asset(self) -> None:
 		for d in self.assets:
 			current_location, current_employee = self.get_latest_location_and_custodian(d.asset)
 			self.update_asset_location_and_custodian(d.asset, current_location, current_employee)
 			self.log_asset_activity(d.asset, current_location, current_employee)
 
-	def get_latest_location_and_custodian(self, asset):
+	def get_latest_location_and_custodian(self, asset: str) -> tuple:
 		current_location, current_employee = "", ""
 
 		# latest entry corresponds to current document's location, employee when transaction date > previous dates
@@ -150,7 +152,7 @@ class AssetMovement(Document):
 
 		return current_location, current_employee
 
-	def update_asset_location_and_custodian(self, asset_id, location, employee):
+	def update_asset_location_and_custodian(self, asset_id: str, location: str, employee: str) -> None:
 		asset = frappe.get_doc("Asset", asset_id)
 
 		if cstr(employee) != asset.custodian:
@@ -158,7 +160,7 @@ class AssetMovement(Document):
 		if location and location != asset.location:
 			frappe.db.set_value("Asset", asset_id, "location", location)
 
-	def log_asset_activity(self, asset_id, location, employee):
+	def log_asset_activity(self, asset_id: str, location: str, employee: str) -> None:
 		if location and employee:
 			add_asset_activity(
 				asset_id,

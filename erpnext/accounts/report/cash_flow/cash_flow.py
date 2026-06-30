@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from datetime import timedelta
 
 import frappe
@@ -272,8 +274,8 @@ def add_total_row_account(
 	currency,
 	summary_data,
 	filters,
-	consolidated=False,
-	add_blank_row=True,
+	consolidated: bool = False,
+	add_blank_row: bool = True,
 ):
 	total_row = {
 		"section_name": "'" + _("{0}").format(label) + "'",
@@ -306,7 +308,7 @@ def add_total_row_account(
 	return total_row
 
 
-def show_opening_and_closing_balance(out, period_list, currency, net_change_in_cash, filters):
+def show_opening_and_closing_balance(out, period_list, currency, net_change_in_cash, filters) -> None:
 	opening_balance = {
 		"section_name": "Opening",
 		"section": "Opening",

@@ -2,6 +2,8 @@
 # See license.txt
 
 # import frappe
+from __future__ import annotations
+
 from frappe.tests import IntegrationTestCase
 
 # On IntegrationTestCase, the doctype test records and all

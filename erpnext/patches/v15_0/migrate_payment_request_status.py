@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	Description:
 	Change Inward Payment Requests from statut 'Initiated' to correct status 'Requested'.

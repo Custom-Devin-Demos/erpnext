@@ -3,6 +3,10 @@
 
 """Sub-assembly item resolution for a Production Plan (extracted from production_plan.py)."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -11,12 +15,15 @@ from erpnext.manufacturing.doctype.production_plan.services.sub_assembly_queries
 	get_sub_assembly_items,
 )
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class SubAssemblyService:
-	def __init__(self, doc):
+	def __init__(self, doc: Document) -> None:
 		self.doc = doc
 
-	def get_sub_assembly_items(self, manufacturing_type: str | None = None):
+	def get_sub_assembly_items(self, manufacturing_type: str | None = None) -> None:
 		"Fetch sub assembly items and optionally combine them."
 		self.doc.sub_assembly_items = []
 		sub_assembly_items_store = []  # temporary store to process all subassembly items
@@ -41,7 +48,9 @@ class SubAssemblyService:
 
 		self.set_default_supplier_for_subcontracting_order()
 
-	def _collect_row_sub_assembly_items(self, row, sub_assembly_items_store, bin_details, manufacturing_type):
+	def _collect_row_sub_assembly_items(
+		self, row, sub_assembly_items_store: list, bin_details: dict, manufacturing_type: str | None
+	) -> bool:
 		self._validate_sub_assembly_row(row)
 		if self._bom_tracks_semi_finished(row):
 			return False
@@ -62,7 +71,7 @@ class SubAssemblyService:
 		return True
 
 	@staticmethod
-	def _bom_tracks_semi_finished(row):
+	def _bom_tracks_semi_finished(row) -> bool:
 		if not frappe.db.get_value("BOM", row.bom_no, "track_semi_finished_goods"):
 			return False
 
@@ -73,7 +82,7 @@ class SubAssemblyService:
 		)
 		return True
 
-	def _validate_sub_assembly_row(self, row):
+	def _validate_sub_assembly_row(self, row) -> None:
 		if self.doc.skip_available_sub_assembly_item and not self.doc.sub_assembly_warehouse:
 			frappe.throw(_("Row #{0}: Please select the Sub Assembly Warehouse").format(row.idx))
 		if not row.item_code:
@@ -81,7 +90,7 @@ class SubAssemblyService:
 		if not row.bom_no:
 			frappe.throw(_("Row #{0}: Please select the BOM No in Assembly Items").format(row.idx))
 
-	def _warn_sufficient_sub_assembly(self):
+	def _warn_sufficient_sub_assembly(self) -> None:
 		label = self.meta.get_field("skip_available_sub_assembly_item").label
 		message = (
 			_(
@@ -92,7 +101,9 @@ class SubAssemblyService:
 		message += _("If you still want to proceed, please disable {0} checkbox.").format(label)
 		frappe.msgprint(message, title=_("Note"))
 
-	def set_sub_assembly_items_based_on_level(self, row, bom_data, manufacturing_type=None):
+	def set_sub_assembly_items_based_on_level(
+		self, row, bom_data: list, manufacturing_type: str | None = None
+	) -> None:
 		"Modify bom_data, set additional details."
 		is_group_warehouse = frappe.db.get_value("Warehouse", self.doc.sub_assembly_warehouse, "is_group")
 
@@ -111,7 +122,7 @@ class SubAssemblyService:
 				data.sales_order = row.sales_order
 				data.sales_order_item = row.sales_order_item
 
-	def set_default_supplier_for_subcontracting_order(self):
+	def set_default_supplier_for_subcontracting_order(self) -> None:
 		items = [
 			d.production_item for d in self.doc.sub_assembly_items if d.type_of_manufacturing == "Subcontract"
 		]
@@ -127,7 +138,7 @@ class SubAssemblyService:
 				row.supplier = default_supplier.get(row.production_item)
 
 	@staticmethod
-	def _default_suppliers(items):
+	def _default_suppliers(items: list) -> dict:
 		return frappe._dict(
 			frappe.get_all(
 				"Item Default",
@@ -137,7 +148,7 @@ class SubAssemblyService:
 			)
 		)
 
-	def combine_subassembly_items(self, sub_assembly_items_store):
+	def combine_subassembly_items(self, sub_assembly_items_store: list) -> list:
 		"Aggregate if same: Item, Warehouse, Inhouse/Outhouse Manu.g, BOM No."
 		key_wise_data = {}
 		for row in sub_assembly_items_store:
@@ -156,12 +167,12 @@ class SubAssemblyService:
 		return list(key_wise_data.values())
 
 	@staticmethod
-	def _merge_subassembly_row(existing_row, row):
+	def _merge_subassembly_row(existing_row, row) -> None:
 		existing_row.qty += flt(row.qty)
 		existing_row.stock_qty += flt(row.stock_qty)
 		existing_row.bom_level = max(existing_row.bom_level, row.bom_level)
 
-	def all_items_completed(self):
+	def all_items_completed(self) -> bool:
 		all_items_produced = all(
 			flt(d.planned_qty) - flt(d.produced_qty) < 0.000001 for d in self.doc.po_items
 		)

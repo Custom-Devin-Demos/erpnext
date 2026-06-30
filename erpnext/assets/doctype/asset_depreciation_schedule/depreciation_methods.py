@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 from frappe.utils import (
@@ -13,7 +15,7 @@ import erpnext
 
 
 class StraightLineMethod(Document):
-	def get_straight_line_depr_amount(self, row_idx):
+	def get_straight_line_depr_amount(self, row_idx: int) -> float:
 		self.depreciable_value = flt(self.fb_row.value_after_depreciation) - flt(
 			self.fb_row.expected_value_after_useful_life
 		)
@@ -26,17 +28,17 @@ class StraightLineMethod(Document):
 		else:
 			return self.get_fixed_depr_amount()
 
-	def get_fixed_depr_amount(self):
+	def get_fixed_depr_amount(self) -> float:
 		pending_periods = flt(self.pending_months) / flt(self.fb_row.frequency_of_depreciation)
 		return self.depreciable_value / pending_periods
 
-	def get_daily_prorata_based_depr_amount(self, row_idx):
+	def get_daily_prorata_based_depr_amount(self, row_idx: int) -> float:
 		daily_depr_amount = self.get_daily_depr_amount()
 
 		from_date, total_depreciable_days = self._get_total_days(self.fb_row.depreciation_start_date, row_idx)
 		return daily_depr_amount * total_depreciable_days
 
-	def get_daily_depr_amount(self):
+	def get_daily_depr_amount(self) -> float:
 		if cint(frappe.get_single_value("Accounts Settings", "calculate_depr_using_total_days")):
 			return self.depreciable_value / self.total_pending_days
 		else:
@@ -44,7 +46,7 @@ class StraightLineMethod(Document):
 			total_days_in_current_depr_year = self.get_total_days_in_current_depr_year()
 			return yearly_depr_amount / total_days_in_current_depr_year
 
-	def get_shift_depr_amount(self, row_idx):
+	def get_shift_depr_amount(self, row_idx: int) -> float:
 		if not self.schedules_before_clearing:
 			pending_periods = flt(self.pending_months) / flt(self.fb_row.frequency_of_depreciation)
 			return self.depreciable_value / pending_periods
@@ -69,23 +71,23 @@ class StraightLineMethod(Document):
 
 		return (self.depreciable_value / shift_factors_sum) * shift_factor
 
-	def get_asset_shift_factors_map(self):
+	def get_asset_shift_factors_map(self) -> dict:
 		return dict(frappe.db.get_all("Asset Shift Factor", ["shift_name", "shift_factor"], as_list=True))
 
 
 class WDVMethod(Document):
 	@erpnext.allow_regional
-	def get_wdv_or_dd_depr_amount(self, row_idx):
+	def get_wdv_or_dd_depr_amount(self, row_idx: int) -> float:
 		return WDVMethod.calculate_wdv_or_dd_based_depreciation_amount(self, row_idx)
 
 	@staticmethod
-	def calculate_wdv_or_dd_based_depreciation_amount(self, row_idx):
+	def calculate_wdv_or_dd_based_depreciation_amount(self, row_idx: int) -> float:
 		if self.fb_row.daily_prorata_based:
 			return self.get_daily_prorata_based_wdv_depr_amount(row_idx)
 		else:
 			return self.get_wdv_depr_amount()
 
-	def get_wdv_depr_amount(self):
+	def get_wdv_depr_amount(self) -> float:
 		if self.is_fiscal_year_changed():
 			yearly_amount = (
 				flt(self.pending_depreciation_amount) * flt(self.fb_row.rate_of_depreciation) / 100
@@ -98,19 +100,19 @@ class WDVMethod(Document):
 		else:
 			return self.prev_depreciation_amount
 
-	def is_fiscal_year_changed(self):
+	def is_fiscal_year_changed(self) -> bool | None:
 		fy_start_date, fy_end_date = self.get_fiscal_year(self.schedule_date)
 		if fy_start_date != self.get("prev_fy_start_date"):
 			self.prev_fy_start_date = fy_start_date
 			return True
 
-	def get_daily_prorata_based_wdv_depr_amount(self, row_idx):
+	def get_daily_prorata_based_wdv_depr_amount(self, row_idx: int) -> float:
 		daily_depr_amount = self.get_daily_wdv_depr_amount()
 
 		from_date, total_depreciable_days = self._get_total_days(self.fb_row.depreciation_start_date, row_idx)
 		return daily_depr_amount * total_depreciable_days
 
-	def get_daily_wdv_depr_amount(self):
+	def get_daily_wdv_depr_amount(self) -> float:
 		if self.is_fiscal_year_changed():
 			self.yearly_wdv_depr_amount = (
 				self.pending_depreciation_amount * self.fb_row.rate_of_depreciation / 100

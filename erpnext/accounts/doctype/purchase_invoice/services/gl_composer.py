@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
@@ -49,7 +51,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 		doc.set_gl_entry_for_purchase_expense(gl_entries)
 		return gl_entries
 
-	def make_precision_loss_gl_entry(self, gl_entries):
+	def make_precision_loss_gl_entry(self, gl_entries) -> None:
 		doc = self.doc
 		(
 			round_off_account,
@@ -78,7 +80,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_supplier_gl_entry(self, gl_entries):
+	def make_supplier_gl_entry(self, gl_entries) -> None:
 		doc = self.doc
 		grand_total = (
 			doc.rounded_total if (doc.rounding_adjustment and doc.rounded_total) else doc.grand_total
@@ -99,8 +101,8 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 		grand_total,
 		against_account=None,
 		remarks=None,
-		skip_merge=False,
-	):
+		skip_merge: bool = False,
+	) -> None:
 		doc = self.doc
 		against_voucher = doc.name
 		if doc.is_return and doc.return_against and not doc.update_outstanding_for_self:
@@ -127,7 +129,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 			gl["remarks"] = remarks
 		gl_entries.append(self.get_gl_dict(gl, doc.party_account_currency, item=doc))
 
-	def make_item_gl_entries(self, gl_entries):
+	def make_item_gl_entries(self, gl_entries) -> None:
 		from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import (
 			get_purchase_document_details,
 		)
@@ -451,7 +453,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 			if item.is_fixed_asset and item.landed_cost_voucher_amount:
 				self.update_net_purchase_amount_for_linked_assets(item)
 
-	def get_provisional_accounts(self):
+	def get_provisional_accounts(self) -> None:
 		doc = self.doc
 		self.provisional_accounts = frappe._dict()
 		linked_purchase_receipts = {d.purchase_receipt for d in doc.items if d.purchase_receipt}
@@ -489,7 +491,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 				"has_provisional_entry": item.name in rows_with_provisional_entries,
 			}
 
-	def make_provisional_gl_entry(self, gl_entries, item):
+	def make_provisional_gl_entry(self, gl_entries, item) -> None:
 		if item.purchase_receipt:
 			pr_item = self.provisional_accounts.get(item.pr_detail, {})
 			if pr_item.get("has_provisional_entry"):
@@ -508,7 +510,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 					),
 				)
 
-	def update_net_purchase_amount_for_linked_assets(self, item):
+	def update_net_purchase_amount_for_linked_assets(self, item) -> None:
 		doc = self.doc
 		assets = frappe.db.get_all(
 			"Asset",
@@ -701,7 +703,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 
 		return warehouse_debit_amount
 
-	def make_tax_gl_entries(self, gl_entries):
+	def make_tax_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		tax_service = TaxService(doc)
 		valuation_tax = {}
@@ -798,7 +800,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 						)
 					)
 
-	def make_internal_transfer_gl_entries(self, gl_entries):
+	def make_internal_transfer_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		if doc.is_internal_transfer() and flt(doc.base_total_taxes_and_charges):
 			account_currency = get_account_currency(doc.unrealized_profit_loss_account)
@@ -817,7 +819,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_gl_entries_for_tax_withholding(self, gl_entries):
+	def make_gl_entries_for_tax_withholding(self, gl_entries) -> None:
 		"""Separate supplier GL entry for tax withholding (TDS) — not part of the supplier invoice amount."""
 		doc = self.doc
 		if not doc.apply_tds:
@@ -840,7 +842,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 				skip_merge=True,
 			)
 
-	def make_payment_gl_entries(self, gl_entries):
+	def make_payment_gl_entries(self, gl_entries) -> None:
 		doc = self.doc
 		if cint(doc.is_paid) and doc.cash_bank_account and doc.paid_amount:
 			against_voucher = doc.name
@@ -887,7 +889,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_write_off_gl_entry(self, gl_entries):
+	def make_write_off_gl_entry(self, gl_entries) -> None:
 		doc = self.doc
 		if doc.write_off_account and flt(doc.write_off_amount):
 			write_off_account_currency = get_account_currency(doc.write_off_account)
@@ -931,7 +933,7 @@ class PurchaseInvoiceGLComposer(BaseGLComposer):
 				)
 			)
 
-	def make_gle_for_rounding_adjustment(self, gl_entries):
+	def make_gle_for_rounding_adjustment(self, gl_entries) -> None:
 		doc = self.doc
 		if not doc.is_internal_transfer() and doc.rounding_adjustment and doc.base_rounding_adjustment:
 			(

@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 from itertools import groupby
 
 import frappe
@@ -11,7 +13,7 @@ from frappe.utils import flt
 from erpnext.accounts.report.utils import convert
 
 
-def validate_filters(from_date, to_date, company):
+def validate_filters(from_date: str, to_date: str, company: str) -> None:
 	if from_date and to_date and (from_date >= to_date):
 		frappe.throw(_("To Date must be greater than From Date"))
 
@@ -20,7 +22,7 @@ def validate_filters(from_date, to_date, company):
 
 
 @frappe.whitelist()
-def get_funnel_data(from_date: str, to_date: str, company: str):
+def get_funnel_data(from_date: str, to_date: str, company: str) -> list:
 	validate_filters(from_date, to_date, company)
 
 	lead = frappe.qb.DocType("Lead")
@@ -75,21 +77,21 @@ def get_funnel_data(from_date: str, to_date: str, company: str):
 
 
 @frappe.whitelist()
-def get_opp_by_utm_source(from_date: str, to_date: str, company: str):
+def get_opp_by_utm_source(from_date: str, to_date: str, company: str) -> dict | str:
 	return get_opp_by("utm_source", from_date, to_date, company)
 
 
 @frappe.whitelist()
-def get_opp_by_utm_campaign(from_date: str, to_date: str, company: str):
+def get_opp_by_utm_campaign(from_date: str, to_date: str, company: str) -> dict | str:
 	return get_opp_by("utm_campaign", from_date, to_date, company)
 
 
 @frappe.whitelist()
-def get_opp_by_utm_medium(from_date: str, to_date: str, company: str):
+def get_opp_by_utm_medium(from_date: str, to_date: str, company: str) -> dict | str:
 	return get_opp_by("utm_medium", from_date, to_date, company)
 
 
-def get_opp_by(by_field, from_date, to_date, company):
+def get_opp_by(by_field: str, from_date: str, to_date: str, company: str) -> dict | str:
 	validate_filters(from_date, to_date, company)
 
 	opportunities = frappe.get_all(
@@ -144,7 +146,7 @@ def get_opp_by(by_field, from_date, to_date, company):
 
 
 @frappe.whitelist()
-def get_pipeline_data(from_date: str, to_date: str, company: str):
+def get_pipeline_data(from_date: str, to_date: str, company: str) -> dict | str:
 	validate_filters(from_date, to_date, company)
 
 	opportunities = frappe.get_all(

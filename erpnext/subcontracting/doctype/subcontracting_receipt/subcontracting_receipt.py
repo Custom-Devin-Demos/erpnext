@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
@@ -98,7 +100,7 @@ class SubcontractingReceipt(SubcontractingController):
 		transporter_name: DF.Data | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.status_updater = [
 			{
@@ -115,13 +117,13 @@ class SubcontractingReceipt(SubcontractingController):
 			},
 		]
 
-	def onload(self):
+	def onload(self) -> None:
 		self.set_onload(
 			"backflush_based_on",
 			frappe.db.get_single_value("Buying Settings", "backflush_raw_materials_of_subcontract_based_on"),
 		)
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.save_inventory_dimensions()
 		super().before_validate()
 		self.validate_items_qty()
@@ -135,7 +137,7 @@ class SubcontractingReceipt(SubcontractingController):
 			self.set_service_expense_account(default_expense_account)
 			self.set_expense_account_for_subcontracted_items(default_expense_account)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.reset_supplied_items()
 		self.validate_posting_time()
 
@@ -165,7 +167,7 @@ class SubcontractingReceipt(SubcontractingController):
 		self.set_supplied_items_cost_center()
 		self.set_supplied_items_inventory_dimensions()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.validate_closed_subcontracting_order()
 		self.validate_bom_required_qty()
 		self.update_status_updater_args()
@@ -184,12 +186,12 @@ class SubcontractingReceipt(SubcontractingController):
 		self.auto_create_purchase_receipt()
 		self.update_job_card()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		for table_field in ["items", "supplied_items"]:
 			if self.get(table_field):
 				self.set_serial_and_batch_bundle(table_field)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = (
 			"GL Entry",
 			"Stock Ledger Entry",
@@ -210,21 +212,21 @@ class SubcontractingReceipt(SubcontractingController):
 		self.update_job_card()
 
 	@frappe.whitelist()
-	def reset_raw_materials(self):
+	def reset_raw_materials(self) -> None:
 		self.supplied_items = []
 		self.flags.reset_raw_materials = True
 		self.create_raw_materials_supplied_or_received()
 
-	def validate_closed_subcontracting_order(self):
+	def validate_closed_subcontracting_order(self) -> None:
 		self.check_for_on_hold_or_closed_status("Subcontracting Order", "subcontracting_order")
 
-	def update_job_card(self):
+	def update_job_card(self) -> None:
 		for row in self.get("items"):
 			if row.job_card:
 				doc = frappe.get_doc("Job Card", row.job_card)
 				doc.set_manufactured_qty()
 
-	def set_service_expense_account(self, default_expense_account):
+	def set_service_expense_account(self, default_expense_account: str | None) -> None:
 		for row in self.get("items"):
 			if not row.service_expense_account and row.purchase_order_item:
 				service_item = frappe.db.get_value(
@@ -243,7 +245,7 @@ class SubcontractingReceipt(SubcontractingController):
 			if not row.service_expense_account:
 				row.service_expense_account = default_expense_account
 
-	def set_expense_account_for_subcontracted_items(self, default_expense_account):
+	def set_expense_account_for_subcontracted_items(self, default_expense_account: str | None) -> None:
 		for row in self.get("items"):
 			if not row.expense_account:
 				if default := (
@@ -257,7 +259,7 @@ class SubcontractingReceipt(SubcontractingController):
 			if not row.expense_account:
 				row.expense_account = default_expense_account
 
-	def get_manufactured_qty(self, job_card):
+	def get_manufactured_qty(self, job_card: str) -> float:
 		table = frappe.qb.DocType("Subcontracting Receipt Item")
 		query = (
 			frappe.qb.from_(table)
@@ -268,7 +270,7 @@ class SubcontractingReceipt(SubcontractingController):
 		qty = query.run()[0][0] or 0.0
 		return flt(qty)
 
-	def validate_items_qty(self):
+	def validate_items_qty(self) -> None:
 		for item in self.items:
 			if not (item.qty or item.rejected_qty):
 				frappe.throw(
@@ -277,7 +279,7 @@ class SubcontractingReceipt(SubcontractingController):
 					)
 				)
 
-	def set_items_bom(self):
+	def set_items_bom(self) -> None:
 		if self.is_return:
 			for item in self.items:
 				if not item.bom:
@@ -295,7 +297,7 @@ class SubcontractingReceipt(SubcontractingController):
 						"bom",
 					)
 
-	def set_items_cost_center(self):
+	def set_items_cost_center(self) -> None:
 		if self.company:
 			cost_center = frappe.get_cached_value("Company", self.company, "cost_center")
 
@@ -303,7 +305,7 @@ class SubcontractingReceipt(SubcontractingController):
 				if not item.cost_center:
 					item.cost_center = cost_center
 
-	def set_supplied_items_cost_center(self):
+	def set_supplied_items_cost_center(self) -> None:
 		for item in self.supplied_items:
 			if not item.cost_center:
 				item.cost_center = get_default_cost_center(
@@ -314,7 +316,7 @@ class SubcontractingReceipt(SubcontractingController):
 					self.company,
 				)
 
-	def set_supplied_items_inventory_dimensions(self):
+	def set_supplied_items_inventory_dimensions(self) -> None:
 		if hasattr(self, "inventory_dimensions") and (inventory_dimensions := get_inventory_dimensions()):
 			for item in self.supplied_items:
 				key = (
@@ -330,7 +332,7 @@ class SubcontractingReceipt(SubcontractingController):
 					if key in dimension_values:
 						item.set(dimension.source_fieldname, dimension_values[key])
 
-	def set_supplied_items_expense_account(self):
+	def set_supplied_items_expense_account(self) -> None:
 		for item in self.supplied_items:
 			if not item.expense_account:
 				item.expense_account = get_default_expense_account(
@@ -346,7 +348,7 @@ class SubcontractingReceipt(SubcontractingController):
 					get_brand_defaults(item.rm_item_code, self.company),
 				)
 
-	def save_inventory_dimensions(self):
+	def save_inventory_dimensions(self) -> None:
 		if inventory_dimensions := get_inventory_dimensions():
 			if not getattr(self, "inventory_dimensions", None):
 				self.inventory_dimensions = {}
@@ -359,7 +361,7 @@ class SubcontractingReceipt(SubcontractingController):
 					for d in self.supplied_items
 				}
 
-	def reset_supplied_items(self):
+	def reset_supplied_items(self) -> None:
 		if (
 			frappe.db.get_single_value("Buying Settings", "backflush_raw_materials_of_subcontract_based_on")
 			== "BOM"
@@ -374,7 +376,7 @@ class SubcontractingReceipt(SubcontractingController):
 				self.update_rate_for_supplied_items()
 
 	@frappe.whitelist()
-	def get_secondary_items(self, recalculate_rate: bool | None = False):
+	def get_secondary_items(self, recalculate_rate: bool | None = False) -> None:
 		self.remove_secondary_items()
 
 		for item in list(self.items):
@@ -444,7 +446,7 @@ class SubcontractingReceipt(SubcontractingController):
 			self.calculate_additional_costs()
 			self.calculate_items_qty_and_amount()
 
-	def remove_secondary_items(self):
+	def remove_secondary_items(self) -> None:
 		for item in list(self.items):
 			if item.secondary_item_type or item.is_legacy_scrap_item:
 				self.remove(item)
@@ -452,12 +454,12 @@ class SubcontractingReceipt(SubcontractingController):
 				item.secondary_items_cost_per_qty = 0
 
 	@frappe.whitelist()
-	def set_missing_values(self):
+	def set_missing_values(self) -> None:
 		self.set_available_qty_for_consumption()
 		self.calculate_additional_costs()
 		self.calculate_items_qty_and_amount()
 
-	def set_available_qty_for_consumption(self):
+	def set_available_qty_for_consumption(self) -> None:
 		supplied_items_details = {}
 
 		sco_supplied_item = frappe.qb.DocType("Subcontracting Order Supplied Item")
@@ -493,7 +495,7 @@ class SubcontractingReceipt(SubcontractingController):
 				item.rm_item_code, 0
 			)
 
-	def calculate_items_qty_and_amount(self):
+	def calculate_items_qty_and_amount(self) -> None:
 		rm_cost_map = {}
 		for item in self.get("supplied_items") or []:
 			item.amount = flt(item.consumed_qty) * flt(item.rate)
@@ -561,7 +563,7 @@ class SubcontractingReceipt(SubcontractingController):
 		self.total_qty = total_qty
 		self.total = total_amount
 
-	def validate_secondary_items(self):
+	def validate_secondary_items(self) -> None:
 		for item in self.items:
 			if item.secondary_item_type or item.is_legacy_scrap_item:
 				if not item.qty:
@@ -583,7 +585,7 @@ class SubcontractingReceipt(SubcontractingController):
 						),
 					)
 
-	def validate_accepted_warehouse(self):
+	def validate_accepted_warehouse(self) -> None:
 		for item in self.get("items"):
 			if flt(item.qty) and not item.warehouse:
 				if self.set_warehouse:
@@ -600,7 +602,7 @@ class SubcontractingReceipt(SubcontractingController):
 					_("Row #{0}: Accepted Warehouse and Rejected Warehouse cannot be same").format(item.idx)
 				)
 
-	def validate_bom_required_qty(self):
+	def validate_bom_required_qty(self) -> None:
 		if (
 			frappe.db.get_single_value("Buying Settings", "backflush_raw_materials_of_subcontract_based_on")
 			== "Material Transferred for Subcontract"
@@ -640,7 +642,7 @@ class SubcontractingReceipt(SubcontractingController):
 						exc=BOMQuantityError,
 					)
 
-	def get_rm_wise_consumed_qty(self):
+	def get_rm_wise_consumed_qty(self) -> dict:
 		rm_dict = defaultdict(float)
 
 		for row in self.supplied_items:
@@ -648,7 +650,7 @@ class SubcontractingReceipt(SubcontractingController):
 
 		return rm_dict
 
-	def update_status_updater_args(self):
+	def update_status_updater_args(self) -> None:
 		if cint(self.is_return):
 			self.status_updater.extend(
 				[
@@ -675,7 +677,7 @@ class SubcontractingReceipt(SubcontractingController):
 				]
 			)
 
-	def update_status(self, status=None, update_modified=False):
+	def update_status(self, status: str | None = None, update_modified: bool = False) -> None:
 		if not status:
 			if self.docstatus == 0:
 				status = "Draft"
@@ -700,18 +702,18 @@ class SubcontractingReceipt(SubcontractingController):
 				"Subcontracting Receipt", self.name, "status", status, update_modified=update_modified
 			)
 
-	def get_gl_entries(self, inventory_account_map=None):
+	def get_gl_entries(self, inventory_account_map: dict | None = None) -> list:
 		from erpnext.subcontracting.doctype.subcontracting_receipt.services.gl_composer import (
 			SubcontractingReceiptGLComposer,
 		)
 
 		return SubcontractingReceiptGLComposer(self).compose(inventory_account_map)
 
-	def auto_create_purchase_receipt(self):
+	def auto_create_purchase_receipt(self) -> None:
 		if frappe.db.get_single_value("Buying Settings", "auto_create_purchase_receipt"):
 			make_purchase_receipt(self, save=True, notify=True)
 
-	def has_reserved_stock(self):
+	def has_reserved_stock(self) -> bool:
 		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import (
 			get_sre_details_for_voucher,
 		)

@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 from datetime import date
 
@@ -421,7 +423,7 @@ def get_older_unreconciled_transactions(bank_account: str, from_date: str):
 @frappe.whitelist()
 def update_clearance_date(
 	payment_document: str, payment_entry: str, account: str, clearance_date: str | None
-):
+) -> None:
 	"""
 	Update the clearance date of a voucher
 	"""
@@ -445,7 +447,7 @@ def update_clearance_date(
 
 
 @frappe.whitelist()
-def clear_clearing_date(voucher_type: str, voucher_name: str):
+def clear_clearing_date(voucher_type: str, voucher_name: str) -> None:
 	"""
 	Clear the clearing date of a voucher
 	"""
@@ -964,7 +966,7 @@ def auto_reconcile_vouchers(
 	filter_by_reference_date: bool | None = None,
 	from_reference_date: bool | None = None,
 	to_reference_date: str | None = None,
-):
+) -> None:
 	bank_transactions = get_bank_transactions(bank_account)
 
 	if len(bank_transactions) > 10:
@@ -993,7 +995,7 @@ def auto_reconcile_vouchers(
 
 def start_auto_reconcile(
 	bank_transactions, from_date, to_date, filter_by_reference_date, from_reference_date, to_reference_date
-):
+) -> None:
 	frappe.flags.auto_reconcile_vouchers = True
 
 	reconciled, partially_reconciled = set(), set()

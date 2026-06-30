@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import scrub
 from frappe.model.meta import get_field_precision
@@ -10,7 +12,7 @@ from erpnext.accounts.report.calculated_discount_mismatch.calculated_discount_mi
 )
 
 
-def execute():
+def execute() -> None:
 	# run this patch only if erpnext version before update is v15.64.0 or higher
 	if not should_run_patch():
 		return
@@ -71,14 +73,14 @@ def execute():
 			)
 
 
-def get_semantic_version(version):
+def get_semantic_version(version: str) -> Version | None:
 	try:
 		return Version(version)
 	except Exception:
 		pass
 
 
-def should_run_patch():
+def should_run_patch() -> bool:
 	installed_app = frappe.db.get_value(
 		"Installed Application",
 		{"app_name": "erpnext"},

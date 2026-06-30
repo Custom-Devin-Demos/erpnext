@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
@@ -10,7 +12,7 @@ from frappe.utils import date_diff, flt, getdate, today
 from erpnext.stock.report.stock_analytics.stock_analytics import get_period, get_period_date_ranges
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 
 	if not filters.get("age"):
@@ -22,7 +24,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	query_filters = {"docstatus": ("<", 2)}
 
 	fields = [
@@ -75,7 +77,7 @@ def get_data(filters):
 	return res
 
 
-def get_chart_data(data, filters):
+def get_chart_data(data: list, filters: dict) -> dict:
 	if filters.get("charts_based_on") == "Status":
 		return get_chart_based_on_status(data)
 	elif filters.get("charts_based_on") == "Age":
@@ -84,7 +86,7 @@ def get_chart_data(data, filters):
 		return get_chart_based_on_qty(data, filters)
 
 
-def get_chart_based_on_status(data):
+def get_chart_based_on_status(data: list) -> dict:
 	labels = frappe.get_meta("Work Order").get_options("status").split("\n")
 	if "" in labels:
 		labels.remove("")
@@ -106,7 +108,7 @@ def get_chart_based_on_status(data):
 	return chart
 
 
-def get_chart_based_on_age(data):
+def get_chart_based_on_age(data: list) -> dict:
 	labels = [_("0-30 Days"), _("30-60 Days"), _("60-90 Days"), _("90 Above")]
 
 	age_wise_data = {"0-30 Days": 0, "30-60 Days": 0, "60-90 Days": 0, "90 Above": 0}
@@ -137,7 +139,7 @@ def get_chart_based_on_age(data):
 	return chart
 
 
-def get_chart_based_on_qty(data, filters):
+def get_chart_based_on_qty(data: list, filters: dict) -> dict:
 	labels, periodic_data = prepare_chart_data(data, filters)
 
 	pending, completed = [], []
@@ -159,7 +161,7 @@ def get_chart_based_on_qty(data, filters):
 	return chart
 
 
-def prepare_chart_data(data, filters):
+def prepare_chart_data(data: list, filters: dict) -> tuple:
 	labels = []
 
 	periodic_data = {"Pending": {}, "Completed": {}}
@@ -186,7 +188,7 @@ def prepare_chart_data(data, filters):
 	return labels, periodic_data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	columns = [
 		{
 			"label": _("Id"),

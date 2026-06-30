@@ -2,25 +2,27 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import date_diff
 
 
-def execute(filters=None, consolidated=False):
+def execute(filters=None, consolidated: bool = False) -> tuple:
 	data, columns = DelayedItemReport(filters).run()
 
 	return data, columns
 
 
 class DelayedItemReport:
-	def __init__(self, filters=None):
+	def __init__(self, filters=None) -> None:
 		self.filters = frappe._dict(filters or {})
 
-	def run(self):
+	def run(self) -> tuple:
 		return self.get_columns(), self.get_data() or []
 
-	def get_data(self, consolidated=False):
+	def get_data(self, consolidated: bool = False):
 		doctype = self.filters.get("based_on")
 		sales_order_field = "sales_order" if doctype == "Sales Invoice" else "against_sales_order"
 
@@ -75,7 +77,7 @@ class DelayedItemReport:
 
 			return self.transactions
 
-	def filter_transactions_data(self, consolidated=False):
+	def filter_transactions_data(self, consolidated: bool = False):
 		sales_orders = [d.sales_order for d in self.transactions]
 		doctype = "Sales Order"
 		filters = {"name": ("in", sales_orders)}
@@ -106,7 +108,7 @@ class DelayedItemReport:
 
 		return self.transactions
 
-	def get_columns(self):
+	def get_columns(self) -> list:
 		based_on = self.filters.get("based_on")
 
 		return [

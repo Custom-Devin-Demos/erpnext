@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import click
 import frappe
 
 
-def execute():
+def execute() -> None:
 	table = "tabStock Ledger Entry"
 	index = "posting_datetime_creation_index"
 

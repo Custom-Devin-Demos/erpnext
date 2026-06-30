@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	subscription = frappe.qb.DocType("Subscription")
 	frappe.qb.update(subscription).set(
 		subscription.generate_invoice_at, "Beginning of the current subscription period"

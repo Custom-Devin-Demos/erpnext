@@ -2,6 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 
 """Packing slip and product bundle handling for Delivery Note."""
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -9,7 +10,7 @@ from frappe.utils import flt
 
 
 class PackingService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def validate_packed_qty(self) -> None:

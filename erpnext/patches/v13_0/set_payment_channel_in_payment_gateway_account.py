@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Set the payment gateway account as Email for all the existing payment channel."""
 	doc_meta = frappe.get_meta("Payment Gateway Account")
 	if doc_meta.get_field("payment_channel"):
@@ -11,7 +13,7 @@ def execute():
 	set_payment_channel_as_email()
 
 
-def set_payment_channel_as_email():
+def set_payment_channel_as_email() -> None:
 	frappe.db.sql(
 		"""
 		UPDATE `tabPayment Gateway Account`

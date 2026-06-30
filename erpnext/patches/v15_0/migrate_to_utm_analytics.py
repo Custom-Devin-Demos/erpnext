@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import click
 import frappe
 from frappe.query_builder.functions import Coalesce
@@ -5,7 +7,7 @@ from frappe.query_builder.functions import Coalesce
 from erpnext.setup.install import create_marketing_campaign_custom_fields
 
 
-def execute():
+def execute() -> None:
 	"""
 	Remove Lead Source doctype and use UTM Source Instead
 	Ensure that for each Campaign, a UTM Campaign is also set

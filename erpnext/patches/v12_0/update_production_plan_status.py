@@ -1,10 +1,12 @@
 # Copyright (c) 2021, Frappe and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("manufacturing", "doctype", "production_plan")
 	frappe.db.sql(
 		"""

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	lead = frappe.qb.DocType("Lead")
 	frappe.qb.update(lead).set(lead.disabled, 0).set(lead.docstatus, 0).where(
 		lead.disabled == 1 and lead.docstatus == 1

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_column("POS Profile", "disable_grand_total_to_default_mop"):
 		POSProfile = frappe.qb.DocType("POS Profile")
 

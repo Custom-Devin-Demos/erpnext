@@ -1,11 +1,13 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters: dict | None = None):
+def execute(filters: dict | None = None) -> tuple:
 	columns = get_columns()
 	data = get_data(filters)
 

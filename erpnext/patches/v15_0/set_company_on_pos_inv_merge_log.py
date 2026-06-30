@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	pos_invoice_merge_logs = frappe.db.get_all(
 		"POS Invoice Merge Log", {"docstatus": 1}, ["name", "pos_closing_entry"]
 	)

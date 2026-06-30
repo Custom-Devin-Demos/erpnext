@@ -1,6 +1,8 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import IfNull
@@ -10,7 +12,7 @@ class TaxWithholdingDetailsReport:
 	party_types = ("Customer", "Supplier")
 	document_types = ("Purchase Invoice", "Sales Invoice", "Payment Entry", "Journal Entry")
 
-	def __init__(self, filters=None):
+	def __init__(self, filters=None) -> None:
 		self.filters = frappe._dict(filters or {})
 		self.entries = []
 		self.doc_info = {}
@@ -24,7 +26,7 @@ class TaxWithholdingDetailsReport:
 		self.validate_filters()
 		return self.get_columns(), self.get_data()
 
-	def validate_filters(self):
+	def validate_filters(self) -> None:
 		if not self.filters.from_date or not self.filters.to_date:
 			frappe.throw(_("From Date and To Date are required"))
 

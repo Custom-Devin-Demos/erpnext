@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.workflow import get_workflow_name
 
 
-def execute():
+def execute() -> None:
 	for doctype in ["Expense Claim", "Leave Application"]:
 		active_workflow = get_workflow_name(doctype)
 		if not active_workflow:

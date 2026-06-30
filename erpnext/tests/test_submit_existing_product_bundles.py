@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.patches.v16_0.submit_existing_product_bundles import execute
@@ -10,7 +12,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestSubmitExistingProductBundles(ERPNextTestSuite):
-	def _make_legacy_bundle(self, item_code, child, disabled=0):
+	def _make_legacy_bundle(self, item_code: str, child: str, disabled: int = 0) -> str:
 		"""Recreate the pre-migration shape: a draft bundle named after its parent item."""
 		bundle = frappe.get_doc(
 			{
@@ -26,7 +28,7 @@ class TestSubmitExistingProductBundles(ERPNextTestSuite):
 		)
 		return item_code
 
-	def test_patch_renames_and_submits_legacy_bundle(self):
+	def test_patch_renames_and_submits_legacy_bundle(self) -> None:
 		parent = make_item("_Test Patch PB Parent", {"is_stock_item": 0, "is_sales_item": 1}).name
 		child = make_item("_Test Patch PB Child", {"is_stock_item": 1}).name
 		legacy = self._make_legacy_bundle(parent, child)
@@ -40,7 +42,7 @@ class TestSubmitExistingProductBundles(ERPNextTestSuite):
 		self.assertEqual(frappe.db.get_value("Product Bundle", migrated, "docstatus"), 1)
 		self.assertEqual(frappe.db.get_value("Product Bundle", migrated, "is_active"), 1)
 
-	def test_patch_seeds_is_active_from_disabled(self):
+	def test_patch_seeds_is_active_from_disabled(self) -> None:
 		parent = make_item("_Test Patch PB Disabled Parent", {"is_stock_item": 0, "is_sales_item": 1}).name
 		child = make_item("_Test Patch PB Disabled Child", {"is_stock_item": 1}).name
 		self._make_legacy_bundle(parent, child, disabled=1)
@@ -53,7 +55,7 @@ class TestSubmitExistingProductBundles(ERPNextTestSuite):
 		self.assertTrue(migrated and migrated.startswith("PB-"))
 		self.assertEqual(frappe.db.get_value("Product Bundle", migrated, "is_active"), 0)
 
-	def test_patch_submits_partially_migrated_bundle(self):
+	def test_patch_submits_partially_migrated_bundle(self) -> None:
 		"""An interrupted run can leave a bundle renamed (PB-*) but still a draft;
 		re-running the patch must submit it rather than skip it."""
 		parent = make_item("_Test Patch PB Partial Parent", {"is_stock_item": 0, "is_sales_item": 1}).name

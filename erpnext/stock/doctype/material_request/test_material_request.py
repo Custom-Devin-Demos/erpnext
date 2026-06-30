@@ -5,6 +5,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt, today
 
@@ -26,10 +28,10 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestMaterialRequest(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.load_test_records("Material Request")
 
-	def test_material_request_qty(self):
+	def test_material_request_qty(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.items[0].qty = 0
 		with self.assertRaises(InvalidQtyError):
@@ -40,7 +42,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		mr.save()
 		self.assertEqual(mr.items[0].qty, 1)
 
-	def test_make_purchase_order(self):
+	def test_make_purchase_order(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0]).insert()
 
 		self.assertRaises(frappe.ValidationError, make_purchase_order, mr.name)
@@ -52,7 +54,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(po.doctype, "Purchase Order")
 		self.assertEqual(len(po.get("items")), len(mr.get("items")))
 
-	def test_make_subcontracted_purchase_order(self):
+	def test_make_subcontracted_purchase_order(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 		from erpnext.stock.doctype.item.test_item import create_item, make_item
 		from erpnext.subcontracting.doctype.subcontracting_bom.test_subcontracting_bom import (
@@ -101,7 +103,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		# Test 2 - MR items ordered qty should be updated based on PO items qty when submitted
 		self.assertEqual(mr.items[0].ordered_qty, 54)
 
-	def test_make_supplier_quotation(self):
+	def test_make_supplier_quotation(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0]).insert()
 
 		self.assertRaises(frappe.ValidationError, make_supplier_quotation, mr.name)
@@ -113,7 +115,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(sq.doctype, "Supplier Quotation")
 		self.assertEqual(len(sq.get("items")), len(mr.get("items")))
 
-	def test_make_stock_entry(self):
+	def test_make_stock_entry(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0]).insert()
 
 		self.assertRaises(frappe.ValidationError, make_stock_entry, mr.name)
@@ -128,7 +130,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(se.doctype, "Stock Entry")
 		self.assertEqual(len(se.get("items")), len(mr.get("items")))
 
-	def test_partial_make_stock_entry(self):
+	def test_partial_make_stock_entry(self) -> None:
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
 
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0]).insert()
@@ -165,7 +167,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		mr.reload()
 		self.assertEqual(mr.status, "Partially Received")
 
-	def test_in_transit_make_stock_entry(self):
+	def test_in_transit_make_stock_entry(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0]).insert()
 
 		self.assertRaises(frappe.ValidationError, make_stock_entry, mr.name)
@@ -183,7 +185,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		for row in se.get("items"):
 			self.assertEqual(row.t_warehouse, in_transit_warehouse)
 
-	def _insert_stock_entry(self, qty1, qty2, warehouse=None):
+	def _insert_stock_entry(self, qty1, qty2, warehouse=None) -> None:
 		se = frappe.get_doc(
 			{
 				"company": "_Test Company",
@@ -226,7 +228,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		se.insert()
 		se.submit()
 
-	def test_cannot_stop_cancelled_material_request(self):
+	def test_cannot_stop_cancelled_material_request(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.submit()
@@ -235,7 +237,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		mr.cancel()
 		self.assertRaises(frappe.ValidationError, mr.update_status, "Stopped")
 
-	def test_mr_changes_from_stopped_to_pending_after_reopen(self):
+	def test_mr_changes_from_stopped_to_pending_after_reopen(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.submit()
@@ -247,7 +249,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		mr.update_status("Submitted")
 		self.assertEqual("Pending", mr.status)
 
-	def test_cannot_submit_cancelled_mr(self):
+	def test_cannot_submit_cancelled_mr(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.submit()
@@ -255,14 +257,14 @@ class TestMaterialRequest(ERPNextTestSuite):
 		mr.cancel()
 		self.assertRaises(frappe.ValidationError, mr.submit)
 
-	def test_mr_changes_from_pending_to_cancelled_after_cancel(self):
+	def test_mr_changes_from_pending_to_cancelled_after_cancel(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.submit()
 		mr.cancel()
 		self.assertEqual("Cancelled", mr.status)
 
-	def test_cannot_change_cancelled_mr(self):
+	def test_cannot_change_cancelled_mr(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.submit()
@@ -276,21 +278,21 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertRaises(frappe.InvalidStatusError, mr.update_status, "Transferred")
 		self.assertRaises(frappe.InvalidStatusError, mr.update_status, "Pending")
 
-	def test_cannot_submit_deleted_material_request(self):
+	def test_cannot_submit_deleted_material_request(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.delete()
 
 		self.assertRaises(frappe.ValidationError, mr.submit)
 
-	def test_cannot_delete_submitted_mr(self):
+	def test_cannot_delete_submitted_mr(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.submit()
 
 		self.assertRaises(frappe.ValidationError, mr.delete)
 
-	def test_stopped_mr_changes_to_pending_after_reopen(self):
+	def test_stopped_mr_changes_to_pending_after_reopen(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.submit()
@@ -300,7 +302,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		mr.update_status("Submitted")
 		self.assertEqual(mr.status, "Pending")
 
-	def test_pending_mr_changes_to_stopped_after_stop(self):
+	def test_pending_mr_changes_to_stopped_after_stop(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		mr.submit()
@@ -309,12 +311,12 @@ class TestMaterialRequest(ERPNextTestSuite):
 		mr.update_status("Stopped")
 		self.assertEqual(mr.status, "Stopped")
 
-	def test_cannot_stop_unsubmitted_mr(self):
+	def test_cannot_stop_unsubmitted_mr(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.insert()
 		self.assertRaises(frappe.InvalidStatusError, mr.update_status, "Stopped")
 
-	def test_completed_qty_for_purchase(self):
+	def test_completed_qty_for_purchase(self) -> None:
 		existing_requested_qty_item1 = self._get_requested_qty(
 			"_Test Item Home Desktop 100", "_Test Warehouse - _TC"
 		)
@@ -386,7 +388,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(current_requested_qty_item1, existing_requested_qty_item1 + 54.0)
 		self.assertEqual(current_requested_qty_item2, existing_requested_qty_item2 + 3.0)
 
-	def test_completed_qty_for_transfer(self):
+	def test_completed_qty_for_transfer(self) -> None:
 		existing_requested_qty_item1 = self._get_requested_qty(
 			"_Test Item Home Desktop 100", "_Test Warehouse - _TC"
 		)
@@ -486,7 +488,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(current_requested_qty_item1, existing_requested_qty_item1 + 54.0)
 		self.assertEqual(current_requested_qty_item2, existing_requested_qty_item2 + 3.0)
 
-	def test_over_transfer_qty_allowance(self):
+	def test_over_transfer_qty_allowance(self) -> None:
 		mr = frappe.new_doc("Material Request")
 		mr.company = "_Test Company"
 		mr.scheduled_date = today()
@@ -548,7 +550,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		se.items[0].qty = 12
 		se.submit()
 
-	def test_completed_qty_for_over_transfer(self):
+	def test_completed_qty_for_over_transfer(self) -> None:
 		existing_requested_qty_item1 = self._get_requested_qty(
 			"_Test Item Home Desktop 100", "_Test Warehouse - _TC"
 		)
@@ -630,7 +632,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(current_requested_qty_item1, existing_requested_qty_item1 + 54.0)
 		self.assertEqual(current_requested_qty_item2, existing_requested_qty_item2 + 3.0)
 
-	def test_incorrect_mapping_of_stock_entry(self):
+	def test_incorrect_mapping_of_stock_entry(self) -> None:
 		# submit material request of type Transfer
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.material_request_type = "Material Transfer"
@@ -677,19 +679,19 @@ class TestMaterialRequest(ERPNextTestSuite):
 		se_doc = make_stock_entry(mr.name)
 		self.assertEqual(se_doc.get("items")[0].s_warehouse, "_Test Warehouse - _TC")
 
-	def test_warehouse_company_validation(self):
+	def test_warehouse_company_validation(self) -> None:
 		from erpnext.stock.utils import InvalidWarehouseCompany
 
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.company = "_Test Company 1"
 		self.assertRaises(InvalidWarehouseCompany, mr.insert)
 
-	def _get_requested_qty(self, item_code, warehouse):
+	def _get_requested_qty(self, item_code, warehouse) -> float:
 		return flt(
 			frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "indented_qty")
 		)
 
-	def test_make_stock_entry_for_material_issue(self):
+	def test_make_stock_entry_for_material_issue(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0]).insert()
 
 		self.assertRaises(frappe.ValidationError, make_stock_entry, mr.name)
@@ -702,8 +704,8 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(se.doctype, "Stock Entry")
 		self.assertEqual(len(se.get("items")), len(mr.get("items")))
 
-	def test_completed_qty_for_issue(self):
-		def _get_requested_qty():
+	def test_completed_qty_for_issue(self) -> float:
+		def _get_requested_qty() -> float:
 			return flt(
 				frappe.db.get_value(
 					"Bin",
@@ -741,7 +743,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		# testing bin requested qty after issuing stock against material request
 		self.assertEqual(_get_requested_qty(), existing_requested_qty)
 
-	def test_material_request_type_manufacture(self):
+	def test_material_request_type_manufacture(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][1]).insert()
 		mr = frappe.get_doc("Material Request", mr.name)
 		mr.submit()
@@ -780,7 +782,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		)
 		self.assertEqual(requested_qty, new_requested_qty)
 
-	def test_requested_qty_multi_uom(self):
+	def test_requested_qty_multi_uom(self) -> None:
 		existing_requested_qty = self._get_requested_qty("_Test FG Item", "_Test Warehouse - _TC")
 
 		mr = make_material_request(
@@ -813,7 +815,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		requested_qty = self._get_requested_qty("_Test FG Item", "_Test Warehouse - _TC")
 		self.assertEqual(requested_qty, existing_requested_qty)
 
-	def test_multi_uom_for_purchase(self):
+	def test_multi_uom_for_purchase(self) -> None:
 		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0])
 		mr.material_request_type = "Purchase"
 		item = mr.items[0]
@@ -849,7 +851,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		mr = frappe.get_doc("Material Request", mr.name)
 		self.assertEqual(mr.per_ordered, 100)
 
-	def test_customer_provided_parts_mr(self):
+	def test_customer_provided_parts_mr(self) -> None:
 		create_item("CUST-0987", is_customer_provided_item=1, customer="_Test Customer", is_purchase_item=0)
 		existing_requested_qty = self._get_requested_qty("_Test Customer", "_Test Warehouse - _TC")
 
@@ -866,7 +868,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(mr.per_ordered, 100)
 		self.assertEqual(existing_requested_qty, current_requested_qty)
 
-	def test_auto_email_users_with_company_user_permissions(self):
+	def test_auto_email_users_with_company_user_permissions(self) -> None:
 		from erpnext.stock.reorder_item import get_email_list
 
 		comapnywise_users = {
@@ -922,7 +924,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		for perm in permissions:
 			perm.delete()
 
-	def test_manufacture_type_status_over_wo(self):
+	def test_manufacture_type_status_over_wo(self) -> None:
 		from erpnext.stock.doctype.material_request.material_request import raise_work_orders
 
 		mr = make_material_request(
@@ -939,7 +941,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(mr.per_ordered, 100)
 		self.assertEqual(mr.status, "Ordered")
 
-	def test_customer_provided_received_status(self):
+	def test_customer_provided_received_status(self) -> None:
 		create_item("CUST-0989", is_customer_provided_item=1, customer="_Test Customer", is_purchase_item=0)
 
 		mr = make_material_request(item_code="CUST-0989", material_request_type="Customer Provided")
@@ -952,7 +954,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(mr.per_ordered, 100)
 		self.assertEqual(mr.status, "Received")
 
-	def test_customer_provided_partially_received_status(self):
+	def test_customer_provided_partially_received_status(self) -> None:
 		create_item("CUST-0990", is_customer_provided_item=1, customer="_Test Customer", is_purchase_item=0)
 
 		mr = make_material_request(item_code="CUST-0990", qty=10, material_request_type="Customer Provided")
@@ -966,7 +968,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(mr.per_ordered, 50)
 		self.assertEqual(mr.status, "Partially Received")
 
-	def test_material_request_qty_over_sales_order_limit(self):
+	def test_material_request_qty_over_sales_order_limit(self) -> None:
 		from erpnext.controllers.status_updater import OverAllowanceError
 		from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 
@@ -978,7 +980,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 
 		self.assertRaises(OverAllowanceError, mr.submit)
 
-	def test_get_remaining_qty_from_sales_order(self):
+	def test_get_remaining_qty_from_sales_order(self) -> None:
 		from frappe.utils import add_to_date, today
 
 		from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
@@ -1017,7 +1019,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(mr.items[0].qty, 5)
 		self.assertEqual(mr.items[1].qty, 5)
 
-	def test_pending_qty_in_pick_list(self):
+	def test_pending_qty_in_pick_list(self) -> None:
 		"""Test for pick list mapped doc qty from partially received Material Request Transfer"""
 		import json
 
@@ -1059,7 +1061,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		pl_for_pending = create_pick_list(mr.name)
 		self.assertEqual(pl_for_pending.locations[0].qty, 5)
 
-	def test_mr_pick_list_qty_validation(self):
+	def test_mr_pick_list_qty_validation(self) -> None:
 		"""Test for checking pick list qty validation from Material Request"""
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 
@@ -1089,7 +1091,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		# System should allow picking qty for excess transfer
 		pl.submit()
 
-	def test_mr_status_with_partial_and_excess_end_transit(self):
+	def test_mr_status_with_partial_and_excess_end_transit(self) -> None:
 		material_request = make_material_request(
 			material_request_type="Material Transfer",
 			item_code="_Test Item Home Desktop 100",
@@ -1132,7 +1134,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, end_transit_2.submit)
 
-	def test_make_stock_entry_material_issue_warehouse_mapping(self):
+	def test_make_stock_entry_material_issue_warehouse_mapping(self) -> None:
 		"""Test to ensure while making stock entry from material request of type Material Issue, warehouse is mapped correctly"""
 		mr = make_material_request(material_request_type="Material Issue", do_not_submit=True)
 		mr.set_warehouse = "_Test Warehouse - _TC"
@@ -1145,7 +1147,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		se.save()
 		se.submit()
 
-	def test_mr_status_for_mixed_direct_and_transit_transfer(self):
+	def test_mr_status_for_mixed_direct_and_transit_transfer(self) -> None:
 		material_request = make_material_request(
 			material_request_type="Material Transfer",
 			item_code="_Test Item Home Desktop 100",
@@ -1191,7 +1193,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		self.assertEqual(material_request.status, "Transferred")
 		self.assertEqual(material_request.transfer_status, "Completed")
 
-	def test_check_modified_date_detects_concurrent_modification(self):
+	def test_check_modified_date_detects_concurrent_modification(self) -> None:
 		"""check_modified_date must raise when the in-memory doc is stale vs the DB modified
 		timestamp. Covers the converted get_value + get_datetime comparison that replaced the
 		raw MariaDB-only TIMEDIFF (which errors on Postgres); update_status() runs this guard."""
@@ -1252,7 +1254,7 @@ class TestMaterialRequest(ERPNextTestSuite):
 		over.items[0].qty = 4
 		over.validate_qty_against_so()
 
-	def test_get_material_requests_based_on_supplier(self):
+	def test_get_material_requests_based_on_supplier(self) -> None:
 		"""The supplier-based Material Request picker must run on every engine.
 
 		It deduplicated requests with SELECT DISTINCT while ordering by an item

@@ -3,6 +3,7 @@
 
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 from frappe import _, throw
 from frappe.model.document import Document
@@ -26,7 +27,7 @@ class CurrencyExchange(Document):
 		to_currency: DF.Link
 	# end: auto-generated types
 
-	def autoname(self):
+	def autoname(self) -> None:
 		purpose = ""
 		if not self.date:
 			self.date = nowdate()
@@ -45,7 +46,7 @@ class CurrencyExchange(Document):
 			("-" + purpose) if purpose else "",
 		)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_value("exchange_rate", ">", 0)
 
 		if self.from_currency == self.to_currency:

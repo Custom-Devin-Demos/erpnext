@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	data = frappe.get_all(
 		"Sales Order Item",
 		filters={"quotation_item": ["is", "set"], "docstatus": 1},

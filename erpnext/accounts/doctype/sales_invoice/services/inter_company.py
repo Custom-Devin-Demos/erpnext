@@ -3,6 +3,8 @@
 
 """Inter-company transaction helpers for Sales Invoice."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
@@ -21,7 +23,7 @@ def validate_inter_company_party(
 		_validate_internal_party_company(config.partytype, party, company)
 
 
-def _get_inter_company_party_config(doctype: str) -> "frappe._dict":
+def _get_inter_company_party_config(doctype: str) -> frappe._dict:
 	if doctype in ["Sales Invoice", "Sales Order"]:
 		return frappe._dict(
 			partytype="Customer",

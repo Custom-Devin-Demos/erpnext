@@ -1,6 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -9,14 +10,14 @@ from frappe.query_builder.functions import Sum
 from erpnext import get_region
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	validate_company_region(filters)
 	columns = get_columns()
 	data, emirates, amounts_by_emirate = get_data(filters)
 	return columns, data
 
 
-def validate_company_region(filters):
+def validate_company_region(filters: dict) -> None:
 	if filters.get("company") and get_region(filters.get("company")) != "United Arab Emirates":
 		frappe.throw(
 			_(
@@ -25,7 +26,7 @@ def validate_company_region(filters):
 		)
 
 
-def get_columns():
+def get_columns() -> list:
 	"""Creates a list of dictionaries that are used to generate column headers of the data table."""
 	return [
 		{"fieldname": "no", "label": _("No"), "fieldtype": "Data", "width": 50},
@@ -45,7 +46,7 @@ def get_columns():
 	]
 
 
-def get_data(filters=None):
+def get_data(filters: dict | None = None) -> tuple:
 	"""Returns the list of dictionaries. Each dictionary is a row in the datatable and chart data."""
 	data = []
 	emirates, amounts_by_emirate = append_vat_on_sales(data, filters)
@@ -53,7 +54,7 @@ def get_data(filters=None):
 	return data, emirates, amounts_by_emirate
 
 
-def append_vat_on_sales(data, filters):
+def append_vat_on_sales(data: list, filters: dict) -> tuple:
 	"""Appends Sales and All Other Outputs."""
 	append_data(data, "", _("VAT on Sales and All Other Outputs"), "", "")
 
@@ -84,7 +85,7 @@ def append_vat_on_sales(data, filters):
 	return emirates, amounts_by_emirate
 
 
-def standard_rated_expenses_emiratewise(data, filters):
+def standard_rated_expenses_emiratewise(data: list, filters: dict) -> tuple:
 	"""Append emiratewise standard rated expenses and vat."""
 	total_emiratewise = get_total_emiratewise(filters)
 	emirates = get_emirates()
@@ -101,7 +102,7 @@ def standard_rated_expenses_emiratewise(data, filters):
 	return emirates, amounts_by_emirate
 
 
-def append_emiratewise_expenses(data, emirates, amounts_by_emirate):
+def append_emiratewise_expenses(data: list, emirates: list, amounts_by_emirate: dict) -> dict:
 	"""Append emiratewise standard rated expenses and vat."""
 	for no, emirate in enumerate(emirates, 97):
 		if emirate in amounts_by_emirate:
@@ -119,7 +120,7 @@ def append_emiratewise_expenses(data, emirates, amounts_by_emirate):
 	return amounts_by_emirate
 
 
-def append_vat_on_expenses(data, filters):
+def append_vat_on_expenses(data: list, filters: dict) -> None:
 	"""Appends Expenses and All Other Inputs."""
 	append_data(data, "", _("VAT on Expenses and All Other Inputs"), "", "")
 	append_data(
@@ -138,12 +139,12 @@ def append_vat_on_expenses(data, filters):
 	)
 
 
-def append_data(data, no, legend, amount, vat_amount):
+def append_data(data: list, no, legend, amount, vat_amount) -> None:
 	"""Returns data with appended value."""
 	data.append({"no": no, "legend": legend, "amount": amount, "vat_amount": vat_amount})
 
 
-def get_total_emiratewise(filters):
+def get_total_emiratewise(filters: dict) -> list | int:
 	"""Returns Emiratewise Amount and Taxes."""
 	i = frappe.qb.DocType("Sales Invoice Item")
 	s = frappe.qb.DocType("Sales Invoice")
@@ -163,12 +164,12 @@ def get_total_emiratewise(filters):
 		return 0
 
 
-def get_emirates():
+def get_emirates() -> list:
 	"""Returns a List of emirates in the order that they are to be displayed."""
 	return ["Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Umm Al Quwain", "Ras Al Khaimah", "Fujairah"]
 
 
-def get_filters(filters):
+def get_filters(filters: dict) -> list:
 	"""The conditions to be used to filter data to calculate the total sale."""
 	query_filters = []
 	if filters.get("company"):
@@ -180,7 +181,7 @@ def get_filters(filters):
 	return query_filters
 
 
-def get_reverse_charge_total(filters):
+def get_reverse_charge_total(filters: dict) -> float:
 	"""Returns the sum of the total of each Purchase invoice made."""
 	query_filters = get_filters(filters)
 	query_filters.append(["reverse_charge", "=", "Y"])
@@ -200,7 +201,7 @@ def get_reverse_charge_total(filters):
 		return 0
 
 
-def get_reverse_charge_tax(filters):
+def get_reverse_charge_tax(filters: dict) -> float:
 	"""Returns the sum of the tax of each Purchase invoice made."""
 	p = frappe.qb.DocType("Purchase Invoice")
 	gl = frappe.qb.DocType("GL Entry")
@@ -226,7 +227,7 @@ def get_reverse_charge_tax(filters):
 	return query.run()[0][0] or 0
 
 
-def get_reverse_charge_recoverable_total(filters):
+def get_reverse_charge_recoverable_total(filters: dict) -> float:
 	"""Returns the sum of the total of each Purchase invoice made with recoverable reverse charge."""
 	query_filters = get_filters(filters)
 	query_filters.append(["reverse_charge", "=", "Y"])
@@ -247,7 +248,7 @@ def get_reverse_charge_recoverable_total(filters):
 		return 0
 
 
-def get_reverse_charge_recoverable_tax(filters):
+def get_reverse_charge_recoverable_tax(filters: dict) -> float:
 	"""Returns the sum of the tax of each Purchase invoice made."""
 	p = frappe.qb.DocType("Purchase Invoice")
 	gl = frappe.qb.DocType("GL Entry")
@@ -274,7 +275,7 @@ def get_reverse_charge_recoverable_tax(filters):
 	return query.run()[0][0] or 0
 
 
-def get_conditions_join(filters, p):
+def get_conditions_join(filters: dict, p) -> list:
 	"""The conditions to be used to filter data to calculate the total vat."""
 	conditions = []
 	if filters.get("company"):
@@ -286,7 +287,7 @@ def get_conditions_join(filters, p):
 	return conditions
 
 
-def get_standard_rated_expenses_total(filters):
+def get_standard_rated_expenses_total(filters: dict) -> float:
 	"""Returns the sum of the total of each Purchase invoice made with recoverable reverse charge."""
 	query_filters = get_filters(filters)
 	query_filters.append(["recoverable_standard_rated_expenses", ">", 0])
@@ -306,7 +307,7 @@ def get_standard_rated_expenses_total(filters):
 		return 0
 
 
-def get_standard_rated_expenses_tax(filters):
+def get_standard_rated_expenses_tax(filters: dict) -> float:
 	"""Returns the sum of the tax of each Purchase invoice made."""
 	query_filters = get_filters(filters)
 	query_filters.append(["recoverable_standard_rated_expenses", ">", 0])
@@ -326,7 +327,7 @@ def get_standard_rated_expenses_tax(filters):
 		return 0
 
 
-def get_tourist_tax_return_total(filters):
+def get_tourist_tax_return_total(filters: dict) -> float:
 	"""Returns the sum of the total of each Sales invoice with non zero tourist_tax_return."""
 	query_filters = get_filters(filters)
 	query_filters.append(["tourist_tax_return", ">", 0])
@@ -342,7 +343,7 @@ def get_tourist_tax_return_total(filters):
 		return 0
 
 
-def get_tourist_tax_return_tax(filters):
+def get_tourist_tax_return_tax(filters: dict) -> float:
 	"""Returns the sum of the tax of each Sales invoice with non zero tourist_tax_return."""
 	query_filters = get_filters(filters)
 	query_filters.append(["tourist_tax_return", ">", 0])
@@ -362,7 +363,7 @@ def get_tourist_tax_return_tax(filters):
 		return 0
 
 
-def get_zero_rated_total(filters):
+def get_zero_rated_total(filters: dict) -> float:
 	"""Returns the sum of each Sales Invoice Item Amount which is zero rated."""
 	i = frappe.qb.DocType("Sales Invoice Item")
 	s = frappe.qb.DocType("Sales Invoice")
@@ -381,7 +382,7 @@ def get_zero_rated_total(filters):
 		return 0
 
 
-def get_exempt_total(filters):
+def get_exempt_total(filters: dict) -> float:
 	"""Returns the sum of each Sales Invoice Item Amount which is Vat Exempt."""
 	i = frappe.qb.DocType("Sales Invoice Item")
 	s = frappe.qb.DocType("Sales Invoice")
@@ -400,7 +401,7 @@ def get_exempt_total(filters):
 		return 0
 
 
-def get_conditions(filters, s):
+def get_conditions(filters: dict, s) -> list:
 	"""The conditions to be used to filter data to calculate the total sale."""
 	conditions = []
 	if filters.get("company"):

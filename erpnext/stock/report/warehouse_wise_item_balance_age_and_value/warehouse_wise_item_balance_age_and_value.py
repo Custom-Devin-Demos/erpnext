@@ -5,6 +5,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Count
@@ -20,7 +22,7 @@ from erpnext.stock.report.stock_balance.stock_balance import filter_items_with_n
 from erpnext.stock.utils import is_reposting_item_valuation_in_progress
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	is_reposting_item_valuation_in_progress()
 	if not filters:
 		filters = {}
@@ -104,7 +106,7 @@ def get_columns(filters):
 	return columns
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	if not (filters.get("item_code") or filters.get("warehouse")):
 		table = frappe.qb.DocType("Stock Ledger Entry")
 		sle_count = flt(
@@ -134,7 +136,7 @@ def get_warehouse_list(filters):
 	)
 
 
-def add_warehouse_column(columns, warehouse_list):
+def add_warehouse_column(columns, warehouse_list) -> None:
 	if len(warehouse_list) > 1:
 		columns += [_("Total Qty") + ":Int:120"]
 

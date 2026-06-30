@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 
 import frappe
@@ -11,7 +13,7 @@ from erpnext.stock.report.stock_analytics.stock_analytics import execute, get_pe
 from erpnext.tests.utils import ERPNextTestSuite
 
 
-def stock_analytics(filters):
+def stock_analytics(filters) -> tuple:
 	col, data, *_ = execute(filters)
 	return col, data
 
@@ -21,7 +23,7 @@ class TestStockAnalyticsReport(ERPNextTestSuite):
 		self.item = make_item().name
 		self.warehouse = "_Test Warehouse - _TC"
 
-	def assert_single_item_report(self, movement, expected_buckets):
+	def assert_single_item_report(self, movement, expected_buckets) -> None:
 		self.generate_stock(movement)
 		filters = _dict(
 			range="Monthly",
@@ -39,13 +41,13 @@ class TestStockAnalyticsReport(ERPNextTestSuite):
 		self.assertEqual(row.name, self.item)
 		self.compare_analytics_row(row, cols, expected_buckets)
 
-	def generate_stock(self, movement):
+	def generate_stock(self, movement) -> None:
 		for qty, posting_date in movement:
 			args = {"item": self.item, "qty": abs(qty), "posting_date": posting_date}
 			args["to_warehouse" if qty > 0 else "from_warehouse"] = self.warehouse
 			make_stock_entry(**args)
 
-	def compare_analytics_row(self, report_row, columns, expected_buckets):
+	def compare_analytics_row(self, report_row, columns, expected_buckets) -> None:
 		# last (N) cols will be monthly data
 		no_of_buckets = len(expected_buckets)
 		month_cols = [col["fieldname"] for col in columns[-no_of_buckets:]]
@@ -54,7 +56,7 @@ class TestStockAnalyticsReport(ERPNextTestSuite):
 
 		self.assertEqual(actual_buckets, expected_buckets)
 
-	def test_get_period_date_ranges(self):
+	def test_get_period_date_ranges(self) -> None:
 		filters = _dict(range="Monthly", from_date="2020-12-28", to_date="2021-02-06")
 
 		ranges = get_period_date_ranges(filters)
@@ -67,7 +69,7 @@ class TestStockAnalyticsReport(ERPNextTestSuite):
 
 		self.assertEqual(ranges, expected_ranges)
 
-	def test_get_period_date_ranges_yearly(self):
+	def test_get_period_date_ranges_yearly(self) -> None:
 		filters = _dict(range="Yearly", from_date="2021-01-28", to_date="2021-02-06")
 
 		ranges = get_period_date_ranges(filters)
@@ -78,7 +80,7 @@ class TestStockAnalyticsReport(ERPNextTestSuite):
 
 		self.assertEqual(ranges, expected_ranges)
 
-	def test_basic_report_functionality(self):
+	def test_basic_report_functionality(self) -> None:
 		"""Stock analytics report generates balance "as of" periods based on
 		user defined ranges. Check that this behaviour is correct."""
 
@@ -91,7 +93,7 @@ class TestStockAnalyticsReport(ERPNextTestSuite):
 		]
 		self.assert_single_item_report(movement, [10, 5, 15])
 
-	def test_empty_month_in_between(self):
+	def test_empty_month_in_between(self) -> None:
 		today = getdate()
 		movement = [
 			(100, add_to_date(today, months=0).replace(day=15)),
@@ -101,7 +103,7 @@ class TestStockAnalyticsReport(ERPNextTestSuite):
 		]
 		self.assert_single_item_report(movement, [100, 50, 50, 70])
 
-	def test_multi_month_missings(self):
+	def test_multi_month_missings(self) -> None:
 		today = getdate()
 		movement = [
 			(100, add_to_date(today, months=0).replace(day=15)),

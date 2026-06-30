@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	# add holiday list and employee group fields in SLA
 	# change response and resolution time in priorities child table
 	if frappe.db.exists("DocType", "Service Level Agreement"):
@@ -102,7 +104,7 @@ def execute():
 	frappe.delete_doc_if_exists("DocType", "Service Level")
 
 
-def convert_to_seconds(value, unit):
+def convert_to_seconds(value, unit: str):
 	seconds = 0
 	if unit == "Hour":
 		seconds = value * 3600

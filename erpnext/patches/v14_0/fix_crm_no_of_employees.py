@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	options = {
 		"11-20": "11-50",
 		"21-30": "11-50",

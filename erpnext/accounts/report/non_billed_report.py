@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.meta import get_field_precision
 from frappe.query_builder.functions import IfNull, Round

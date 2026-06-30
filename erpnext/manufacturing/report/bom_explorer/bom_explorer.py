@@ -2,22 +2,24 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	data = []
 	columns = get_columns()
 	get_data(filters, data)
 	return columns, data
 
 
-def get_data(filters, data):
+def get_data(filters: dict, data: list) -> None:
 	get_exploded_items(filters.bom, data)
 
 
-def get_exploded_items(bom, data, indent=0, qty=1):
+def get_exploded_items(bom: str, data: list, indent: int = 0, qty: float = 1) -> None:
 	exploded_items = frappe.get_all(
 		"BOM Item",
 		filters={"parent": bom},
@@ -54,7 +56,7 @@ def get_exploded_items(bom, data, indent=0, qty=1):
 			get_exploded_items(item.bom_no, data, indent=indent + 1, qty=item.qty)
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"label": _("Item Code"),

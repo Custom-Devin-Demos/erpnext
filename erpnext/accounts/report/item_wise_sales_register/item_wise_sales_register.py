@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import functions as fn
@@ -536,8 +538,8 @@ def get_tax_accounts(
 	item_list,
 	columns,
 	company_currency,
-	doctype="Sales Invoice",
-	tax_doctype="Sales Taxes and Charges",
+	doctype: str = "Sales Invoice",
+	tax_doctype: str = "Sales Taxes and Charges",
 ):
 	invoice_item_row = [d.name for d in item_list]
 	tax = frappe.qb.DocType("Item Wise Tax Detail")
@@ -755,7 +757,7 @@ def get_group_by_and_display_fields(filters):
 	return group_by_field, subtotal_display_field
 
 
-def add_sub_total_row(item, total_row_map, group_by_value, tax_columns):
+def add_sub_total_row(item, total_row_map, group_by_value, tax_columns) -> None:
 	total_row = total_row_map.get(group_by_value)
 	total_row["stock_qty"] += item["stock_qty"]
 	total_row["amount"] += item["amount"]

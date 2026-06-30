@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import Criterion
 
 
 @frappe.whitelist()
-def get_last_interaction(contact: str | None = None, lead: str | None = None):
+def get_last_interaction(contact: str | None = None, lead: str | None = None) -> dict | None:
 	if not contact and not lead:
 		return
 
@@ -45,7 +47,7 @@ def get_last_interaction(contact: str | None = None, lead: str | None = None):
 	return {"last_communication": last_communication, "last_issue": last_issue}
 
 
-def get_last_issue_from_customer(customer_name):
+def get_last_issue_from_customer(customer_name: str) -> dict | None:
 	issues = frappe.get_all(
 		"Issue",
 		{"customer": customer_name},
@@ -57,7 +59,7 @@ def get_last_issue_from_customer(customer_name):
 	return issues[0] if issues else None
 
 
-def get_scheduled_employees_for_popup(communication_medium):
+def get_scheduled_employees_for_popup(communication_medium: str | None) -> set | list:
 	if not communication_medium:
 		return []
 
@@ -86,7 +88,7 @@ def get_scheduled_employees_for_popup(communication_medium):
 	return employee_emails
 
 
-def strip_number(number):
+def strip_number(number: str | None) -> str | None:
 	if not number:
 		return
 	# strip + and 0 from the start of the number for proper number comparisions

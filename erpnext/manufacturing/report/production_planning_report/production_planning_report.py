@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from pypika import Order
@@ -9,17 +11,17 @@ from pypika import Order
 from erpnext.stock.doctype.warehouse.warehouse import get_child_warehouses
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	return ProductionPlanReport(filters).execute_report()
 
 
 class ProductionPlanReport:
-	def __init__(self, filters=None):
+	def __init__(self, filters: dict | None = None) -> None:
 		self.filters = frappe._dict(filters or {})
 		self.raw_materials_dict = {}
 		self.data = []
 
-	def execute_report(self):
+	def execute_report(self) -> tuple:
 		self.get_open_orders()
 		self.get_raw_materials()
 		self.get_item_details()
@@ -30,7 +32,7 @@ class ProductionPlanReport:
 
 		return self.columns, self.data
 
-	def get_open_orders(self):
+	def get_open_orders(self) -> None:
 		doctype, order_by = self.filters.based_on, self.filters.order_by
 
 		parent = frappe.qb.DocType(doctype)
@@ -112,7 +114,7 @@ class ProductionPlanReport:
 
 		self.orders = query.run(as_dict=True)
 
-	def get_raw_materials(self):
+	def get_raw_materials(self) -> None:
 		"""Retrieve raw materials and source warehouses for production orders.
 
 		This method collects BOM or Work Order items depending on the selected
@@ -191,7 +193,7 @@ class ProductionPlanReport:
 			rows = self.raw_materials_dict[d.parent]
 			rows.append(d)
 
-	def get_item_details(self):
+	def get_item_details(self) -> None:
 		if not (self.orders and self.item_codes):
 			return
 
@@ -203,7 +205,7 @@ class ProductionPlanReport:
 		):
 			self.item_details[d.parent] = d
 
-	def get_bin_details(self):
+	def get_bin_details(self) -> None:
 		if not (self.orders and self.raw_materials_dict):
 			return
 
@@ -222,7 +224,7 @@ class ProductionPlanReport:
 			if key not in self.bin_details:
 				self.bin_details.setdefault(key, d)
 
-	def get_purchase_details(self):
+	def get_purchase_details(self) -> None:
 		if not (self.orders and self.raw_materials_dict):
 			return
 
@@ -251,7 +253,7 @@ class ProductionPlanReport:
 			if key not in self.purchase_details:
 				self.purchase_details.setdefault(key, d)
 
-	def prepare_data(self):
+	def prepare_data(self) -> None:
 		if not self.orders:
 			return
 
@@ -275,7 +277,7 @@ class ProductionPlanReport:
 
 			self.update_raw_materials(d, key)
 
-	def update_raw_materials(self, data, key):
+	def update_raw_materials(self, data, key: str) -> None:
 		self.index = 0
 		self.raw_materials_dict.get(key)
 
@@ -308,7 +310,7 @@ class ProductionPlanReport:
 				row.update(d)
 				self.data.append(row)
 
-	def pick_materials_from_warehouses(self, args, order_data, warehouses):
+	def pick_materials_from_warehouses(self, args, order_data, warehouses: list) -> None:
 		for index, warehouse in enumerate(warehouses):
 			if not args.remaining_qty:
 				return
@@ -346,7 +348,7 @@ class ProductionPlanReport:
 
 				self.data.append(row)
 
-	def get_args(self):
+	def get_args(self) -> dict:
 		return frappe._dict(
 			{
 				"work_order": "",
@@ -358,7 +360,7 @@ class ProductionPlanReport:
 			}
 		)
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		based_on = self.filters.based_on
 
 		self.columns = [

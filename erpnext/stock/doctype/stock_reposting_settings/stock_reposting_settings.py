@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -30,20 +32,20 @@ class StockRepostingSettings(Document):
 		start_time: DF.Time | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_minimum_reposting_time_slot()
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.reset_parallel_reposting_settings()
 
-	def reset_parallel_reposting_settings(self):
+	def reset_parallel_reposting_settings(self) -> None:
 		if not self.item_based_reposting and self.enable_parallel_reposting:
 			self.enable_parallel_reposting = 0
 
 		if self.enable_parallel_reposting and not self.no_of_parallel_reposting:
 			self.no_of_parallel_reposting = 4
 
-	def set_minimum_reposting_time_slot(self):
+	def set_minimum_reposting_time_slot(self) -> None:
 		"""Ensure that timeslot for reposting is at least 12 hours."""
 		if not self.limit_reposting_timeslot:
 			return
@@ -60,7 +62,7 @@ class StockRepostingSettings(Document):
 			self.end_time = get_time_str(add_to_date(self.start_time, hours=10, as_datetime=True))
 
 	@frappe.whitelist(methods=["POST"])
-	def convert_to_item_wh_reposting(self):
+	def convert_to_item_wh_reposting(self) -> None:
 		"""Convert Transaction reposting to Item Warehouse based reposting if Item Based Reposting has enabled."""
 
 		reposting_data = get_reposting_entries()
@@ -103,7 +105,7 @@ def get_stock_ledgers(vouchers):
 	)
 
 
-def create_repost_item_valuation(item_code, warehouse, posting_date):
+def create_repost_item_valuation(item_code, warehouse, posting_date) -> None:
 	frappe.get_doc(
 		{
 			"doctype": "Repost Item Valuation",

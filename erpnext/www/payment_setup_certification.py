@@ -1,16 +1,18 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import IfNull
 
 no_cache = 1
 
 
-def get_context(context):
+def get_context(context) -> None:
 	if frappe.session.user != "Guest":
 		context.all_certifications = get_all_certifications_of_a_member()
 		context.show_sidebar = True
 
 
-def get_all_certifications_of_a_member():
+def get_all_certifications_of_a_member() -> list:
 	"""Returns all certifications"""
 	all_certifications = []
 	cc = frappe.qb.DocType("Certified Consultant")

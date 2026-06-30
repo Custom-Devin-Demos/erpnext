@@ -1,5 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -15,7 +17,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestCompany(ERPNextTestSuite):
-	def test_coa_based_on_existing_company(self):
+	def test_coa_based_on_existing_company(self) -> None:
 		company = frappe.new_doc("Company")
 		company.company_name = "COA from Existing Company"
 		company.abbr = "CFEC"
@@ -47,7 +49,7 @@ class TestCompany(ERPNextTestSuite):
 
 		frappe.delete_doc("Company", "COA from Existing Company")
 
-	def test_coa_based_on_country_template(self):
+	def test_coa_based_on_country_template(self) -> None:
 		countries = ["Canada", "Germany", "France"]
 
 		for country in countries:
@@ -98,7 +100,7 @@ class TestCompany(ERPNextTestSuite):
 				finally:
 					frappe.delete_doc("Company", template)
 
-	def test_basic_tree(self, records=None):
+	def test_basic_tree(self, records: list | None = None) -> None:
 		self.load_test_records("Company")
 		min_lft = 1
 		max_rgt = frappe.get_all("Company", fields=[{"MAX": "rgt", "as": "max_rgt"}])[0].max_rgt
@@ -127,7 +129,7 @@ class TestCompany(ERPNextTestSuite):
 			self.assertGreaterEqual(lft, min_lft)
 			self.assertLessEqual(rgt, max_rgt)
 
-	def test_primary_address(self):
+	def test_primary_address(self) -> None:
 		company = "_Test Company"
 
 		secondary = frappe.get_doc(
@@ -159,8 +161,8 @@ class TestCompany(ERPNextTestSuite):
 
 		self.assertEqual(get_default_company_address(company), primary.name)
 
-	def get_no_of_children(self, company):
-		def get_no_of_children(companies, no_of_children):
+	def get_no_of_children(self, company: str) -> int:
+		def get_no_of_children(companies: list, no_of_children: int) -> int:
 			children = []
 			for company in companies:
 				company_dt = frappe.qb.DocType("Company")
@@ -178,7 +180,7 @@ class TestCompany(ERPNextTestSuite):
 
 		return get_no_of_children([company], 0)
 
-	def test_change_parent_company(self):
+	def test_change_parent_company(self) -> None:
 		child_company = frappe.get_doc("Company", "_Test Company 5")
 
 		# changing parent of company
@@ -191,7 +193,7 @@ class TestCompany(ERPNextTestSuite):
 		child_company.save()
 		self.test_basic_tree()
 
-	def test_get_children_root_includes_empty_string_parent(self):
+	def test_get_children_root_includes_empty_string_parent(self) -> None:
 		"""get_children at the root mirrors the original ifnull(parent_company,"")="": the converted
 		`["is", "not set"]` filter expands to `parent_company IS NULL OR parent_company = ''`, so a
 		company whose parent_company is '' (MariaDB keeps '') is still listed as a root. Guards against
@@ -210,7 +212,7 @@ class TestCompany(ERPNextTestSuite):
 		roots = {row.value for row in get_children("Company", parent="")}
 		self.assertIn(company, roots)
 
-	def test_annual_transaction_history_merges_dates_across_doctypes(self):
+	def test_annual_transaction_history_merges_dates_across_doctypes(self) -> None:
 		"""get_all_transactions_annual_history aggregates each DocType separately, then merges the
 		per-date counts. Two transactions of different DocTypes sharing a transaction_date must land
 		in one date bucket with the summed count (the UNION GROUP BY -> Counter-merge conversion)."""
@@ -234,7 +236,7 @@ class TestCompany(ERPNextTestSuite):
 		after = get_all_transactions_annual_history(company).get(key, 0)
 		self.assertEqual(after - before, 2)
 
-	def test_demo_data(self):
+	def test_demo_data(self) -> None:
 		from erpnext.setup.demo import clear_demo_data, setup_demo_data
 
 		self.load_test_records("Company")
@@ -253,7 +255,7 @@ class TestCompany(ERPNextTestSuite):
 			self.assertFalse(frappe.db.exists(frappe.unscrub(transaction), {"company": company_name}))
 
 
-def create_company_communication(doctype, docname):
+def create_company_communication(doctype: str, docname: str) -> None:
 	comm = frappe.get_doc(
 		{
 			"doctype": "Communication",
@@ -267,7 +269,7 @@ def create_company_communication(doctype, docname):
 	comm.insert()
 
 
-def create_child_company():
+def create_child_company() -> str:
 	child_company = frappe.db.exists("Company", "Test Company")
 	if not child_company:
 		child_company = frappe.get_doc(
@@ -285,7 +287,7 @@ def create_child_company():
 	return child_company.name
 
 
-def create_test_lead_in_company(company):
+def create_test_lead_in_company(company: str) -> str:
 	lead = frappe.db.exists("Lead", "Test Lead in new company")
 	if not lead:
 		lead = frappe.get_doc(

@@ -1,6 +1,7 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import time
 from datetime import timedelta
@@ -48,18 +49,18 @@ class SupplierScorecard(Document):
 		weighting_function: DF.SmallText
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_standings()
 		self.validate_criteria_weights()
 		self.calculate_total_score()
 		self.update_standing()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		score = make_all_scorecards(self.name)
 		if score > 0:
 			self.save()
 
-	def validate_standings(self):
+	def validate_standings(self) -> None:
 		# Standings must form a continuous chain of bands covering 0 to 100 with no gaps or overlaps
 		expected_min = 0
 		for standing in sorted(self.standings, key=lambda s: s.min_grade or 0):
@@ -75,7 +76,7 @@ class SupplierScorecard(Document):
 		if expected_min < 100:
 			throw(_("Standing scores must cover the full range from 0 to 100"))
 
-	def validate_criteria_weights(self):
+	def validate_criteria_weights(self) -> None:
 		weight = 0
 		for c in self.criteria:
 			weight += c.weight
@@ -83,7 +84,7 @@ class SupplierScorecard(Document):
 		if weight != 100:
 			throw(_("Criteria weights must add up to 100%"))
 
-	def calculate_total_score(self):
+	def calculate_total_score(self) -> None:
 		scorecards = frappe.get_all(
 			"Supplier Scorecard Period",
 			fields=["name"],
@@ -113,13 +114,13 @@ class SupplierScorecard(Document):
 		else:
 			self.supplier_score = 100
 
-	def update_standing(self):
+	def update_standing(self) -> None:
 		highest_grade = max((s.max_grade for s in self.standings if s.max_grade), default=0)
 		for standing in self.standings:
 			if self.score_within_standing(standing, highest_grade):
 				self.apply_standing(standing)
 
-	def score_within_standing(self, standing, highest_grade):
+	def score_within_standing(self, standing, highest_grade: float) -> bool:
 		score = self.supplier_score
 		above_min = not standing.min_grade or standing.min_grade <= score
 		if standing.max_grade and standing.max_grade == highest_grade:
@@ -127,7 +128,7 @@ class SupplierScorecard(Document):
 			return above_min and score <= standing.max_grade
 		return above_min and (not standing.max_grade or standing.max_grade > score)
 
-	def apply_standing(self, standing):
+	def apply_standing(self, standing) -> None:
 		self.status = standing.standing_name
 		self.indicator_color = standing.standing_color
 		self.notify_supplier = standing.notify_supplier
@@ -140,7 +141,7 @@ class SupplierScorecard(Document):
 
 
 @frappe.whitelist()
-def get_timeline_data(doctype: str, name: str):
+def get_timeline_data(doctype: str, name: str) -> dict:
 	# Get a list of all the associated scorecards
 
 	out = {}
@@ -166,7 +167,7 @@ def daterange(start_date, end_date):
 		yield start_date + timedelta(n)
 
 
-def refresh_scorecards():
+def refresh_scorecards() -> None:
 	"""
 	Refresh the scorecards
 	"""
@@ -179,7 +180,7 @@ def refresh_scorecards():
 
 
 @frappe.whitelist()
-def make_all_scorecards(docname: str):
+def make_all_scorecards(docname: str) -> int:
 	sc = frappe.get_doc("Supplier Scorecard", docname)
 	supplier = frappe.get_doc("Supplier", sc.supplier)
 	supplier.check_permission("write")
@@ -229,7 +230,7 @@ def make_all_scorecards(docname: str):
 	return scp_count
 
 
-def get_scorecard_date(period, start_date):
+def get_scorecard_date(period: str, start_date):
 	if period == "Per Week":
 		end_date = getdate(add_days(start_date, 7))
 	elif period == "Per Month":
@@ -239,7 +240,7 @@ def get_scorecard_date(period, start_date):
 	return end_date
 
 
-def get_default_scorecard_variables():
+def get_default_scorecard_variables() -> list:
 	return [
 		{
 			"param_name": "total_accepted_items",
@@ -349,7 +350,7 @@ def get_default_scorecard_variables():
 	]
 
 
-def get_default_scorecard_standing():
+def get_default_scorecard_standing() -> list:
 	return [
 		{
 			"min_grade": 0.0,
@@ -402,7 +403,7 @@ def get_default_scorecard_standing():
 	]
 
 
-def make_default_records():
+def make_default_records() -> None:
 	install_variable_docs = get_default_scorecard_variables()
 	for d in install_variable_docs:
 		d["doctype"] = "Supplier Scorecard Variable"

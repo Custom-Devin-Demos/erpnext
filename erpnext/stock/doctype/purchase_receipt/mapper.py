@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -68,7 +70,7 @@ def make_purchase_invoice(
 	returned_qty_map = get_returned_qty_map(source_name)
 	invoiced_qty_map = get_invoiced_qty_map(source_name)
 
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		if len(target.get("items")) == 0:
 			frappe.throw(_("All items have already been Invoiced/Returned"))
 
@@ -85,7 +87,7 @@ def make_purchase_invoice(
 
 		PaymentScheduleService(doc).set_payment_schedule()
 
-	def update_item(source_doc, target_doc, source_parent):
+	def update_item(source_doc, target_doc, source_parent) -> None:
 		target_doc.qty, returned_qty = get_pending_qty(source_doc)
 		if frappe.db.get_single_value("Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"):
 			target_doc.rejected_qty = 0
@@ -95,7 +97,7 @@ def make_purchase_invoice(
 		returned_qty_map[source_doc.name] = returned_qty
 		target_doc._old_name = source_doc.name
 
-	def get_pending_qty(item_row):
+	def get_pending_qty(item_row) -> tuple:
 		qty = item_row.qty
 		if frappe.db.get_single_value("Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"):
 			qty = item_row.received_qty
@@ -187,12 +189,12 @@ def make_purchase_return(source_name: str, target_doc: str | Document | None = N
 
 @frappe.whitelist()
 def make_stock_entry(source_name: str, target_doc: str | Document | None = None):
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		target.stock_entry_type = "Material Transfer"
 		target.purpose = "Material Transfer"
 		target.set_missing_values()
 
-	def update_item(source_doc, target_doc, source_parent):
+	def update_item(source_doc, target_doc, source_parent) -> None:
 		if source_doc.serial_and_batch_bundle:
 			serial_nos = get_serial_nos_from_bundle(source_doc.serial_and_batch_bundle)
 			if serial_nos:

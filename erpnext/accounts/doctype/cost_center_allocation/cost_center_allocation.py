@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -47,11 +49,11 @@ class CostCenterAllocation(Document):
 		valid_from: DF.Date
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self._skip_from_date_validation = False
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_total_allocation_percentage()
 		if not self._skip_from_date_validation:
 			self.validate_from_date_based_on_existing_gle()
@@ -59,13 +61,13 @@ class CostCenterAllocation(Document):
 		self.validate_main_cost_center()
 		self.validate_child_cost_centers()
 
-	def validate_total_allocation_percentage(self):
+	def validate_total_allocation_percentage(self) -> None:
 		total_percentage = sum([flt(d.percentage) for d in self.get("allocation_percentages", [])])
 
 		if total_percentage != 100:
 			frappe.throw(_("Total percentage against cost centers should be 100"), WrongPercentageAllocation)
 
-	def validate_from_date_based_on_existing_gle(self):
+	def validate_from_date_based_on_existing_gle(self) -> None:
 		# Check if GLE exists against the main cost center
 		# If exists ensure from date is set after posting date of last GLE
 
@@ -85,7 +87,7 @@ class CostCenterAllocation(Document):
 					InvalidDateError,
 				)
 
-	def validate_backdated_allocation(self):
+	def validate_backdated_allocation(self) -> None:
 		# Check if there are any future existing allocation records against the main cost center
 		# If exists, warn the user about it
 
@@ -116,7 +118,7 @@ class CostCenterAllocation(Document):
 				alert=1,
 			)
 
-	def validate_main_cost_center(self):
+	def validate_main_cost_center(self) -> None:
 		# Main cost center itself cannot be entered in child table
 		if self.main_cost_center in [d.cost_center for d in self.allocation_percentages]:
 			frappe.throw(
@@ -139,7 +141,7 @@ class CostCenterAllocation(Document):
 				InvalidMainCostCenter,
 			)
 
-	def validate_child_cost_centers(self):
+	def validate_child_cost_centers(self) -> None:
 		# Check if child cost center is used as main cost center in any existing allocation
 		main_cost_centers = [
 			d.main_cost_center

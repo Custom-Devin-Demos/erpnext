@@ -1,11 +1,13 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters: dict | None = None):
+def execute(filters: dict | None = None) -> tuple:
 	"""Return columns and data for the report.
 
 	This is the main entry point for the report. It accepts the filters as a
@@ -134,7 +136,7 @@ def get_linked_cancelled_sabb(filters):
 
 
 @frappe.whitelist()
-def fix_sabb_entries(selected_rows: str | list):
+def fix_sabb_entries(selected_rows: str | list) -> None:
 	frappe.has_permission("Serial and Batch Bundle", "write", throw=True)
 
 	if isinstance(selected_rows, str):

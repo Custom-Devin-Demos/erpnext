@@ -3,6 +3,8 @@
 
 """Loyalty program helpers for Sales Invoice."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, getdate
@@ -13,7 +15,7 @@ from erpnext.accounts.doctype.loyalty_program.loyalty_program import (
 
 
 class LoyaltyService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def make_loyalty_point_entry(self) -> None:

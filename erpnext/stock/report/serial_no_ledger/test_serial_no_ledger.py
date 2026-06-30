@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -21,7 +23,7 @@ class TestSerialNoLedger(ERPNextTestSuite):
 	def make_serial_item(self) -> str:
 		return "_Test Serialized Item With Series"
 
-	def test_receipt_appears_in_serial_ledger(self):
+	def test_receipt_appears_in_serial_ledger(self) -> None:
 		item = self.make_serial_item()
 		stock_entry = make_stock_entry(
 			item_code=item,
@@ -46,7 +48,7 @@ class TestSerialNoLedger(ERPNextTestSuite):
 		self.assertEqual(row["qty"], 1)
 		self.assertEqual(row["valuation_rate"], 100)
 
-	def test_filter_by_item_lists_all_received_serials(self):
+	def test_filter_by_item_lists_all_received_serials(self) -> None:
 		item = self.make_serial_item()
 		make_stock_entry(
 			item_code=item,

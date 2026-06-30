@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt, today
@@ -15,7 +17,7 @@ from erpnext.stock.utils import (
 )
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	is_reposting_item_valuation_in_progress()
 	filters = frappe._dict(filters or {})
 	include_uom = filters.get("include_uom")
@@ -98,7 +100,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"label": _("Item Code"),

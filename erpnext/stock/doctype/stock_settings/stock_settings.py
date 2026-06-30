@@ -4,6 +4,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
@@ -72,7 +74,7 @@ class StockSettings(Document):
 		valuation_method: DF.Literal["FIFO", "Moving Average", "LIFO"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		for key in [
 			"item_naming_by",
 			"item_group",
@@ -115,7 +117,7 @@ class StockSettings(Document):
 		self.change_precision_for_stock_entry()
 		self.validate_do_not_use_batchwise_valuation()
 
-	def validate_do_not_use_batchwise_valuation(self):
+	def validate_do_not_use_batchwise_valuation(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if not doc_before_save:
 			return
@@ -130,7 +132,7 @@ class StockSettings(Document):
 				)
 			)
 
-	def validate_serial_and_batch_no_settings(self):
+	def validate_serial_and_batch_no_settings(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if not doc_before_save:
 			return
@@ -149,7 +151,7 @@ class StockSettings(Document):
 					)
 				)
 
-	def validate_warehouses(self):
+	def validate_warehouses(self) -> None:
 		warehouse_fields = ["default_warehouse", "sample_retention_warehouse"]
 		for field in warehouse_fields:
 			if frappe.db.get_value("Warehouse", self.get(field), "is_group"):
@@ -160,7 +162,7 @@ class StockSettings(Document):
 					title=_("Incorrect Warehouse"),
 				)
 
-	def cant_change_valuation_method(self):
+	def cant_change_valuation_method(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if not doc_before_save:
 			return
@@ -193,7 +195,7 @@ class StockSettings(Document):
 					)
 				)
 
-	def validate_clean_description_html(self):
+	def validate_clean_description_html(self) -> None:
 		if int(self.clean_description_html or 0) and not int(self.db_get("clean_description_html") or 0):
 			# changed to text
 			frappe.enqueue(
@@ -202,11 +204,11 @@ class StockSettings(Document):
 				enqueue_after_commit=True,
 			)
 
-	def validate_pending_reposts(self):
+	def validate_pending_reposts(self) -> None:
 		if self.stock_frozen_upto:
 			check_pending_reposting(self.stock_frozen_upto)
 
-	def validate_stock_reservation(self):
+	def validate_stock_reservation(self) -> None:
 		"""Raises an exception if the user tries to enable/disable `Stock Reservation` with `Negative Stock` or `Open Stock Reservation Entries`."""
 
 		if not self.enable_stock_reservation and self.auto_reserve_stock:
@@ -252,7 +254,7 @@ class StockSettings(Document):
 						)
 					)
 
-	def validate_auto_insert_price_list_rate_if_missing(self):
+	def validate_auto_insert_price_list_rate_if_missing(self) -> None:
 		if (
 			self.auto_insert_price_list_rate_if_missing
 			and self.has_value_changed("auto_insert_price_list_rate_if_missing")
@@ -269,7 +271,7 @@ class StockSettings(Document):
 				)
 			)
 
-	def change_precision_for_for_sales(self):
+	def change_precision_for_for_sales(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if doc_before_save and (
 			doc_before_save.allow_to_edit_stock_uom_qty_for_sales
@@ -281,7 +283,7 @@ class StockSettings(Document):
 			doctypes = ["Sales Order Item", "Sales Invoice Item", "Delivery Note Item", "Quotation Item"]
 			self.make_property_setter_for_precision(doctypes)
 
-	def change_precision_for_purchase(self):
+	def change_precision_for_purchase(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if doc_before_save and (
 			doc_before_save.allow_to_edit_stock_uom_qty_for_purchase
@@ -300,7 +302,7 @@ class StockSettings(Document):
 			]
 			self.make_property_setter_for_precision(doctypes)
 
-	def change_precision_for_stock_entry(self):
+	def change_precision_for_stock_entry(self) -> None:
 		doc_before_save = self.get_doc_before_save()
 		if doc_before_save and (
 			doc_before_save.allow_to_edit_stock_uom_qty_for_stock_entry
@@ -313,7 +315,7 @@ class StockSettings(Document):
 			self.make_property_setter_for_precision(doctypes)
 
 	@staticmethod
-	def make_property_setter_for_precision(doctypes):
+	def make_property_setter_for_precision(doctypes) -> None:
 		for doctype in doctypes:
 			if property_name := frappe.db.exists(
 				"Property Setter",
@@ -332,7 +334,7 @@ class StockSettings(Document):
 			)
 
 
-def clean_all_descriptions():
+def clean_all_descriptions() -> None:
 	for item in frappe.get_all("Item", ["name", "description"]):
 		if item.description:
 			clean_description = clean_html(item.description)

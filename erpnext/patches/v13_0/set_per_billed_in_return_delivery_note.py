@@ -1,10 +1,12 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	dn = frappe.qb.DocType("Delivery Note")
 	dn_item = frappe.qb.DocType("Delivery Note Item")
 

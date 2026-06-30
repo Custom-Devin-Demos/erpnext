@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 
@@ -40,6 +42,6 @@ class SerialandBatchEntry(Document):
 	pass
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Serial and Batch Entry", ["warehouse", "batch_no", "posting_datetime"])
 	frappe.db.add_index("Serial and Batch Entry", ["warehouse", "serial_no", "posting_datetime"])

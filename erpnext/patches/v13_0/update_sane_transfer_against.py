@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	bom = frappe.qb.DocType("BOM")
 
 	(

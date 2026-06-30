@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	default_exchange_gain_loss_accounts = frappe.get_all(
 		"Company",
 		filters={"exchange_gain_loss_account": ["!=", ""]},

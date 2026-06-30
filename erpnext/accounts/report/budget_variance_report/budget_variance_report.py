@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.custom import MonthName
@@ -37,7 +39,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def validate_filters(filters):
+def validate_filters(filters) -> None:
 	validate_budget_dimensions(filters)
 
 
@@ -399,7 +401,7 @@ def get_budget_dimensions(filters):
 		return frappe.qb.from_(dimension).select(dimension.name).run(pluck="name")
 
 
-def validate_budget_dimensions(filters):
+def validate_budget_dimensions(filters) -> None:
 	dimensions = [d.get("document_type") for d in get_dimensions(with_cost_center_and_project=True)[0]]
 	if filters.get("budget_against") and filters.get("budget_against") not in dimensions:
 		frappe.throw(

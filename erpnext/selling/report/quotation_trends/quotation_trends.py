@@ -2,12 +2,14 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from frappe import _
 
 from erpnext.controllers.trends import get_columns, get_data
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 	data = []
@@ -19,7 +21,7 @@ def execute(filters=None):
 	return conditions["columns"], data, None, chart_data
 
 
-def get_chart_data(data, conditions, filters):
+def get_chart_data(data: list, conditions: dict, filters: dict) -> dict | list:
 	if not (data and conditions):
 		return []
 

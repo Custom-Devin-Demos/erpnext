@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("support", "doctype", "issue_priority")
 	frappe.reload_doc("support", "doctype", "service_level_priority")
 	frappe.reload_doc("support", "doctype", "issue")
@@ -12,14 +14,14 @@ def execute():
 	set_priorities_service_level_agreement()
 
 
-def set_issue_priority():
+def set_issue_priority() -> None:
 	# Adds priority from issue to Issue Priority DocType as Priority is a new DocType.
 	for priority in frappe.get_meta("Issue").get_field("priority").options.split("\n"):
 		if priority and not frappe.db.exists("Issue Priority", priority):
 			frappe.get_doc({"doctype": "Issue Priority", "name": priority}).insert(ignore_permissions=True)
 
 
-def set_priority_for_issue():
+def set_priority_for_issue() -> None:
 	# Sets priority for Issues as Select field is changed to Link field.
 	issue_priority = frappe.get_list("Issue", fields=["name", "priority"])
 	frappe.reload_doc("support", "doctype", "issue")
@@ -28,7 +30,7 @@ def set_priority_for_issue():
 		frappe.db.set_value("Issue", issue.name, "priority", issue.priority)
 
 
-def set_priorities_service_level():
+def set_priorities_service_level() -> None:
 	# Migrates "priority", "response_time", "response_time_period", "resolution_time", "resolution_time_period" to Child Table
 	# as a Service Level can have multiple priorities
 	try:
@@ -69,7 +71,7 @@ def set_priorities_service_level():
 		frappe.reload_doc("support", "doctype", "service_level")
 
 
-def set_priorities_service_level_agreement():
+def set_priorities_service_level_agreement() -> None:
 	# Migrates "priority", "response_time", "response_time_period", "resolution_time", "resolution_time_period" to Child Table
 	# as a Service Level Agreement can have multiple priorities
 	try:

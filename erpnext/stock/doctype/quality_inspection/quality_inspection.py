@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
@@ -62,11 +64,11 @@ class QualityInspection(Document):
 		verified_by: DF.Data | None
 
 	# end: auto-generated types
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.update_qc_reference()
 		self.db_set("status", "Cancelled")
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.readings and self.item_code:
 			self.get_item_specification_details()
 
@@ -86,13 +88,13 @@ class QualityInspection(Document):
 		self.set_child_row_reference()
 		self.set_company()
 
-	def set_company(self):
+	def set_company(self) -> None:
 		if self.reference_type and self.reference_name:
 			company = frappe.get_cached_value(self.reference_type, self.reference_name, "company")
 			if company != self.company:
 				self.company = company
 
-	def set_child_row_reference(self):
+	def set_child_row_reference(self) -> None:
 		if self.child_row_reference:
 			return
 
@@ -123,7 +125,7 @@ class QualityInspection(Document):
 		if len(child_row_references):
 			self.child_row_reference = child_row_references[0]
 
-	def validate_inspection_required(self):
+	def validate_inspection_required(self) -> None:
 		if frappe.db.get_single_value(
 			"Stock Settings", "allow_to_make_quality_inspection_after_purchase_or_delivery"
 		):
@@ -147,11 +149,11 @@ class QualityInspection(Document):
 				).format(get_link_to_form("Item", self.item_code))
 			)
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.validate_readings_status_mandatory()
 
 	@frappe.whitelist()
-	def get_item_specification_details(self):
+	def get_item_specification_details(self) -> None:
 		if not self.quality_inspection_template:
 			self.quality_inspection_template = frappe.db.get_value(
 				"Item", self.item_code, "quality_inspection_template"
@@ -171,7 +173,7 @@ class QualityInspection(Document):
 			)
 
 	@frappe.whitelist()
-	def get_quality_inspection_template(self):
+	def get_quality_inspection_template(self) -> None:
 		template = ""
 		if self.bom_no:
 			template = frappe.db.get_value("BOM", self.bom_no, "quality_inspection_template")
@@ -182,7 +184,7 @@ class QualityInspection(Document):
 		self.quality_inspection_template = template
 		self.get_item_specification_details()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		action_if_qi_in_draft = frappe.db.get_single_value(
 			"Stock Settings", "action_if_quality_inspection_is_not_submitted"
 		)
@@ -190,27 +192,27 @@ class QualityInspection(Document):
 		if not action_if_qi_in_draft or action_if_qi_in_draft == "Warn":
 			self.update_qc_reference()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		if (
 			frappe.db.get_single_value("Stock Settings", "action_if_quality_inspection_is_not_submitted")
 			== "Stop"
 		):
 			self.update_qc_reference()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = "Serial and Batch Bundle"
 
 		self.update_qc_reference()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self.update_qc_reference(remove_reference=True)
 
-	def validate_readings_status_mandatory(self):
+	def validate_readings_status_mandatory(self) -> None:
 		for reading in self.readings:
 			if not reading.status:
 				frappe.throw(_("Row #{0}: Status is mandatory").format(reading.idx))
 
-	def update_qc_reference(self, remove_reference=False):
+	def update_qc_reference(self, remove_reference: bool = False) -> None:
 		quality_inspection = self.name if self.docstatus < 2 and not remove_reference else ""
 
 		if self.reference_type == "Job Card":
@@ -258,7 +260,7 @@ class QualityInspection(Document):
 					self.modified,
 				)
 
-	def inspect_and_set_status(self):
+	def inspect_and_set_status(self) -> None:
 		for reading in self.readings:
 			if not reading.manual_inspection:  # dont auto set status if manual
 				if reading.formula_based_criteria:
@@ -277,7 +279,7 @@ class QualityInspection(Document):
 					)
 					break
 
-	def set_status_based_on_acceptance_values(self, reading):
+	def set_status_based_on_acceptance_values(self, reading) -> None:
 		if not cint(reading.numeric):
 			reading_value = reading.get("reading_value") or ""
 			value = reading.get("value") or ""
@@ -304,7 +306,7 @@ class QualityInspection(Document):
 					return False
 		return has_reading
 
-	def set_status_based_on_acceptance_formula(self, reading):
+	def set_status_based_on_acceptance_formula(self, reading) -> None:
 		if not reading.acceptance_formula:
 			frappe.throw(
 				_("Row #{0}: Acceptance Criteria Formula is required.").format(reading.idx),
@@ -453,7 +455,7 @@ def quality_inspection_query(
 
 @frappe.whitelist()
 def make_quality_inspection(source_name: str, target_doc: Document | str | None = None):
-	def postprocess(source, doc):
+	def postprocess(source, doc) -> None:
 		doc.inspected_by = frappe.session.user
 		doc.get_quality_inspection_template()
 

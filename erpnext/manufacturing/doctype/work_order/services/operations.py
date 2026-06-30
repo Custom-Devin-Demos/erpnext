@@ -8,6 +8,10 @@ Extracted from work_order.py. ``OperationsService`` wraps a Work Order document
 are called from other modules.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from dateutil.relativedelta import relativedelta
 from frappe import _
@@ -29,6 +33,9 @@ from erpnext.manufacturing.doctype.work_order.mapper import (
 	create_job_card,
 	split_qty_based_on_batch_size,
 )
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 _BOM_OPERATION_FIELDS = [
 	"operation",
@@ -56,10 +63,10 @@ _BOM_OPERATION_FIELDS = [
 
 
 class OperationsService:
-	def __init__(self, doc):
+	def __init__(self, doc: Document) -> None:
 		self.doc = doc
 
-	def calculate_operating_cost(self):
+	def calculate_operating_cost(self) -> None:
 		self.doc.planned_operating_cost, self.doc.actual_operating_cost = 0.0, 0.0
 		for d in self.doc.get("operations"):
 			self._set_operation_cost(d)
@@ -74,7 +81,7 @@ class OperationsService:
 		)
 
 	@staticmethod
-	def _set_operation_cost(d):
+	def _set_operation_cost(d) -> None:
 		if not d.hour_rate and d.workstation:
 			d.hour_rate = get_hour_rate(d.workstation)
 
@@ -85,7 +92,7 @@ class OperationsService:
 			flt(d.hour_rate) * (flt(d.actual_operation_time) / 60.0), d.precision("actual_operating_cost")
 		)
 
-	def create_job_card(self):
+	def create_job_card(self) -> None:
 		manufacturing_settings_doc = frappe.get_doc("Manufacturing Settings")
 
 		enable_capacity_planning = not cint(manufacturing_settings_doc.disable_capacity_planning)
@@ -102,7 +109,9 @@ class OperationsService:
 		if planned_end_date:
 			self.doc.db_set("planned_end_date", planned_end_date)
 
-	def prepare_data_for_job_card(self, row, idx, plan_days, enable_capacity_planning):
+	def prepare_data_for_job_card(
+		self, row, idx: int, plan_days: int, enable_capacity_planning: bool
+	) -> None:
 		self.set_operation_start_end_time(row, idx)
 
 		job_card_doc = create_job_card(
@@ -115,7 +124,7 @@ class OperationsService:
 			self._validate_capacity_window(row, plan_days)
 			row.db_update()
 
-	def _validate_capacity_window(self, row, plan_days):
+	def _validate_capacity_window(self, row, plan_days: int) -> None:
 		from erpnext.manufacturing.doctype.work_order.work_order import CapacityError
 
 		if date_diff(row.planned_end_time, self.doc.planned_start_date) <= plan_days:
@@ -129,7 +138,7 @@ class OperationsService:
 		)
 		frappe.throw(msg, CapacityError)
 
-	def set_operation_start_end_time(self, row, idx):
+	def set_operation_start_end_time(self, row, idx: int) -> None:
 		"""Set start and end time for given operation. If first operation, set start as
 		`planned_start_date`, else add time diff to end time of earlier operation."""
 		if idx == 0:
@@ -146,7 +155,7 @@ class OperationsService:
 		if row.planned_start_time == row.planned_end_time:
 			frappe.throw(_("Capacity Planning Error, planned start time can not be same as end time"))
 
-	def _sequence_based_start_time(self, row, idx):
+	def _sequence_based_start_time(self, row, idx: int):
 		previous = self.doc.operations[idx - 1]
 		if previous.sequence_id == row.sequence_id:
 			return previous.planned_start_time
@@ -157,7 +166,7 @@ class OperationsService:
 		)
 		return get_datetime(same_sequence[-1].planned_end_time) + get_mins_between_operations()
 
-	def set_work_order_operations(self):
+	def set_work_order_operations(self) -> None:
 		"""Fetch operations from BOM and set in 'Work Order'"""
 		self.doc.set("operations", [])
 		if not self.doc.bom_no or not frappe.get_cached_value("BOM", self.doc.bom_no, "with_operations"):
@@ -170,7 +179,7 @@ class OperationsService:
 		self.doc.set("operations", operations)
 		self.calculate_time()
 
-	def _collect_bom_operations(self):
+	def _collect_bom_operations(self) -> list:
 		operations = []
 		if self.doc.use_multi_level_bom:
 			bom_tree = frappe.get_doc("BOM", self.doc.bom_no).get_tree_representation()
@@ -183,7 +192,7 @@ class OperationsService:
 		operations.extend(self._bom_operations(self.doc.bom_no, qty=bom_qty))
 		return operations
 
-	def _bom_operations(self, bom_no, qty=1, exploded=False):
+	def _bom_operations(self, bom_no: str, qty: float = 1, exploded: bool = False) -> list:
 		data = frappe.get_all(
 			"BOM Operation", filters={"parent": bom_no}, fields=_BOM_OPERATION_FIELDS, order_by="idx"
 		)
@@ -191,7 +200,7 @@ class OperationsService:
 			self._adjust_operation_row(d, qty, exploded)
 		return data
 
-	def _adjust_operation_row(self, d, qty, exploded):
+	def _adjust_operation_row(self, d, qty: float, exploded: bool) -> None:
 		if not d.fixed_time:
 			if frappe.get_value("Operation", d.operation, "create_job_card_based_on_batch_size"):
 				qty = d.batch_size
@@ -201,14 +210,14 @@ class OperationsService:
 		if self.doc.track_semi_finished_goods and not d.sequence_id:
 			d.sequence_id = d.idx
 
-	def calculate_time(self):
+	def calculate_time(self) -> None:
 		for d in self.doc.get("operations"):
 			if not d.fixed_time:
 				d.time_in_mins = flt(d.time_in_mins) * flt(self.doc.qty)
 
 		self.calculate_operating_cost()
 
-	def get_holidays(self, workstation):
+	def get_holidays(self, workstation: str) -> list:
 		holiday_list = frappe.db.get_value("Workstation", workstation, "holiday_list")
 
 		holidays = {}
@@ -230,7 +239,7 @@ class OperationsService:
 
 		return holidays[holiday_list]
 
-	def update_operation_status(self):
+	def update_operation_status(self) -> None:
 		allowance_percentage = flt(
 			frappe.db.get_single_value("Manufacturing Settings", "overproduction_percentage_for_work_order")
 		)
@@ -239,7 +248,7 @@ class OperationsService:
 		for d in self.doc.get("operations"):
 			d.status = self._operation_status(d, max_allowed_qty_for_wo)
 
-	def _operation_status(self, d, max_allowed_qty_for_wo):
+	def _operation_status(self, d, max_allowed_qty_for_wo: float) -> str:
 		precision = d.precision("completed_qty")
 		qty = flt(flt(d.completed_qty, precision) + flt(d.process_loss_qty, precision), precision)
 		if not qty:
@@ -250,7 +259,7 @@ class OperationsService:
 			return "Completed"
 		frappe.throw(_("Completed Qty cannot be greater than 'Qty to Manufacture'"))
 
-	def set_actual_dates(self):
+	def set_actual_dates(self) -> None:
 		if self.doc.get("operations"):
 			self._set_dates_from_operations()
 		else:
@@ -258,7 +267,7 @@ class OperationsService:
 
 		self.set_lead_time()
 
-	def _set_dates_from_operations(self):
+	def _set_dates_from_operations(self) -> None:
 		operations = self.doc.get("operations")
 		start_dates = [d.actual_start_time for d in operations if d.actual_start_time]
 		if start_dates:
@@ -268,7 +277,7 @@ class OperationsService:
 		if end_dates:
 			self.doc.actual_end_date = max(end_dates)
 
-	def _set_dates_from_stock_entries(self):
+	def _set_dates_from_stock_entries(self) -> None:
 		# {"TIMESTAMP": [...]} renders MySQL's TIMESTAMP(date, time), invalid on postgres; use the
 		# portable CombineDatetime via query builder instead.
 		se = frappe.qb.DocType("Stock Entry")
@@ -289,7 +298,7 @@ class OperationsService:
 		if self.doc.status == "Completed":
 			self.doc.db_set("actual_end_date", max(dates))
 
-	def set_lead_time(self):
+	def set_lead_time(self) -> None:
 		if self.doc.actual_start_date and self.doc.actual_end_date:
 			self.doc.lead_time = flt(
 				time_diff_in_hours(self.doc.actual_end_date, self.doc.actual_start_date) * 60
@@ -297,5 +306,5 @@ class OperationsService:
 
 
 @frappe.request_cache
-def get_hour_rate(workstation):
+def get_hour_rate(workstation: str) -> float:
 	return frappe.get_cached_value("Workstation", workstation, "hour_rate") or 0.0

@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import inspect
 
 import frappe
@@ -29,21 +31,21 @@ class RepostAccountingLedger(Document):
 		vouchers: DF.Table[RepostAccountingLedgerItems]
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self._allowed_types = get_allowed_types_from_settings()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_vouchers()
 		self.validate_for_closed_fiscal_year()
 		self.validate_for_deferred_accounting()
 
-	def validate_for_deferred_accounting(self):
+	def validate_for_deferred_accounting(self) -> None:
 		sales_docs = [x.voucher_no for x in self.vouchers if x.voucher_type == "Sales Invoice"]
 		purchase_docs = [x.voucher_no for x in self.vouchers if x.voucher_type == "Purchase Invoice"]
 		validate_docs_for_deferred_accounting(sales_docs, purchase_docs)
 
-	def validate_for_closed_fiscal_year(self):
+	def validate_for_closed_fiscal_year(self) -> None:
 		if self.vouchers:
 			latest_pcv = (
 				frappe.db.get_all(
@@ -70,11 +72,11 @@ class RepostAccountingLedger(Document):
 					if latest_voucher and latest_pcv[0] >= latest_voucher:
 						frappe.throw(_("Cannot Resubmit Ledger entries for vouchers in Closed fiscal year."))
 
-	def validate_vouchers(self):
+	def validate_vouchers(self) -> None:
 		if self.vouchers:
 			validate_docs_for_voucher_types([x.voucher_type for x in self.vouchers])
 
-	def get_existing_ledger_entries(self):
+	def get_existing_ledger_entries(self) -> None:
 		vouchers = [x.voucher_no for x in self.vouchers]
 		gl = qb.DocType("GL Entry")
 		existing_gles = (
@@ -90,7 +92,7 @@ class RepostAccountingLedger(Document):
 				"existing", []
 			).append(gle.update({"old": True}))
 
-	def generate_preview_data(self):
+	def generate_preview_data(self) -> None:
 		frappe.flags.through_repost_accounting_ledger = True
 		self.gl_entries = []
 		self.get_existing_ledger_entries()
@@ -136,7 +138,7 @@ class RepostAccountingLedger(Document):
 
 		return rendered_page
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		if len(self.vouchers) > 5:
 			job_name = "repost_accounting_ledger_" + self.name
 			frappe.enqueue(
@@ -240,7 +242,7 @@ def get_child_docs(doc: list) -> list:
 	return child_doc
 
 
-def validate_docs_for_deferred_accounting(sales_docs, purchase_docs):
+def validate_docs_for_deferred_accounting(sales_docs, purchase_docs) -> None:
 	docs_with_deferred_revenue = frappe.db.get_all(
 		"Sales Invoice Item",
 		filters={"parent": ["in", sales_docs], "docstatus": 1, "enable_deferred_revenue": True},
@@ -265,7 +267,7 @@ def validate_docs_for_deferred_accounting(sales_docs, purchase_docs):
 		)
 
 
-def validate_docs_for_voucher_types(doc_voucher_types):
+def validate_docs_for_voucher_types(doc_voucher_types) -> None:
 	allowed_types = get_allowed_types_from_settings()
 	# Validate voucher types
 	voucher_types = set(doc_voucher_types)

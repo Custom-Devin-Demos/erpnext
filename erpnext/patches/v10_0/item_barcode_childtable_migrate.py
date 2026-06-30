@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "item_barcode")
 	if frappe.get_all("Item Barcode", limit=1):
 		return

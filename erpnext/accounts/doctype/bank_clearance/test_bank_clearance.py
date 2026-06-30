@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_months, getdate
 
@@ -17,7 +19,7 @@ from erpnext.tests.utils import ERPNextTestSuite, if_lending_app_installed, if_l
 
 
 class TestBankClearance(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.clear_cache()
 		create_warehouse(
 			warehouse_name="_Test Warehouse",
@@ -33,7 +35,7 @@ class TestBankClearance(ERPNextTestSuite):
 	# Basic test case to test if bank clearance tool doesn't break
 	# Detailed test can be added later
 	@if_lending_app_not_installed
-	def test_bank_clearance(self):
+	def test_bank_clearance(self) -> None:
 		bank_clearance = frappe.get_doc("Bank Clearance")
 		bank_clearance.account = "_Test Bank Clearance - _TC"
 		bank_clearance.from_date = add_months(getdate(), -1)
@@ -42,7 +44,7 @@ class TestBankClearance(ERPNextTestSuite):
 		self.assertEqual(len(bank_clearance.payment_entries), 1)
 
 	@if_lending_app_installed
-	def test_bank_clearance_with_loan(self):
+	def test_bank_clearance_with_loan(self) -> None:
 		from lending.loan_management.doctype.loan.test_loan import (
 			create_loan,
 			create_loan_accounts,
@@ -51,7 +53,7 @@ class TestBankClearance(ERPNextTestSuite):
 			make_loan_disbursement_entry,
 		)
 
-		def create_loan_masters():
+		def create_loan_masters() -> None:
 			create_loan_product(
 				"Clearance Loan",
 				"Clearance Loan",
@@ -68,7 +70,7 @@ class TestBankClearance(ERPNextTestSuite):
 				"Penalty Income Account - _TC",
 			)
 
-		def make_loan():
+		def make_loan() -> None:
 			loan = create_loan(
 				"_Test Customer",
 				"Clearance Loan",
@@ -94,7 +96,7 @@ class TestBankClearance(ERPNextTestSuite):
 		bank_clearance.get_payment_entries()
 		self.assertEqual(len(bank_clearance.payment_entries), 3)
 
-	def test_update_clearance_date_on_si(self):
+	def test_update_clearance_date_on_si(self) -> None:
 		sales_invoice = make_pos_sales_invoice()
 
 		date = getdate()
@@ -121,7 +123,7 @@ class TestBankClearance(ERPNextTestSuite):
 		self.assertEqual(si_clearance_date, date)
 
 
-def make_bank_account():
+def make_bank_account() -> None:
 	if not frappe.db.get_value("Account", "_Test Bank Clearance - _TC"):
 		frappe.get_doc(
 			{
@@ -134,11 +136,11 @@ def make_bank_account():
 		).insert()
 
 
-def add_transactions():
+def add_transactions() -> None:
 	make_payment_entry()
 
 
-def make_payment_entry():
+def make_payment_entry() -> None:
 	from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 
 	supplier = create_supplier(supplier_name="_Test Supplier")

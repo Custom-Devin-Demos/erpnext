@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from frappe import _
 
 
-def get_data():
+def get_data() -> dict:
 	return {
 		"heatmap": True,
 		"heatmap_message": _("This covers all scorecards tied to this Setup"),

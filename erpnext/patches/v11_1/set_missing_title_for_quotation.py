@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doctype("Quotation")
 	# update customer_name from Customer document if quotation_to is set to Customer
 	frappe.db.sql(

@@ -3,12 +3,14 @@
 
 """Drop-ship item handling for Purchase Order."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
 class DropShipService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def update_dropship_received_qty(self, data: list[dict]) -> None:

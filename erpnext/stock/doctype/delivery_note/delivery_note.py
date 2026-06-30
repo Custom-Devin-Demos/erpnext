@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cint, flt
@@ -152,7 +154,7 @@ class DeliveryNote(SellingController):
 		vehicle_no: DF.Data | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.status_updater = [
 			{
@@ -232,14 +234,14 @@ class DeliveryNote(SellingController):
 				]
 			)
 
-	def onload(self):
+	def onload(self) -> None:
 		super().onload()
 
 		if self.docstatus == 0:
 			self.set_onload("has_unpacked_items", self.has_unpacked_items())
 
-	def before_print(self, settings=None):
-		def toggle_print_hide(meta, fieldname):
+	def before_print(self, settings=None) -> None:
+		def toggle_print_hide(meta, fieldname) -> None:
 			df = meta.get_field(fieldname)
 			if self.get("print_without_amount"):
 				df.set("__print_hide", 1)
@@ -258,7 +260,7 @@ class DeliveryNote(SellingController):
 
 		super().before_print(settings)
 
-	def set_actual_qty(self):
+	def set_actual_qty(self) -> None:
 		for d in self.get("items"):
 			if d.item_code and d.warehouse:
 				actual_qty = frappe.db.get_value(
@@ -266,14 +268,14 @@ class DeliveryNote(SellingController):
 				)
 				d.actual_qty = flt(actual_qty) or 0
 
-	def so_required(self):
+	def so_required(self) -> None:
 		"""check in manage account if sales order required or not"""
 		if frappe.get_single_value("Selling Settings", "so_required") == "Yes":
 			for d in self.get("items"):
 				if not d.against_sales_order:
 					frappe.throw(_("Sales Order required for Item {0}").format(d.item_code))
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_posting_time()
 		super().validate()
 		self.validate_references()
@@ -296,7 +298,7 @@ class DeliveryNote(SellingController):
 		self.validate_against_stock_reservation_entries()
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 
-	def validate_with_previous_doc(self):
+	def validate_with_previous_doc(self) -> None:
 		super().validate_with_previous_doc(
 			{
 				"Sales Order": {
@@ -344,16 +346,16 @@ class DeliveryNote(SellingController):
 				]
 			)
 
-	def validate_references(self):
+	def validate_references(self) -> None:
 		self.validate_sales_order_references()
 		self.validate_sales_invoice_references()
 
-	def validate_sales_order_references(self):
+	def validate_sales_order_references(self) -> None:
 		self._validate_dependent_item_fields(
 			"against_sales_order", "so_detail", _("References to Sales Orders are Incomplete")
 		)
 
-	def validate_sales_invoice_references(self):
+	def validate_sales_invoice_references(self) -> None:
 		if self.is_return:
 			return
 
@@ -361,7 +363,7 @@ class DeliveryNote(SellingController):
 			"against_sales_invoice", "si_detail", _("References to Sales Invoices are Incomplete")
 		)
 
-	def _validate_dependent_item_fields(self, field_a: str, field_b: str, error_title: str):
+	def _validate_dependent_item_fields(self, field_a: str, field_b: str, error_title: str) -> None:
 		errors = []
 		for item in self.items:
 			missing_label = None
@@ -380,7 +382,7 @@ class DeliveryNote(SellingController):
 		if errors:
 			frappe.throw("<br>".join(errors), title=error_title)
 
-	def validate_proj_cust(self):
+	def validate_proj_cust(self) -> None:
 		"""check for does customer belong to same project as entered.."""
 		if self.project and self.customer:
 			res = frappe.get_all(
@@ -393,14 +395,14 @@ class DeliveryNote(SellingController):
 					_("Customer {0} does not belong to project {1}").format(self.customer, self.project)
 				)
 
-	def validate_warehouse(self):
+	def validate_warehouse(self) -> None:
 		super().validate_warehouse()
 
 		for d in self.get_item_list():
 			if not d["warehouse"] and frappe.get_cached_value("Item", d["item_code"], "is_stock_item") == 1:
 				frappe.throw(_("Warehouse required for stock Item {0}").format(d["item_code"]))
 
-	def update_current_stock(self):
+	def update_current_stock(self) -> None:
 		if self.get("_action") and self._action != "update_after_submit":
 			for d in self.get("items"):
 				d.actual_qty = frappe.db.get_value(
@@ -418,7 +420,7 @@ class DeliveryNote(SellingController):
 					d.actual_qty = flt(bin_qty.actual_qty)
 					d.projected_qty = flt(bin_qty.projected_qty)
 
-	def validate_expense_account(self):
+	def validate_expense_account(self) -> None:
 		company_values = frappe.get_cached_value(
 			"Company",
 			self.company,
@@ -458,7 +460,7 @@ class DeliveryNote(SellingController):
 			if not item.expense_account and default_expense_account:
 				item.expense_account = default_expense_account
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.validate_packed_qty()
 		self.update_pick_list_status()
 
@@ -492,7 +494,7 @@ class DeliveryNote(SellingController):
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		super().on_cancel()
 
 		self.check_sales_order_on_hold_or_close("against_sales_order")
@@ -521,7 +523,7 @@ class DeliveryNote(SellingController):
 
 		self.delete_auto_created_batches()
 
-	def validate_against_stock_reservation_entries(self):
+	def validate_against_stock_reservation_entries(self) -> None:
 		"""Validates if Stock Reservation Entries are available for the Sales Order Item reference."""
 
 		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import (
@@ -563,7 +565,7 @@ class DeliveryNote(SellingController):
 					)
 					frappe.throw(msg, title=_("Stock Reservation Warehouse Mismatch"))
 
-	def check_credit_limit(self):
+	def check_credit_limit(self) -> None:
 		from erpnext.selling.doctype.customer.customer import check_credit_limit
 
 		if self.per_billed == 100:
@@ -596,11 +598,11 @@ class DeliveryNote(SellingController):
 				self.customer, self.company, bypass_credit_limit_check_at_sales_order, extra_amount
 			)
 
-	def validate_packed_qty(self):
+	def validate_packed_qty(self) -> None:
 		"""Validate that if packed qty exists, it should be equal to qty"""
 		PackingService(self).validate_packed_qty()
 
-	def check_next_docstatus(self):
+	def check_next_docstatus(self) -> None:
 		submit_rv = frappe.get_all(
 			"Sales Invoice Item",
 			filters={"delivery_note": self.name, "docstatus": 1},
@@ -619,10 +621,10 @@ class DeliveryNote(SellingController):
 		if submit_in:
 			frappe.throw(_("Installation Note {0} has already been submitted").format(submit_in[0][0]))
 
-	def update_status(self, status):
+	def update_status(self, status) -> None:
 		BillingStatusService(self).update_status(status)
 
-	def update_billing_status(self, update_modified=True):
+	def update_billing_status(self, update_modified: bool = True) -> None:
 		BillingStatusService(self).update_billing_status(update_modified)
 
 	def has_unpacked_items(self):
@@ -646,6 +648,6 @@ def get_list_context(context=None):
 
 
 @frappe.whitelist()
-def update_delivery_note_status(docname: str, status: str):
+def update_delivery_note_status(docname: str, status: str) -> None:
 	dn = frappe.get_lazy_doc("Delivery Note", docname)
 	dn.update_status(status)

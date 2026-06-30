@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.regional.united_arab_emirates.setup import make_custom_fields
 
 
-def execute():
+def execute() -> None:
 	if not frappe.db.get_value("Company", {"country": "United Arab Emirates"}):
 		return
 

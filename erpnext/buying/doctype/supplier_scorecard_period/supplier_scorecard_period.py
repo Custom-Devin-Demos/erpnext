@@ -1,6 +1,7 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _, throw
@@ -40,13 +41,13 @@ class SupplierScorecardPeriod(Document):
 		variables: DF.Table[SupplierScorecardScoringVariable]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_criteria_weights()
 		self.calculate_variables()
 		self.calculate_criteria()
 		self.calculate_score()
 
-	def validate_criteria_weights(self):
+	def validate_criteria_weights(self) -> None:
 		weight = 0
 		for c in self.criteria:
 			weight += c.weight
@@ -54,7 +55,7 @@ class SupplierScorecardPeriod(Document):
 		if weight != 100:
 			throw(_("Criteria weights must add up to 100%"))
 
-	def calculate_variables(self):
+	def calculate_variables(self) -> None:
 		for var in self.variables:
 			if "." in var.path:
 				method_to_call = import_string_path(var.path)
@@ -63,7 +64,7 @@ class SupplierScorecardPeriod(Document):
 				method_to_call = getattr(variable_functions, var.path)
 				var.value = method_to_call(self)
 
-	def calculate_criteria(self):
+	def calculate_criteria(self) -> None:
 		for crit in self.criteria:
 			try:
 				crit.score = min(
@@ -83,13 +84,13 @@ class SupplierScorecardPeriod(Document):
 					frappe.ValidationError,
 				)
 
-	def calculate_score(self):
+	def calculate_score(self) -> None:
 		myscore = 0
 		for crit in self.criteria:
 			myscore += crit.score * crit.weight / 100.0
 		self.total_score = myscore
 
-	def calculate_weighted_score(self, weighing_function):
+	def calculate_weighted_score(self, weighing_function: str) -> float:
 		try:
 			weighed_score = frappe.safe_eval(
 				self.get_eval_statement(weighing_function), None, {"max": max, "min": min}
@@ -102,7 +103,7 @@ class SupplierScorecardPeriod(Document):
 			weighed_score = 0
 		return weighed_score
 
-	def get_eval_statement(self, formula):
+	def get_eval_statement(self, formula: str) -> str:
 		my_eval_statement = formula.replace("\r", "").replace("\n", "")
 
 		for var in self.variables:
@@ -118,7 +119,7 @@ class SupplierScorecardPeriod(Document):
 		return my_eval_statement
 
 
-def import_string_path(path):
+def import_string_path(path: str):
 	components = path.split(".")
 	mod = __import__(components[0])
 	for comp in components[1:]:
@@ -126,13 +127,13 @@ def import_string_path(path):
 	return mod
 
 
-def make_supplier_scorecard(source_name, target_doc=None):
-	def update_criteria_fields(obj, target, source_parent):
+def make_supplier_scorecard(source_name: str, target_doc: str | Document | None = None) -> Document:
+	def update_criteria_fields(obj, target, source_parent) -> None:
 		target.max_score, target.formula = frappe.db.get_value(
 			"Supplier Scorecard Criteria", obj.criteria_name, ["max_score", "formula"]
 		)
 
-	def post_process(source, target):
+	def post_process(source, target) -> None:
 		variables = []
 		for cr in target.criteria:
 			for var in get_variables(cr.criteria_name):

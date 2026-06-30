@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.report.bom_search.bom_search import execute
@@ -13,7 +15,7 @@ class TestBomSearch(ERPNextTestSuite):
 		filters.update(extra)
 		return execute(filters)[1]
 
-	def test_bom_found_by_contained_item(self):
+	def test_bom_found_by_contained_item(self) -> None:
 		raw_material = "_Test Item"
 		finished_good = "_Test FG Item"
 
@@ -26,7 +28,7 @@ class TestBomSearch(ERPNextTestSuite):
 		bom_names = [row[0] for row in rows]
 		self.assertIn(bom.name, bom_names)
 
-	def test_search_sub_assemblies_finds_top_level_bom(self):
+	def test_search_sub_assemblies_finds_top_level_bom(self) -> None:
 		raw_material = "_Test Item"
 		sub_assembly = "_Test FG Item"  # its default BOM contains _Test Item
 		finished_good = "_Test FG Item 2"

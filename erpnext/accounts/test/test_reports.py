@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from erpnext.tests.utils import ERPNextTestSuite, ReportFilters, ReportName, execute_script_report
 
 DEFAULT_FILTERS = {
@@ -33,7 +35,7 @@ OPTIONAL_FILTERS = {}
 
 
 class TestReports(ERPNextTestSuite):
-	def test_execute_all_accounts_reports(self):
+	def test_execute_all_accounts_reports(self) -> None:
 		"""Test that all script report in stock modules are executable with supported filters"""
 		for report, filter in REPORT_FILTER_TEST_CASES:
 			with self.subTest(report=report):

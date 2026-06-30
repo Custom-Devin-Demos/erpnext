@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from datetime import date, datetime
 
@@ -9,7 +11,7 @@ from frappe.utils import get_link_to_form, today
 @frappe.whitelist()
 def transaction_processing(
 	data: str | list, from_doctype: str, to_doctype: str, args: str | frappe._dict | None = None
-):
+) -> None:
 	frappe.has_permission(from_doctype, "read", throw=True)
 	frappe.has_permission(to_doctype, "create", throw=True)
 
@@ -51,7 +53,7 @@ def transaction_processing(
 
 
 @frappe.whitelist()
-def retry(date: str | None = None):
+def retry(date: str | None = None) -> None:
 	if not date:
 		date = today()
 
@@ -75,7 +77,7 @@ def retry(date: str | None = None):
 			)
 
 
-def retry_failed_transactions(failed_docs: list | None):
+def retry_failed_transactions(failed_docs: list | None) -> None:
 	if failed_docs:
 		for log in failed_docs:
 			try:
@@ -88,14 +90,14 @@ def retry_failed_transactions(failed_docs: list | None):
 				update_log(log.name, "Success", 1)
 
 
-def update_log(log_name, status, retried, err=None):
+def update_log(log_name: str, status: str, retried: int, err: str | None = None) -> None:
 	frappe.db.set_value("Bulk Transaction Log Detail", log_name, "transaction_status", status)
 	frappe.db.set_value("Bulk Transaction Log Detail", log_name, "retried", retried)
 	if err:
 		frappe.db.set_value("Bulk Transaction Log Detail", log_name, "error_description", err)
 
 
-def job(deserialized_data, from_doctype, to_doctype, args):
+def job(deserialized_data: list, from_doctype: str, to_doctype: str, args: dict) -> None:
 	fail_count = 0
 
 	if args:
@@ -124,7 +126,7 @@ def job(deserialized_data, from_doctype, to_doctype, args):
 	show_job_status(fail_count, len(deserialized_data), to_doctype)
 
 
-def task(doc_name, from_doctype, to_doctype):
+def task(doc_name: str, from_doctype: str, to_doctype: str) -> None:
 	from erpnext.accounts.doctype.payment_entry import payment_entry
 	from erpnext.accounts.doctype.purchase_invoice import mapper as purchase_invoice
 	from erpnext.accounts.doctype.sales_invoice import mapper as sales_invoice
@@ -188,7 +190,15 @@ def task(doc_name, from_doctype, to_doctype):
 	del frappe.flags.bulk_transaction
 
 
-def create_log(doc_name, e, from_doctype, to_doctype, status, log_date=None, restarted=0):
+def create_log(
+	doc_name: str,
+	e: str | None,
+	from_doctype: str,
+	to_doctype: str,
+	status: str,
+	log_date: str | None = None,
+	restarted: int = 0,
+) -> None:
 	transaction_log = frappe.new_doc("Bulk Transaction Log Detail")
 	transaction_log.transaction_name = doc_name
 	transaction_log.date = today()
@@ -202,7 +212,7 @@ def create_log(doc_name, e, from_doctype, to_doctype, status, log_date=None, res
 	transaction_log.save(ignore_permissions=True)
 
 
-def show_job_status(fail_count, deserialized_data_count, to_doctype):
+def show_job_status(fail_count: int, deserialized_data_count: int, to_doctype: str) -> None:
 	if not fail_count:
 		frappe.msgprint(
 			_("Creation of <b><a href='/app/{0}'>{1}(s)</a></b> successful").format(

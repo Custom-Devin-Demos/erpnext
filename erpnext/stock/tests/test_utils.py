@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -15,7 +17,7 @@ class StockTestMixin:
 
 		return make_item(item_code, properties, *args, **kwargs)
 
-	def assertSLEs(self, doc, expected_sles, sle_filters=None):
+	def assertSLEs(self, doc, expected_sles, sle_filters=None) -> None:
 		"""Compare sorted SLEs, useful for vouchers that create multiple SLEs for same line"""
 
 		filters = {"voucher_no": doc.name, "voucher_type": doc.doctype, "is_cancelled": 0}
@@ -52,7 +54,7 @@ class StockTestMixin:
 
 				self.assertEqual(v, act_value, msg=f"{k} doesn't match \n{exp_sle}\n{act_sle}")
 
-	def assertGLEs(self, doc, expected_gles, gle_filters=None, order_by=None):
+	def assertGLEs(self, doc, expected_gles, gle_filters=None, order_by=None) -> None:
 		filters = {"voucher_no": doc.name, "voucher_type": doc.doctype, "is_cancelled": 0}
 
 		if gle_filters:
@@ -71,7 +73,7 @@ class StockTestMixin:
 
 
 class TestStockUtilities(ERPNextTestSuite, StockTestMixin):
-	def test_barcode_scanning(self):
+	def test_barcode_scanning(self) -> None:
 		simple_item = self.make_item(properties={"barcodes": [{"barcode": "12399"}]})
 		self.assertEqual(scan_barcode("12399")["item_code"], simple_item.name)
 
@@ -98,7 +100,7 @@ class TestStockUtilities(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(serial_scan["has_batch_no"], 0)
 		self.assertEqual(serial_scan["has_serial_no"], 1)
 
-	def test_barcode_scanning_of_warehouse(self):
+	def test_barcode_scanning_of_warehouse(self) -> None:
 		warehouse = frappe.get_doc(
 			{
 				"doctype": "Warehouse",
@@ -139,7 +141,7 @@ class TestStockUtilities(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(item_scan_with_ctx["item_code"], item_with_warehouse.name)
 		self.assertEqual(item_scan_with_ctx["default_warehouse"], warehouse_2.name)
 
-	def test_get_latest_stock_qty(self):
+	def test_get_latest_stock_qty(self) -> None:
 		"""get_latest_stock_qty (Sum(actual_qty) over Bin; the warehouse-subtree EXISTS converted to
 		a qb subquery) must reflect received stock for a non-group warehouse."""
 		from frappe.utils import flt
@@ -155,7 +157,7 @@ class TestStockUtilities(ERPNextTestSuite, StockTestMixin):
 
 		self.assertEqual(flt(get_latest_stock_qty(item, warehouse)), before + 8)
 
-	def test_get_stock_value_from_bin(self):
+	def test_get_stock_value_from_bin(self) -> None:
 		"""get_stock_value_from_bin (comma-join -> inner_join, `ifnull(disabled,0)=0` ->
 		`disabled==0 | isnull`) must sum the Bin stock_value for an item."""
 		from frappe.utils import flt
@@ -171,7 +173,7 @@ class TestStockUtilities(ERPNextTestSuite, StockTestMixin):
 		# returns a single-row result set: [(stock_value,)]
 		self.assertEqual(flt(get_stock_value_from_bin(item_code=item)[0][0]), 5 * 50)
 
-	def test_get_avg_purchase_rate(self):
+	def test_get_avg_purchase_rate(self) -> None:
 		"""get_avg_purchase_rate must average Serial No purchase_rate via the dict-`AVG` get_all
 		field (frappe compiles `[{"AVG": "purchase_rate"}]` to `AVG(purchase_rate)` on both engines)."""
 		from frappe.utils import flt, random_string

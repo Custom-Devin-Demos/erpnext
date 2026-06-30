@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import json
 from typing import Literal
 
@@ -182,7 +184,7 @@ class SalesOrder(SellingController):
 		utm_source: DF.Link | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.status_updater = [
 			{
@@ -212,11 +214,11 @@ class SalesOrder(SellingController):
 	def can_update_items(self) -> bool:
 		return SubcontractingService(self).can_update_items()
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_has_unit_price_items()
 		self.flags.allow_zero_qty = self.has_unit_price_items
 
-	def validate(self):
+	def validate(self) -> None:
 		super().validate()
 		self.validate_delivery_date()
 		self.validate_proj_cust()
@@ -250,7 +252,7 @@ class SalesOrder(SellingController):
 		if not self.get("is_subcontracted"):
 			SalesOrderStockReservation(self).enable_auto_reserve_stock()
 
-	def set_has_unit_price_items(self):
+	def set_has_unit_price_items(self) -> None:
 		"""
 		If permitted in settings and any item has 0 qty, the SO has unit price items.
 		"""
@@ -261,7 +263,7 @@ class SalesOrder(SellingController):
 			not row.qty for row in self.get("items") if (row.item_code and not row.qty)
 		)
 
-	def validate_po(self):
+	def validate_po(self) -> None:
 		# validate p.o date v/s delivery date
 		if self.po_date and not self.skip_delivery_note:
 			for d in self.get("items"):
@@ -307,7 +309,7 @@ class SalesOrder(SellingController):
 						)
 					)
 
-	def validate_for_items(self):
+	def validate_for_items(self) -> None:
 		item_warehouse_pairs = [
 			(d.item_code, d.warehouse) for d in self.get("items") if d.item_code and d.warehouse
 		]
@@ -325,7 +327,7 @@ class SalesOrder(SellingController):
 			d.transaction_date = self.transaction_date
 			d.projected_qty = bin_data.get((d.item_code, d.warehouse), 0.0)
 
-	def product_bundle_has_stock_item(self, product_bundle):
+	def product_bundle_has_stock_item(self, product_bundle: str) -> bool:
 		"""Returns true if the active bundle for `product_bundle` (a parent item code) has a stock item"""
 		from erpnext.selling.doctype.product_bundle.product_bundle import get_active_product_bundle
 
@@ -342,7 +344,7 @@ class SalesOrder(SellingController):
 
 		return frappe.db.exists("Item", {"name": ["in", bundle_items], "is_stock_item": 1}) is not None
 
-	def validate_sales_mntc_quotation(self):
+	def validate_sales_mntc_quotation(self) -> None:
 		quotation_names = [d.prevdoc_docname for d in self.get("items") if d.prevdoc_docname]
 
 		if not quotation_names:
@@ -358,7 +360,7 @@ class SalesOrder(SellingController):
 			if d.prevdoc_docname and d.prevdoc_docname not in valid_quotations:
 				frappe.msgprint(_("Quotation {0} not of type {1}").format(d.prevdoc_docname, self.order_type))
 
-	def validate_delivery_date(self):
+	def validate_delivery_date(self) -> None:
 		if self.order_type == "Sales" and not self.skip_delivery_note:
 			delivery_date_list = [d.delivery_date for d in self.get("items") if d.delivery_date]
 			max_delivery_date = max(delivery_date_list) if delivery_date_list else None
@@ -382,7 +384,7 @@ class SalesOrder(SellingController):
 
 		self.validate_sales_mntc_quotation()
 
-	def validate_proj_cust(self):
+	def validate_proj_cust(self) -> None:
 		if self.project and self.customer_name:
 			project_has_valid_customer = frappe.db.exists(
 				"Project", {"name": self.project, "customer": ["in", [self.customer, "", None]]}
@@ -392,7 +394,7 @@ class SalesOrder(SellingController):
 					_("Customer {0} does not belong to project {1}").format(self.customer, self.project)
 				)
 
-	def validate_warehouse(self):
+	def validate_warehouse(self) -> None:
 		super().validate_warehouse()
 
 		for d in self.get("items"):
@@ -411,7 +413,7 @@ class SalesOrder(SellingController):
 					_("Source warehouse required for stock item {0}").format(d.item_code), WarehouseRequired
 				)
 
-	def validate_with_previous_doc(self):
+	def validate_with_previous_doc(self) -> None:
 		super().validate_with_previous_doc(
 			{
 				"Quotation": {"ref_dn_field": "prevdoc_docname", "compare_fields": [["company", "="]]},
@@ -427,12 +429,12 @@ class SalesOrder(SellingController):
 		if cint(frappe.get_single_value("Selling Settings", "maintain_same_sales_rate")):
 			self.validate_rate_with_reference_doc([["Quotation", "prevdoc_docname", "quotation_item"]])
 
-	def update_enquiry_status(self, prevdoc, flag):
+	def update_enquiry_status(self, prevdoc: str, flag: str) -> None:
 		opportunity_name = frappe.db.get_value("Quotation Item", {"parent": prevdoc}, "prevdoc_docname")
 		if opportunity_name:
 			frappe.db.set_value("Opportunity", opportunity_name, "status", flag)
 
-	def update_prevdoc_status(self, flag=None):
+	def update_prevdoc_status(self, flag: str | None = None) -> None:
 		for quotation in set(d.prevdoc_docname for d in self.get("items")):
 			if quotation:
 				doc = frappe.get_doc("Quotation", quotation)
@@ -442,12 +444,12 @@ class SalesOrder(SellingController):
 				doc.set_status(update=True)
 				doc.update_opportunity("Converted" if flag == "submit" else "Quotation")
 
-	def validate_drop_ship(self):
+	def validate_drop_ship(self) -> None:
 		for d in self.get("items"):
 			if d.delivered_by_supplier and not d.supplier:
 				frappe.throw(_("Row #{0}: Set Supplier for item {1}").format(d.idx, d.item_code))
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		super().update_prevdoc_status()
 		self.check_credit_limit()
 		self.update_reserved_qty()
@@ -470,7 +472,7 @@ class SalesOrder(SellingController):
 		if self.get("reserve_stock") and not self.get("is_subcontracted"):
 			self.create_stock_reservation_entries()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = (
 			"GL Entry",
 			"Stock Ledger Entry",
@@ -502,7 +504,7 @@ class SalesOrder(SellingController):
 
 			update_coupon_code_count(self.coupon_code, "cancelled")
 
-	def update_project(self):
+	def update_project(self) -> None:
 		if frappe.get_single_value("Selling Settings", "sales_update_frequency") != "Each Transaction":
 			return
 
@@ -511,7 +513,7 @@ class SalesOrder(SellingController):
 			project.update_sales_amount()
 			project.db_update()
 
-	def check_credit_limit(self):
+	def check_credit_limit(self) -> None:
 		# if bypass credit limit check is set to true (1) at sales order level,
 		# then we need not to check credit limit and vise versa
 		if not cint(
@@ -523,7 +525,7 @@ class SalesOrder(SellingController):
 		):
 			check_credit_limit(self.customer, self.company)
 
-	def check_nextdoc_docstatus(self):
+	def check_nextdoc_docstatus(self) -> None:
 		linked_invoices = frappe.get_all(
 			"Sales Invoice Item",
 			filters={"sales_order": self.name, "docstatus": 0},
@@ -538,24 +540,24 @@ class SalesOrder(SellingController):
 				)
 			)
 
-	def update_status(self, status):
+	def update_status(self, status: str) -> None:
 		StatusService(self).update_status(status)
 
-	def update_reserved_qty(self, so_item_rows=None):
+	def update_reserved_qty(self, so_item_rows: list | None = None) -> None:
 		SalesOrderStockReservation(self).update_reserved_qty(so_item_rows)
 
-	def on_update_after_submit(self):
+	def on_update_after_submit(self) -> None:
 		self.calculate_commission()
 		self.calculate_contribution()
 		self.check_credit_limit()
 
-	def before_update_after_submit(self):
+	def before_update_after_submit(self) -> None:
 		self.validate_po()
 		self.validate_drop_ship()
 		self.validate_supplier_after_submit()
 		self.validate_delivery_date()
 
-	def validate_supplier_after_submit(self):
+	def validate_supplier_after_submit(self) -> None:
 		"""Check that supplier is the same after submit if PO is already made"""
 		exc_list = []
 
@@ -572,18 +574,18 @@ class SalesOrder(SellingController):
 		if exc_list:
 			frappe.throw("\n".join(exc_list))
 
-	def update_delivery_status(self):
+	def update_delivery_status(self) -> None:
 		"""Update delivery status from Purchase Order for drop shipping"""
 		StatusService(self).update_delivery_status()
 
-	def update_picking_status(self):
+	def update_picking_status(self) -> None:
 		StatusService(self).update_picking_status()
 
-	def set_indicator(self):
+	def set_indicator(self) -> None:
 		"""Set indicator for portal"""
 		StatusService(self).set_indicator()
 
-	def on_recurring(self, reference_doc, auto_repeat_doc):
+	def on_recurring(self, reference_doc, auto_repeat_doc) -> None:
 		def _get_delivery_date(ref_doc_delivery_date, red_doc_transaction_date, transaction_date):
 			delivery_date = auto_repeat_doc.get_next_schedule_date(schedule_date=ref_doc_delivery_date)
 
@@ -614,7 +616,7 @@ class SalesOrder(SellingController):
 				),
 			)
 
-	def validate_serial_no_based_delivery(self):
+	def validate_serial_no_based_delivery(self) -> None:
 		reserved_items = []
 		normal_items = []
 		for item in self.items:
@@ -671,7 +673,7 @@ class SalesOrder(SellingController):
 		"""Cancel Stock Reservation Entries for Sales Order Items."""
 		SalesOrderStockReservation(self).cancel_stock_reservation_entries(sre_list, notify)
 
-	def set_missing_values(self, for_validate=False):
+	def set_missing_values(self, for_validate: bool = False) -> None:
 		super().set_missing_values(for_validate)
 
 		if self.delivery_date:
@@ -680,15 +682,15 @@ class SalesOrder(SellingController):
 					item.delivery_date = self.delivery_date
 
 	@frappe.whitelist()
-	def get_delivery_schedule(self, sales_order_item: str):
+	def get_delivery_schedule(self, sales_order_item: str) -> list[dict]:
 		return DeliveryScheduleService(self).get_delivery_schedule(sales_order_item)
 
 	@frappe.whitelist()
-	def create_delivery_schedule(self, child_row: dict | frappe._dict, schedules: str | list[dict]):
+	def create_delivery_schedule(self, child_row: dict | frappe._dict, schedules: str | list[dict]) -> None:
 		DeliveryScheduleService(self).create_delivery_schedule(child_row, schedules)
 
 
-def get_list_context(context=None):
+def get_list_context(context=None) -> dict:
 	from erpnext.controllers.website_list_for_contact import get_list_context
 
 	list_context = get_list_context(context)
@@ -706,12 +708,12 @@ def get_list_context(context=None):
 
 
 @frappe.whitelist()
-def is_enable_cutoff_date_on_bulk_delivery_note_creation():
+def is_enable_cutoff_date_on_bulk_delivery_note_creation() -> int:
 	return frappe.get_single_value("Selling Settings", "enable_cutoff_date_on_bulk_delivery_note_creation")
 
 
 @frappe.whitelist()
-def close_or_unclose_sales_orders(names: str | list, status: str):
+def close_or_unclose_sales_orders(names: str | list, status: str) -> None:
 	if not frappe.has_permission("Sales Order", "write"):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
@@ -733,7 +735,7 @@ def close_or_unclose_sales_orders(names: str | list, status: str):
 
 
 @frappe.whitelist()
-def get_events(start: str, end: str, filters: str | dict | None = None):
+def get_events(start: str, end: str, filters: str | dict | None = None) -> list:
 	"""Returns events for Gantt / Calendar view rendering.
 
 	:param start: Start date-time.
@@ -777,12 +779,12 @@ def get_events(start: str, end: str, filters: str | dict | None = None):
 
 
 @frappe.whitelist()
-def update_status(status: str, name: str):
+def update_status(status: str, name: str) -> None:
 	so = frappe.get_doc("Sales Order", name, check_permission="submit")
 	so.update_status(status)
 
 
-def update_produced_qty_in_so_item(sales_order, sales_order_item):
+def update_produced_qty_in_so_item(sales_order: str, sales_order_item: str) -> None:
 	# for multiple work orders against same sales order item
 	linked_wo_with_so_item = frappe.db.get_all(
 		"Work Order",
@@ -801,7 +803,7 @@ def update_produced_qty_in_so_item(sales_order, sales_order_item):
 
 
 @frappe.whitelist()
-def get_work_order_items(sales_order: str, for_raw_material_request: int = 0):
+def get_work_order_items(sales_order: str, for_raw_material_request: int = 0) -> list | None:
 	"""Returns items with BOM that already do not have a linked work order"""
 	if sales_order:
 		so = frappe.get_doc("Sales Order", sales_order)
@@ -867,5 +869,5 @@ def get_work_order_items(sales_order: str, for_raw_material_request: int = 0):
 
 
 @frappe.whitelist()
-def get_stock_reservation_status():
+def get_stock_reservation_status() -> int:
 	return frappe.get_single_value("Stock Settings", "enable_stock_reservation")

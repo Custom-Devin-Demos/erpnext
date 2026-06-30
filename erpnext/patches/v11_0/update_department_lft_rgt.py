@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils.nestedset import rebuild_tree
 
 
-def execute():
+def execute() -> None:
 	"""assign lft and rgt appropriately"""
 	frappe.reload_doc("setup", "doctype", "department")
 	if not frappe.db.exists("Department", _("All Departments")):

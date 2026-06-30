@@ -2,12 +2,14 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.regional.italy.setup import add_permissions
 
 
-def execute():
+def execute() -> None:
 	countries = frappe.get_all("Company", fields="country")
 	countries = [country["country"] for country in countries]
 	if "Italy" in countries:

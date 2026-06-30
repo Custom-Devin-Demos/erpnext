@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 
 import erpnext
@@ -16,9 +20,12 @@ from erpnext.regional.report.uae_vat_201.uae_vat_201 import (
 from erpnext.stock.doctype.warehouse.test_warehouse import get_warehouse_account
 from erpnext.tests.utils import ERPNextTestSuite
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class TestUaeVat201(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		set_vat_accounts()
 
 		make_customer()
@@ -31,14 +38,14 @@ class TestUaeVat201(ERPNextTestSuite):
 		make_item("_Test UAE VAT Zero Rated Item", properties={"is_zero_rated": 1, "is_exempt": 0})
 		make_item("_Test UAE VAT Exempt Item", properties={"is_zero_rated": 0, "is_exempt": 1})
 
-	def test_validate_company_region(self):
+	def test_validate_company_region(self) -> None:
 		self.assertRaises(
 			frappe.exceptions.ValidationError,
 			execute,
 			{"company": "_Test Company"},
 		)
 
-	def test_uae_vat_201_report(self):
+	def test_uae_vat_201_report(self) -> None:
 		make_sales_invoices()
 		create_purchase_invoices()
 
@@ -65,7 +72,7 @@ class TestUaeVat201(ERPNextTestSuite):
 	@ERPNextTestSuite.change_settings(
 		"Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": True}
 	)
-	def test_uae_vat_201_report_with_foreign_transaction(self):
+	def test_uae_vat_201_report_with_foreign_transaction(self) -> None:
 		pi = make_purchase_invoice(
 			company="_Test Company UAE VAT",
 			supplier="_Test UAE Supplier",
@@ -97,7 +104,7 @@ class TestUaeVat201(ERPNextTestSuite):
 		self.assertEqual(get_standard_rated_expenses_tax(filters), 50)
 
 
-def set_vat_accounts():
+def set_vat_accounts() -> None:
 	if not frappe.db.exists("UAE VAT Settings", "_Test Company UAE VAT"):
 		vat_accounts = frappe.get_all(
 			"Account",
@@ -118,7 +125,7 @@ def set_vat_accounts():
 		).insert()
 
 
-def make_customer():
+def make_customer() -> None:
 	if not frappe.db.exists("Customer", "_Test UAE Customer"):
 		customer = frappe.get_doc(
 			{
@@ -130,7 +137,7 @@ def make_customer():
 		customer.insert()
 
 
-def make_supplier():
+def make_supplier() -> None:
 	if not frappe.db.exists("Supplier", "_Test UAE Supplier"):
 		frappe.get_doc(
 			{
@@ -142,7 +149,7 @@ def make_supplier():
 		).insert()
 
 
-def create_warehouse(warehouse_name, properties=None, company=None):
+def create_warehouse(warehouse_name: str, properties: dict | None = None, company: str | None = None) -> str:
 	if not company:
 		company = "_Test Company"
 
@@ -161,7 +168,7 @@ def create_warehouse(warehouse_name, properties=None, company=None):
 		return warehouse_id
 
 
-def make_item(item_code, properties=None):
+def make_item(item_code: str, properties: dict | None = None) -> Document:
 	if frappe.db.exists("Item", item_code):
 		return frappe.get_doc("Item", item_code)
 
@@ -183,8 +190,10 @@ def make_item(item_code, properties=None):
 	return item
 
 
-def make_sales_invoices():
-	def make_sales_invoices_wrapper(emirate, item, tax=True, tourist_tax=False):
+def make_sales_invoices() -> None:
+	def make_sales_invoices_wrapper(
+		emirate: str, item: str, tax: bool = True, tourist_tax: bool = False
+	) -> None:
 		si = create_sales_invoice(
 			company="_Test Company UAE VAT",
 			customer="_Test UAE Customer",
@@ -230,7 +239,7 @@ def make_sales_invoices():
 	make_sales_invoices_wrapper("Sharjah", uae_zero_rated_item, False)
 
 
-def create_purchase_invoices():
+def create_purchase_invoices() -> None:
 	pi = make_purchase_invoice(
 		company="_Test Company UAE VAT",
 		supplier="_Test UAE Supplier",

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import copy
 import functools
 import math
@@ -28,10 +30,10 @@ def get_period_list(
 	period_end_date,
 	filter_based_on,
 	periodicity,
-	accumulated_values=False,
+	accumulated_values: bool = False,
 	company=None,
-	reset_period_on_fy_change=True,
-	ignore_fiscal_year=False,
+	reset_period_on_fy_change: bool = True,
+	ignore_fiscal_year: bool = False,
 ):
 	"""Get a list of dict {"from_date": from_date, "to_date": to_date, "key": key, "label": label}
 	Periodicity can be (Yearly, Quarterly, Monthly)"""
@@ -125,7 +127,7 @@ def get_fiscal_year_data(from_fiscal_year, to_fiscal_year):
 	return fiscal_year[0] if fiscal_year else {}
 
 
-def validate_fiscal_year(fiscal_year, from_fiscal_year, to_fiscal_year):
+def validate_fiscal_year(fiscal_year, from_fiscal_year, to_fiscal_year) -> None:
 	if not fiscal_year.get("year_start_date") or not fiscal_year.get("year_end_date"):
 		frappe.throw(_("Start Year and End Year are mandatory"))
 
@@ -133,7 +135,7 @@ def validate_fiscal_year(fiscal_year, from_fiscal_year, to_fiscal_year):
 		frappe.throw(_("End Year cannot be before Start Year"))
 
 
-def validate_dates(from_date, to_date):
+def validate_dates(from_date, to_date) -> None:
 	if not from_date or not to_date:
 		frappe.throw(_("From Date and To Date are mandatory"))
 
@@ -164,11 +166,11 @@ def get_data(
 	balance_must_be,
 	period_list,
 	filters=None,
-	accumulated_values=1,
-	only_current_fiscal_year=True,
-	ignore_closing_entries=False,
-	ignore_accumulated_values_for_fy=False,
-	total=True,
+	accumulated_values: int = 1,
+	only_current_fiscal_year: bool = True,
+	ignore_closing_entries: bool = False,
+	ignore_accumulated_values_for_fy: bool = False,
+	total: bool = True,
 ):
 	accounts = get_accounts(company, root_type)
 	if not accounts:
@@ -232,7 +234,7 @@ def calculate_values(
 	period_list,
 	accumulated_values,
 	ignore_accumulated_values_for_fy,
-):
+) -> None:
 	for entries in gl_entries_by_account.values():
 		for entry in entries:
 			d = accounts_by_name.get(entry.account)
@@ -256,7 +258,7 @@ def calculate_values(
 				d["opening_balance"] = d.get("opening_balance", 0.0) + flt(entry.debit) - flt(entry.credit)
 
 
-def accumulate_values_into_parents(accounts, accounts_by_name, period_list):
+def accumulate_values_into_parents(accounts, accounts_by_name, period_list) -> None:
 	"""accumulate children's values in parent accounts"""
 	for d in reversed(accounts):
 		if d.parent_account:
@@ -323,8 +325,8 @@ def prepare_data(accounts, balance_must_be, period_list, company_currency, accum
 	return data
 
 
-def filter_out_zero_value_rows(data, parent_children_map, show_zero_values=False):
-	def get_all_parents(account, parent_children_map):
+def filter_out_zero_value_rows(data, parent_children_map, show_zero_values: bool = False):
+	def get_all_parents(account, parent_children_map) -> None:
 		for parent, children in parent_children_map.items():
 			for child in children:
 				if child["name"] == account and parent:
@@ -346,7 +348,7 @@ def filter_out_zero_value_rows(data, parent_children_map, show_zero_values=False
 	return data_with_value
 
 
-def add_total_row(out, root_type, balance_must_be, period_list, company_currency):
+def add_total_row(out, root_type, balance_must_be, period_list, company_currency) -> None:
 	total_row = {
 		"account_name": "'" + _("Total {0} ({1})").format(_(root_type), _(balance_must_be)) + "'",
 		"account": "'" + _("Total {0} ({1})").format(_(root_type), _(balance_must_be)) + "'",
@@ -392,7 +394,7 @@ def get_accounts(company, root_type):
 	)
 
 
-def filter_accounts(accounts, depth=20):
+def filter_accounts(accounts, depth: int = 20):
 	parent_children_map = {}
 	accounts_by_name = {}
 	for d in accounts:
@@ -401,7 +403,7 @@ def filter_accounts(accounts, depth=20):
 
 	filtered_accounts = []
 
-	def add_to_list(parent, level):
+	def add_to_list(parent, level) -> None:
 		if level < depth:
 			children = parent_children_map.get(parent) or []
 			sort_accounts(children, is_root=True if parent is None else False)
@@ -416,7 +418,7 @@ def filter_accounts(accounts, depth=20):
 	return filtered_accounts, accounts_by_name, parent_children_map
 
 
-def sort_accounts(accounts, is_root=False, key="name"):
+def sort_accounts(accounts, is_root: bool = False, key: str = "name") -> None:
 	"""Sort root types as Asset, Liability, Equity, Income, Expense"""
 
 	def compare_accounts(a, b):
@@ -449,10 +451,10 @@ def set_gl_entries_by_account(
 	root_lft=None,
 	root_rgt=None,
 	root_type=None,
-	ignore_closing_entries=False,
-	ignore_opening_entries=False,
-	group_by_account=False,
-	ignore_reporting_currency=True,
+	ignore_closing_entries: bool = False,
+	ignore_opening_entries: bool = False,
+	group_by_account: bool = False,
+	ignore_reporting_currency: bool = True,
 ):
 	"""Returns a dict like { "account": [gl entries], ... }"""
 	gl_entries = []
@@ -521,9 +523,9 @@ def get_accounting_entries(
 	root_type=None,
 	ignore_closing_entries=None,
 	period_closing_voucher=None,
-	ignore_opening_entries=False,
-	group_by_account=False,
-	ignore_reporting_currency=True,
+	ignore_opening_entries: bool = False,
+	group_by_account: bool = False,
+	ignore_reporting_currency: bool = True,
 ):
 	gl_entry = frappe.qb.DocType(doctype)
 	query = (
@@ -687,7 +689,7 @@ def get_cost_centers_with_children(cost_centers):
 	return list(set(all_cost_centers))
 
 
-def get_columns(periodicity, period_list, accumulated_values=1, company=None, cash_flow=False):
+def get_columns(periodicity, period_list, accumulated_values: int = 1, company=None, cash_flow: bool = False):
 	columns = [
 		{
 			"fieldname": "account" if not cash_flow else "section",
@@ -760,7 +762,7 @@ def get_filtered_list_for_consolidated_report(filters, period_list):
 	return filtered_summary_list
 
 
-def compute_growth_view_data(data, columns):
+def compute_growth_view_data(data, columns) -> None:
 	data_copy = copy.deepcopy(data)
 
 	for row_idx in range(len(data_copy)):
@@ -789,7 +791,7 @@ def compute_growth_view_data(data, columns):
 			data[row_idx][current_period_key] = growth_percent
 
 
-def compute_margin_view_data(data, columns, accumulated_values):
+def compute_margin_view_data(data, columns, accumulated_values) -> None:
 	if not columns:
 		return
 

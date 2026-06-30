@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
@@ -20,12 +22,12 @@ field_map = {
 }
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = get_columns(filters), get_data(filters)
 	return columns, data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	party_type = filters.get("party_type")
 	party_type_value = get_party_group(party_type)
 	columns = [
@@ -59,7 +61,7 @@ def get_columns(filters):
 	return columns
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	party_type = filters.get("party_type")
 	party = filters.get("party_name")
 	party_group = get_party_group(party_type)
@@ -67,7 +69,9 @@ def get_data(filters):
 	return get_party_addresses_and_contact(party_type, party, party_group, filters)
 
 
-def get_party_addresses_and_contact(party_type, party, party_group, filters):
+def get_party_addresses_and_contact(
+	party_type: str, party: str | None, party_group: str, filters: dict
+) -> list:
 	data = []
 	query_filters = None
 	party_details = frappe._dict()
@@ -134,7 +138,7 @@ def get_party_addresses_and_contact(party_type, party, party_group, filters):
 	return data
 
 
-def get_party_details(party_type, party_list, doctype, party_details):
+def get_party_details(party_type: str, party_list: list, doctype: str, party_details: dict) -> dict:
 	filters = [
 		["Dynamic Link", "link_doctype", "=", party_type],
 		["Dynamic Link", "link_name", "in", party_list],
@@ -150,11 +154,11 @@ def get_party_details(party_type, party_list, doctype, party_details):
 	return party_details
 
 
-def add_blank_columns_for(doctype):
+def add_blank_columns_for(doctype: str) -> list:
 	return ["" for field in field_map.get(doctype, [])]
 
 
-def get_party_group(party_type):
+def get_party_group(party_type: str) -> str | None:
 	if not party_type:
 		return
 	group = {
@@ -167,7 +171,7 @@ def get_party_group(party_type):
 	return group[party_type]
 
 
-def should_add_party_name(party_type):
+def should_add_party_name(party_type: str) -> bool:
 	settings_map = {
 		"Supplier": ("Buying Settings", "supp_master_name"),
 		"Customer": ("Selling Settings", "cust_master_name"),

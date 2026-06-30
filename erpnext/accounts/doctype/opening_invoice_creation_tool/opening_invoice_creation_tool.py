@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, scrub
 from frappe.model.document import Document
@@ -35,7 +37,7 @@ class OpeningInvoiceCreationTool(Document):
 		project: DF.Link | None
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		"""Load the Opening Invoice summary"""
 		summary, max_count = self.get_opening_invoice_summary()
 		self.set_onload("opening_invoices_summary", summary)
@@ -43,7 +45,7 @@ class OpeningInvoiceCreationTool(Document):
 		self.set_onload("temporary_opening_account", get_temporary_opening_account(self.company))
 
 	def get_opening_invoice_summary(self):
-		def prepare_invoice_summary(doctype, invoices):
+		def prepare_invoice_summary(doctype, invoices) -> None:
 			# add company wise sales / purchase invoice summary
 			paid_amount = []
 			outstanding_amount = []
@@ -93,11 +95,11 @@ class OpeningInvoiceCreationTool(Document):
 
 		return invoices_summary, max_count
 
-	def validate_company(self):
+	def validate_company(self) -> None:
 		if not self.company:
 			frappe.throw(_("Please select the Company"))
 
-	def set_missing_values(self, row):
+	def set_missing_values(self, row) -> None:
 		row.qty = row.qty or 1.0
 		row.temporary_opening_account = row.temporary_opening_account or get_temporary_opening_account(
 			self.company
@@ -107,7 +109,7 @@ class OpeningInvoiceCreationTool(Document):
 		row.posting_date = row.posting_date or nowdate()
 		row.due_date = row.due_date or nowdate()
 
-	def validate_mandatory_invoice_fields(self, row):
+	def validate_mandatory_invoice_fields(self, row) -> None:
 		if self.create_missing_party:
 			if not row.party and not row.party_name:
 				frappe.throw(_("Row #{0}: Either Party ID or Party Name is required").format(row.idx))
@@ -135,7 +137,7 @@ class OpeningInvoiceCreationTool(Document):
 
 		self.validate_temporary_opening_account(row)
 
-	def validate_temporary_opening_account(self, row):
+	def validate_temporary_opening_account(self, row) -> None:
 		account_type = frappe.get_cached_value("Account", row.temporary_opening_account, "account_type")
 		if account_type != "Temporary":
 			frappe.throw(
@@ -316,7 +318,7 @@ def start_import(invoices):
 	return names
 
 
-def publish(index, total, doctype):
+def publish(index, total, doctype) -> None:
 	frappe.publish_realtime(
 		"opening_invoice_creation_progress",
 		dict(

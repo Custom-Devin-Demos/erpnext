@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import click
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if "webshop" in frappe.get_installed_apps():
 		return
 

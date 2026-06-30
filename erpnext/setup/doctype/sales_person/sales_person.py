@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 from collections import defaultdict
 from itertools import chain
@@ -42,7 +43,7 @@ class SalesPerson(NestedSet):
 
 	nsm_parent_field = "parent_sales_person"
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.enabled:
 			self.validate_sales_person()
 
@@ -54,10 +55,10 @@ class SalesPerson(NestedSet):
 				frappe.throw(_("Either target qty or target amount is mandatory."))
 		self.validate_employee_id()
 
-	def onload(self):
+	def onload(self) -> None:
 		self.load_dashboard_info()
 
-	def load_dashboard_info(self):
+	def load_dashboard_info(self) -> None:
 		company_default_currency = get_default_currency()
 
 		allocated_amount_against_order = flt(
@@ -83,11 +84,11 @@ class SalesPerson(NestedSet):
 
 		self.set_onload("dashboard_info", info)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		super().on_update()
 		self.validate_one_root()
 
-	def validate_sales_person(self):
+	def validate_sales_person(self) -> None:
 		sales_team = frappe.qb.DocType("Sales Team")
 
 		query = (
@@ -106,7 +107,7 @@ class SalesPerson(NestedSet):
 				)
 			)
 
-	def get_email_id(self):
+	def get_email_id(self) -> str | None:
 		if self.employee:
 			user = frappe.db.get_value("Employee", self.employee, "user_id")
 			if not user:
@@ -114,7 +115,7 @@ class SalesPerson(NestedSet):
 			else:
 				return frappe.db.get_value("User", user, "email") or user
 
-	def validate_employee_id(self):
+	def validate_employee_id(self) -> None:
 		if self.employee:
 			sales_person = frappe.db.get_value("Sales Person", {"employee": self.employee})
 
@@ -124,12 +125,12 @@ class SalesPerson(NestedSet):
 				)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Sales Person", ["lft", "rgt"])
 
 
 def get_timeline_data(doctype: str, name: str) -> dict[int, int]:
-	def _fetch_activity(doctype: str, date_field: str):
+	def _fetch_activity(doctype: str, date_field: str) -> dict:
 		sales_team = frappe.qb.DocType("Sales Team")
 		transaction = frappe.qb.DocType(doctype)
 

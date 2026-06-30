@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
@@ -5,7 +7,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 
 
-def execute():
+def execute() -> None:
 	accounting_dimensions = frappe.db.sql(
 		"""select fieldname from
 		`tabAccounting Dimension`""",

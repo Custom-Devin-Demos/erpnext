@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def get_notification_config():
+def get_notification_config() -> dict:
 	notifications = {
 		"for_doctype": {
 			"Issue": {"status": "Open"},

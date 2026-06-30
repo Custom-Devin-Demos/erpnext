@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from erpnext import encode_company_abbr
 from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestInit(ERPNextTestSuite):
-	def test_encode_company_abbr(self):
+	def test_encode_company_abbr(self) -> None:
 		abbr = "NFECT"
 
 		names = [
@@ -35,12 +37,12 @@ class TestInit(ERPNextTestSuite):
 				f"{enc_name} is not same as {expected_names[i]}",
 			)
 
-	def test_translation_files(self):
+	def test_translation_files(self) -> None:
 		from frappe.tests.test_translate import verify_translation_files
 
 		verify_translation_files("erpnext")
 
-	def test_patches(self):
+	def test_patches(self) -> None:
 		from frappe.tests.test_patches import check_patch_files
 
 		check_patch_files("erpnext")

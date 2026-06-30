@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -105,7 +107,7 @@ class SalesInvoiceItem(Document):
 		weight_uom: DF.Link | None
 	# end: auto-generated types
 
-	def validate_cost_center(self, company: str):
+	def validate_cost_center(self, company: str) -> None:
 		cost_center_company = frappe.get_cached_value("Cost Center", self.cost_center, "company")
 		if cost_center_company != company:
 			frappe.throw(
@@ -114,7 +116,7 @@ class SalesInvoiceItem(Document):
 				)
 			)
 
-	def set_actual_qty(self):
+	def set_actual_qty(self) -> None:
 		if self.item_code and self.warehouse:
 			self.actual_qty = (
 				frappe.db.get_value(
@@ -123,7 +125,7 @@ class SalesInvoiceItem(Document):
 				or 0
 			)
 
-	def set_income_account_for_fixed_asset(self, company: str):
+	def set_income_account_for_fixed_asset(self, company: str) -> None:
 		"""Set income account for fixed asset item based on company's disposal account and cost center."""
 		if not self.is_fixed_asset:
 			return

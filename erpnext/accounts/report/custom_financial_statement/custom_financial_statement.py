@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from erpnext.accounts.doctype.financial_report_template.financial_report_engine import (
 	FinancialReportEngine,
 	get_xlsx_styles,  #! DO NOT REMOVE - hook for styling

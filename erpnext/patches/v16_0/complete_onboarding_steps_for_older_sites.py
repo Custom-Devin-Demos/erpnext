@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import date_diff, getdate, today
 
 
-def execute():
+def execute() -> None:
 	steps = frappe.get_all(
 		"Onboarding Step",
 		filters={"is_complete": 0},
@@ -24,12 +26,12 @@ def execute():
 		complete_onboarding_steps_if_record_exists(steps)
 
 
-def complete_all_onboarding_steps(steps):
+def complete_all_onboarding_steps(steps) -> None:
 	for step in steps:
 		frappe.db.set_value("Onboarding Step", step.name, "is_complete", 1, update_modified=False)
 
 
-def complete_onboarding_steps_if_record_exists(steps):
+def complete_onboarding_steps_if_record_exists(steps) -> None:
 	for step in steps:
 		if (
 			step.action == "Create Entry"

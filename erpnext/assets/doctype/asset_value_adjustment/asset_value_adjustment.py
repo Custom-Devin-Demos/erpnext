@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -41,12 +43,12 @@ class AssetValueAdjustment(Document):
 		new_asset_value: DF.Currency
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_date()
 		self.set_current_asset_value()
 		self.set_difference_amount()
 
-	def validate_date(self):
+	def validate_date(self) -> None:
 		asset_purchase_date = frappe.db.get_value("Asset", self.asset, "purchase_date")
 		if getdate(self.date) < getdate(asset_purchase_date):
 			frappe.throw(
@@ -56,14 +58,14 @@ class AssetValueAdjustment(Document):
 				title=_("Incorrect Date"),
 			)
 
-	def set_difference_amount(self):
+	def set_difference_amount(self) -> None:
 		self.difference_amount = flt(self.new_asset_value - self.current_asset_value)
 
-	def set_current_asset_value(self):
+	def set_current_asset_value(self) -> None:
 		if not self.current_asset_value and self.asset:
 			self.current_asset_value = get_asset_value_after_depreciation(self.asset, self.finance_book)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.make_asset_revaluation_entry()
 		self.update_asset()
 		add_asset_activity(
@@ -73,7 +75,7 @@ class AssetValueAdjustment(Document):
 			),
 		)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.cancel_asset_revaluation_entry()
 		self.update_asset()
 		add_asset_activity(
@@ -83,7 +85,7 @@ class AssetValueAdjustment(Document):
 			),
 		)
 
-	def make_asset_revaluation_entry(self):
+	def make_asset_revaluation_entry(self) -> None:
 		asset = frappe.get_doc("Asset", self.asset)
 		(
 			fixed_asset_account,
@@ -128,7 +130,7 @@ class AssetValueAdjustment(Document):
 
 		self.db_set("journal_entry", je.name)
 
-	def get_entry_for_asset_value_decrease(self, fixed_asset_account, entry_template):
+	def get_entry_for_asset_value_decrease(self, fixed_asset_account: str, entry_template: dict) -> tuple:
 		credit_entry = {
 			"account": fixed_asset_account,
 			"credit_in_account_currency": -self.difference_amount,
@@ -142,7 +144,7 @@ class AssetValueAdjustment(Document):
 
 		return credit_entry, debit_entry
 
-	def get_entry_for_asset_value_increase(self, fixed_asset_account, entry_template):
+	def get_entry_for_asset_value_increase(self, fixed_asset_account: str, entry_template: dict) -> tuple:
 		credit_entry = {
 			"account": self.difference_account,
 			"credit_in_account_currency": self.difference_amount,
@@ -156,7 +158,7 @@ class AssetValueAdjustment(Document):
 
 		return credit_entry, debit_entry
 
-	def update_accounting_dimensions(self, credit_entry, debit_entry):
+	def update_accounting_dimensions(self, credit_entry: dict, debit_entry: dict) -> None:
 		accounting_dimensions = get_checks_for_pl_and_bs_accounts()
 
 		for dimension in accounting_dimensions:
@@ -167,7 +169,7 @@ class AssetValueAdjustment(Document):
 			if dimension.get("mandatory_for_pl"):
 				debit_entry.update({dimension["fieldname"]: dimension_value})
 
-	def cancel_asset_revaluation_entry(self):
+	def cancel_asset_revaluation_entry(self) -> None:
 		if not self.journal_entry:
 			return
 
@@ -178,13 +180,13 @@ class AssetValueAdjustment(Document):
 			revaluation_entry.flags.via_asset_value_adjustment = True
 			revaluation_entry.cancel()
 
-	def update_asset(self):
+	def update_asset(self) -> None:
 		asset = self.update_asset_value_after_depreciation()
 		note = self.get_adjustment_note()
 		reschedule_depreciation(asset, note)
 		asset.set_status()
 
-	def update_asset_value_after_depreciation(self):
+	def update_asset_value_after_depreciation(self) -> Document:
 		difference_amount = self.difference_amount if self.docstatus == 1 else -1 * self.difference_amount
 
 		asset = frappe.get_doc("Asset", self.asset)
@@ -202,12 +204,12 @@ class AssetValueAdjustment(Document):
 		asset.db_update()
 		return asset
 
-	def get_adjusted_salvage_value_amount(self, row, difference_amount):
+	def get_adjusted_salvage_value_amount(self, row, difference_amount: float) -> float | None:
 		if row.expected_value_after_useful_life:
 			salvage_value_adjustment = (difference_amount * row.salvage_value_percentage) / 100
 			return flt(salvage_value_adjustment if self.docstatus == 1 else -1 * salvage_value_adjustment)
 
-	def get_adjustment_note(self):
+	def get_adjustment_note(self) -> str:
 		if self.docstatus == 1:
 			notes = _(
 				"This schedule was created when Asset {0} was adjusted through Asset Value Adjustment {1}."
@@ -227,6 +229,6 @@ class AssetValueAdjustment(Document):
 
 
 @frappe.whitelist()
-def get_value_of_accounting_dimensions(asset_name: str):
+def get_value_of_accounting_dimensions(asset_name: str) -> dict | None:
 	dimension_fields = [*frappe.get_list("Accounting Dimension", pluck="fieldname"), "cost_center"]
 	return frappe.db.get_value("Asset", asset_name, fieldname=dimension_fields, as_dict=True)

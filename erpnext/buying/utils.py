@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 
@@ -11,7 +12,7 @@ from frappe.utils import cint, cstr, flt, getdate
 from erpnext.stock.doctype.item.item import get_last_purchase_details, validate_end_of_life
 
 
-def update_last_purchase_rate(doc, is_submit) -> None:
+def update_last_purchase_rate(doc, is_submit: int) -> None:
 	"""updates last_purchase_rate in item table for each item"""
 
 	if doc.get("is_internal_supplier"):
@@ -109,7 +110,7 @@ def validate_stock_item_warehouse(row, item) -> None:
 		)
 
 
-def check_on_hold_or_closed_status(doctype, docname) -> None:
+def check_on_hold_or_closed_status(doctype: str, docname: str) -> None:
 	status = frappe.db.get_value(doctype, docname, "status")
 
 	if status in ("Closed", "On Hold"):
@@ -124,7 +125,7 @@ def check_on_hold_or_closed_status(doctype, docname) -> None:
 
 
 @frappe.whitelist()
-def get_linked_material_requests(items: str | list):
+def get_linked_material_requests(items: str | list) -> list:
 	"""
 	Retrieve Material Requests linked to a list of items.
 	"""

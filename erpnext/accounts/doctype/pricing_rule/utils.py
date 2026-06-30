@@ -4,6 +4,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import copy
 import json
 
@@ -180,7 +182,7 @@ def apply_multiple_pricing_rules(pricing_rules):
 	return True
 
 
-def _get_tree_conditions(args, parenttype, table, allow_blank=True):
+def _get_tree_conditions(args, parenttype, table, allow_blank: bool = True):
 	field = frappe.scrub(parenttype)
 	condition = ""
 	if args.get(field):
@@ -551,7 +553,7 @@ def get_qty_amount_data_for_cumulative(pr_doc, doc, items=None):
 	return [sum_qty, sum_amt]
 
 
-def apply_pricing_rule_on_transaction(doc):
+def apply_pricing_rule_on_transaction(doc) -> None:
 	conditions = "apply_on = 'Transaction'"
 
 	values = {}
@@ -627,7 +629,7 @@ def apply_pricing_rule_on_transaction(doc):
 				doc.calculate_taxes_and_totals()
 
 
-def remove_free_item(doc):
+def remove_free_item(doc) -> None:
 	for d in doc.items:
 		if d.is_free_item:
 			doc.remove(d)
@@ -643,7 +645,7 @@ def get_applied_pricing_rules(pricing_rules):
 	return []
 
 
-def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
+def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None) -> None:
 	free_item = pricing_rule.free_item
 	if pricing_rule.same_item and pricing_rule.get("apply_on") != "Transaction":
 		free_item = item_details.item_code or args.item_code
@@ -703,7 +705,7 @@ def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 	item_details.free_item_data.append(free_item_data_args)
 
 
-def apply_pricing_rule_for_free_items(doc, pricing_rule_args):
+def apply_pricing_rule_for_free_items(doc, pricing_rule_args) -> None:
 	if pricing_rule_args:
 		args = {(d["item_code"], d["pricing_rules"]): d for d in pricing_rule_args}
 
@@ -725,7 +727,7 @@ def apply_pricing_rule_for_free_items(doc, pricing_rule_args):
 				doc.append("items", free_item)
 
 
-def get_pricing_rule_items(pr_doc, other_items=False) -> list:
+def get_pricing_rule_items(pr_doc, other_items: bool = False) -> list:
 	apply_on_data = []
 	apply_on = frappe.scrub(pr_doc.get("apply_on"))
 
@@ -744,7 +746,7 @@ def get_pricing_rule_items(pr_doc, other_items=False) -> list:
 	return list(set(apply_on_data))
 
 
-def validate_coupon_code(coupon_name):
+def validate_coupon_code(coupon_name) -> None:
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
 	if coupon.valid_from and coupon.valid_from > getdate(today()):
 		frappe.throw(_("Sorry, this coupon code's validity has not started"))
@@ -754,7 +756,7 @@ def validate_coupon_code(coupon_name):
 		frappe.throw(_("Sorry, this coupon code is no longer valid"))
 
 
-def update_coupon_code_count(coupon_name, transaction_type):
+def update_coupon_code_count(coupon_name, transaction_type) -> None:
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
 	if transaction_type == "used":
 		if coupon.maximum_use and coupon.used >= coupon.maximum_use:

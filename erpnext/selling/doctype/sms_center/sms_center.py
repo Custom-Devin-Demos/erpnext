@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, msgprint
 from frappe.core.doctype.sms_settings.sms_settings import send_sms
@@ -41,7 +43,7 @@ class SMSCenter(Document):
 	# end: auto-generated types
 
 	@frappe.whitelist()
-	def create_receiver_list(self):
+	def create_receiver_list(self) -> None:
 		query = None
 
 		if self.send_to == "":
@@ -153,7 +155,7 @@ class SMSCenter(Document):
 
 		return query
 
-	def get_receiver_nos(self):
+	def get_receiver_nos(self) -> list:
 		receiver_nos = []
 		if self.receiver_list:
 			for d in self.receiver_list.split("\n"):
@@ -168,7 +170,7 @@ class SMSCenter(Document):
 		return receiver_nos
 
 	@frappe.whitelist()
-	def send_sms(self):
+	def send_sms(self) -> None:
 		receiver_list = []
 		if not self.message:
 			msgprint(_("Please enter message before sending"))

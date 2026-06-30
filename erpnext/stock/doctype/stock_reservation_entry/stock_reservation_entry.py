@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import defaultdict
 from typing import Literal
 
@@ -117,7 +119,7 @@ class StockReservationEntry(Document):
 	def before_cancel(self) -> None:
 		self.validate_reserved_entries()
 
-	def validate_reserved_entries(self):
+	def validate_reserved_entries(self) -> None:
 		entries = frappe.get_all(
 			"Stock Reservation Entry",
 			fields=["voucher_no as name"],
@@ -145,7 +147,7 @@ class StockReservationEntry(Document):
 				)
 			)
 
-	def update_unreserved_qty_in_sre(self):
+	def update_unreserved_qty_in_sre(self) -> None:
 		if self.voucher_type == "Delivery Note":
 			return
 
@@ -191,7 +193,7 @@ class StockReservationEntry(Document):
 
 					delivered_qty -= row.reserved_qty
 
-	def get_serial_batch_entries(self):
+	def get_serial_batch_entries(self) -> dict:
 		serial_nos = []
 		batches = defaultdict(float)
 		for entry in self.sb_entries:
@@ -655,7 +657,7 @@ class StockReservationEntry(Document):
 			msg = _("Reserved Qty should be greater than Delivered Qty.")
 			frappe.throw(msg)
 
-	def consume_serial_batch_for_material_transfer(self, row_wise_serial_batch):
+	def consume_serial_batch_for_material_transfer(self, row_wise_serial_batch) -> None:
 		for entry in self.sb_entries:
 			entry.delivered_qty = 0
 
@@ -1091,7 +1093,7 @@ def has_reserved_stock(voucher_type: str, voucher_no: str, voucher_detail_no: st
 
 
 class StockReservation:
-	def __init__(self, doc, items=None, kwargs=None):
+	def __init__(self, doc, items=None, kwargs=None) -> None:
 		if isinstance(doc, str):
 			doc = parse_json(doc)
 			doc = frappe.get_doc("Work Order", doc.get("name"))
@@ -1230,7 +1232,7 @@ class StockReservation:
 
 		return is_sre_created
 
-	def set_serial_batch(self, sre, serial_batch_bundles):
+	def set_serial_batch(self, sre, serial_batch_bundles) -> None:
 		bundle_details = frappe.get_all(
 			"Serial and Batch Entry",
 			fields=["serial_no", "batch_no", "qty"],
@@ -1249,7 +1251,7 @@ class StockReservation:
 				},
 			)
 
-	def throw_stock_not_exists_error(self, idx, item_code, warehouse):
+	def throw_stock_not_exists_error(self, idx, item_code, warehouse) -> None:
 		frappe.msgprint(
 			_("Row #{0}: Stock not available to reserve for the Item {1} in Warehouse {2}.").format(
 				idx, frappe.bold(item_code), frappe.bold(warehouse)
@@ -1286,7 +1288,7 @@ class StockReservation:
 
 	def transfer_reservation_entries_to(
 		self, docnames, from_doctype, to_doctype, against_fg_item=None, qty_change=None
-	):
+	) -> None:
 		if isinstance(docnames, str):
 			docnames = [docnames]
 
@@ -1399,7 +1401,7 @@ class StockReservation:
 			sre.insert()
 			sre.submit()
 
-	def update_delivered_qty(self, data):
+	def update_delivered_qty(self, data) -> None:
 		for name, delivered_qty in data.get("sre_names").items():
 			doctype = frappe.qb.DocType("Stock Reservation Entry")
 			query = (
@@ -1417,7 +1419,7 @@ class StockReservation:
 			if data.serial_nos or data.batches:
 				update_serial_batch_delivered_qty(data, name)
 
-	def make_stock_reservation_entry(self, row):
+	def make_stock_reservation_entry(self, row) -> None:
 		fields = [
 			"item_code",
 			"warehouse",
@@ -1596,7 +1598,7 @@ def create_stock_reservation_entries_for_so_items(
 	sales_order: object,
 	items_details: list[dict] | None = None,
 	from_voucher_type: Literal["Pick List", "Purchase Receipt"] = None,
-	notify=True,
+	notify: bool = True,
 ):
 	"""Creates Stock Reservation Entries for Sales Order Items."""
 
@@ -1890,7 +1892,7 @@ def get_stock_reservation_entries_for_voucher(
 	return query.run(as_dict=True)
 
 
-def update_serial_batch_delivered_qty(row, name, is_cancelled=False):
+def update_serial_batch_delivered_qty(row, name, is_cancelled: bool = False) -> None:
 	if row.serial_nos:
 		doctype = frappe.qb.DocType("Serial and Batch Entry")
 		query = (

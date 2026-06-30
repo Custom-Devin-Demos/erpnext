@@ -1,6 +1,7 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -30,12 +31,12 @@ class SupplierGroup(NestedSet):
 
 	nsm_parent_field = "parent_supplier_group"
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.parent_supplier_group:
 			self.parent_supplier_group = get_root_of("Supplier Group")
 		self.validate_currency_for_payable_and_advance_account()
 
-	def validate_currency_for_payable_and_advance_account(self):
+	def validate_currency_for_payable_and_advance_account(self) -> None:
 		for x in self.accounts:
 			payable_account_currency = None
 			advance_account_currency = None
@@ -63,16 +64,16 @@ class SupplierGroup(NestedSet):
 					)
 				)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		NestedSet.on_update(self)
 		self.validate_one_root()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		NestedSet.validate_if_child_exists(self)
 		frappe.utils.nestedset.update_nsm(self)
 
 
-def get_parent_supplier_groups(supplier_group):
+def get_parent_supplier_groups(supplier_group: str) -> list:
 	lft, rgt = frappe.db.get_value("Supplier Group", supplier_group, ["lft", "rgt"])
 	return frappe.get_all(
 		"Supplier Group",

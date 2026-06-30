@@ -1,12 +1,14 @@
 # Copyright (c) 2019, Frappe and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.regional.united_arab_emirates.setup import setup
 
 
-def execute():
+def execute() -> None:
 	company = frappe.get_all("Company", filters={"country": "United Arab Emirates"})
 	if not company:
 		return

@@ -1,12 +1,14 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns, data = [], []
 	columns = get_columns()
 	data = get_data(filters)
@@ -77,7 +79,7 @@ def get_stock_ledger_entries(report_filters):
 	)
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"label": _("Id"),

@@ -14,6 +14,8 @@ transaction stores a bundle's *name* (they snapshot components and reference the
 parent item code), so renaming is reference-safe. The whole patch is idempotent.
 """
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.selling.doctype.product_bundle.product_bundle import NAME_PREFIX, build_bundle_name
@@ -31,12 +33,12 @@ SELLING_ITEM_TABLES = {
 BUYING_ITEM_TABLES = ["Purchase Order Item", "Purchase Invoice Item", "Purchase Receipt Item"]
 
 
-def execute():
+def execute() -> None:
 	submit_existing_bundles()
 	stamp_versions_on_transactions()
 
 
-def submit_existing_bundles():
+def submit_existing_bundles() -> None:
 	legacy_bundles = frappe.get_all(
 		"Product Bundle",
 		filters={"docstatus": 0},
@@ -68,7 +70,7 @@ def submit_existing_bundles():
 	_enforce_single_active_version()
 
 
-def stamp_versions_on_transactions():
+def stamp_versions_on_transactions() -> None:
 	"""Backfill the ``product_bundle`` version link onto existing transaction rows.
 
 	- Selling / packed rows: a row whose item is a bundle parent is stamped with that
@@ -137,7 +139,7 @@ def _next_index(item_code: str) -> int:
 	return get_next_version_index(existing)
 
 
-def _enforce_single_active_version():
+def _enforce_single_active_version() -> None:
 	"""Guarantee at most one active version per parent item.
 
 	Under the old unique-name-per-item invariant duplicates can't exist, so this is a

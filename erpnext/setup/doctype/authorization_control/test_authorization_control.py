@@ -1,5 +1,6 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+from __future__ import annotations
 
 import frappe
 
@@ -7,7 +8,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAuthorizationControl(ERPNextTestSuite):
-	def test_validate_approving_authority_raises_when_over_limit(self):
+	def test_validate_approving_authority_raises_when_over_limit(self) -> None:
 		# Exercises validate_approving_authority -> the based_on query-builder lookups and the
 		# coalesce()-based rule lookups (formerly ifnull, which is invalid on Postgres).
 		if not frappe.db.exists("Role", "_Test Approver Role"):
@@ -51,7 +52,7 @@ class TestAuthorizationControl(ERPNextTestSuite):
 			5000,
 		)
 
-	def test_get_value_based_rule_runs(self):
+	def test_get_value_based_rule_runs(self) -> None:
 		# Exercises the four query-builder lookups (incl. the Employee designation subquery) added in
 		# get_value_based_rule; with no matching rule they must run and return empty on both engines.
 		controller = frappe.get_cached_doc("Authorization Control")

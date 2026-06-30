@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.model.document import Document
@@ -98,5 +99,5 @@ class PurchaseOrderItem(Document):
 	pass
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Purchase Order Item", ["item_code", "warehouse"])

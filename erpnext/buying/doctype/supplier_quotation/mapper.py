@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -12,20 +14,20 @@ from frappe.utils import flt
 @frappe.whitelist()
 def make_purchase_order(
 	source_name: str, target_doc: str | Document | None = None, args: str | dict | None = None
-):
+) -> Document:
 	if args is None:
 		args = {}
 	args = frappe.parse_json(args)
 
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		target.run_method("set_missing_values")
 		target.run_method("get_schedule_dates")
 		target.run_method("calculate_taxes_and_totals")
 
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		target.stock_qty = flt(obj.qty) * flt(obj.conversion_factor)
 
-	def select_item(d):
+	def select_item(d) -> bool:
 		filtered_items = args.get("filtered_children", [])
 		child_filter = d.name in filtered_items if filtered_items else True
 		return child_filter
@@ -65,7 +67,7 @@ def make_purchase_order(
 
 
 @frappe.whitelist()
-def make_purchase_invoice(source_name: str, target_doc: str | Document | None = None):
+def make_purchase_invoice(source_name: str, target_doc: str | Document | None = None) -> Document:
 	doc = get_mapped_doc(
 		"Supplier Quotation",
 		source_name,
@@ -86,7 +88,7 @@ def make_purchase_invoice(source_name: str, target_doc: str | Document | None = 
 
 
 @frappe.whitelist()
-def make_quotation(source_name: str, target_doc: str | Document | None = None):
+def make_quotation(source_name: str, target_doc: str | Document | None = None) -> Document:
 	doclist = get_mapped_doc(
 		"Supplier Quotation",
 		source_name,

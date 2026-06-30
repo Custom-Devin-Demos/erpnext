@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doctype("Opportunity")
 	if frappe.db.has_column("Opportunity", "enquiry_from"):
 		frappe.db.sql(

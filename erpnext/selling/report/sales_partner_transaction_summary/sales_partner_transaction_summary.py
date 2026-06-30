@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import Case
@@ -11,7 +13,7 @@ from erpnext.selling.report.sales_partner_commission_summary.sales_partner_commi
 )
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -19,7 +21,7 @@ def execute(filters=None):
 
 
 class SalesPartnerTransactionSummaryReport(SalesPartnerSummaryReport):
-	def prepare_columns(self):
+	def prepare_columns(self) -> None:
 		self.make_column(_(self.filters.get("doctype")), "name", "Link", options=self.filters.get("doctype"))
 
 		self.make_column(_("Customer"), "customer", "Link", options="Customer")
@@ -48,7 +50,7 @@ class SalesPartnerTransactionSummaryReport(SalesPartnerSummaryReport):
 
 		self.make_column(_("Commission"), "commission", "Currency", 120, "currency")
 
-	def extend_report_query(self):
+	def extend_report_query(self) -> None:
 		self.dt_item = frappe.qb.DocType(f"{self.filters['doctype']} Item")
 
 		self.query = (
@@ -71,7 +73,7 @@ class SalesPartnerTransactionSummaryReport(SalesPartnerSummaryReport):
 			)
 		)
 
-	def apply_filters(self):
+	def apply_filters(self) -> None:
 		if not self.filters.get("show_return_entries"):
 			self.query = self.query.where(self.dt_item.qty > 0.0)
 

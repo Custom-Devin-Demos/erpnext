@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 
 import frappe
 
 
-def get_company_for_dashboards():
+def get_company_for_dashboards() -> str | None:
 	company = frappe.defaults.get_defaults().company
 	if company:
 		return company
@@ -14,7 +16,7 @@ def get_company_for_dashboards():
 	return None
 
 
-def get_default_dashboards():
+def get_default_dashboards() -> dict:
 	company = frappe.get_doc("Company", get_company_for_dashboards())
 	income_account = company.default_income_account or get_account("Income Account", company.name)
 	expense_account = company.default_expense_account or get_account("Expense Account", company.name)
@@ -145,7 +147,7 @@ def get_default_dashboards():
 	}
 
 
-def get_account(account_type, company):
+def get_account(account_type: str, company: str) -> str | None:
 	accounts = frappe.get_list("Account", filters={"account_type": account_type, "company": company})
 	if accounts:
 		return accounts[0].name

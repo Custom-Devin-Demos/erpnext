@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, throw
 from frappe.model.document import Document
@@ -28,16 +30,16 @@ class PriceList(Document):
 		selling: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if not cint(self.buying) and not cint(self.selling):
 			throw(_("Price List must be applicable for Buying or Selling"))
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.set_default_if_missing()
 		self.update_item_price()
 		self.delete_price_list_details_key()
 
-	def set_default_if_missing(self):
+	def set_default_if_missing(self) -> None:
 		if cint(self.selling):
 			if not frappe.get_single_value("Selling Settings", "selling_price_list"):
 				frappe.set_value("Selling Settings", "Selling Settings", "selling_price_list", self.name)
@@ -46,7 +48,7 @@ class PriceList(Document):
 			if not frappe.db.get_single_value("Buying Settings", "buying_price_list"):
 				frappe.set_value("Buying Settings", "Buying Settings", "buying_price_list", self.name)
 
-	def update_item_price(self):
+	def update_item_price(self) -> None:
 		item_price = frappe.qb.DocType("Item Price")
 		(
 			frappe.qb.update(item_price)
@@ -57,10 +59,10 @@ class PriceList(Document):
 			.where(item_price.price_list == self.name)
 		).run()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self.delete_price_list_details_key()
 
-		def _update_default_price_list(module):
+		def _update_default_price_list(module) -> None:
 			b = frappe.get_doc(module + " Settings")
 			price_list_fieldname = module.lower() + "_price_list"
 
@@ -72,7 +74,7 @@ class PriceList(Document):
 		for module in ["Selling", "Buying"]:
 			_update_default_price_list(module)
 
-	def delete_price_list_details_key(self):
+	def delete_price_list_details_key(self) -> None:
 		frappe.cache().hdel("price_list_details", self.name)
 
 

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if data := frappe.get_all(
 		"Pick List Item",
 		filters={"material_request_item": ["is", "set"], "docstatus": 1},

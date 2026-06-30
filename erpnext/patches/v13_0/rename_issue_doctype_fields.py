@@ -2,11 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.exists("DocType", "Issue"):
 		issues = frappe.db.get_all(
 			"Issue",
@@ -77,7 +79,7 @@ def execute():
 			frappe.delete_doc("Report", report, ignore_permissions=True)
 
 
-def convert_to_seconds(value, unit):
+def convert_to_seconds(value, unit: str):
 	seconds = 0
 	if not value:
 		return seconds

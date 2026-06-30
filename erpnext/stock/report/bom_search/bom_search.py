@@ -2,11 +2,13 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	data = []
 	parents = {
 		"Product Bundle Item": "Product Bundle",

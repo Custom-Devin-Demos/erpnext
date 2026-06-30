@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.maxDiff = None
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
@@ -17,7 +19,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.debit_to = "Debtors - _TC"
 		self.cost_center = "Main - _TC"
 
-	def test_01_receivable_summary_output(self):
+	def test_01_receivable_summary_output(self) -> None:
 		"""
 		Test for Invoices, Paid, Advance and Outstanding
 		"""
@@ -111,7 +113,7 @@ class TestAccountsReceivable(ERPNextTestSuite, AccountsTestMixin):
 		self.assertDictEqual(rpt_output[0], expected_data)
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"cust_master_name": "Naming Series"})
-	def test_02_various_filters_and_output(self):
+	def test_02_various_filters_and_output(self) -> None:
 		filters = {
 			"company": self.company,
 			"customer": self.customer,

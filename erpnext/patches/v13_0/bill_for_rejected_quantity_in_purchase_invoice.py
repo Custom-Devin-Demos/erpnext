@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doctype("Buying Settings")
 	buying_settings = frappe.get_single("Buying Settings")
 	buying_settings.bill_for_rejected_quantity_in_purchase_invoice = 0

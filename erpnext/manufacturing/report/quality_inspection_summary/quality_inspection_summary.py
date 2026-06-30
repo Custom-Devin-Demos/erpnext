@@ -2,11 +2,13 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	data = get_data(filters)
 	columns = get_columns(filters)
@@ -14,7 +16,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	query_filters = {"docstatus": ("<", 2)}
 
 	fields = [
@@ -41,7 +43,7 @@ def get_data(filters):
 	)
 
 
-def get_chart_data(periodic_data, columns):
+def get_chart_data(periodic_data: list, columns: dict) -> dict:
 	labels = [_("Rejected"), _("Accepted")]
 
 	status_wise_data = {"Accepted": 0, "Rejected": 0}
@@ -63,7 +65,7 @@ def get_chart_data(periodic_data, columns):
 	return chart
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	columns = [
 		{
 			"label": _("Id"),

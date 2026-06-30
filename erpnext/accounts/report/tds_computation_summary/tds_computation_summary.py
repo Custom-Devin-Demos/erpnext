@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
@@ -20,7 +22,7 @@ class TDSComputationSummaryReport(TaxWithholdingDetailsReport):
 	)
 	AGGREGATE_FIELDS = ("total_amount", "tax_amount")
 
-	def validate_filters(self):
+	def validate_filters(self) -> None:
 		if self.filters.from_date > self.filters.to_date:
 			frappe.throw(_("From Date must be before To Date"))
 

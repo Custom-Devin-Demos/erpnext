@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -11,7 +13,7 @@ from frappe.utils import cint, flt, has_common
 from frappe.utils.user import is_website_user
 
 
-def get_list_context(context=None):
+def get_list_context(context=None) -> dict:
 	return {
 		"global_number_format": frappe.db.get_default("number_format") or "#,###.##",
 		"currency": frappe.db.get_default("currency"),
@@ -31,15 +33,20 @@ def get_list_context(context=None):
 	}
 
 
-def get_webform_list_context(module):
+def get_webform_list_context(module: str) -> dict | None:
 	if get_module_app(module) != "erpnext":
 		return
 	return {"get_list": get_webform_transaction_list}
 
 
 def get_webform_transaction_list(
-	doctype, txt=None, filters=None, limit_start=0, limit_page_length=20, order_by="creation"
-):
+	doctype: str,
+	txt: str | None = None,
+	filters: list | None = None,
+	limit_start: int = 0,
+	limit_page_length: int = 20,
+	order_by: str = "creation",
+) -> list:
 	"""Get List of transactions for custom doctypes"""
 	from frappe.www.list import get_list
 
@@ -67,14 +74,14 @@ def get_webform_transaction_list(
 
 
 def get_transaction_list(
-	doctype,
-	txt=None,
-	filters=None,
-	limit_start=0,
-	limit_page_length=20,
-	order_by="creation desc",
-	custom=False,
-):
+	doctype: str,
+	txt: str | None = None,
+	filters: dict | None = None,
+	limit_start: int = 0,
+	limit_page_length: int = 20,
+	order_by: str = "creation desc",
+	custom: bool = False,
+) -> list:
 	user = frappe.session.user
 	ignore_permissions = False
 
@@ -128,15 +135,15 @@ def get_transaction_list(
 
 
 def get_list_for_transactions(
-	doctype,
-	txt,
-	filters,
-	limit_start,
-	limit_page_length=20,
-	ignore_permissions=False,
-	fields=None,
-	order_by=None,
-):
+	doctype: str,
+	txt: str | None,
+	filters: dict | list | None,
+	limit_start: int,
+	limit_page_length: int = 20,
+	ignore_permissions: bool = False,
+	fields: list | str | None = None,
+	order_by: str | None = None,
+) -> list:
 	"""Get List of transactions like Invoices, Orders"""
 	from frappe.www.list import get_list
 
@@ -180,7 +187,9 @@ def get_list_for_transactions(
 	return data
 
 
-def rfq_transaction_list(parties_doctype, doctype, parties, limit_start, limit_page_length):
+def rfq_transaction_list(
+	parties_doctype: str, doctype: str, parties: list, limit_start: int, limit_page_length: int
+) -> list:
 	party = frappe.qb.DocType(parties_doctype)
 	data = (
 		frappe.qb.from_(party)
@@ -196,7 +205,7 @@ def rfq_transaction_list(parties_doctype, doctype, parties, limit_start, limit_p
 	return post_process(doctype, data)
 
 
-def post_process(doctype, data):
+def post_process(doctype: str, data: list) -> list:
 	result = []
 	for d in data:
 		doc = frappe.get_doc(doctype, d.name)
@@ -228,7 +237,7 @@ def post_process(doctype, data):
 	return result
 
 
-def get_customers_suppliers(doctype, user):
+def get_customers_suppliers(doctype: str, user: str) -> tuple:
 	customers = []
 	suppliers = []
 	meta = frappe.get_meta(doctype)
@@ -259,7 +268,7 @@ def get_parents_for_user(parenttype: str) -> list[str]:
 	).run(pluck="name")
 
 
-def has_website_permission(doc, ptype, user, verbose=False):
+def has_website_permission(doc, ptype, user, verbose: bool = False) -> bool:
 	doctype = doc.doctype
 	customers, suppliers = get_customers_suppliers(doctype, user)
 	if customers:
@@ -271,7 +280,7 @@ def has_website_permission(doc, ptype, user, verbose=False):
 		return False
 
 
-def get_customer_filter(doc, customers):
+def get_customer_filter(doc, customers: list) -> dict:
 	doctype = doc.doctype
 	filters = frappe._dict()
 	filters.name = doc.name
@@ -281,14 +290,14 @@ def get_customer_filter(doc, customers):
 	return filters
 
 
-def get_customer_field_name(doctype):
+def get_customer_field_name(doctype: str) -> str:
 	if doctype == "Quotation":
 		return "party_name"
 	else:
 		return "customer"
 
 
-def add_role_for_portal_user(portal_user, role):
+def add_role_for_portal_user(portal_user, role: str) -> None:
 	"""When a new portal user is added, give appropriate roles to user if
 	posssible, else warn user to add roles."""
 	if not portal_user.is_new():

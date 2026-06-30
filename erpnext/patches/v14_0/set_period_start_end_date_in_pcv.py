@@ -2,10 +2,12 @@
 # License: MIT. See LICENSE
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	# nosemgrep
 	frappe.db.sql(
 		"""

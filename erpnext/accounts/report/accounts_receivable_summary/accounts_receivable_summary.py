@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, scrub
 from frappe.utils import flt
@@ -29,7 +31,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		self.get_data(args)
 		return self.columns, self.data
 
-	def get_data(self, args):
+	def get_data(self, args) -> None:
 		self.data = []
 		self.receivables = ReceivablePayableReport(self.filters).run(args)[1]
 		self.currency_precision = get_currency_precision() or 2
@@ -89,7 +91,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 			self.data.append(row)
 
-	def get_party_total(self, args):
+	def get_party_total(self, args) -> None:
 		self.party_total = frappe._dict()
 
 		for d in self.receivables:
@@ -103,7 +105,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			# set territory, customer_group, sales person etc
 			self.set_party_details(d)
 
-	def init_party_total(self, row):
+	def init_party_total(self, row) -> None:
 		default_dict = {
 			"invoiced": 0.0,
 			"paid": 0.0,
@@ -123,7 +125,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			frappe._dict(default_dict),
 		)
 
-	def set_party_details(self, row):
+	def set_party_details(self, row) -> None:
 		self.party_total[row.party].currency = row.currency
 
 		for key in ("territory", "customer_group", "supplier_group"):
@@ -135,7 +137,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		if self.filters.sales_partner:
 			self.party_total[row.party]["default_sales_partner"] = row.get("default_sales_partner", "")
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = []
 		self.add_column(
 			label=_("Party Type"),

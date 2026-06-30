@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("manufacturing", "doctype", "job_card_time_log")
 
 	if frappe.db.table_exists("Job Card") and frappe.get_meta("Job Card").has_field("actual_start_date"):

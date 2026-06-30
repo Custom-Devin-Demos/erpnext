@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # MIT License. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_to_date, today
 
@@ -19,11 +21,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestTaxWithholdingDetails(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		create_records()
 
-	def test_tax_withholding_for_customers(self):
+	def test_tax_withholding_for_customers(self) -> None:
 		create_tax_category(cumulative_threshold=300)
 		frappe.db.set_value("Customer", "Test TCS Customer", "tax_withholding_category", "TCS")
 		si = create_sales_invoice(customer="Test TCS Customer", rate=1000)
@@ -44,7 +46,7 @@ class TestTaxWithholdingDetails(ERPNextTestSuite, AccountsTestMixin):
 		]
 		self.check_expected_values(result, expected_values)
 
-	def test_single_account_for_multiple_categories(self):
+	def test_single_account_for_multiple_categories(self) -> None:
 		create_tax_category("TDS - 1", rate=10, account="TDS - _TC", cumulative_threshold=1)
 		frappe.db.set_value("Supplier", "Test TDS Supplier", "tax_withholding_category", "TDS - 1")
 		inv_1 = create_purchase_invoice(supplier="Test TDS Supplier", rate=5000)
@@ -63,7 +65,7 @@ class TestTaxWithholdingDetails(ERPNextTestSuite, AccountsTestMixin):
 		]
 		self.check_expected_values(result, expected_values)
 
-	def test_date_filters_in_multiple_tax_withholding_rules(self):
+	def test_date_filters_in_multiple_tax_withholding_rules(self) -> None:
 		create_tax_category("TDS - 3", rate=10, account="TDS - _TC", cumulative_threshold=1)
 		# insert new rate in same fiscal year
 		fiscal_year = get_fiscal_year(today(), company="_Test Company")
@@ -116,7 +118,7 @@ class TestTaxWithholdingDetails(ERPNextTestSuite, AccountsTestMixin):
 		]
 		self.check_expected_values(result, expected_values)
 
-	def check_expected_values(self, result, expected_values):
+	def check_expected_values(self, result, expected_values) -> None:
 		self.assertEqual(len(result), len(expected_values))
 		for i in range(len(result)):
 			voucher = frappe._dict(result[i])
@@ -132,7 +134,9 @@ class TestTaxWithholdingDetails(ERPNextTestSuite, AccountsTestMixin):
 			self.assertSequenceEqual(voucher_actual_values, voucher_expected_values)
 
 
-def create_tax_category(category="TCS", rate=0.075, account="TCS - _TC", cumulative_threshold=0):
+def create_tax_category(
+	category: str = "TCS", rate: float = 0.075, account: str = "TCS - _TC", cumulative_threshold: int = 0
+) -> None:
 	fiscal_year = get_fiscal_year(today(), company="_Test Company")
 	from_date = fiscal_year[1]
 	to_date = fiscal_year[2]
@@ -147,7 +151,7 @@ def create_tax_category(category="TCS", rate=0.075, account="TCS - _TC", cumulat
 	)
 
 
-def create_tcs_payment_entry(party="Test TCS Customer", category="TCS", amount=1000):
+def create_tcs_payment_entry(party: str = "Test TCS Customer", category: str = "TCS", amount: int = 1000):
 	"""Create a TCS Payment Entry that generates a Tax Withholding Entry (Over Withheld)."""
 	payment_entry = create_payment_entry(
 		payment_type="Receive",
@@ -164,7 +168,7 @@ def create_tcs_payment_entry(party="Test TCS Customer", category="TCS", amount=1
 	return payment_entry
 
 
-def create_tcs_journal_entry(party="Test TCS Customer", category="TCS", amount=1000):
+def create_tcs_journal_entry(party: str = "Test TCS Customer", category: str = "TCS", amount: int = 1000):
 	"""Create a TCS Credit Note Journal Entry that generates a Tax Withholding Entry."""
 	jv = make_journal_entry_with_tax_withholding(
 		party_type="Customer",

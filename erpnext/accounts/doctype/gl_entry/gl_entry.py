@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -72,7 +74,7 @@ class GLEntry(Document):
 		voucher_type: DF.Link | None
 	# end: auto-generated types
 
-	def autoname(self):
+	def autoname(self) -> None:
 		"""
 		Temporarily name doc for fast insertion
 		name will be changed using autoname options (in a scheduled job)
@@ -81,7 +83,7 @@ class GLEntry(Document):
 		if self.meta.autoname == "hash":
 			self.to_rename = 0
 
-	def validate(self):
+	def validate(self) -> None:
 		self.flags.ignore_submit_comment = True
 		self.validate_and_set_fiscal_year()
 		self.pl_must_have_cost_center()
@@ -95,7 +97,7 @@ class GLEntry(Document):
 
 		self.set_amount_in_reporting_currency()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		adv_adj = self.flags.adv_adj
 		if not self.flags.from_repost and self.voucher_type != "Period Closing Voucher":
 			self.validate_account_details(adv_adj)
@@ -130,7 +132,7 @@ class GLEntry(Document):
 						self.against_voucher,
 					)
 
-	def check_mandatory(self):
+	def check_mandatory(self) -> None:
 		mandatory = ["account", "voucher_type", "voucher_no", "company"]
 		for k in mandatory:
 			if not self.get(k):
@@ -169,7 +171,7 @@ class GLEntry(Document):
 				)
 			)
 
-	def pl_must_have_cost_center(self):
+	def pl_must_have_cost_center(self) -> None:
 		"""Validate that profit and loss type account GL entries have a cost center."""
 
 		if self.cost_center or self.voucher_type == "Period Closing Voucher":
@@ -186,7 +188,7 @@ class GLEntry(Document):
 
 			frappe.throw(msg, title=_("Missing Cost Center"))
 
-	def validate_dimensions_for_pl_and_bs(self):
+	def validate_dimensions_for_pl_and_bs(self) -> None:
 		account_type = frappe.get_cached_value("Account", self.account, "report_type")
 
 		for dimension in get_checks_for_pl_and_bs_accounts():
@@ -216,7 +218,7 @@ class GLEntry(Document):
 						).format(dimension.label, self.account)
 					)
 
-	def check_pl_account(self):
+	def check_pl_account(self) -> None:
 		if (
 			self.is_opening == "Yes"
 			and frappe.get_cached_value("Account", self.account, "report_type") == "Profit and Loss"
@@ -228,7 +230,7 @@ class GLEntry(Document):
 				)
 			)
 
-	def validate_account_details(self, adv_adj):
+	def validate_account_details(self, adv_adj) -> None:
 		"""Account must be ledger, active and not freezed"""
 
 		account = frappe.get_cached_value(
@@ -254,7 +256,7 @@ class GLEntry(Document):
 				)
 			)
 
-	def validate_cost_center(self):
+	def validate_cost_center(self) -> None:
 		if not self.cost_center or self.is_cancelled:
 			return
 
@@ -274,11 +276,11 @@ class GLEntry(Document):
 				).format(self.voucher_type, self.voucher_no, frappe.bold(self.cost_center))
 			)
 
-	def validate_party(self):
+	def validate_party(self) -> None:
 		validate_party_frozen_disabled(self.company, self.party_type, self.party)
 		validate_account_party_type(self)
 
-	def validate_currency(self):
+	def validate_currency(self) -> None:
 		if self.is_cancelled:
 			return
 
@@ -299,7 +301,7 @@ class GLEntry(Document):
 		if self.party_type and self.party:
 			validate_party_gle_currency(self.party_type, self.party, self.company, self.account_currency)
 
-	def set_amount_in_reporting_currency(self):
+	def set_amount_in_reporting_currency(self) -> None:
 		default_currency, reporting_currency = frappe.get_cached_value(
 			"Company", self.company, ["default_currency", "reporting_currency"]
 		)
@@ -318,17 +320,17 @@ class GLEntry(Document):
 		self.debit_in_reporting_currency = flt(self.debit * self.reporting_currency_exchange_rate)
 		self.credit_in_reporting_currency = flt(self.credit * self.reporting_currency_exchange_rate)
 
-	def validate_and_set_fiscal_year(self):
+	def validate_and_set_fiscal_year(self) -> None:
 		if not self.fiscal_year:
 			self.fiscal_year = get_fiscal_year(self.posting_date, company=self.company)[0]
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		msg = _("Individual GL Entry cannot be cancelled.")
 		msg += "<br>" + _("Please cancel related transaction.")
 		frappe.throw(msg)
 
 
-def validate_balance_type(account, adv_adj=False):
+def validate_balance_type(account, adv_adj: bool = False) -> None:
 	if not adv_adj and account:
 		balance_must_be = frappe.get_cached_value("Account", account, "balance_must_be")
 		if balance_must_be:
@@ -349,8 +351,8 @@ def validate_balance_type(account, adv_adj=False):
 
 
 def update_outstanding_amt(
-	account, party_type, party, against_voucher_type, against_voucher, on_cancel=False
-):
+	account, party_type, party, against_voucher_type, against_voucher, on_cancel: bool = False
+) -> None:
 	gle = frappe.qb.DocType("GL Entry")
 
 	conditions = (
@@ -424,7 +426,7 @@ def update_outstanding_amt(
 		ref_doc.set_status(update=True)
 
 
-def validate_frozen_account(company, account, adv_adj=None):
+def validate_frozen_account(company, account, adv_adj=None) -> None:
 	frozen_account = frappe.get_cached_value("Account", account, "freeze_account")
 	if frozen_account == "Yes" and not adv_adj:
 		role_allowed_for_frozen_entries = frappe.get_cached_value(
@@ -437,7 +439,7 @@ def validate_frozen_account(company, account, adv_adj=None):
 			frappe.throw(_("Not authorized to edit frozen Account {0}").format(account))
 
 
-def update_against_account(voucher_type, voucher_no):
+def update_against_account(voucher_type, voucher_no) -> None:
 	entries = frappe.db.get_all(
 		"GL Entry",
 		filters={"voucher_type": voucher_type, "voucher_no": voucher_no},
@@ -466,18 +468,18 @@ def update_against_account(voucher_type, voucher_no):
 			frappe.db.set_value("GL Entry", d.name, "against", new_against)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("GL Entry", ["voucher_type", "voucher_no"])
 	frappe.db.add_index("GL Entry", ["posting_date", "company"])
 	frappe.db.add_index("GL Entry", ["party_type", "party"])
 
 
-def rename_gle_sle_docs():
+def rename_gle_sle_docs() -> None:
 	for doctype in ["GL Entry", "Stock Ledger Entry"]:
 		rename_temporarily_named_docs(doctype)
 
 
-def rename_temporarily_named_docs(doctype):
+def rename_temporarily_named_docs(doctype) -> None:
 	"""Rename temporarily named docs using autoname options"""
 	docs_to_rename = frappe.get_all(doctype, {"to_rename": "1"}, order_by="creation", limit=50000)
 	autoname = frappe.get_meta(doctype).autoname

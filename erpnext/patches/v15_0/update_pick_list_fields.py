@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import IfNull
 
 
-def execute():
+def execute() -> None:
 	update_delivery_note()
 	update_pick_list_items()
 
 
-def update_delivery_note():
+def update_delivery_note() -> None:
 	DN = frappe.qb.DocType("Delivery Note")
 	DNI = frappe.qb.DocType("Delivery Note Item")
 
@@ -16,7 +18,7 @@ def update_delivery_note():
 	).run()
 
 
-def update_pick_list_items():
+def update_pick_list_items() -> None:
 	PL = frappe.qb.DocType("Pick List")
 	PLI = frappe.qb.DocType("Pick List Item")
 

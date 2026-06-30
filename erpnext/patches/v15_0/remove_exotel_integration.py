@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import click
 import frappe
 from frappe import _
@@ -7,7 +9,7 @@ from frappe.utils.user import get_system_managers
 SETTINGS_DOCTYPE = "Exotel Settings"
 
 
-def execute():
+def execute() -> None:
 	if "exotel_integration" in frappe.get_installed_apps():
 		return
 
@@ -21,7 +23,7 @@ def execute():
 		frappe.log_error("Failed to remove Exotel Integration.")
 
 
-def notify_existing_users():
+def notify_existing_users() -> None:
 	click.secho(
 		"Exotel integration is moved to a separate app and will be removed from ERPNext in version-15.\n"
 		"Please install the app to continue using the integration: https://github.com/frappe/exotel_integration",

@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt, today
 
@@ -14,7 +16,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestSalesPaymentSummary(ERPNextTestSuite):
-	def test_get_mode_of_payments(self):
+	def test_get_mode_of_payments(self) -> None:
 		filters = get_filters()
 
 		for _dummy in range(2):
@@ -54,7 +56,7 @@ class TestSalesPaymentSummary(ERPNextTestSuite):
 		self.assertIn("Credit Card", next(iter(mop.values())))
 		self.assertNotIn("Cash", next(iter(mop.values())))
 
-	def test_get_mode_of_payments_details(self):
+	def test_get_mode_of_payments_details(self) -> None:
 		filters = get_filters()
 
 		for _dummy in range(2):
@@ -103,7 +105,7 @@ class TestSalesPaymentSummary(ERPNextTestSuite):
 
 		self.assertGreater(cc_init_amount, cc_final_amount)
 
-	def test_get_pos_invoice_data(self):
+	def test_get_pos_invoice_data(self) -> None:
 		"""The POS path (is_pos filter -> get_pos_invoice_data) used nested loose-GROUP-BY subqueries
 		that raised on Postgres; it now aggregates deterministically and runs identically on both
 		engines."""
@@ -135,7 +137,7 @@ def get_filters():
 	return {"from_date": "1900-01-01", "to_date": today(), "company": "_Test Company"}
 
 
-def create_sales_invoice_record(qty=1):
+def create_sales_invoice_record(qty: int = 1):
 	# return sales invoice doc object
 	return frappe.get_doc(
 		{

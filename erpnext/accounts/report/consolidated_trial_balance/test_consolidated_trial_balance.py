@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and Contributors
 # MIT License. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt, today
@@ -15,7 +17,7 @@ class ForeignCurrencyTranslationReserveNotFoundError(frappe.ValidationError):
 
 
 class TestConsolidatedTrialBalance(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		from erpnext.accounts.utils import get_fiscal_year
 
 		create_journal_entry(
@@ -35,7 +37,7 @@ class TestConsolidatedTrialBalance(ERPNextTestSuite):
 
 		self.fiscal_year = get_fiscal_year(today(), company="Parent Group Company India")[0]
 
-	def test_single_company_report(self):
+	def test_single_company_report(self) -> None:
 		filters = frappe._dict({"company": ["Parent Group Company India"], "fiscal_year": self.fiscal_year})
 
 		report = execute(filters)
@@ -44,7 +46,7 @@ class TestConsolidatedTrialBalance(ERPNextTestSuite):
 		self.assertEqual(total_row["closing_debit"], total_row["closing_credit"])
 		self.assertEqual(total_row["closing_credit"], 100000)
 
-	def test_child_company_report_with_same_default_currency_as_parent_company(self):
+	def test_child_company_report_with_same_default_currency_as_parent_company(self) -> None:
 		filters = frappe._dict(
 			{
 				"company": ["Parent Group Company India", "Child Company India"],
@@ -57,7 +59,7 @@ class TestConsolidatedTrialBalance(ERPNextTestSuite):
 
 		self.assertEqual(total_row["closing_debit"], total_row["closing_credit"])
 
-	def test_child_company_with_different_default_currency_from_parent_company(self):
+	def test_child_company_with_different_default_currency_from_parent_company(self) -> None:
 		filters = frappe._dict(
 			{
 				"company": ["Parent Group Company India", "Child Company US"],
@@ -83,7 +85,7 @@ class TestConsolidatedTrialBalance(ERPNextTestSuite):
 		self.assertEqual(total_row["closing_credit"], flt(100000 + ccu_total_credit))
 
 
-def create_journal_entry(**args):
+def create_journal_entry(**args) -> None:
 	args = frappe._dict(args)
 	je = frappe.new_doc("Journal Entry")
 	je.posting_date = args.posting_date or today()

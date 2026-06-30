@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # MIT License. See license.txt
 
+from __future__ import annotations
+
 from erpnext.accounts.doctype.pos_profile.test_pos_profile import make_pos_profile
 from erpnext.selling.page.point_of_sale.point_of_sale import get_items
 from erpnext.stock.doctype.item.test_item import make_item
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPointOfSale(ERPNextTestSuite):
-	def test_item_search(self):
+	def test_item_search(self) -> None:
 		"""
 		Test Stock and Service Item Search.
 		"""

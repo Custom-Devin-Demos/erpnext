@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 # Snapshot of the relevant German defaults when this migration was written.
@@ -139,7 +141,7 @@ GERMAN_ITEM_TAX_TEMPLATE_NOT_APPLICABLE_ACCOUNTS = {
 }
 
 
-def update_account_cache(accounts, account_cache):
+def update_account_cache(accounts: list, account_cache: dict) -> None:
 	missing_accounts = set(accounts) - set(account_cache)
 	if not missing_accounts:
 		return
@@ -152,7 +154,7 @@ def update_account_cache(accounts, account_cache):
 		account_cache[account.name] = account
 
 
-def get_account_identifier(account, identifier_field, account_cache):
+def get_account_identifier(account: str, identifier_field: str, account_cache: dict) -> tuple | None:
 	cached_account = account_cache.get(account)
 	if not cached_account:
 		return None
@@ -160,7 +162,7 @@ def get_account_identifier(account, identifier_field, account_cache):
 	return cached_account.get(identifier_field), cached_account.root_type
 
 
-def execute():
+def execute() -> None:
 	"""Backfill `not_applicable` on Item Tax Template Details for German companies.
 
 	Before the `not_applicable` flag existed, German default templates used

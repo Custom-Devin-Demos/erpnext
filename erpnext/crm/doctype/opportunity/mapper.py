@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.email.inbox import link_communication_to_document
@@ -11,8 +13,8 @@ from erpnext.setup.utils import get_exchange_rate
 
 
 @frappe.whitelist()
-def make_quotation(source_name: str, target_doc: str | Document | None = None):
-	def set_missing_values(source, target):
+def make_quotation(source_name: str, target_doc: str | Document | None = None) -> Document:
+	def set_missing_values(source, target) -> None:
 		from erpnext.controllers.accounts_controller import get_default_taxes_and_charges
 
 		quotation = frappe.get_doc(target)
@@ -64,8 +66,8 @@ def make_quotation(source_name: str, target_doc: str | Document | None = None):
 
 
 @frappe.whitelist()
-def make_request_for_quotation(source_name: str, target_doc: str | Document | None = None):
-	def update_item(obj, target, source_parent):
+def make_request_for_quotation(source_name: str, target_doc: str | Document | None = None) -> Document:
+	def update_item(obj, target, source_parent) -> None:
 		target.conversion_factor = 1.0
 
 	doclist = get_mapped_doc(
@@ -86,8 +88,8 @@ def make_request_for_quotation(source_name: str, target_doc: str | Document | No
 
 
 @frappe.whitelist()
-def make_customer(source_name: str, target_doc: str | Document | None = None):
-	def set_missing_values(source, target):
+def make_customer(source_name: str, target_doc: str | Document | None = None) -> Document:
+	def set_missing_values(source, target) -> None:
 		target.opportunity_name = source.name
 
 		if source.opportunity_from == "Lead":
@@ -110,7 +112,7 @@ def make_customer(source_name: str, target_doc: str | Document | None = None):
 
 
 @frappe.whitelist()
-def make_supplier_quotation(source_name: str, target_doc: str | Document | None = None):
+def make_supplier_quotation(source_name: str, target_doc: str | Document | None = None) -> Document:
 	doclist = get_mapped_doc(
 		"Opportunity",
 		source_name,
@@ -127,7 +129,7 @@ def make_supplier_quotation(source_name: str, target_doc: str | Document | None 
 @frappe.whitelist()
 def make_opportunity_from_communication(
 	communication: str, company: str, ignore_communication_links: bool = False
-):
+) -> str:
 	from erpnext.crm.doctype.lead.mapper import make_lead_from_communication
 
 	doc = frappe.get_doc("Communication", communication)

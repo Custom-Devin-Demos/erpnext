@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from erpnext.controllers.trends import get_columns, get_data
 
 

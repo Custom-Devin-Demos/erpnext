@@ -6,6 +6,8 @@
 Extracted from bom.py; bom.py re-exports them for backward compatibility.
 """
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import Field
@@ -13,7 +15,7 @@ from frappe.query_builder.functions import IfNull, Sum
 from frappe.utils import cint, flt
 
 
-def add_additional_cost(stock_entry, work_order, job_card=None):
+def add_additional_cost(stock_entry, work_order, job_card=None) -> None:
 	# Add non stock items cost in the additional cost
 	stock_entry.additional_costs = []
 	expense_account = frappe.get_value(
@@ -25,7 +27,7 @@ def add_additional_cost(stock_entry, work_order, job_card=None):
 	add_operations_cost(stock_entry, work_order, expense_account, job_card=job_card)
 
 
-def add_non_stock_items_cost(stock_entry, work_order, expense_account, job_card=None):
+def add_non_stock_items_cost(stock_entry, work_order, expense_account, job_card=None) -> None:
 	bom = frappe.get_doc("BOM", work_order.bom_no)
 	item_amounts = _non_phantom_item_amounts(bom, _bom_items_table(work_order, job_card))
 	cost = _non_stock_items_cost(item_amounts, stock_entry, bom)
@@ -37,13 +39,13 @@ def add_non_stock_items_cost(stock_entry, work_order, expense_account, job_card=
 		)
 
 
-def _bom_items_table(work_order, job_card):
+def _bom_items_table(work_order, job_card) -> str:
 	if work_order and not job_card:
 		return "exploded_items" if work_order.get("use_multi_level_bom") else "items"
 	return "items"
 
 
-def _non_phantom_item_amounts(bom, table):
+def _non_phantom_item_amounts(bom, table: str) -> dict:
 	items = frappe._dict()
 	for d in bom.get(table):
 		# Phantom item is exploded, so its cost is considered via its components
@@ -55,7 +57,7 @@ def _non_phantom_item_amounts(bom, table):
 	return items
 
 
-def _non_stock_items_cost(item_amounts, stock_entry, bom):
+def _non_stock_items_cost(item_amounts: dict, stock_entry, bom) -> float:
 	non_stock_items = frappe.get_all(
 		"Item",
 		fields="name",
@@ -69,7 +71,9 @@ def _non_stock_items_cost(item_amounts, stock_entry, bom):
 	return cost
 
 
-def add_operating_cost_component_wise(stock_entry, work_order=None, op_expense_account=None, job_card=None):
+def add_operating_cost_component_wise(
+	stock_entry, work_order=None, op_expense_account=None, job_card=None
+) -> bool:
 	if not work_order:
 		return False
 
@@ -85,7 +89,7 @@ def add_operating_cost_component_wise(stock_entry, work_order=None, op_expense_a
 	return cost_added
 
 
-def _add_operation_workstation_costs(stock_entry, work_order, row, op_expense_account):
+def _add_operation_workstation_costs(stock_entry, work_order, row, op_expense_account) -> bool:
 	from erpnext.stock.doctype.stock_entry.stock_entry import get_consumed_operating_cost
 
 	workstation_cost = frappe.get_all(
@@ -102,7 +106,7 @@ def _add_operation_workstation_costs(stock_entry, work_order, row, op_expense_ac
 	return cost_added
 
 
-def _append_workstation_cost(stock_entry, row, wc, consumed, op_expense_account):
+def _append_workstation_cost(stock_entry, row, wc, consumed: list, op_expense_account) -> bool:
 	expense_account = get_component_account(wc.operating_component, stock_entry.company) or op_expense_account
 	consumed_op_cost = next(
 		(c for c in consumed if c.get("operating_component") == wc.operating_component), {}
@@ -119,7 +123,7 @@ def _append_workstation_cost(stock_entry, row, wc, consumed, op_expense_account)
 	return True
 
 
-def _actual_operating_cost(wc, row, consumed_op_cost):
+def _actual_operating_cost(wc, row, consumed_op_cost: dict) -> float:
 	return flt(
 		flt(wc.operating_cost) * flt(flt(row.actual_operation_time) / 60.0)
 		- flt(consumed_op_cost.get("consumed_cost")),
@@ -127,7 +131,7 @@ def _actual_operating_cost(wc, row, consumed_op_cost):
 	)
 
 
-def _workstation_cost_row(expense_account, row, wc, actual, operating_cost, qty):
+def _workstation_cost_row(expense_account, row, wc, actual: float, operating_cost: float, qty: float) -> dict:
 	precision = frappe.get_precision("Landed Cost Taxes and Charges", "amount")
 	return {
 		"expense_account": expense_account,
@@ -143,13 +147,13 @@ def _workstation_cost_row(expense_account, row, wc, actual, operating_cost, qty)
 
 
 @frappe.request_cache
-def get_component_account(parent, company):
+def get_component_account(parent: str, company: str) -> str | None:
 	return frappe.db.get_value(
 		"Workstation Operating Component Account", {"parent": parent, "company": company}, "expense_account"
 	)
 
 
-def add_operations_cost(stock_entry, work_order=None, expense_account=None, job_card=None):
+def add_operations_cost(stock_entry, work_order=None, expense_account=None, job_card=None) -> None:
 	from erpnext.stock.doctype.stock_entry.stock_entry import get_remaining_operating_cost
 
 	remaining_operating_cost = get_remaining_operating_cost(work_order, stock_entry.bom_no)
@@ -162,7 +166,9 @@ def add_operations_cost(stock_entry, work_order=None, expense_account=None, job_
 	_add_corrective_operation_cost(stock_entry, work_order, expense_account)
 
 
-def _add_remaining_operating_cost(stock_entry, work_order, expense_account, job_card, remaining_cost):
+def _add_remaining_operating_cost(
+	stock_entry, work_order, expense_account, job_card, remaining_cost: float
+) -> None:
 	if add_operating_cost_component_wise(stock_entry, work_order, expense_account, job_card=job_card):
 		return
 	if job_card:
@@ -180,7 +186,7 @@ def _add_remaining_operating_cost(stock_entry, work_order, expense_account, job_
 	)
 
 
-def _add_additional_operating_cost(stock_entry, work_order, expense_account):
+def _add_additional_operating_cost(stock_entry, work_order, expense_account) -> None:
 	if not (work_order and work_order.additional_operating_cost and work_order.qty):
 		return
 
@@ -198,7 +204,7 @@ def _add_additional_operating_cost(stock_entry, work_order, expense_account):
 	)
 
 
-def _add_corrective_operation_cost(stock_entry, work_order, expense_account):
+def _add_corrective_operation_cost(stock_entry, work_order, expense_account) -> None:
 	if not (work_order and work_order.corrective_operation_cost and _corrective_cost_enabled()):
 		return
 
@@ -215,7 +221,7 @@ def _add_corrective_operation_cost(stock_entry, work_order, expense_account):
 	)
 
 
-def _max_operation_quantity(work_order):
+def _max_operation_quantity(work_order) -> float:
 	table = frappe.qb.DocType("Job Card")
 	query = (
 		frappe.qb.from_(table)
@@ -230,7 +236,7 @@ def _max_operation_quantity(work_order):
 	return min([d.qty for d in query.run(as_dict=True)], default=0)
 
 
-def _corrective_cost_enabled():
+def _corrective_cost_enabled() -> int:
 	return cint(
 		frappe.db.get_single_value(
 			"Manufacturing Settings", "add_corrective_operation_cost_in_finished_good_valuation"
@@ -238,7 +244,7 @@ def _corrective_cost_enabled():
 	)
 
 
-def _utilised_corrective_cost(work_order):
+def _utilised_corrective_cost(work_order) -> float:
 	charges = frappe.qb.DocType("Landed Cost Taxes and Charges")
 	query = (
 		frappe.qb.from_(charges)
@@ -250,7 +256,7 @@ def _utilised_corrective_cost(work_order):
 	return query.run(as_dict=True)[0].amount or 0
 
 
-def _manufacture_stock_entries(work_order):
+def _manufacture_stock_entries(work_order):  # query builder selection
 	stock_entry = frappe.qb.DocType("Stock Entry")
 	return (
 		frappe.qb.from_(stock_entry)
@@ -263,7 +269,7 @@ def _manufacture_stock_entries(work_order):
 	)
 
 
-def get_op_cost_from_sub_assemblies(bom_no, op_cost=0):
+def get_op_cost_from_sub_assemblies(bom_no: str, op_cost: float = 0) -> float:
 	# Get operating cost from sub-assemblies
 
 	bom_items = frappe.get_all(
@@ -281,7 +287,9 @@ def get_op_cost_from_sub_assemblies(bom_no, op_cost=0):
 	return op_cost
 
 
-def get_secondary_items_from_sub_assemblies(bom_no, company, qty, secondary_items=None):
+def get_secondary_items_from_sub_assemblies(
+	bom_no: str, company: str, qty: float, secondary_items: dict | None = None
+) -> dict:
 	from erpnext.manufacturing.doctype.bom.bom import get_bom_items_as_dict
 
 	if not secondary_items:
@@ -299,7 +307,7 @@ def get_secondary_items_from_sub_assemblies(bom_no, company, qty, secondary_item
 	return secondary_items
 
 
-def _child_bom_items_with_qty(bom_no):
+def _child_bom_items_with_qty(bom_no: str) -> list:
 	return frappe.get_all(
 		"BOM Item", filters={"parent": bom_no, "docstatus": 1}, fields=["bom_no", "qty"], order_by="idx asc"
 	)

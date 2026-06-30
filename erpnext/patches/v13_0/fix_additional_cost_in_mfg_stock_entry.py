@@ -1,11 +1,16 @@
-from typing import NewType
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, NewType
 
 import frappe
+
+if TYPE_CHECKING:
+	from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 
 StockEntryCode = NewType("StockEntryCode", str)
 
 
-def execute():
+def execute() -> None:
 	stock_entry_codes = find_broken_stock_entries()
 
 	for stock_entry_code in stock_entry_codes:
@@ -39,7 +44,7 @@ def find_broken_stock_entries() -> list[StockEntryCode]:
 	return [d.name for d in stock_entries_to_patch]
 
 
-def patch_additional_cost(code: StockEntryCode):
+def patch_additional_cost(code: StockEntryCode) -> StockEntry:
 	stock_entry = frappe.get_doc("Stock Entry", code)
 	stock_entry.distribute_additional_costs()
 	stock_entry.update_valuation_rate()
@@ -51,7 +56,7 @@ def patch_additional_cost(code: StockEntryCode):
 	return stock_entry
 
 
-def create_repost_item_valuation(stock_entry):
+def create_repost_item_valuation(stock_entry) -> None:
 	from erpnext.controllers.stock_controller import create_repost_item_valuation_entry
 
 	# turn on recalculate flag so reposting corrects the incoming/outgoing rates.

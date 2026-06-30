@@ -1,5 +1,7 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+from __future__ import annotations
+
 import json
 from typing import Any
 
@@ -46,7 +48,7 @@ class BOMUpdateLog(Document):
 	# end: auto-generated types
 
 	@staticmethod
-	def clear_old_logs(days=None):
+	def clear_old_logs(days: int | None = None) -> None:
 		days = days or 90
 		table = DocType("BOM Update Log")
 		frappe.db.delete(
@@ -54,7 +56,7 @@ class BOMUpdateLog(Document):
 			filters=((table.creation < (Now() - Interval(days=days))) & (table.update_type == "Update Cost")),
 		)
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.update_type == "Replace BOM":
 			self.validate_boms_are_specified()
 			self.validate_same_bom()
@@ -64,10 +66,10 @@ class BOMUpdateLog(Document):
 
 		self.status = "Queued"
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def validate_boms_are_specified(self):
+	def validate_boms_are_specified(self) -> None:
 		if self.update_type == "Replace BOM" and not (self.current_bom and self.new_bom):
 			frappe.throw(
 				msg=_("Please mention the Current and New BOM for replacement."),
@@ -75,18 +77,18 @@ class BOMUpdateLog(Document):
 				exc=BOMMissingError,
 			)
 
-	def validate_same_bom(self):
+	def validate_same_bom(self) -> None:
 		if cstr(self.current_bom) == cstr(self.new_bom):
 			frappe.throw(_("Current BOM and New BOM cannot be the same"))
 
-	def validate_bom_items(self):
+	def validate_bom_items(self) -> None:
 		current_bom_item = frappe.db.get_value("BOM", self.current_bom, "item")
 		new_bom_item = frappe.db.get_value("BOM", self.new_bom, "item")
 
 		if current_bom_item != new_bom_item:
 			frappe.throw(_("The selected BOMs are not for the same item"))
 
-	def validate_bom_cost_update_in_progress(self):
+	def validate_bom_cost_update_in_progress(self) -> None:
 		"If another Cost Updation Log is still in progress, dont make new ones."
 
 		wip_log = frappe.get_all(
@@ -103,7 +105,7 @@ class BOMUpdateLog(Document):
 				title=_("Note"),
 			)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		if self.update_type == "Replace BOM":
 			boms = {"current_bom": self.current_bom, "new_bom": self.new_bom}
 			frappe.enqueue(
@@ -125,7 +127,7 @@ class BOMUpdateLog(Document):
 
 
 def run_replace_bom_job(
-	doc: "BOMUpdateLog",
+	doc: BOMUpdateLog,
 	boms: dict[str, str] | None = None,
 ) -> None:
 	try:
@@ -149,7 +151,7 @@ def run_replace_bom_job(
 
 
 def process_boms_cost_level_wise(
-	update_doc: "BOMUpdateLog", parent_boms: list[str] | None = None
+	update_doc: BOMUpdateLog, parent_boms: list[str] | None = None
 ) -> None | tuple:
 	"Queue jobs at the start of new BOM Level in 'Update Cost' Jobs."
 
@@ -183,7 +185,7 @@ def process_boms_cost_level_wise(
 		handle_exception(update_doc)
 
 
-def queue_bom_cost_jobs(current_boms_list: list[str], update_doc: "BOMUpdateLog", current_level: int) -> None:
+def queue_bom_cost_jobs(current_boms_list: list[str], update_doc: BOMUpdateLog, current_level: int) -> None:
 	"Queue batches of 20k BOMs of the same level to process parallelly"
 	batch_no = 0
 
@@ -210,7 +212,7 @@ def queue_bom_cost_jobs(current_boms_list: list[str], update_doc: "BOMUpdateLog"
 		)
 
 
-def resume_bom_cost_update_jobs():
+def resume_bom_cost_update_jobs() -> None:
 	"""
 	1. Checks for In Progress BOM Update Log.
 	2. Checks if this job has completed the _current level_.

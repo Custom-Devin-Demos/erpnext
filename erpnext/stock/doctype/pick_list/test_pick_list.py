@@ -1,6 +1,8 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _dict
 
@@ -28,7 +30,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPickList(ERPNextTestSuite):
-	def test_pick_list_picks_warehouse_for_each_item(self):
+	def test_pick_list_picks_warehouse_for_each_item(self) -> None:
 		item_code = make_item().name
 		try:
 			frappe.get_doc(
@@ -75,7 +77,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(pick_list.locations[0].warehouse, "_Test Warehouse - _TC")
 		self.assertEqual(pick_list.locations[0].qty, 5)
 
-	def test_pick_list_splits_row_according_to_warehouse_availability(self):
+	def test_pick_list_splits_row_according_to_warehouse_availability(self) -> None:
 		try:
 			frappe.get_doc(
 				{
@@ -146,7 +148,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(pick_list.locations[1].warehouse, "_Test Warehouse 2 - _TC")
 		self.assertEqual(pick_list.locations[1].qty, 10)
 
-	def test_pick_list_shows_serial_no_for_serialized_item(self):
+	def test_pick_list_shows_serial_no_for_serialized_item(self) -> None:
 		serial_nos = ["SADD-0001", "SADD-0002", "SADD-0003", "SADD-0004", "SADD-0005"]
 
 		for serial_no in serial_nos:
@@ -231,7 +233,7 @@ class TestPickList(ERPNextTestSuite):
 			get_serial_nos_from_bundle(pick_list.locations[0].serial_and_batch_bundle), serial_nos
 		)
 
-	def test_pick_list_shows_batch_no_for_batched_item(self):
+	def test_pick_list_shows_batch_no_for_batched_item(self) -> None:
 		# check if oldest batch no is picked
 		item = frappe.db.exists("Item", {"item_name": "Batched Item"})
 		if not item:
@@ -271,7 +273,7 @@ class TestPickList(ERPNextTestSuite):
 		pr1.cancel()
 		pr2.cancel()
 
-	def test_pick_list_warehouse_for_batched_item(self):
+	def test_pick_list_warehouse_for_batched_item(self) -> None:
 		"""
 		Test that pick list respects company based warehouse assignment for batched items.
 
@@ -349,7 +351,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(pick_list.locations[0].batch_no, batch_no.name)
 		self.assertEqual(pick_list.locations[0].warehouse, batch_warehouse.name)
 
-	def test_pick_list_warehouse_validation(self):
+	def test_pick_list_warehouse_validation(self) -> None:
 		"""check if the warehouse validations are triggered"""
 		from erpnext.stock.doctype.pick_list.pick_list import (
 			IncorrectWarehouseValidationError,
@@ -394,7 +396,7 @@ class TestPickList(ERPNextTestSuite):
 		pick_list.locations[0].warehouse = temp_warehouse.name
 		pick_list.insert()
 
-	def test_pick_list_for_batched_and_serialised_item(self):
+	def test_pick_list_for_batched_and_serialised_item(self) -> None:
 		# check if oldest batch no and serial nos are picked
 		item = frappe.db.exists("Item", {"item_name": "Batched and Serialised Item"})
 		if not item:
@@ -446,7 +448,7 @@ class TestPickList(ERPNextTestSuite):
 		pr1.cancel()
 		pr2.cancel()
 
-	def test_pick_list_for_items_from_multiple_sales_orders(self):
+	def test_pick_list_for_items_from_multiple_sales_orders(self) -> None:
 		item_code = make_item().name
 		try:
 			frappe.get_doc(
@@ -525,7 +527,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(pick_list.locations[1].sales_order_item, sales_order.items[0].name)
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"allow_multiple_items": 1})
-	def test_pick_list_for_items_with_multiple_UOM(self):
+	def test_pick_list_for_items_with_multiple_UOM(self) -> None:
 		item_code = make_item(
 			uoms=[
 				{"uom": "Nos", "conversion_factor": 1},
@@ -608,8 +610,8 @@ class TestPickList(ERPNextTestSuite):
 		sales_order.cancel()
 		purchase_receipt.cancel()
 
-	def test_pick_list_grouping_before_print(self):
-		def _compare_dicts(a, b):
+	def test_pick_list_grouping_before_print(self) -> None:
+		def _compare_dicts(a, b) -> None:
 			"compare dicts but ignore missing keys in `a`"
 			for key, value in a.items():
 				self.assertEqual(b.get(key), value, msg=f"{key} doesn't match")
@@ -654,7 +656,7 @@ class TestPickList(ERPNextTestSuite):
 		for expected_item, created_item in zip(expected_items, pl.locations, strict=False):
 			_compare_dicts(expected_item, created_item)
 
-	def test_multiple_dn_creation(self):
+	def test_multiple_dn_creation(self) -> None:
 		sales_order_1 = frappe.get_doc(
 			{
 				"doctype": "Sales Order",
@@ -773,7 +775,7 @@ class TestPickList(ERPNextTestSuite):
 					self.assertEqual(dn_item.qty, 2)
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"use_serial_batch_fields": 1})
-	def test_sales_invoice_from_pick_list_copies_old_batch_serial_fields(self):
+	def test_sales_invoice_from_pick_list_copies_old_batch_serial_fields(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			f"_Test PLSI Old Fields {frappe.generate_hash(length=8)}",
@@ -811,7 +813,7 @@ class TestPickList(ERPNextTestSuite):
 		)
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"use_serial_batch_fields": 0})
-	def test_sales_invoice_from_pick_list_copies_serial_and_batch_bundle(self):
+	def test_sales_invoice_from_pick_list_copies_serial_and_batch_bundle(self) -> None:
 		frappe.db.set_single_value("Stock Settings", "use_serial_batch_fields", 0)
 
 		warehouse = "_Test Warehouse - _TC"
@@ -910,7 +912,7 @@ class TestPickList(ERPNextTestSuite):
 			set(get_serial_nos_from_bundle(pick_list_item.serial_and_batch_bundle)),
 		)
 
-	def test_sales_invoice_from_sales_order_pick_list_updates_sales_order(self):
+	def test_sales_invoice_from_sales_order_pick_list_updates_sales_order(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item().name
 
@@ -945,7 +947,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(sales_order.billing_status, "Fully Billed")
 		self.assertEqual(sales_order.status, "Completed")
 
-	def test_sales_invoice_against_pick_list_requires_update_stock(self):
+	def test_sales_invoice_against_pick_list_requires_update_stock(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item().name
 
@@ -964,7 +966,7 @@ class TestPickList(ERPNextTestSuite):
 			sales_invoice.save,
 		)
 
-	def test_picklist_reserved_qty_validation(self):
+	def test_picklist_reserved_qty_validation(self) -> None:
 		from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 
 		warehouse = "_Test Warehouse - _TC"
@@ -1004,7 +1006,7 @@ class TestPickList(ERPNextTestSuite):
 		picklist_2 = create_pick_list(sales_order_2.name)
 		self.assertEqual(picklist_2.locations[0].qty, 5)
 
-	def test_picklist_with_multi_uom(self):
+	def test_picklist_with_multi_uom(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(properties={"uoms": [dict(uom="Box", conversion_factor=24)]}).name
 		make_stock_entry(item=item, to_warehouse=warehouse, qty=1000)
@@ -1020,7 +1022,7 @@ class TestPickList(ERPNextTestSuite):
 		so.reload()
 		self.assertEqual(so.per_picked, 50)
 
-	def test_picklist_for_batch_item(self):
+	def test_picklist_for_batch_item(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			properties={"is_stock_item": 1, "has_batch_no": 1, "batch_number_series": "PICKLT-.######"}
@@ -1081,7 +1083,7 @@ class TestPickList(ERPNextTestSuite):
 		pl1.cancel()
 		pl.cancel()
 
-	def test_picklist_for_serial_item(self):
+	def test_picklist_for_serial_item(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			properties={"is_stock_item": 1, "has_serial_no": 1, "serial_no_series": "SN-PICKLT-.######"}
@@ -1128,7 +1130,7 @@ class TestPickList(ERPNextTestSuite):
 		pl1.cancel()
 		pl.cancel()
 
-	def test_picklist_with_bundles(self):
+	def test_picklist_with_bundles(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 
 		quantities = [5, 2]
@@ -1154,7 +1156,7 @@ class TestPickList(ERPNextTestSuite):
 		so.reload()
 		self.assertEqual(so.per_delivered, 100)
 
-	def test_picklist_with_partial_bundles(self):
+	def test_picklist_with_partial_bundles(self) -> None:
 		# from self.globalTestRecords
 		warehouse = "_Test Warehouse - _TC"
 
@@ -1188,7 +1190,7 @@ class TestPickList(ERPNextTestSuite):
 		so.reload()
 		self.assertEqual(so.per_delivered, 100)
 
-	def test_pick_list_status(self):
+	def test_pick_list_status(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(properties={"is_stock_item": 1}).name
 		make_stock_entry(item=item, to_warehouse=warehouse, qty=10)
@@ -1221,7 +1223,7 @@ class TestPickList(ERPNextTestSuite):
 		pl.reload()
 		self.assertEqual(pl.status, "Cancelled")
 
-	def test_pick_list_validation(self):
+	def test_pick_list_validation(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item("Test Non Serialized Pick List Item", properties={"is_stock_item": 1}).name
 
@@ -1246,7 +1248,7 @@ class TestPickList(ERPNextTestSuite):
 		pl = create_pick_list(so.name)
 		self.assertFalse(pl.locations)
 
-	def test_pick_list_warehouse_for_work_order(self):
+	def test_pick_list_warehouse_for_work_order(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 		from erpnext.manufacturing.doctype.work_order.mapper import create_pick_list
 		from erpnext.manufacturing.doctype.work_order.work_order import make_work_order
@@ -1294,7 +1296,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(pl.locations[0].item_code, rm_item)
 		self.assertEqual(pl.locations[0].qty, 5)
 
-	def test_pick_list_validation_for_serial_no(self):
+	def test_pick_list_validation_for_serial_no(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Serialized Pick List Item",
@@ -1325,7 +1327,7 @@ class TestPickList(ERPNextTestSuite):
 		pl = create_pick_list(so.name)
 		self.assertFalse(pl.locations)
 
-	def test_pick_list_validation_for_batch_no(self):
+	def test_pick_list_validation_for_batch_no(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Batch Pick List Item",
@@ -1361,7 +1363,7 @@ class TestPickList(ERPNextTestSuite):
 		pl = create_pick_list(so.name)
 		self.assertFalse(pl.locations)
 
-	def test_pick_list_validation_for_batch_no_and_serial_item(self):
+	def test_pick_list_validation_for_batch_no_and_serial_item(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Serialized Batch Pick List Item",
@@ -1401,7 +1403,7 @@ class TestPickList(ERPNextTestSuite):
 		pl = create_pick_list(so.name)
 		self.assertFalse(pl.locations)
 
-	def test_pick_list_validation_for_multiple_batches_and_sales_order(self):
+	def test_pick_list_validation_for_multiple_batches_and_sales_order(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Batch Pick List Item For Multiple Batches",
@@ -1437,7 +1439,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(pl.locations[0].qty, 4.0)
 		self.assertTrue(hasattr(pl, "locations"))
 
-	def test_pick_list_for_multiple_sales_order_with_multiple_batches(self):
+	def test_pick_list_for_multiple_sales_order_with_multiple_batches(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Batch Pick List Item For Multiple Batches and Sales Order",
@@ -1474,7 +1476,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(pl.locations[1].qty, 20.0)
 		self.assertTrue(hasattr(pl, "locations"))
 
-	def test_pick_list_for_multiple_sales_order_with_multiple_serial_nos(self):
+	def test_pick_list_for_multiple_sales_order_with_multiple_serial_nos(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Serial No Pick List Item For Multiple Batches and Sales Order",
@@ -1517,7 +1519,7 @@ class TestPickList(ERPNextTestSuite):
 		self.assertEqual(pl.locations[0].qty, 110.0)
 		self.assertTrue(hasattr(pl, "locations"))
 
-	def test_pick_list_for_multiple_sales_orders_for_non_serialized_item(self):
+	def test_pick_list_for_multiple_sales_orders_for_non_serialized_item(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Non Serialized Pick List Item For Multiple Batches and Sales Order",
@@ -1555,7 +1557,7 @@ class TestPickList(ERPNextTestSuite):
 
 		self.assertEqual(pl.locations[0].qty, 80.0)
 
-	def test_validate_picked_qty_with_manual_option(self):
+	def test_validate_picked_qty_with_manual_option(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		non_serialized_item = make_item(
 			"Test Non Serialized Pick List Item For Manual Option", properties={"is_stock_item": 1}
@@ -1598,7 +1600,7 @@ class TestPickList(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, pl.save)
 
-	def test_over_allowance_picking(self):
+	def test_over_allowance_picking(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Over Allowance Picking Item",
@@ -1630,7 +1632,7 @@ class TestPickList(ERPNextTestSuite):
 		frappe.db.set_single_value("Stock Settings", "over_picking_allowance", 0)
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"allow_multiple_items": 1})
-	def test_ignore_pricing_rule_in_pick_list(self):
+	def test_ignore_pricing_rule_in_pick_list(self) -> None:
 		frappe.flags.print_stmt = False
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
@@ -1692,7 +1694,7 @@ class TestPickList(ERPNextTestSuite):
 
 		self.assertEqual(len(delivery_note.items), 1)
 
-	def test_pick_list_not_reset_batch(self):
+	def test_pick_list_not_reset_batch(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item(
 			"Test Do Not Reset Picked Item",
@@ -1788,7 +1790,7 @@ class TestPickList(ERPNextTestSuite):
 		sales_order.cancel()
 		stock_entry.cancel()
 
-	def test_packed_item_in_pick_list(self):
+	def test_packed_item_in_pick_list(self) -> None:
 		warehouse_1 = "_Test Warehouse - _TC"
 		warehouse_2 = "_Test Warehouse 2 - _TC"
 		item_1 = make_item(properties={"is_stock_item": 0}).name
@@ -1819,7 +1821,7 @@ class TestPickList(ERPNextTestSuite):
 		stock_entry_3.cancel()
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"allow_multiple_items": 1})
-	def test_packed_item_multiple_times_in_so(self):
+	def test_packed_item_multiple_times_in_so(self) -> None:
 		frappe.db.delete("Item Price")
 		warehouse_1 = "_Test Warehouse - _TC"
 		warehouse_2 = "_Test Warehouse 2 - _TC"
@@ -1863,7 +1865,7 @@ class TestPickList(ERPNextTestSuite):
 		stock_entry_2.cancel()
 		stock_entry_3.cancel()
 
-	def test_pick_list_with_and_without_so(self):
+	def test_pick_list_with_and_without_so(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item = make_item().name
 
@@ -1896,7 +1898,7 @@ class TestPickList(ERPNextTestSuite):
 		sales_order.cancel()
 		stock_entry.cancel()
 
-	def test_creating_dn_from_so_with_different_addresses(self):
+	def test_creating_dn_from_so_with_different_addresses(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item1 = make_item().name
 		item2 = make_item().name
@@ -1965,7 +1967,7 @@ class TestPickList(ERPNextTestSuite):
 				self.assertIn(item1, item_codes)
 				self.assertIn(item2, item_codes)
 
-	def test_get_pick_list_query_postgres_valid(self):
+	def test_get_pick_list_query_postgres_valid(self) -> None:
 		"""get_pick_list_query selects Sales Order.customer (a joined-table column) under
 		GROUP BY Pick List.name. Postgres rejects that bare column (PK functional dependency does
 		not cross tables), so the link query raised GroupingError. customer is pinned to one value

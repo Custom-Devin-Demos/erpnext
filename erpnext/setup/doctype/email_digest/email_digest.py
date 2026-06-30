@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 from datetime import timedelta
 
@@ -76,7 +77,7 @@ class EmailDigest(Document):
 		todo_list: DF.Check
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 
 		self.from_date, self.to_date = self.get_from_to_date()
@@ -85,7 +86,7 @@ class EmailDigest(Document):
 		self.currency = frappe.db.get_value("Company", self.company, "default_currency")
 
 	@frappe.whitelist()
-	def get_users(self):
+	def get_users(self) -> None:
 		"""get list of users"""
 		user_list = frappe.get_all(
 			"User",
@@ -104,7 +105,7 @@ class EmailDigest(Document):
 		frappe.response["user_list"] = user_list
 
 	@frappe.whitelist()
-	def send(self):
+	def send(self) -> None:
 		# send email only to enabled users
 		valid_users = frappe.get_all("User", filters={"enabled": 1}, pluck="name")
 
@@ -121,7 +122,7 @@ class EmailDigest(Document):
 						unsubscribe_message=_("Unsubscribe from this Email Digest"),
 					)
 
-	def get_msg_html(self):
+	def get_msg_html(self) -> str | None:
 		"""Build email digest content"""
 		frappe.flags.ignore_account_permission = True
 		from erpnext.setup.doctype.email_digest.quotes import get_random_quote
@@ -163,7 +164,7 @@ class EmailDigest(Document):
 			"erpnext/setup/doctype/email_digest/templates/default.html", context, is_path=True
 		)
 
-	def set_title(self, context):
+	def set_title(self, context: dict) -> None:
 		"""Set digest title"""
 		if self.frequency == "Daily":
 			context.title = _("Daily Reminders")
@@ -175,7 +176,7 @@ class EmailDigest(Document):
 			context.title = _("This Month's Summary")
 			context.subtitle = _("Summary for this month and pending activities")
 
-	def set_style(self, context):
+	def set_style(self, context: dict) -> None:
 		"""Set standard digest style"""
 		context.text_muted = "#8D99A6"
 		context.text_color = "#36414C"
@@ -187,7 +188,7 @@ class EmailDigest(Document):
 		context.line_item = "padding: 5px 0px; margin: 0; border-bottom: 1px solid #d1d8dd;"
 		context.link_css = f"color: {context.text_color}; text-decoration: none;"
 
-	def get_notifications(self):
+	def get_notifications(self) -> list:
 		"""Get notifications for user"""
 		notifications = frappe.desk.notifications.get_notifications()
 
@@ -199,7 +200,7 @@ class EmailDigest(Document):
 
 		return notifications
 
-	def get_calendar_events(self):
+	def get_calendar_events(self) -> tuple:
 		"""Get calendar events for given user"""
 		from frappe.desk.doctype.event.event import get_events
 
@@ -217,7 +218,7 @@ class EmailDigest(Document):
 
 		return events, event_count
 
-	def get_todo_list(self, user_id=None):
+	def get_todo_list(self, user_id: str | None = None) -> list:
 		"""Get to-do list"""
 		if not user_id:
 			user_id = frappe.session.user
@@ -247,7 +248,7 @@ class EmailDigest(Document):
 
 		return todo_list
 
-	def get_todo_count(self, user_id=None):
+	def get_todo_count(self, user_id: str | None = None) -> int:
 		"""Get count of Todo"""
 		if not user_id:
 			user_id = frappe.session.user
@@ -260,7 +261,7 @@ class EmailDigest(Document):
 			.run()
 		)[0][0]
 
-	def get_issue_list(self, user_id=None):
+	def get_issue_list(self, user_id: str | None = None) -> list | None:
 		"""Get issue list"""
 		if not user_id:
 			user_id = frappe.session.user
@@ -283,11 +284,11 @@ class EmailDigest(Document):
 
 		return issue_list
 
-	def get_issue_count(self):
+	def get_issue_count(self) -> int:
 		"""Get count of Issue"""
 		return frappe.db.count("Issue", {"status": ["in", ["Open", "Replied"]]})
 
-	def get_project_list(self, user_id=None):
+	def get_project_list(self, user_id: str | None = None) -> list:
 		"""Get project list"""
 		if not user_id:
 			user_id = frappe.session.user
@@ -305,11 +306,11 @@ class EmailDigest(Document):
 
 		return project_list
 
-	def get_project_count(self):
+	def get_project_count(self) -> int:
 		"""Get count of Project"""
 		return frappe.db.count("Project", {"status": "Open", "project_type": "External"})
 
-	def set_accounting_cards(self, context):
+	def set_accounting_cards(self, context: dict) -> None:
 		"""Create accounting cards if checked"""
 
 		cache = frappe.cache()
@@ -381,7 +382,7 @@ class EmailDigest(Document):
 
 				context.cards.append(card)
 
-	def get_income(self):
+	def get_income(self) -> dict:
 		"""Get income for given period"""
 		income, past_income, count = self.get_period_amounts(self.get_roots("income"), "income")
 
@@ -403,15 +404,15 @@ class EmailDigest(Document):
 		)
 		return {"label": label, "value": income, "last_value": past_income, "count": count}
 
-	def get_income_year_to_date(self):
+	def get_income_year_to_date(self) -> dict:
 		"""Get income to date"""
 		return self.get_year_to_date_balance("income", "income")
 
-	def get_expense_year_to_date(self):
+	def get_expense_year_to_date(self) -> dict:
 		"""Get income to date"""
 		return self.get_year_to_date_balance("expense", "expenses_booked")
 
-	def get_year_to_date_balance(self, root_type, fieldname):
+	def get_year_to_date_balance(self, root_type: str, fieldname: str) -> dict:
 		"""Get income to date"""
 		balance = 0.0
 		count = 0
@@ -439,21 +440,21 @@ class EmailDigest(Document):
 
 		return {"label": label, "value": balance, "count": count}
 
-	def get_bank_balance(self):
+	def get_bank_balance(self) -> dict:
 		# account is of type "Bank" and root_type is Asset
 		return self.get_type_balance("bank_balance", "Bank", root_type="Asset")
 
-	def get_credit_balance(self):
+	def get_credit_balance(self) -> dict:
 		# account is of type "Bank" and root_type is Liability
 		return self.get_type_balance("credit_balance", "Bank", root_type="Liability")
 
-	def get_payables(self):
+	def get_payables(self) -> dict:
 		return self.get_type_balance("payables", "Payable")
 
-	def get_invoiced_amount(self):
+	def get_invoiced_amount(self) -> dict:
 		return self.get_type_balance("invoiced_amount", "Receivable")
 
-	def get_expenses_booked(self):
+	def get_expenses_booked(self) -> dict:
 		expenses, past_expenses, count = self.get_period_amounts(self.get_roots("expense"), "expenses_booked")
 
 		expense_account = frappe.db.get_all(
@@ -474,7 +475,7 @@ class EmailDigest(Document):
 		)
 		return {"label": label, "value": expenses, "last_value": past_expenses, "count": count}
 
-	def get_period_amounts(self, accounts, fieldname):
+	def get_period_amounts(self, accounts: list, fieldname: str) -> tuple:
 		"""Get amounts for current and past periods"""
 		balance = past_balance = 0.0
 		count = 0
@@ -485,7 +486,7 @@ class EmailDigest(Document):
 
 		return balance, past_balance, count
 
-	def get_sales_orders_to_bill(self):
+	def get_sales_orders_to_bill(self) -> dict:
 		"""Get value not billed"""
 
 		so = frappe.qb.DocType("Sales Order")
@@ -519,7 +520,7 @@ class EmailDigest(Document):
 
 		return {"label": label, "value": value, "count": count}
 
-	def get_sales_orders_to_deliver(self):
+	def get_sales_orders_to_deliver(self) -> dict:
 		"""Get value not delivered"""
 
 		so = frappe.qb.DocType("Sales Order")
@@ -553,7 +554,7 @@ class EmailDigest(Document):
 
 		return {"label": label, "value": value, "count": count}
 
-	def get_purchase_orders_to_receive(self):
+	def get_purchase_orders_to_receive(self) -> dict:
 		"""Get value not received"""
 
 		po = frappe.qb.DocType("Purchase Order")
@@ -587,7 +588,7 @@ class EmailDigest(Document):
 
 		return {"label": label, "value": value, "count": count}
 
-	def get_purchase_orders_to_bill(self):
+	def get_purchase_orders_to_bill(self) -> dict:
 		"""Get purchase not billed"""
 
 		po = frappe.qb.DocType("Purchase Order")
@@ -621,7 +622,7 @@ class EmailDigest(Document):
 
 		return {"label": label, "value": value, "count": count}
 
-	def get_type_balance(self, fieldname, account_type, root_type=None):
+	def get_type_balance(self, fieldname: str, account_type: str, root_type: str | None = None) -> dict:
 		if root_type:
 			accounts = [
 				d.name
@@ -692,7 +693,7 @@ class EmailDigest(Document):
 
 			return {"label": label, "value": balance, "last_value": prev_balance, "count": count}
 
-	def get_roots(self, root_type):
+	def get_roots(self, root_type: str) -> list:
 		return [
 			d.name
 			for d in frappe.db.get_all(
@@ -706,7 +707,7 @@ class EmailDigest(Document):
 			)
 		]
 
-	def get_root_type_accounts(self, root_type):
+	def get_root_type_accounts(self, root_type: str) -> list:
 		if root_type not in self._accounts:
 			self._accounts[root_type] = [
 				d.name
@@ -717,31 +718,31 @@ class EmailDigest(Document):
 			]
 		return self._accounts[root_type]
 
-	def get_purchase_order(self):
+	def get_purchase_order(self) -> dict:
 		return self.get_summary_of_doc("Purchase Order", "purchase_order")
 
-	def get_sales_order(self):
+	def get_sales_order(self) -> dict:
 		return self.get_summary_of_doc("Sales Order", "sales_order")
 
-	def get_pending_purchase_orders(self):
+	def get_pending_purchase_orders(self) -> dict:
 		return self.get_summary_of_pending("Purchase Order", "pending_purchase_orders", "per_received")
 
-	def get_pending_sales_orders(self):
+	def get_pending_sales_orders(self) -> dict:
 		return self.get_summary_of_pending("Sales Order", "pending_sales_orders", "per_delivered")
 
-	def get_sales_invoice(self):
+	def get_sales_invoice(self) -> dict:
 		return self.get_summary_of_doc("Sales Invoice", "sales_invoice")
 
-	def get_purchase_invoice(self):
+	def get_purchase_invoice(self) -> dict:
 		return self.get_summary_of_doc("Purchase Invoice", "purchase_invoice")
 
-	def get_new_quotations(self):
+	def get_new_quotations(self) -> dict:
 		return self.get_summary_of_doc("Quotation", "new_quotations")
 
-	def get_pending_quotations(self):
+	def get_pending_quotations(self) -> dict:
 		return self.get_summary_of_pending_quotations("pending_quotations")
 
-	def get_summary_of_pending(self, doc_type, fieldname, getfield):
+	def get_summary_of_pending(self, doc_type: str, fieldname: str, getfield: str) -> dict:
 		doc = frappe.qb.DocType(doc_type)
 		value, count, billed_value, delivered_value = (
 			frappe.qb.from_(doc)
@@ -767,7 +768,7 @@ class EmailDigest(Document):
 			"count": count,
 		}
 
-	def get_summary_of_pending_quotations(self, fieldname):
+	def get_summary_of_pending_quotations(self, fieldname: str) -> dict:
 		quotation = frappe.qb.DocType("Quotation")
 		value, count = (
 			frappe.qb.from_(quotation)
@@ -806,7 +807,7 @@ class EmailDigest(Document):
 
 		return {"label": label, "value": value, "last_value": last_value, "count": count}
 
-	def get_summary_of_doc(self, doc_type, fieldname):
+	def get_summary_of_doc(self, doc_type: str, fieldname: str) -> dict:
 		date_field = (
 			"posting_date" if doc_type in ["Sales Invoice", "Purchase Invoice"] else "transaction_date"
 		)
@@ -832,7 +833,7 @@ class EmailDigest(Document):
 
 		return {"label": label, "value": value, "last_value": last_value, "count": count}
 
-	def get_total_on(self, doc_type, from_date, to_date):
+	def get_total_on(self, doc_type: str, from_date, to_date) -> list:
 		date_field = (
 			"posting_date" if doc_type in ["Sales Invoice", "Purchase Invoice"] else "transaction_date"
 		)
@@ -847,7 +848,7 @@ class EmailDigest(Document):
 			fields=[{"COUNT": "*", "as": "count"}, {"SUM": "grand_total", "as": "grand_total"}],
 		)
 
-	def get_from_to_date(self):
+	def get_from_to_date(self) -> tuple:
 		today = now_datetime().date()
 
 		# decide from date based on email digest frequency
@@ -868,7 +869,7 @@ class EmailDigest(Document):
 
 		return from_date, to_date
 
-	def set_dates(self):
+	def set_dates(self) -> None:
 		self.future_from_date, self.future_to_date = self.from_date, self.to_date
 
 		# decide from date based on email digest frequency
@@ -897,16 +898,16 @@ class EmailDigest(Document):
 
 		return send_date
 
-	def onload(self):
+	def onload(self) -> None:
 		self.get_next_sending()
 
-	def fmt_money(self, value, absol=True):
+	def fmt_money(self, value: float, absol: bool = True) -> str:
 		if absol:
 			return fmt_money(abs(value), currency=self.currency)
 		else:
 			return fmt_money(value, currency=self.currency)
 
-	def get_purchase_orders_items_overdue_list(self):
+	def get_purchase_orders_items_overdue_list(self) -> dict:
 		po = frappe.qb.DocType("Purchase Order")
 		poi = frappe.qb.DocType("Purchase Order Item")
 
@@ -945,7 +946,7 @@ class EmailDigest(Document):
 		return items_by_parent
 
 
-def send():
+def send() -> None:
 	now_date = now_datetime().date()
 
 	for ed in frappe.get_all(
@@ -957,11 +958,11 @@ def send():
 
 
 @frappe.whitelist()
-def get_digest_msg(name: str):
+def get_digest_msg(name: str) -> str | None:
 	return frappe.get_doc("Email Digest", name).get_msg_html()
 
 
-def get_incomes_expenses_for_period(account, from_date, to_date):
+def get_incomes_expenses_for_period(account: str, from_date, to_date) -> float:
 	"""Get amounts for current and past periods"""
 
 	val = 0.0
@@ -981,7 +982,7 @@ def get_incomes_expenses_for_period(account, from_date, to_date):
 	return val
 
 
-def get_count_for_period(account, fieldname, from_date, to_date):
+def get_count_for_period(account: str, fieldname: str, from_date, to_date) -> float:
 	count = 0.0
 	count_on_to_date = get_count_on(account, fieldname, to_date)
 	count_before_from_date = get_count_on(account, fieldname, from_date - timedelta(days=1))
@@ -998,7 +999,7 @@ def get_count_for_period(account, fieldname, from_date, to_date):
 	return count
 
 
-def get_future_date_for_calendaer_event(frequency):
+def get_future_date_for_calendaer_event(frequency: str) -> tuple:
 	from_date = to_date = today()
 
 	if frequency == "Weekly":

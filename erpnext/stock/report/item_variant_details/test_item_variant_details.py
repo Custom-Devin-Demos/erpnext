@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.controllers.item_variant import create_variant
@@ -13,7 +15,7 @@ class TestItemVariantDetails(ERPNextTestSuite):
 	def run_report(self, **extra):
 		return execute(frappe._dict(extra))[1]
 
-	def test_variants_listed_for_template(self):
+	def test_variants_listed_for_template(self) -> None:
 		template = "_Test Variant Item"
 
 		variant = create_variant(template, {"Test Size": "Small"})

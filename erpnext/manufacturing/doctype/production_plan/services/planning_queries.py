@@ -3,6 +3,8 @@
 
 """Small query helpers shared by Production Plan material planning."""
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -12,7 +14,7 @@ from pypika.terms import ExistsCriterion
 from erpnext.manufacturing.doctype.work_order.work_order import get_item_details
 
 
-def get_uom_conversion_factor(item_code, uom):
+def get_uom_conversion_factor(item_code: str, uom: str) -> float | None:
 	return frappe.db.get_value(
 		"UOM Conversion Detail", {"parent": item_code, "uom": uom}, "conversion_factor"
 	)
@@ -21,7 +23,7 @@ def get_uom_conversion_factor(item_code, uom):
 @frappe.whitelist()
 def get_bin_details(
 	row: str | dict, company: str, for_warehouse: str | None = None, all_warehouse: bool = False
-):
+) -> list:
 	frappe.has_permission("Production Plan", "read", throw=True)
 
 	row = frappe._dict(frappe.parse_json(row))
@@ -37,7 +39,7 @@ def get_bin_details(
 	return query.run(as_dict=True)
 
 
-def _bin_warehouse_subquery(bin, company, row, for_warehouse, all_warehouse):
+def _bin_warehouse_subquery(bin, company: str, row: dict, for_warehouse: str | None, all_warehouse: bool):
 	wh = frappe.qb.DocType("Warehouse")
 	subquery = frappe.qb.from_(wh).select(wh.name).where(wh.company == company)
 
@@ -51,7 +53,7 @@ def _bin_warehouse_subquery(bin, company, row, for_warehouse, all_warehouse):
 	return subquery
 
 
-def _bin_qty_columns(bin):
+def _bin_qty_columns(bin) -> list:
 	return [
 		IfNull(Sum(bin.projected_qty), 0).as_("projected_qty"),
 		IfNull(Sum(bin.actual_qty), 0).as_("actual_qty"),
@@ -61,7 +63,7 @@ def _bin_qty_columns(bin):
 	]
 
 
-def get_warehouse_list(warehouses):
+def get_warehouse_list(warehouses: str | list) -> list:
 	warehouse_list = []
 
 	warehouses = frappe.parse_json(warehouses)
@@ -77,7 +79,7 @@ def get_warehouse_list(warehouses):
 
 
 @frappe.whitelist()
-def get_item_data(item_code: str):
+def get_item_data(item_code: str) -> dict:
 	frappe.has_permission("Item", "read", throw=True)
 
 	item_details = get_item_details(item_code)
@@ -89,13 +91,13 @@ def get_item_data(item_code: str):
 	}
 
 
-def set_default_warehouses(row, default_warehouses):
+def set_default_warehouses(row: dict, default_warehouses: dict) -> None:
 	for field in ["wip_warehouse", "fg_warehouse", "scrap_warehouse"]:
 		if not row.get(field):
 			row[field] = default_warehouses.get(field)
 
 
-def get_sales_orders(self):
+def get_sales_orders(self) -> list:
 	bom = frappe.qb.DocType("BOM")
 	so = frappe.qb.DocType("Sales Order")
 	so_item = frappe.qb.DocType("Sales Order Item")

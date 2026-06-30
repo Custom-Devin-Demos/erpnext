@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("buying", "doctype", "purchase_order")
 	frappe.reload_doc("buying", "doctype", "supplier_quotation")
 	frappe.reload_doc("selling", "doctype", "sales_order")

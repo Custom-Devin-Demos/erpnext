@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -8,12 +10,12 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestSupplierLedgerSummary(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.supplier = "_Test Supplier"
 		self.item = "_Test Item"
 
-	def create_purchase_invoice(self, do_not_submit=False):
+	def create_purchase_invoice(self, do_not_submit: bool = False):
 		frappe.set_user("Administrator")
 		pi = make_purchase_invoice(
 			item=self.item,
@@ -33,7 +35,7 @@ class TestSupplierLedgerSummary(ERPNextTestSuite, AccountsTestMixin):
 			pi = pi.submit()
 		return pi
 
-	def test_basic_supplier_ledger_summary(self):
+	def test_basic_supplier_ledger_summary(self) -> None:
 		self.create_purchase_invoice()
 
 		filters = {"company": self.company, "from_date": today(), "to_date": today()}
@@ -56,7 +58,7 @@ class TestSupplierLedgerSummary(ERPNextTestSuite, AccountsTestMixin):
 			with self.subTest(field=field):
 				self.assertEqual(report_output[0].get(field), expected.get(field))
 
-	def test_supplier_ledger_summary_with_filters(self):
+	def test_supplier_ledger_summary_with_filters(self) -> None:
 		self.create_purchase_invoice()
 
 		supplier_group = frappe.db.get_value("Supplier", self.supplier, "supplier_group")

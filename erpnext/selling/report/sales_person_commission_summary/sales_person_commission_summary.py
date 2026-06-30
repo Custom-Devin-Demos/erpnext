@@ -1,11 +1,13 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from frappe import _, msgprint, qb
 from frappe.query_builder import Criterion
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -36,7 +38,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	if not filters.get("doc_type"):
 		msgprint(_("Please select the document type first"), raise_exception=1)
 
@@ -95,7 +97,7 @@ def get_columns(filters):
 	return columns
 
 
-def get_entries(filters):
+def get_entries(filters: dict) -> list:
 	dt = qb.DocType(filters["doc_type"])
 	st = qb.DocType("Sales Team")
 	date_field = dt["transaction_date"] if filters["doc_type"] == "Sales Order" else dt["posting_date"]
@@ -125,7 +127,7 @@ def get_entries(filters):
 	return entries
 
 
-def get_conditions(dt, st, filters, date_field):
+def get_conditions(dt, st, filters: dict, date_field) -> list:
 	conditions = []
 
 	conditions.append(dt.docstatus.eq(1))

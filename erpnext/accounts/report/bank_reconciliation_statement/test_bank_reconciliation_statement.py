@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.report.bank_reconciliation_statement.bank_reconciliation_statement import (
@@ -11,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite, if_lending_app_installed
 
 class TestBankReconciliationStatement(ERPNextTestSuite):
 	@if_lending_app_installed
-	def test_loan_entries_in_bank_reco_statement(self):
+	def test_loan_entries_in_bank_reco_statement(self) -> None:
 		from lending.loan_management.doctype.loan.test_loan import create_loan_accounts
 
 		from erpnext.accounts.doctype.bank_transaction.test_bank_transaction import (

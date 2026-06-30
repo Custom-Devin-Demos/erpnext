@@ -1,13 +1,14 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
 from frappe.utils import flt
 
 
-def get_context(context):
+def get_context(context) -> None:
 	context.no_cache = 1
 	context.show_sidebar = True
 	context.doc = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.name)
@@ -32,7 +33,7 @@ def get_context(context):
 	context.doc.items = get_more_items_info(context.doc.items, context.doc.name)
 
 
-def get_more_items_info(items, material_request):
+def get_more_items_info(items: list, material_request: str) -> list:
 	for item in items:
 		item.customer_provided = frappe.get_value("Item", item.item_code, "is_customer_provided_item")
 		wo = frappe.qb.DocType("Work Order")

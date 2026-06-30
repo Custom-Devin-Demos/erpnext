@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 # import frappe
 from frappe.model.document import Document
 
@@ -26,25 +28,25 @@ class WorkOrderAdditionalItem(Document):
 	# end: auto-generated types
 
 	@staticmethod
-	def get_list(self, *args, **kwargs):
+	def get_list(self, *args, **kwargs) -> None:
 		pass
 
 	@staticmethod
-	def get_count(self, *args, **kwargs):
+	def get_count(self, *args, **kwargs) -> None:
 		pass
 
 	@staticmethod
-	def get_stats(self, *args, **kwargs):
+	def get_stats(self, *args, **kwargs) -> None:
 		pass
 
-	def db_insert(self, *args, **kwargs):
+	def db_insert(self, *args, **kwargs) -> None:
 		pass
 
-	def load_from_db(self, *args, **kwargs):
+	def load_from_db(self, *args, **kwargs) -> None:
 		pass
 
-	def db_update(self, *args, **kwargs):
+	def db_update(self, *args, **kwargs) -> None:
 		pass
 
-	def delete(self, *args, **kwargs):
+	def delete(self, *args, **kwargs) -> None:
 		pass

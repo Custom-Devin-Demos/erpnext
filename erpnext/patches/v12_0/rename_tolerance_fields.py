@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "item")
 	frappe.reload_doc("stock", "doctype", "stock_settings")
 	frappe.reload_doc("accounts", "doctype", "accounts_settings")

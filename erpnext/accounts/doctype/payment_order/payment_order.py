@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -35,13 +37,13 @@ class PaymentOrder(Document):
 		references: DF.Table[PaymentOrderReference]
 	# end: auto-generated types
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_payment_status()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_payment_status(cancel=True)
 
-	def update_payment_status(self, cancel=False):
+	def update_payment_status(self, cancel: bool = False) -> None:
 		status = "Payment Ordered"
 		if cancel:
 			status = "Initiated"
@@ -90,12 +92,12 @@ def get_supplier_query(doctype: str, txt: str, searchfield: str, start: int, pag
 
 
 @frappe.whitelist()
-def make_payment_records(name: str, supplier: str, mode_of_payment: str | None = None):
+def make_payment_records(name: str, supplier: str, mode_of_payment: str | None = None) -> None:
 	doc = frappe.get_doc("Payment Order", name)
 	make_journal_entry(doc, supplier, mode_of_payment)
 
 
-def make_journal_entry(doc, supplier, mode_of_payment=None):
+def make_journal_entry(doc, supplier, mode_of_payment=None) -> None:
 	je = frappe.new_doc("Journal Entry")
 	je.payment_order = doc.name
 	je.posting_date = nowdate()
