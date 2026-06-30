@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.regional.report.irs_1099.irs_1099 import get_street_address_html
@@ -8,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestIRS1099StreetAddress(ERPNextTestSuite):
-	def test_street_address_prefers_postal(self):
+	def test_street_address_prefers_postal(self) -> None:
 		"""The original query cross-joined Address with no join predicate, so its
 		`ORDER BY address_type='Postal' DESC` sorted on an arbitrary cross-joined row and never
 		controlled which link.parent (Address) was returned. The conversion joins address.name ==
@@ -20,7 +22,7 @@ class TestIRS1099StreetAddress(ERPNextTestSuite):
 				{"doctype": "Supplier", "supplier_name": party, "supplier_group": "_Test Supplier Group"}
 			).insert(ignore_permissions=True)
 
-		def mk_addr(title, address_type, line1):
+		def mk_addr(title: str, address_type: str, line1: str) -> None:
 			frappe.get_doc(
 				{
 					"doctype": "Address",

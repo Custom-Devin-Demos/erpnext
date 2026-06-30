@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import re
 import zipfile
@@ -35,15 +36,15 @@ class ImportSupplierInvoice(Document):
 		zip_file: DF.Attach | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if not frappe.db.get_value("Stock Settings", fieldname="stock_uom"):
 			frappe.throw(_("Please set default UOM in Stock Settings"))
 
-	def autoname(self):
+	def autoname(self) -> None:
 		if not self.name:
 			self.name = "Import Invoice on " + format_datetime(self.creation)
 
-	def import_xml_data(self):
+	def import_xml_data(self) -> None:
 		zip_file = frappe.get_doc(
 			"File",
 			{"file_url": self.zip_file, "attached_to_doctype": self.doctype, "attached_to_name": self.name},
@@ -71,7 +72,7 @@ class ImportSupplierInvoice(Document):
 		self.save()
 		self.publish("File Import", _("XML Files Processed"), 3, 3)
 
-	def prepare_data_for_import(self, file_content, file_name, encoded_content):
+	def prepare_data_for_import(self, file_content, file_name: str, encoded_content: str) -> None:
 		for line in file_content.find_all("DatiGeneraliDocumento"):
 			invoices_args = {
 				"company": self.company,
@@ -121,7 +122,7 @@ class ImportSupplierInvoice(Document):
 			file_doc.is_private = False
 			file_doc.insert(ignore_permissions=True)
 
-	def prepare_items_for_invoice(self, file_content, invoices_args):
+	def prepare_items_for_invoice(self, file_content, invoices_args: dict) -> None:
 		qty = 1
 		rate, tax_rate = [0, 0]
 		uom = self.default_uom
@@ -167,11 +168,11 @@ class ImportSupplierInvoice(Document):
 						)
 
 	@frappe.whitelist()
-	def process_file_data(self):
+	def process_file_data(self) -> None:
 		self.db_set("status", "Processing File Data", notify=True, commit=True)
 		frappe.enqueue_doc(self.doctype, self.name, "import_xml_data", queue="long", timeout=3600)
 
-	def publish(self, title, message, count, total):
+	def publish(self, title: str, message: str, count: int, total: int) -> None:
 		frappe.publish_realtime(
 			"import_invoice_update",
 			{"title": title, "message": message, "count": count, "total": total},
@@ -179,7 +180,7 @@ class ImportSupplierInvoice(Document):
 		)
 
 
-def get_file_content(file_name, zip_file_object):
+def get_file_content(file_name: str, zip_file_object) -> str:
 	content = ""
 	encoded_content = zip_file_object.read(file_name)
 
@@ -194,7 +195,7 @@ def get_file_content(file_name, zip_file_object):
 	return content
 
 
-def get_supplier_details(file_content):
+def get_supplier_details(file_content) -> dict | None:
 	supplier_info = {}
 	for line in file_content.find_all("CedentePrestatore"):
 		supplier_info["tax_id"] = line.DatiAnagrafici.IdPaese.text + line.DatiAnagrafici.IdCodice.text
@@ -223,7 +224,7 @@ def get_supplier_details(file_content):
 		return supplier_info
 
 
-def get_taxes_from_file(file_content, tax_account):
+def get_taxes_from_file(file_content, tax_account: str) -> list:
 	taxes = []
 	# read file for taxes information
 	for line in file_content.find_all("DatiRiepilogo"):
@@ -245,7 +246,7 @@ def get_taxes_from_file(file_content, tax_account):
 	return taxes
 
 
-def get_payment_terms_from_file(file_content):
+def get_payment_terms_from_file(file_content) -> list:
 	terms = []
 	# Get mode of payment dict from setup
 	mop_options = frappe.get_meta("Mode of Payment").fields[4].options
@@ -270,7 +271,7 @@ def get_payment_terms_from_file(file_content):
 	return terms
 
 
-def get_destination_code_from_file(file_content):
+def get_destination_code_from_file(file_content) -> str:
 	destination_code = ""
 	for line in file_content.find_all("DatiTrasmissione"):
 		destination_code = line.CodiceDestinatario.text
@@ -278,7 +279,7 @@ def get_destination_code_from_file(file_content):
 	return destination_code
 
 
-def create_supplier(supplier_group, args):
+def create_supplier(supplier_group: str, args: dict) -> str:
 	args = frappe._dict(args)
 
 	existing_supplier_name = frappe.db.get_value(
@@ -323,7 +324,7 @@ def create_supplier(supplier_group, args):
 		return new_supplier.name
 
 
-def create_address(supplier_name, args):
+def create_address(supplier_name: str, args: dict) -> str | dict | None:
 	args = frappe._dict(args)
 
 	filters = [
@@ -363,7 +364,7 @@ def create_address(supplier_name, args):
 		return None
 
 
-def create_purchase_invoice(supplier_name, file_name, args, name):
+def create_purchase_invoice(supplier_name: str, file_name: str, args: dict, name: str) -> str:
 	args = frappe._dict(args)
 	pi = frappe.get_doc(
 		{
@@ -417,7 +418,7 @@ def create_purchase_invoice(supplier_name, file_name, args, name):
 	return pi.name
 
 
-def get_country(code):
+def get_country(code: str) -> str:
 	existing_country_name = frappe.db.get_value("Country", filters={"code": code}, fieldname="name")
 	if existing_country_name:
 		return existing_country_name
@@ -425,7 +426,7 @@ def get_country(code):
 		frappe.throw(_("Country Code in File does not match with country code set up in the system"))
 
 
-def create_uom(uom):
+def create_uom(uom: str) -> str:
 	existing_uom = frappe.db.get_value("UOM", filters={"uom_name": uom}, fieldname="uom_name")
 	if existing_uom:
 		return existing_uom

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt, money_in_words, round_based_on_smallest_currency_fraction
@@ -6,7 +8,7 @@ import erpnext
 from erpnext.controllers.taxes_and_totals import get_itemised_tax
 
 
-def update_itemised_tax_data(doc):
+def update_itemised_tax_data(doc) -> None:
 	if not doc.items:
 		return
 
@@ -16,7 +18,7 @@ def update_itemised_tax_data(doc):
 
 	itemised_tax = get_itemised_tax(doc)
 
-	def determine_if_export(doc):
+	def determine_if_export(doc) -> bool:
 		if doc.doctype != "Sales Invoice":
 			return False
 
@@ -57,12 +59,12 @@ def update_itemised_tax_data(doc):
 		row.total_amount = flt((row.net_amount + row.tax_amount), row.precision("total_amount"))
 
 
-def get_account_currency(account):
+def get_account_currency(account: str) -> str | None:
 	"""Helper function to get account currency."""
 	if not account:
 		return
 
-	def generator():
+	def generator() -> str:
 		account_currency, company = frappe.get_cached_value(
 			"Account", account, ["account_currency", "company"]
 		)
@@ -74,7 +76,7 @@ def get_account_currency(account):
 	return frappe.local_cache("account_currency", account, generator)
 
 
-def get_tax_accounts(company):
+def get_tax_accounts(company: str) -> dict:
 	"""Get the list of tax accounts for a specific company."""
 	tax_accounts_dict = frappe._dict()
 	tax_accounts_list = frappe.get_all("UAE VAT Account", filters={"parent": company}, fields=["account"])
@@ -88,7 +90,7 @@ def get_tax_accounts(company):
 	return tax_accounts_dict
 
 
-def update_grand_total_for_rcm(doc, method):
+def update_grand_total_for_rcm(doc, method: str) -> None:
 	"""If the Reverse Charge is Applicable subtract the tax amount from the grand total and update in the form."""
 	country = frappe.get_cached_value("Company", doc.company, "country")
 
@@ -120,7 +122,7 @@ def update_grand_total_for_rcm(doc, method):
 		update_totals(vat_tax, base_vat_tax, doc)
 
 
-def update_totals(vat_tax, base_vat_tax, doc):
+def update_totals(vat_tax: float, base_vat_tax: float, doc) -> None:
 	"""Update the grand total values in the form."""
 	doc.base_grand_total -= base_vat_tax
 	doc.grand_total -= vat_tax
@@ -145,7 +147,7 @@ def update_totals(vat_tax, base_vat_tax, doc):
 	PaymentScheduleService(doc).set_payment_schedule()
 
 
-def make_regional_gl_entries(gl_entries, doc):
+def make_regional_gl_entries(gl_entries: list, doc) -> list:
 	"""Hooked to make_regional_gl_entries in Purchase Invoice.It appends the region specific general ledger entries to the list of GL Entries."""
 	country = frappe.get_cached_value("Company", doc.company, "country")
 
@@ -161,7 +163,7 @@ def make_regional_gl_entries(gl_entries, doc):
 	return gl_entries
 
 
-def make_gl_entry(tax, gl_entries, doc, tax_accounts):
+def make_gl_entry(tax, gl_entries: list, doc, tax_accounts: dict) -> list:
 	dr_or_cr = "credit" if tax.add_deduct_tax == "Add" else "debit"
 	if flt(tax.base_tax_amount_after_discount_amount) and tax.account_head in tax_accounts:
 		account_currency = get_account_currency(tax.account_head)
@@ -185,7 +187,7 @@ def make_gl_entry(tax, gl_entries, doc, tax_accounts):
 	return gl_entries
 
 
-def validate_returns(doc, method):
+def validate_returns(doc, method: str) -> None:
 	"""Standard Rated expenses should not be set when Reverse Charge Applicable is set."""
 	country = frappe.get_cached_value("Company", doc.company, "country")
 	if country != "United Arab Emirates":

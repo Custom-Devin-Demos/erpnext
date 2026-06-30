@@ -1,6 +1,7 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -10,18 +11,18 @@ from erpnext import get_region
 from erpnext.accounts.report.item_wise_sales_register.item_wise_sales_register import get_tax_details_query
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	return VATAuditReport(filters).run()
 
 
 class VATAuditReport:
-	def __init__(self, filters=None):
+	def __init__(self, filters: dict | None = None) -> None:
 		self.filters = frappe._dict(filters or {})
 		self.columns = []
 		self.data = []
 		self.doctypes = ["Purchase Invoice", "Sales Invoice"]
 
-	def run(self):
+	def run(self) -> tuple:
 		self.validate_company_region()
 		self.get_sa_vat_accounts()
 		self.get_columns()
@@ -35,7 +36,7 @@ class VATAuditReport:
 
 		return self.columns, self.data
 
-	def validate_company_region(self):
+	def validate_company_region(self) -> None:
 		if self.filters.company and get_region(self.filters.company) != "South Africa":
 			frappe.throw(
 				_(
@@ -43,7 +44,7 @@ class VATAuditReport:
 				).format(frappe.bold(self.filters.company))
 			)
 
-	def get_sa_vat_accounts(self):
+	def get_sa_vat_accounts(self) -> None:
 		self.sa_vat_accounts = frappe.get_all(
 			"South Africa VAT Account", filters={"parent": self.filters.company}, pluck="account"
 		)
@@ -53,7 +54,7 @@ class VATAuditReport:
 			)
 			frappe.throw(_("Please set VAT Accounts in {0}").format(link_to_settings))
 
-	def get_invoice_data(self, doctype):
+	def get_invoice_data(self, doctype: str) -> None:
 		self.invoices = frappe._dict()
 		invoice_doctype = frappe.qb.DocType(doctype)
 		party_field = invoice_doctype.supplier if doctype == "Purchase Invoice" else invoice_doctype.customer
@@ -87,7 +88,7 @@ class VATAuditReport:
 		for row in invoice_data:
 			self.invoices.setdefault(row.voucher_no, row)
 
-	def get_invoice_items(self, doctype):
+	def get_invoice_items(self, doctype: str) -> None:
 		self.invoice_items = frappe._dict()
 		item_doctype = frappe.qb.DocType(doctype + " Item")
 		self.invoice_items = frappe._dict(
@@ -100,7 +101,7 @@ class VATAuditReport:
 			.run(as_list=1)
 		)
 
-	def get_items_based_on_tax_rate(self, doctype):
+	def get_items_based_on_tax_rate(self, doctype: str) -> None:
 		self.items_based_on_tax_rate = frappe._dict()
 		self.tax_doctype = (
 			"Purchase Taxes and Charges" if doctype == "Purchase Invoice" else "Sales Taxes and Charges"
@@ -138,7 +139,7 @@ class VATAuditReport:
 			self.items_based_on_tax_rate[parent][row.rate]["net_amount"] += row.taxable_amount
 			self.items_based_on_tax_rate[parent][row.rate]["gross_amount"] += row.amount + row.taxable_amount
 
-	def get_data(self, doctype):
+	def get_data(self, doctype: str) -> None:
 		consolidated_data = self.get_consolidated_data(doctype)
 		section_name = _("Purchases") if doctype == "Purchase Invoice" else _("Sales")
 
@@ -164,7 +165,7 @@ class VATAuditReport:
 			self.data.append(total)
 			self.data.append({})
 
-	def get_consolidated_data(self, doctype):
+	def get_consolidated_data(self, doctype: str) -> dict:
 		consolidated_data_map = {}
 		for inv, inv_data in self.invoices.items():
 			rate_details = self.items_based_on_tax_rate.get(inv, {})
@@ -194,7 +195,7 @@ class VATAuditReport:
 
 		return consolidated_data_map
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = [
 			{"fieldname": "posting_date", "label": "Posting Date", "fieldtype": "Data", "width": 200},
 			{

@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -19,7 +21,7 @@ from erpnext.accounts.utils import get_fiscal_year
 IRS_1099_FORMS_FILE_EXTENSION = ".pdf"
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	filters = filters if isinstance(filters, frappe._dict) else frappe._dict(filters)
 	if not filters:
 		filters.setdefault("fiscal_year", get_fiscal_year(nowdate())[0])
@@ -62,7 +64,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"fieldname": "supplier_group",
@@ -84,7 +86,7 @@ def get_columns():
 
 
 @frappe.whitelist()
-def irs_1099_print(filters: str | dict):
+def irs_1099_print(filters: str | dict) -> None:
 	if not filters:
 		frappe._dict(
 			{
@@ -123,7 +125,7 @@ def irs_1099_print(filters: str | dict):
 	frappe.local.response.type = "download"
 
 
-def get_payer_address_html(company):
+def get_payer_address_html(company: str) -> str:
 	address = frappe.qb.DocType("Address")
 	address_list = (
 		frappe.qb.from_(address)
@@ -144,7 +146,7 @@ def get_payer_address_html(company):
 	return address_display
 
 
-def get_street_address_html(party_type, party):
+def get_street_address_html(party_type: str, party: str) -> tuple:
 	link = frappe.qb.DocType("Dynamic Link")
 	address = frappe.qb.DocType("Address")
 	address_list = (

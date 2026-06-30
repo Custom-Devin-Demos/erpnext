@@ -1,20 +1,21 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.permissions import add_permission, update_permission_property
 
 
-def setup(company=None, patch=True):
+def setup(company: str | None = None, patch: bool = True) -> None:
 	make_custom_fields()
 	add_print_formats()
 	add_custom_roles_for_reports()
 	add_permissions()
 
 
-def make_custom_fields():
+def make_custom_fields() -> None:
 	is_zero_rated = dict(
 		fieldname="is_zero_rated",
 		label="Is Zero Rated",
@@ -246,7 +247,7 @@ def make_custom_fields():
 	create_custom_fields(custom_fields, ignore_validate=True)
 
 
-def add_print_formats():
+def add_print_formats() -> None:
 	frappe.reload_doc("regional", "print_format", "detailed_tax_invoice")
 	frappe.reload_doc("regional", "print_format", "simplified_tax_invoice")
 	frappe.reload_doc("regional", "print_format", "tax_invoice")
@@ -260,7 +261,7 @@ def add_print_formats():
 	)
 
 
-def add_custom_roles_for_reports():
+def add_custom_roles_for_reports() -> None:
 	"""Add Access Control to UAE VAT 201."""
 	if not frappe.db.get_value("Custom Role", dict(report="UAE VAT 201")):
 		frappe.get_doc(
@@ -270,7 +271,7 @@ def add_custom_roles_for_reports():
 		).insert()
 
 
-def add_permissions():
+def add_permissions() -> None:
 	"""Add Permissions for UAE VAT Settings and UAE VAT Account."""
 	for doctype in ("UAE VAT Settings", "UAE VAT Account"):
 		add_permission(doctype, "All", 0)

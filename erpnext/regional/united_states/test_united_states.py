@@ -1,20 +1,27 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 
 from erpnext.regional.report.irs_1099.irs_1099 import execute as execute_1099_report
 from erpnext.tests.utils import ERPNextTestSuite
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class TestUnitedStates(ERPNextTestSuite):
-	def test_irs_1099_custom_field(self):
+	def test_irs_1099_custom_field(self) -> None:
 		if not frappe.db.exists("Supplier", "_US 1099 Test Supplier"):
 			make_irs_1099_supplier()
 			supplier = frappe.get_doc("Supplier", "_US 1099 Test Supplier")
 			self.assertEqual(supplier.irs_1099, 1)
 
-	def test_irs_1099_report(self):
+	def test_irs_1099_report(self) -> None:
 		make_irs_1099_supplier()
 		make_payment_entry_to_irs_1099_supplier()
 		filters = frappe._dict({"fiscal_year": "_Test Fiscal Year 2016", "company": "_Test Company 1"})
@@ -28,7 +35,7 @@ class TestUnitedStates(ERPNextTestSuite):
 		self.assertEqual(data[0], expected_row)
 
 
-def make_irs_1099_supplier():
+def make_irs_1099_supplier() -> Document:
 	doc = frappe.new_doc("Supplier")
 	doc.supplier_name = "_US 1099 Test Supplier"
 	doc.supplier_group = "Services"
@@ -40,7 +47,7 @@ def make_irs_1099_supplier():
 	return doc
 
 
-def make_payment_entry_to_irs_1099_supplier():
+def make_payment_entry_to_irs_1099_supplier() -> None:
 	pe = frappe.new_doc("Payment Entry")
 	pe.payment_type = "Pay"
 	pe.company = "_Test Company 1"

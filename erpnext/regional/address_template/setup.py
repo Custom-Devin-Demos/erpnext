@@ -1,30 +1,33 @@
 """Import Address Templates from ./templates directory."""
+
+from __future__ import annotations
+
 import os
 
 import frappe
 
 
-def set_up_address_templates(default_country=None):
+def set_up_address_templates(default_country: str | None = None) -> None:
 	for country, html in get_address_templates():
 		is_default = 1 if country == default_country else 0
 		update_address_template(country, html, is_default)
 
 
-def get_address_templates():
+def get_address_templates() -> list:
 	"""
 	Return country and path for all HTML files in this directory.
 
 	Returns a list of dicts.
 	"""
 
-	def country(file_name):
+	def country(file_name: str) -> str:
 		"""Convert 'united_states.html' to 'United States'."""
 		suffix_pos = file_name.find(".html")
 		country_snake_case = file_name[:suffix_pos]
 		country_title_case = " ".join(country_snake_case.split("_")).title()
 		return country_title_case
 
-	def get_file_content(file_name):
+	def get_file_content(file_name: str) -> str:
 		"""Convert 'united_states.html' to '/path/to/united_states.html'."""
 		full_path = os.path.join(template_dir, file_name)
 		with open(full_path) as f:
@@ -39,7 +42,7 @@ def get_address_templates():
 	return [(country(file_name), get_file_content(file_name)) for file_name in html_files]
 
 
-def update_address_template(country, html, is_default=0):
+def update_address_template(country: str, html: str, is_default: int = 0) -> None:
 	"""Update existing Address Template or create a new one."""
 	if not frappe.db.exists("Country", country):
 		frappe.log_error(f"Country {country} for regional Address Template does not exist.")

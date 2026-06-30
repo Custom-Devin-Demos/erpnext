@@ -1,6 +1,7 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -31,11 +32,11 @@ class LowerDeductionCertificate(Document):
 		valid_upto: DF.Date
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_dates()
 		self.validate_supplier_against_tax_category()
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		if getdate(self.valid_upto) < getdate(self.valid_from):
 			frappe.throw(_("Valid Up To date cannot be before Valid From date"))
 
@@ -47,7 +48,7 @@ class LowerDeductionCertificate(Document):
 		if not (fiscal_year.year_start_date <= getdate(self.valid_upto) <= fiscal_year.year_end_date):
 			frappe.throw(_("Valid Up To date not in Fiscal Year {0}").format(frappe.bold(self.fiscal_year)))
 
-	def validate_supplier_against_tax_category(self):
+	def validate_supplier_against_tax_category(self) -> None:
 		duplicate_certificate = frappe.db.get_value(
 			"Lower Deduction Certificate",
 			{
@@ -69,7 +70,7 @@ class LowerDeductionCertificate(Document):
 				)
 			)
 
-	def are_dates_overlapping(self, duplicate_certificate):
+	def are_dates_overlapping(self, duplicate_certificate: dict) -> bool:
 		valid_from = duplicate_certificate.valid_from
 		valid_upto = duplicate_certificate.valid_upto
 		if valid_from <= getdate(self.valid_from) <= valid_upto:

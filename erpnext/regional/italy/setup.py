@@ -2,6 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 # coding=utf-8
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -16,13 +17,13 @@ from erpnext.regional.italy import (
 )
 
 
-def setup(company=None, patch=True):
+def setup(company: str | None = None, patch: bool = True) -> None:
 	make_custom_fields()
 	setup_report()
 	add_permissions()
 
 
-def make_custom_fields(update=True):
+def make_custom_fields(update: bool = True) -> None:
 	invoice_item_fields = [
 		dict(
 			fieldname="tax_rate",
@@ -464,7 +465,7 @@ def make_custom_fields(update=True):
 	create_custom_fields(custom_fields, ignore_validate=frappe.flags.in_patch, update=update)
 
 
-def setup_report():
+def setup_report() -> None:
 	report_name = "Electronic Invoice Register"
 	frappe.db.set_value("Report", report_name, "disabled", 0)
 
@@ -476,7 +477,7 @@ def setup_report():
 		).insert()
 
 
-def add_permissions():
+def add_permissions() -> None:
 	doctype = "Import Supplier Invoice"
 	add_permission(doctype, "All", 0)
 
