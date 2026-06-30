@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -27,15 +29,15 @@ class SubcontractingBOM(Document):
 		service_item_uom: DF.Link
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_finished_good()
 		self.validate_service_item()
 		self.validate_is_active()
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.set_conversion_factor()
 
-	def validate_finished_good(self):
+	def validate_finished_good(self) -> None:
 		disabled, is_stock_item, default_bom, is_sub_contracted_item = frappe.db.get_value(
 			"Item",
 			self.finished_good,
@@ -55,7 +57,7 @@ class SubcontractingBOM(Document):
 				_("Finished Good {0} must be a sub-contracted item.").format(frappe.bold(self.finished_good))
 			)
 
-	def validate_service_item(self):
+	def validate_service_item(self) -> None:
 		disabled, is_stock_item = frappe.db.get_value(
 			"Item", self.service_item, ["disabled", "is_stock_item"]
 		)
@@ -67,7 +69,7 @@ class SubcontractingBOM(Document):
 				_("Service Item {0} must be a non-stock item.").format(frappe.bold(self.service_item))
 			)
 
-	def validate_is_active(self):
+	def validate_is_active(self) -> None:
 		if self.is_active:
 			if sb := frappe.db.exists(
 				"Subcontracting BOM",
@@ -79,12 +81,12 @@ class SubcontractingBOM(Document):
 					)
 				)
 
-	def set_conversion_factor(self):
+	def set_conversion_factor(self) -> None:
 		self.conversion_factor = flt(self.service_item_qty) / flt(self.finished_good_qty)
 
 
 @frappe.whitelist()
-def get_subcontracting_boms_for_finished_goods(fg_items: str | list):
+def get_subcontracting_boms_for_finished_goods(fg_items: str | list) -> dict:
 	if fg_items:
 		filters = {"is_active": 1}
 

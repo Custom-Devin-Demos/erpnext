@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 from frappe.query_builder.functions import Sum
@@ -36,7 +38,7 @@ class SubcontractingInwardOrderItem(Document):
 
 	pass
 
-	def update_manufacturing_qty_fields(self):
+	def update_manufacturing_qty_fields(self) -> None:
 		table = frappe.qb.DocType("Work Order")
 		query = (
 			frappe.qb.from_(table)

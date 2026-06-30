@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -9,14 +11,14 @@ from frappe.utils import flt, get_link_to_form
 
 
 @frappe.whitelist()
-def make_subcontract_return_against_rejected_warehouse(source_name: str):
+def make_subcontract_return_against_rejected_warehouse(source_name: str) -> Document:
 	from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
 	return make_return_doc("Subcontracting Receipt", source_name, return_against_rejected_qty=True)
 
 
 @frappe.whitelist()
-def make_subcontract_return(source_name: str, target_doc: Document | str | None = None):
+def make_subcontract_return(source_name: str, target_doc: Document | str | None = None) -> Document:
 	from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
 	return make_return_doc("Subcontracting Receipt", source_name, target_doc)
@@ -29,7 +31,7 @@ def make_purchase_receipt(
 	save: bool = False,
 	submit: bool = False,
 	notify: bool = False,
-):
+) -> Document | None:
 	if isinstance(source_name, str):
 		source_doc = frappe.get_doc("Subcontracting Receipt", source_name)
 	else:
@@ -62,7 +64,7 @@ def make_purchase_receipt(
 			)
 		)
 
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		sr_item_details = po_sr_item_dict.get(obj.name)
 		ratio = flt(obj.qty) / flt(obj.fg_item_qty)
 
@@ -76,7 +78,7 @@ def make_purchase_receipt(
 			}
 		)
 
-	def post_process(source, target):
+	def post_process(source, target) -> None:
 		target.set_missing_values()
 		target.update(
 			{
@@ -144,7 +146,7 @@ def make_purchase_receipt(
 	return target_doc
 
 
-def add_po_items_to_pr(scr_doc, target_doc):
+def add_po_items_to_pr(scr_doc, target_doc) -> None:
 	fg_items = {(item.item_code, item.purchase_order): item.qty for item in scr_doc.items}
 
 	for (item_code, po_name), fg_qty in fg_items.items():
