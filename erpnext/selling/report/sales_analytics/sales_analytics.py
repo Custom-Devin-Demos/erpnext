@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, scrub
 from frappe.query_builder import DocType
@@ -11,7 +13,7 @@ from frappe.utils import add_days, add_to_date, flt, getdate
 from erpnext.accounts.utils import get_fiscal_year
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	filters = frappe._dict(filters or {})
 	# Special report showing all doctype totals on a single chart; overrides some filters
 	if filters.doc_type == "All":
@@ -34,7 +36,7 @@ def execute(filters=None):
 		return Analytics(filters).run()
 
 
-def append_report(dt, org, new):
+def append_report(dt: str, org: tuple | None, new: tuple) -> tuple:
 	# idx 1 is data, 3 is chart
 	new[1].insert(0, {"entity": dt})  # heading
 	new[1].append({})  # empty row
@@ -51,7 +53,7 @@ def append_report(dt, org, new):
 
 
 class Analytics:
-	def __init__(self, filters=None):
+	def __init__(self, filters: dict | None = None) -> None:
 		self.filters = frappe._dict(filters or {})
 		if self.filters.doc_type == "Payment Entry" and self.filters.value_quantity == "Quantity":
 			frappe.throw(_("Only Value available for Payment Entry"))
@@ -80,7 +82,7 @@ class Analytics:
 		]
 		self.get_period_date_ranges()
 
-	def update_company_list_for_parent_company(self):
+	def update_company_list_for_parent_company(self) -> None:
 		company_list = [self.filters.get("company")]
 
 		selected_company = self.filters.get("company")
@@ -98,7 +100,7 @@ class Analytics:
 
 		self.filters["company"] = company_list
 
-	def run(self):
+	def run(self) -> tuple:
 		self.update_company_list_for_parent_company()
 		self.get_columns()
 		self.get_data()
@@ -112,7 +114,7 @@ class Analytics:
 
 		return self.columns, self.data, None, self.chart, None, skip_total_row
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = [
 			{
 				"label": _(self.filters.tree_type),
@@ -151,7 +153,7 @@ class Analytics:
 
 		self.columns.append({"label": _("Total"), "fieldname": "total", "fieldtype": "Float", "width": 120})
 
-	def get_data(self):
+	def get_data(self) -> None:
 		if self.filters.tree_type in ["Customer", "Supplier"]:
 			self.get_sales_transactions_based_on_customers_or_suppliers()
 			self.get_rows()
@@ -191,7 +193,7 @@ class Analytics:
 			self.get_sales_transactions_based_on_project()
 			self.get_rows()
 
-	def _get_permitted_parent_names(self):
+	def _get_permitted_parent_names(self) -> list:
 		return frappe.qb.get_query(
 			table=self.filters.doc_type,
 			fields=["name"],
@@ -203,7 +205,7 @@ class Analytics:
 			ignore_permissions=False,
 		).run(pluck="name")
 
-	def get_sales_transactions_based_on_order_type(self):
+	def get_sales_transactions_based_on_order_type(self) -> None:
 		if self.filters["value_quantity"] == "Value":
 			value_field = "base_net_total"
 		else:
@@ -230,7 +232,7 @@ class Analytics:
 
 		self.get_teams()
 
-	def get_sales_transactions_based_on_customers_or_suppliers(self):
+	def get_sales_transactions_based_on_customers_or_suppliers(self) -> None:
 		if self.filters["value_quantity"] == "Value":
 			value_field = "base_net_total as value_field"
 		else:
@@ -274,7 +276,7 @@ class Analytics:
 		for d in self.entries:
 			self.entity_names.setdefault(d.entity, d.entity_name)
 
-	def get_sales_transactions_based_on_items(self):
+	def get_sales_transactions_based_on_items(self) -> None:
 		if self.filters["value_quantity"] == "Value":
 			value_field = "base_net_amount"
 		else:
@@ -307,7 +309,7 @@ class Analytics:
 		for d in self.entries:
 			self.entity_names.setdefault(d.entity, d.entity_name)
 
-	def get_sales_transactions_based_on_customer_or_territory_group(self):
+	def get_sales_transactions_based_on_customer_or_territory_group(self) -> None:
 		if self.filters["value_quantity"] == "Value":
 			value_field = "base_net_total as value_field"
 		else:
@@ -338,7 +340,7 @@ class Analytics:
 		).run(as_dict=True)
 		self.get_groups()
 
-	def get_sales_transactions_based_on_item_group(self):
+	def get_sales_transactions_based_on_item_group(self) -> None:
 		if self.filters["value_quantity"] == "Value":
 			value_field = "base_net_amount"
 		else:
@@ -367,7 +369,7 @@ class Analytics:
 
 		self.get_groups()
 
-	def get_sales_transactions_based_on_project(self):
+	def get_sales_transactions_based_on_project(self) -> None:
 		if self.filters["value_quantity"] == "Value":
 			value_field = "base_net_total as value_field"
 		else:
@@ -395,7 +397,7 @@ class Analytics:
 			ignore_permissions=False,
 		).run(as_dict=True)
 
-	def get_rows(self):
+	def get_rows(self) -> None:
 		self.data = []
 		self.get_periodic_data()
 
@@ -418,7 +420,7 @@ class Analytics:
 
 			self.data.append(row)
 
-	def get_rows_by_group(self):
+	def get_rows_by_group(self) -> None:
 		self.get_periodic_data()
 		out = []
 
@@ -439,7 +441,7 @@ class Analytics:
 
 		self.data = out
 
-	def get_periodic_data(self):
+	def get_periodic_data(self) -> None:
 		self.entity_periodic_data = frappe._dict()
 
 		for d in self.entries:
@@ -452,7 +454,7 @@ class Analytics:
 			if self.filters.tree_type == "Item":
 				self.entity_periodic_data[d.entity]["stock_uom"] = d.stock_uom
 
-	def get_period(self, posting_date):
+	def get_period(self, posting_date) -> str:
 		if self.filters.range == "Weekly":
 			period = _("Week {0} {1}").format(str(posting_date.isocalendar()[1]), str(posting_date.year))
 		elif self.filters.range == "Monthly":
@@ -466,7 +468,7 @@ class Analytics:
 			period = str(year[0])
 		return period
 
-	def get_period_date_ranges(self):
+	def get_period_date_ranges(self) -> None:
 		from dateutil.relativedelta import MO, relativedelta
 
 		from_date, to_date = getdate(self.filters.from_date), getdate(self.filters.to_date)
@@ -496,7 +498,7 @@ class Analytics:
 			if period_end_date == to_date:
 				break
 
-	def get_groups(self):
+	def get_groups(self) -> None:
 		parent_field_map = {
 			"Territory": "parent_territory",
 			"Customer Group": "parent_customer_group",
@@ -522,7 +524,7 @@ class Analytics:
 			else:
 				self.depth_map.setdefault(d.name, 0)
 
-	def get_teams(self):
+	def get_teams(self) -> None:
 		self.depth_map = frappe._dict()
 
 		if not frappe.db.exists("DocType", self.filters.doc_type):
@@ -553,12 +555,12 @@ class Analytics:
 			else:
 				self.depth_map.setdefault(d.name, 0)
 
-	def get_supplier_parent_child_map(self):
+	def get_supplier_parent_child_map(self) -> None:
 		self.parent_child_map = frappe._dict(
 			frappe.get_all("Supplier", fields=["name", "supplier_group"], as_list=True)
 		)
 
-	def get_chart_data(self):
+	def get_chart_data(self) -> None:
 		length = len(self.columns)
 
 		if self.filters.tree_type in ["Customer", "Supplier"]:
