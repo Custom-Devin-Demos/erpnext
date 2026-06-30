@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, bold
 from frappe.model.document import Document
@@ -24,10 +26,10 @@ class WorkstationType(Document):
 		workstation_type: DF.Data
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_duplicate_operating_component()
 
-	def validate_duplicate_operating_component(self):
+	def validate_duplicate_operating_component(self) -> None:
 		components = []
 		for row in self.workstation_costs:
 			if row.operating_component not in components:
@@ -39,10 +41,10 @@ class WorkstationType(Document):
 					)
 				)
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.set_hour_rate()
 
-	def set_hour_rate(self):
+	def set_hour_rate(self) -> None:
 		self.hour_rate = 0.0
 
 		for row in self.workstation_costs:
@@ -50,7 +52,7 @@ class WorkstationType(Document):
 				self.hour_rate += flt(row.operating_cost)
 
 
-def get_workstations(workstation_type):
+def get_workstations(workstation_type: str) -> list:
 	workstations = frappe.get_all(
 		"Workstation", filters={"workstation_type": workstation_type}, order_by="creation"
 	)

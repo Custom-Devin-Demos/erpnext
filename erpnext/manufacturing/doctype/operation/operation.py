@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -28,14 +30,14 @@ class Operation(Document):
 		workstation: DF.Link | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.description:
 			self.description = self.name
 
 		self.duplicate_sub_operation()
 		self.set_total_time()
 
-	def duplicate_sub_operation(self):
+	def duplicate_sub_operation(self) -> None:
 		operation_list = []
 		for row in self.sub_operations:
 			if row.operation in operation_list:
@@ -50,7 +52,7 @@ class Operation(Document):
 
 			operation_list.append(row.operation)
 
-	def set_total_time(self):
+	def set_total_time(self) -> None:
 		self.total_operation_time = 0.0
 
 		for row in self.sub_operations:

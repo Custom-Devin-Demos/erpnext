@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
@@ -31,10 +33,10 @@ class SalesForecast(Document):
 		status: DF.Literal["Planned", "MPS Generated", "Cancelled"]
 	# end: auto-generated types
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def generate_manual_demand(self):
+	def generate_manual_demand(self) -> None:
 		forecast_demand = []
 		for row in self.selected_items:
 			item_details = frappe.db.get_value(
@@ -61,14 +63,14 @@ class SalesForecast(Document):
 			self.append("items", demand)
 
 	@frappe.whitelist()
-	def generate_demand(self):
+	def generate_demand(self) -> None:
 		self.set("items", [])
 		self.generate_manual_demand()
 
 
 @frappe.whitelist()
-def create_mps(source_name: str, target_doc: Document | str | None = None):
-	def postprocess(source, doc):
+def create_mps(source_name: str, target_doc: Document | str | None = None) -> Document:
+	def postprocess(source, doc) -> None:
 		doc.naming_series = "MPS.YY.-.######"
 
 	doc = get_mapped_doc(
