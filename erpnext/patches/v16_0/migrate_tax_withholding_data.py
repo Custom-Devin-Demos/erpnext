@@ -50,7 +50,7 @@ def execute() -> None:
 	copy_category_to_items_for_sales(column_cache)
 
 
-def get_column_cache():
+def get_column_cache() -> dict:
 	return {
 		"Supplier": {
 			"pan": frappe.db.has_column("Supplier", "pan"),
@@ -79,7 +79,7 @@ def get_column_cache():
 	}
 
 
-def get_tds_accounts():
+def get_tds_accounts() -> dict | None:
 	twa = frappe.qb.DocType("Tax Withholding Account")
 
 	result = (
@@ -108,7 +108,7 @@ def get_tds_accounts():
 	return {"account_map": account_map, "accounts_by_company": accounts_by_company}
 
 
-def get_tax_rate_map():
+def get_tax_rate_map() -> dict:
 	twr = frappe.qb.DocType("Tax Withholding Rate")
 	twc = frappe.qb.DocType("Tax Withholding Category")
 
@@ -133,7 +133,7 @@ def get_tax_rate_map():
 	return rate_map
 
 
-def get_tax_rate_for_date(tax_rate_map: dict, category, posting_date):
+def get_tax_rate_for_date(tax_rate_map: dict, category, posting_date) -> tuple:
 	if not category or category not in tax_rate_map or not posting_date:
 		return 0, False
 
@@ -144,7 +144,7 @@ def get_tax_rate_for_date(tax_rate_map: dict, category, posting_date):
 	return 0, False
 
 
-def get_party_tax_id(party_type, party, column_cache: dict, party_tax_id_cache: dict):
+def get_party_tax_id(party_type: str, party: str, column_cache: dict, party_tax_id_cache: dict) -> str | None:
 	if not party:
 		return None
 
@@ -164,7 +164,12 @@ def get_party_tax_id(party_type, party, column_cache: dict, party_tax_id_cache: 
 	return tax_id
 
 
-def determine_status(taxable_name, withholding_name, under_withheld_reason, is_duplicate=False):
+def determine_status(
+	taxable_name: str | None,
+	withholding_name: str | None,
+	under_withheld_reason: str | None,
+	is_duplicate: bool = False,
+) -> str:
 	"""Determine the status of a Tax Withholding Entry."""
 	if is_duplicate:
 		return "Duplicate"
@@ -199,7 +204,7 @@ def bulk_insert_entries(all_entries: list) -> None:
 	# Get existing names to avoid collisions
 	existing_names = set(frappe.get_all("Tax Withholding Entry", pluck="name"))
 
-	def generate_unique_name():
+	def generate_unique_name() -> str:
 		while True:
 			name = frappe.generate_hash(length=10)
 			if name not in existing_names:
@@ -300,7 +305,7 @@ def bulk_insert_entries(all_entries: list) -> None:
 
 class PurchaseInvoiceMigrator:
 	def __init__(
-		self, tds_accounts, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
+		self, tds_accounts: dict, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
 	) -> None:
 		self.tds_accounts = tds_accounts
 		self.tax_rate_map = tax_rate_map
@@ -574,7 +579,7 @@ class PurchaseInvoiceMigrator:
 		for invoice_name in all_invoice_names:
 			self._process_invoice(invoice_name)
 
-	def _process_invoice(self, invoice_name) -> None:
+	def _process_invoice(self, invoice_name: str) -> None:
 		info = self.invoice_info.get(invoice_name)
 		if not info:
 			return
@@ -599,7 +604,7 @@ class PurchaseInvoiceMigrator:
 		if entries:
 			self._add_entries("Purchase Invoice", invoice_name, entries)
 
-	def _build_invoice_context(self, invoice_name, info):
+	def _build_invoice_context(self, invoice_name: str, info) -> dict:
 		# Get category
 		category = info.tax_withholding_category
 		if not category and invoice_name in self.invoice_taxes:
@@ -646,7 +651,7 @@ class PurchaseInvoiceMigrator:
 			"withheld_vouchers": withheld_vouchers,
 		}
 
-	def _process_advance_taxes(self, invoice_name, ctx):
+	def _process_advance_taxes(self, invoice_name: str, ctx: dict) -> list:
 		entries = []
 		info = ctx["info"]
 
@@ -686,7 +691,7 @@ class PurchaseInvoiceMigrator:
 
 		return entries
 
-	def _process_invoice_tds(self, invoice_name, ctx):
+	def _process_invoice_tds(self, invoice_name: str, ctx: dict) -> list:
 		entries = []
 		info = ctx["info"]
 		tax_rate = ctx["tax_rate"]
@@ -746,7 +751,7 @@ class PurchaseInvoiceMigrator:
 
 		return entries
 
-	def _process_withheld_vouchers(self, invoice_name, ctx):
+	def _process_withheld_vouchers(self, invoice_name: str, ctx: dict) -> list:
 		entries = []
 		info = ctx["info"]
 		tax_rate = ctx["tax_rate"]
@@ -780,7 +785,7 @@ class PurchaseInvoiceMigrator:
 
 		return entries
 
-	def _process_underwithheld(self, invoice_name, ctx):
+	def _process_underwithheld(self, invoice_name: str, ctx: dict) -> dict | None:
 		# Skip if TDS was paid by another invoice
 		if invoice_name in self.tds_paid_by_other:
 			return None
@@ -869,7 +874,7 @@ class PurchaseInvoiceMigrator:
 	# Helper Methods
 	# -------------------------------------------------------------------------
 
-	def _create_entry(self, ctx, **kwargs):
+	def _create_entry(self, ctx: dict, **kwargs) -> dict:
 		is_return = ctx["info"].is_return
 
 		if is_return:
@@ -890,7 +895,7 @@ class PurchaseInvoiceMigrator:
 			**kwargs,
 		}
 
-	def _add_entries(self, parent_doctype, parent_name, entries: list) -> None:
+	def _add_entries(self, parent_doctype: str, parent_name: str, entries: list) -> None:
 		key = (parent_doctype, parent_name)
 		if key not in self.all_entries:
 			self.all_entries[key] = []
@@ -904,7 +909,7 @@ class PurchaseInvoiceMigrator:
 
 
 def migrate_sales_invoices(
-	tds_accounts, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
+	tds_accounts: dict, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
 ) -> None:
 	"""
 	Migrate Sales Invoice TCS data.
@@ -1060,7 +1065,7 @@ def migrate_sales_invoices(
 
 
 def migrate_journal_entries(
-	tds_accounts, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
+	tds_accounts: dict, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
 ) -> None:
 	"""
 	Migrate Journal Entry TDS data.
