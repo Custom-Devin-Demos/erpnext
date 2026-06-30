@@ -97,7 +97,7 @@ def set_series(doctype: str, value) -> None:
 		make_property_setter(doctype, "", "autoname", value, "", for_doctype=True)
 
 
-def get_series():
+def get_series() -> dict:
 	series_to_set = {}
 
 	for doctype in doctype_series_map:
@@ -118,6 +118,6 @@ def get_series():
 	return series_to_set
 
 
-def get_series_to_preserve(doctype: str):
+def get_series_to_preserve(doctype: str) -> str | None:
 	series_to_preserve = frappe.db.get_value("DocType", doctype, "autoname")
 	return series_to_preserve

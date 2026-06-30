@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 
 
-def get_inventory_dimensions():
+def get_inventory_dimensions() -> list:
 	return frappe.get_all(
 		"Inventory Dimension",
 		fields=[
@@ -18,7 +18,7 @@ def get_inventory_dimensions():
 	)
 
 
-def get_display_depends_on(doctype: str, fieldname: str):
+def get_display_depends_on(doctype: str, fieldname: str) -> tuple:
 	if doctype not in [
 		"Stock Entry Detail",
 		"Sales Invoice Item",

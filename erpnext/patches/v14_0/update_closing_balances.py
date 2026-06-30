@@ -78,7 +78,7 @@ def process_grouped_pcvs(pcvs: list, gl_entries: list) -> None:
 	make_closing_entries(closing_entries, pcv_doc.name, pcv_doc.company, pcv_doc.period_end_date)
 
 
-def get_period_closing_vouchers():
+def get_period_closing_vouchers() -> list:
 	return frappe.db.get_all(
 		"Period Closing Voucher",
 		fields=["name", "closing_account_head", "period_start_date", "period_end_date", "company"],
@@ -87,7 +87,7 @@ def get_period_closing_vouchers():
 	)
 
 
-def get_gl_entries(pcv_list: list):
+def get_gl_entries(pcv_list: list) -> dict:
 	gl_entries = frappe.get_all(
 		"GL Entry",
 		filters={"voucher_no": ("in", [pcv.name for pcv in pcv_list]), "is_cancelled": 0},
@@ -98,7 +98,7 @@ def get_gl_entries(pcv_list: list):
 	return {k: list(v) for k, v in itertools.groupby(gl_entries, key=lambda gle: gle.voucher_no)}
 
 
-def get_gle_fields():
+def get_gle_fields() -> list:
 	return [
 		"name",
 		"company",

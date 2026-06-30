@@ -65,7 +65,9 @@ def set_amounts_in_reporting_currency_on_gle_and_acb() -> None:
 		)
 
 
-def get_posting_closing_date(company_details, current_fiscal_year, previous_fiscal_year=None):
+def get_posting_closing_date(
+	company_details: dict, current_fiscal_year: dict, previous_fiscal_year: dict | None = None
+) -> dict:
 	posting_dates = {}
 	posting_dates["GL Entry"] = get_closing_posting_dates(
 		"GL Entry", company_details.get("name"), current_fiscal_year
@@ -95,7 +97,7 @@ def get_posting_closing_date(company_details, current_fiscal_year, previous_fisc
 	return posting_dates
 
 
-def check_exchange_rate_availability(company_details, posting_dates):
+def check_exchange_rate_availability(company_details: dict, posting_dates: dict) -> bool:
 	exchange_rate_available = True
 	for doctype, values in posting_dates.items():
 		if not exchange_rate_available:
@@ -129,7 +131,9 @@ def set_reporting_currency_by_doctype(doctype: str, company_details, posting_clo
 		)
 
 
-def get_closing_posting_dates(doctype: str, company: str, fiscal_year=None, closing_date=None):
+def get_closing_posting_dates(
+	doctype: str, company: str, fiscal_year: dict | None = None, closing_date=None
+) -> list:
 	dt = frappe.qb.DocType(doctype)
 
 	date_column = "posting_date" if doctype == "GL Entry" else "closing_date"

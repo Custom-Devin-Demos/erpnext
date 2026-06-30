@@ -76,7 +76,7 @@ def execute() -> None:
 			frappe.db.set_value(doctype, {"name": ("in", docs)}, "status", status, update_modified=False)
 
 
-def get_correct_status(doc):
+def get_correct_status(doc) -> str | None:
 	outstanding_amount = flt(doc.outstanding_amount, doc.precision("outstanding_amount"))
 	total = get_total_in_party_account_currency(doc)
 
