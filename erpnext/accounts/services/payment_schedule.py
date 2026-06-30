@@ -3,6 +3,8 @@
 
 """Payment schedule and payment terms helpers."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import DateTimeLikeObject, add_days, add_months, cint, flt, get_last_day, getdate
@@ -11,7 +13,7 @@ from erpnext.accounts.party import get_party_account_currency
 
 
 class PaymentScheduleService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def set_payment_schedule(self) -> None:

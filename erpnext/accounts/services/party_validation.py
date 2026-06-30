@@ -3,6 +3,8 @@
 
 """Party validation: PartyValidator class for transaction-level party checks."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
@@ -18,7 +20,7 @@ from erpnext.exceptions import InvalidCurrency
 class PartyValidator:
 	"""Validates all party-related fields on a transaction document."""
 
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def validate(self) -> None:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.party import get_default_price_list
@@ -5,7 +7,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class PartyTestCase(ERPNextTestSuite):
-	def test_get_default_price_list_should_return_none_for_invalid_group(self):
+	def test_get_default_price_list_should_return_none_for_invalid_group(self) -> None:
 		customer = frappe.get_doc(
 			{
 				"doctype": "Customer",

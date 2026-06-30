@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
@@ -16,15 +18,15 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestUtils(ERPNextTestSuite):
-	def test_get_party_shipping_address(self):
+	def test_get_party_shipping_address(self) -> None:
 		address = get_party_shipping_address("Customer", "_Test Customer 1")
 		self.assertEqual(address, "_Test Billing Address 2 Title-Billing")
 
-	def test_get_party_shipping_address2(self):
+	def test_get_party_shipping_address2(self) -> None:
 		address = get_party_shipping_address("Customer", "_Test Customer 2")
 		self.assertEqual(address, "_Test Shipping Address 2 Title-Shipping")
 
-	def test_get_voucher_wise_gl_entry(self):
+	def test_get_voucher_wise_gl_entry(self) -> None:
 		pr = make_purchase_receipt(
 			item_code="_Test Item",
 			posting_date="2021-02-01",
@@ -51,7 +53,7 @@ class TestUtils(ERPNextTestSuite):
 			msg="get_voucherwise_gl_entries not returning expected GLes",
 		)
 
-	def test_stock_voucher_sorting(self):
+	def test_stock_voucher_sorting(self) -> None:
 		vouchers = []
 
 		item = make_item().name
@@ -70,7 +72,7 @@ class TestUtils(ERPNextTestSuite):
 		sorted_vouchers = sort_stock_vouchers_by_posting_date(list(reversed(vouchers)))
 		self.assertEqual(sorted_vouchers, vouchers)
 
-	def test_update_reference_in_payment_entry(self):
+	def test_update_reference_in_payment_entry(self) -> None:
 		item = make_item().name
 
 		purchase_invoice = make_purchase_invoice(
@@ -122,7 +124,7 @@ class TestUtils(ERPNextTestSuite):
 		self.assertEqual(len(payment_entry.references), 1)
 		self.assertEqual(payment_entry.difference_amount, 0)
 
-	def test_naming_series_variable_parsing(self):
+	def test_naming_series_variable_parsing(self) -> None:
 		"""
 		Tests parsing utility used by Naming Series Variable hook for FY
 		"""
@@ -150,7 +152,7 @@ class TestUtils(ERPNextTestSuite):
 		self.assertSequenceEqual(doc_name[0:2], ("SUP", fiscal_year))
 		frappe.db.set_default("supp_master_name", "Supplier Name")
 
-	def test_get_zero_cutoff(self):
+	def test_get_zero_cutoff(self) -> None:
 		self.assertEqual(get_zero_cutoff(None), 0.005)
 		self.assertEqual(get_zero_cutoff("EUR"), 0.005)
 		self.assertEqual(get_zero_cutoff("BHD"), 0.0005)

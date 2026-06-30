@@ -13,6 +13,8 @@ Subclasses implement ``compose`` to return the voucher-specific list of GL
 entries.
 """
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt, formatdate
@@ -217,20 +219,20 @@ def validate_account_currency(doc, account: str, account_currency: str | None = 
 
 
 @erpnext.allow_regional
-def update_gl_dict_with_regional_fields(doc, gl_dict):
+def update_gl_dict_with_regional_fields(doc, gl_dict) -> None:
 	pass
 
 
-def update_gl_dict_with_app_based_fields(doc, gl_dict):
+def update_gl_dict_with_app_based_fields(doc, gl_dict) -> None:
 	for method in frappe.get_hooks("update_gl_dict_with_app_based_fields", default=[]):
 		frappe.get_attr(method)(doc, gl_dict)
 
 
 class BaseGLComposer:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
-	def compose(self):
+	def compose(self) -> None:
 		raise NotImplementedError
 
 	def get_gl_dict(self, args: dict, account_currency: str | None = None, item=None) -> dict:

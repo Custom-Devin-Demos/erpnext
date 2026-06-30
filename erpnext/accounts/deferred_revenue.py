@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.email import sendmail_to_system_managers
@@ -22,7 +24,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 from erpnext.accounts.utils import get_account_currency
 
 
-def validate_service_stop_date(doc):
+def validate_service_stop_date(doc) -> None:
 	"""Validates service_stop_date for Purchase Invoice and Sales Invoice"""
 
 	enable_check = "enable_deferred_revenue" if doc.doctype == "Sales Invoice" else "enable_deferred_expense"
@@ -71,7 +73,9 @@ def build_conditions(process_type, account, company):
 	return None
 
 
-def convert_deferred_expense_to_expense(deferred_process, start_date=None, end_date=None, conditions=None):
+def convert_deferred_expense_to_expense(
+	deferred_process, start_date=None, end_date=None, conditions=None
+) -> None:
 	# book the expense/income on the last day, but it will be trigger on the 1st of month at 12:00 AM
 
 	if not start_date:
@@ -109,7 +113,9 @@ def convert_deferred_expense_to_expense(deferred_process, start_date=None, end_d
 		send_mail(deferred_process)
 
 
-def convert_deferred_revenue_to_income(deferred_process, start_date=None, end_date=None, conditions=None):
+def convert_deferred_revenue_to_income(
+	deferred_process, start_date=None, end_date=None, conditions=None
+) -> None:
 	# book the expense/income on the last day, but it will be trigger on the 1st of month at 12:00 AM
 
 	if not start_date:
@@ -370,7 +376,7 @@ def get_already_booked_amount(doc, item):
 	return already_booked_amount, already_booked_amount_in_account_currency
 
 
-def book_deferred_income_or_expense(doc, deferred_process, posting_date=None):
+def book_deferred_income_or_expense(doc, deferred_process, posting_date=None) -> None:
 	enable_check = "enable_deferred_revenue" if doc.doctype == "Sales Invoice" else "enable_deferred_expense"
 
 	accounts_frozen_upto = frappe.db.get_value("Company", doc.company, "accounts_frozen_till_date")
@@ -381,7 +387,7 @@ def book_deferred_income_or_expense(doc, deferred_process, posting_date=None):
 		submit_journal_entry,
 		book_deferred_entries_based_on,
 		prev_posting_date=None,
-	):
+	) -> None:
 		start_date, end_date, last_gl_entry = get_booking_dates(
 			doc, item, posting_date=posting_date, prev_posting_date=prev_posting_date
 		)
@@ -484,7 +490,7 @@ def book_deferred_income_or_expense(doc, deferred_process, posting_date=None):
 			)
 
 
-def process_deferred_accounting(posting_date=None):
+def process_deferred_accounting(posting_date=None) -> None:
 	"""Converts deferred income/expense into income/expense
 	Executed via background jobs on every month end"""
 
@@ -529,7 +535,7 @@ def make_gl_entries(
 	cost_center,
 	item,
 	deferred_process=None,
-):
+) -> None:
 	# GL Entry for crediting the amount in the deferred expense
 	from erpnext.accounts.general_ledger import make_gl_entries
 
@@ -591,7 +597,7 @@ def make_gl_entries(
 				frappe.flags.deferred_accounting_error = True
 
 
-def send_mail(deferred_process):
+def send_mail(deferred_process) -> None:
 	title = _("Error while processing deferred accounting for {0}").format(deferred_process)
 	link = get_link_to_form("Process Deferred Accounting", deferred_process)
 	content = _("Deferred accounting failed for some invoices:") + "\n"
@@ -613,8 +619,8 @@ def book_revenue_via_journal_entry(
 	cost_center,
 	item,
 	deferred_process=None,
-	submit="No",
-):
+	submit: str = "No",
+) -> None:
 	if amount == 0:
 		return
 

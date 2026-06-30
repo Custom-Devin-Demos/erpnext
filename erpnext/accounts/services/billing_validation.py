@@ -3,6 +3,8 @@
 
 """Billing amount validation helpers (overbilling checks)."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
@@ -10,7 +12,7 @@ from frappe.utils import cint, flt, fmt_money
 
 
 class BillingValidationService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def validate_multiple_billing(self, ref_dt: str, item_ref_dn: str, based_on: str) -> None:

@@ -3,6 +3,8 @@
 
 """Internal transfer helpers: InternalTransferService for inter-company transaction validation and setup."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, bold
 from frappe.utils import cint, flt
@@ -11,7 +13,7 @@ from frappe.utils import cint, flt
 class InternalTransferService:
 	"""Handles validation and setup for inter-company / internal transfer transactions."""
 
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def is_internal_transfer(self) -> bool:

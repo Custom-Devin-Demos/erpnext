@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 from datetime import date
 
 import frappe
@@ -116,15 +118,15 @@ def get_party_details(
 def _get_party_details(
 	party=None,
 	account=None,
-	party_type="Customer",
+	party_type: str = "Customer",
 	company=None,
 	posting_date=None,
 	bill_date=None,
 	price_list=None,
 	currency=None,
 	doctype=None,
-	ignore_permissions=False,
-	fetch_payment_terms_template=True,
+	ignore_permissions: bool = False,
+	fetch_payment_terms_template: bool = True,
 	party_address=None,
 	company_address=None,
 	shipping_address=None,
@@ -208,7 +210,7 @@ def set_address_details(
 	shipping_address=None,
 	dispatch_address=None,
 	*,
-	ignore_permissions=False,
+	ignore_permissions: bool = False,
 ):
 	# party_billing
 	party_billing_field = (
@@ -305,11 +307,11 @@ def set_address_details(
 
 
 @erpnext.allow_regional
-def get_regional_address_details(party_details, doctype, company):
+def get_regional_address_details(party_details, doctype, company) -> None:
 	pass
 
 
-def complete_contact_details(party_details):
+def complete_contact_details(party_details) -> None:
 	contact_details = frappe._dict()
 
 	if party_details.party_type == "Employee":
@@ -346,12 +348,12 @@ def complete_contact_details(party_details):
 	party_details.update(contact_details)
 
 
-def set_contact_details(party_details, party, party_type):
+def set_contact_details(party_details, party, party_type) -> None:
 	party_details.contact_person = get_default_contact(party_type, party.name)
 	complete_contact_details(party_details)
 
 
-def set_other_values(party_details, party, party_type):
+def set_other_values(party_details, party, party_type) -> None:
 	# copy
 	to_copy = ["tax_withholding_category", "tax_withholding_group", "language"]
 
@@ -378,7 +380,7 @@ def get_default_price_list(party):
 		return frappe.get_cached_value("Customer Group", party.customer_group, "default_price_list")
 
 
-def set_price_list(party_details, party, party_type, given_price_list, pos=None):
+def set_price_list(party_details, party, party_type, given_price_list, pos=None) -> None:
 	# price list
 	price_list = get_permitted_documents("Price List")
 
@@ -565,7 +567,7 @@ def get_party_gle_account(party_type, party, company):
 	)
 
 
-def validate_party_gle_currency(party_type, party, company, party_account_currency=None):
+def validate_party_gle_currency(party_type, party, company, party_account_currency=None) -> None:
 	"""Validate party account currency with existing GL Entry's currency"""
 	if not party_account_currency:
 		party_account_currency = get_party_account_currency(party_type, party, company)
@@ -586,7 +588,7 @@ def validate_party_gle_currency(party_type, party, company, party_account_curren
 		)
 
 
-def validate_party_accounts(doc):
+def validate_party_accounts(doc) -> None:
 	from erpnext.controllers.accounts_controller import validate_account_head
 
 	companies = []
@@ -683,7 +685,7 @@ def get_due_date_from_template(template_name, posting_date, bill_date):
 	return due_date
 
 
-def validate_due_date(posting_date, due_date, bill_date=None, template_name=None, doctype=None):
+def validate_due_date(posting_date, due_date, bill_date=None, template_name=None, doctype=None) -> None:
 	if getdate(due_date) < getdate(posting_date):
 		doctype_date = "Date"
 		if doctype == "Purchase Invoice":
@@ -697,7 +699,7 @@ def validate_due_date(posting_date, due_date, bill_date=None, template_name=None
 		validate_due_date_with_template(posting_date, due_date, bill_date, template_name, doctype)
 
 
-def validate_due_date_with_template(posting_date, due_date, bill_date, template_name, doctype=None):
+def validate_due_date_with_template(posting_date, due_date, bill_date, template_name, doctype=None) -> None:
 	if not template_name:
 		return
 
@@ -813,7 +815,7 @@ def get_payment_terms_template(party_name: str, party_type: str, company: str | 
 	return template
 
 
-def validate_party_frozen_disabled(company, party_type, party_name):
+def validate_party_frozen_disabled(company, party_type, party_name) -> None:
 	if frappe.flags.ignore_party_validation:
 		return
 
@@ -834,7 +836,7 @@ def validate_party_frozen_disabled(company, party_type, party_name):
 				frappe.msgprint(_("{0} {1} is not active").format(party_type, party_name), alert=True)
 
 
-def validate_account_party_type(self):
+def validate_account_party_type(self) -> None:
 	if self.is_cancelled:
 		return
 
@@ -984,7 +986,7 @@ def get_party_shipping_address(doctype: str, name: str) -> str | None:
 
 
 def get_partywise_advanced_payment_amount(
-	party_type, posting_date=None, future_payment=0, company=None, party=None
+	party_type, posting_date=None, future_payment: int = 0, company=None, party=None
 ):
 	account_type = frappe.get_cached_value("Party Type", party_type, "account_type")
 
@@ -1071,7 +1073,7 @@ def get_default_contact(doctype: str, name: str) -> str | None:
 	return contacts[0] if contacts else None
 
 
-def add_party_account(party_type, party, company, account):
+def add_party_account(party_type, party, company, account) -> None:
 	doc = frappe.get_doc(party_type, party)
 	account_exists = False
 	for d in doc.get("accounts"):
@@ -1086,11 +1088,11 @@ def add_party_account(party_type, party, company, account):
 		doc.save()
 
 
-def render_address(address, check_permissions=True):
+def render_address(address, check_permissions: bool = True):
 	return frappe.call(_render_address, address, check_permissions=check_permissions)
 
 
-def validate_party_currency_before_merging(party_type, old_party, new_party):
+def validate_party_currency_before_merging(party_type, old_party, new_party) -> None:
 	for company in frappe.get_all("Company"):
 		old_party_currency = get_party_gle_currency(party_type, old_party, company.name)
 		new_party_currency = get_party_gle_currency(party_type, new_party, company.name)

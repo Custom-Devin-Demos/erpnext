@@ -9,6 +9,8 @@ They do not mutate or repair the entries; balancing and round-off live with the
 posting sink in ``erpnext.accounts.general_ledger``.
 """
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cint, formatdate, getdate
@@ -17,7 +19,7 @@ from erpnext.accounts.doctype.accounting_period.accounting_period import ClosedA
 from erpnext.exceptions import InvalidAccountDimensionError, MandatoryAccountDimensionError
 
 
-def validate_disabled_accounts(gl_map):
+def validate_disabled_accounts(gl_map) -> None:
 	accounts = [d.account for d in gl_map if d.account]
 
 	disabled_accounts = frappe.get_all(
@@ -36,7 +38,7 @@ def validate_disabled_accounts(gl_map):
 		)
 
 
-def validate_accounting_period(gl_map):
+def validate_accounting_period(gl_map) -> None:
 	ap = frappe.qb.DocType("Accounting Period")
 	cd = frappe.qb.DocType("Closed Document")
 	accounting_periods = (
@@ -68,7 +70,7 @@ def validate_accounting_period(gl_map):
 		)
 
 
-def validate_cwip_accounts(gl_map):
+def validate_cwip_accounts(gl_map) -> None:
 	"""Validate that CWIP account are not used in Journal Entry"""
 	if gl_map and gl_map[0].voucher_type != "Journal Entry":
 		return
@@ -93,7 +95,7 @@ def validate_cwip_accounts(gl_map):
 				)
 
 
-def check_freezing_date(posting_date, company, adv_adj=False):
+def check_freezing_date(posting_date, company, adv_adj: bool = False) -> None:
 	"""
 	Nobody can do GL Entries where posting date is before freezing date
 	except authorized person
@@ -117,7 +119,7 @@ def check_freezing_date(posting_date, company, adv_adj=False):
 				)
 
 
-def validate_opening_entry_against_pcv(company):
+def validate_opening_entry_against_pcv(company) -> None:
 	if frappe.db.exists("Period Closing Voucher", {"docstatus": 1, "company": company}):
 		frappe.throw(
 			_(
@@ -131,7 +133,7 @@ def validate_opening_entry_against_pcv(company):
 		)
 
 
-def validate_against_pcv(is_opening, posting_date, company):
+def validate_against_pcv(is_opening, posting_date, company) -> None:
 	if is_opening:
 		validate_opening_entry_against_pcv(company)
 
@@ -146,7 +148,7 @@ def validate_against_pcv(is_opening, posting_date, company):
 		frappe.throw(message, title=_("Period Closed"))
 
 
-def validate_allowed_dimensions(gl_entry, dimension_filter_map):
+def validate_allowed_dimensions(gl_entry, dimension_filter_map) -> None:
 	for key, value in dimension_filter_map.items():
 		dimension = key[0]
 		account = key[1]
