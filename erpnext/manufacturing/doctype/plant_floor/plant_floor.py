@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.document import Document
 from frappe.query_builder import Order
@@ -22,7 +24,7 @@ class PlantFloor(Document):
 	# end: auto-generated types
 
 	@frappe.whitelist()
-	def make_stock_entry(self, kwargs: str | dict):
+	def make_stock_entry(self, kwargs: str | dict) -> Document:
 		if isinstance(kwargs, str):
 			kwargs = frappe.parse_json(kwargs)
 
@@ -47,7 +49,7 @@ class PlantFloor(Document):
 
 		return stock_entry
 
-	def get_item_details(self, kwargs) -> list[dict]:
+	def get_item_details(self, kwargs: dict) -> list[dict]:
 		item_details = frappe.db.get_value(
 			"Item", kwargs.item_code, ["item_name", "stock_uom", "item_group", "description"], as_dict=True
 		)
@@ -68,7 +70,7 @@ class PlantFloor(Document):
 @frappe.whitelist()
 def get_stock_summary(
 	warehouse: str, start: int = 0, item_code: str | None = None, item_group: str | None = None
-):
+) -> list:
 	stock_details = get_stock_details(warehouse, start=start, item_code=item_code, item_group=item_group)
 
 	max_count = 0.0
@@ -88,7 +90,9 @@ def get_stock_summary(
 	return stock_details
 
 
-def get_stock_details(warehouse, start=0, item_code=None, item_group=None):
+def get_stock_details(
+	warehouse: str, start: int = 0, item_code: str | None = None, item_group: str | None = None
+) -> list:
 	item_table = frappe.qb.DocType("Item")
 	bin_table = frappe.qb.DocType("Bin")
 

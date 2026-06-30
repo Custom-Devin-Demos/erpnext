@@ -3,12 +3,13 @@
 
 """Query/data helpers for Production Plan (extracted from production_plan.py)."""
 
+from __future__ import annotations
 
 import frappe
 
 
 @frappe.whitelist()
-def get_so_details(sales_order: str):
+def get_so_details(sales_order: str) -> dict | None:
 	frappe.has_permission("Sales Order", "read", throw=True)
 
 	return frappe.db.get_value(
@@ -24,7 +25,7 @@ def sales_order_query(
 	start: int | None = None,
 	page_len: int | None = None,
 	filters: dict | None = None,
-):
+) -> list:
 	frappe.has_permission("Production Plan", throw=True)
 
 	filters = filters or {}
@@ -44,7 +45,7 @@ def sales_order_query(
 	return query.run()
 
 
-def _paginate(query, start, page_len):
+def _paginate(query, start: int | None, page_len: int | None):
 	if page_len:
 		query = query.limit(page_len)
 	if start:
@@ -52,7 +53,7 @@ def _paginate(query, start, page_len):
 	return query
 
 
-def _apply_sales_order_filters(query, so_table, table, filters, txt):
+def _apply_sales_order_filters(query, so_table, table, filters: dict, txt: str | None):
 	if filters.get("company"):
 		query = query.where(so_table.company == filters.get("company"))
 	if filters.get("sales_orders"):

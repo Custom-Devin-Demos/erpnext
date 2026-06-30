@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -10,7 +12,7 @@ from frappe.utils import add_months, nowdate
 import erpnext
 
 
-def get_data():
+def get_data() -> dict:
 	return frappe._dict(
 		{
 			"dashboards": get_dashboards(),
@@ -20,7 +22,7 @@ def get_data():
 	)
 
 
-def get_dashboards():
+def get_dashboards() -> list:
 	return [
 		{
 			"name": "Manufacturing",
@@ -45,7 +47,7 @@ def get_dashboards():
 	]
 
 
-def get_charts():
+def get_charts() -> list:
 	company = erpnext.get_default_company()
 
 	if not company:
@@ -178,7 +180,7 @@ def get_charts():
 	]
 
 
-def get_number_cards():
+def get_number_cards() -> list:
 	start_date = add_months(nowdate(), -1)
 	end_date = nowdate()
 
