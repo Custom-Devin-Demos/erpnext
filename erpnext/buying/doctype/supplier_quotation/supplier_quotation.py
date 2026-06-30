@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -106,11 +107,11 @@ class SupplierQuotation(BuyingController):
 		valid_till: DF.Date | None
 	# end: auto-generated types
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_has_unit_price_items()
 		self.flags.allow_zero_qty = self.has_unit_price_items
 
-	def validate(self):
+	def validate(self) -> None:
 		super().validate()
 
 		if not self.status:
@@ -125,18 +126,18 @@ class SupplierQuotation(BuyingController):
 		self.validate_uom_is_integer("uom", "qty")
 		self.validate_valid_till()
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.db_set("status", "Submitted")
 		self.update_rfq_supplier_status(1)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.db_set("status", "Cancelled")
 		self.update_rfq_supplier_status(0)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		pass
 
-	def set_has_unit_price_items(self):
+	def set_has_unit_price_items(self) -> None:
 		"""
 		If permitted in settings and any item has 0 qty, the SQ has unit price items.
 		"""
@@ -147,7 +148,7 @@ class SupplierQuotation(BuyingController):
 			not row.qty for row in self.get("items") if (row.item_code and not row.qty)
 		)
 
-	def validate_with_previous_doc(self):
+	def validate_with_previous_doc(self) -> None:
 		super().validate_with_previous_doc(
 			{
 				"Material Request": {
@@ -162,11 +163,11 @@ class SupplierQuotation(BuyingController):
 			}
 		)
 
-	def validate_valid_till(self):
+	def validate_valid_till(self) -> None:
 		if self.valid_till and getdate(self.valid_till) < getdate(self.transaction_date):
 			frappe.throw(_("Valid till Date cannot be before Transaction Date"))
 
-	def update_rfq_supplier_status(self, include_me):
+	def update_rfq_supplier_status(self, include_me: int) -> None:
 		from frappe.query_builder.functions import Count
 
 		rfq_list = set([])
@@ -242,7 +243,7 @@ def get_list_context(context=None):
 	return list_context
 
 
-def set_expired_status():
+def set_expired_status() -> None:
 	# Only submitted quotations past their validity should be expired
 	frappe.db.set_value(
 		"Supplier Quotation",
@@ -257,7 +258,7 @@ def set_expired_status():
 	)
 
 
-def get_purchased_items(supplier_quotation: str):
+def get_purchased_items(supplier_quotation: str) -> dict:
 	return frappe._dict(
 		frappe.get_all(
 			"Purchase Order Item",
