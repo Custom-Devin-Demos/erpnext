@@ -8,12 +8,19 @@ Extracted from work_order.py. ``StatusService`` wraps a Work Order document
 callers (job cards, sales orders, production plans, patches) keep working.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
 from frappe.utils import cint, flt, get_link_to_form
 
 from erpnext.stock.stock_balance import get_planned_qty, update_bin_qty
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 _QTY_PURPOSES = (
 	("Manufacture", "produced_qty"),
@@ -23,10 +30,10 @@ _QTY_PURPOSES = (
 
 
 class StatusService:
-	def __init__(self, doc):
+	def __init__(self, doc: Document) -> None:
 		self.doc = doc
 
-	def validate_work_order_against_so(self):
+	def validate_work_order_against_so(self) -> None:
 		from erpnext.manufacturing.doctype.work_order.work_order import OverProductionError
 
 		total_qty = flt(self._ordered_qty_against_so()) + flt(self.doc.qty)
@@ -46,7 +53,7 @@ class StatusService:
 			OverProductionError,
 		)
 
-	def _ordered_qty_against_so(self):
+	def _ordered_qty_against_so(self) -> float | None:
 		wo = frappe.qb.DocType("Work Order")
 		return (
 			frappe.qb.from_(wo)
@@ -60,7 +67,7 @@ class StatusService:
 			)
 		).run()[0][0]
 
-	def _so_item_qty(self):
+	def _so_item_qty(self) -> float | None:
 		so_item = frappe.qb.DocType("Sales Order Item")
 		return (
 			frappe.qb.from_(so_item)
@@ -72,7 +79,7 @@ class StatusService:
 			)
 		).run()[0][0]
 
-	def _packed_item_qty(self):
+	def _packed_item_qty(self) -> float | None:
 		packed_item = frappe.qb.DocType("Packed Item")
 		return (
 			frappe.qb.from_(packed_item)
@@ -85,7 +92,7 @@ class StatusService:
 			)
 		).run()[0][0]
 
-	def update_status(self, status=None):
+	def update_status(self, status: str | None = None) -> str:
 		"""Update status of work order if unknown"""
 		if self.doc.status != "Closed":
 			if status not in ["Stopped", "Closed"]:
@@ -98,7 +105,7 @@ class StatusService:
 
 		return status or self.doc.status
 
-	def get_status(self, status=None):
+	def get_status(self, status: str | None = None) -> str:
 		"""Return the status based on stock entries against this work order"""
 		status = status or self.doc.status
 
@@ -120,7 +127,7 @@ class StatusService:
 
 		return status
 
-	def _submitted_status(self, status):
+	def _submitted_status(self, status: str) -> str:
 		if status in ["Closed", "Stopped"]:
 			return status
 
@@ -135,14 +142,14 @@ class StatusService:
 			status = "Completed"
 		return status
 
-	def _is_partial_skip_transfer(self):
+	def _is_partial_skip_transfer(self) -> bool:
 		return bool(
 			self.doc.skip_transfer
 			and self.doc.produced_qty
 			and self.doc.qty > (flt(self.doc.produced_qty) + flt(self.doc.process_loss_qty))
 		)
 
-	def _reservation_status(self, status):
+	def _reservation_status(self, status: str) -> str:
 		for row in self.doc.required_items:
 			if not row.stock_reserved_qty:
 				continue
@@ -153,7 +160,7 @@ class StatusService:
 				return "Stock Partially Reserved"
 		return status
 
-	def update_work_order_qty(self):
+	def update_work_order_qty(self) -> None:
 		"""Update Manufactured Qty and Material Transferred for Qty based on Stock Entry"""
 		if self.doc.track_semi_finished_goods:
 			return
@@ -168,7 +175,7 @@ class StatusService:
 		if self.doc.additional_transferred_qty:
 			self.doc.validate_additional_transferred_qty()
 
-	def _update_qty_for_purpose(self, purpose, fieldname):
+	def _update_qty_for_purpose(self, purpose: str, fieldname: str) -> None:
 		from erpnext.manufacturing.doctype.work_order.work_order import StockOverProductionError
 
 		if self._skip_transfer_purpose(purpose):
@@ -188,14 +195,14 @@ class StatusService:
 		self.set_process_loss_qty()
 		self._update_produced_qty_in_so()
 
-	def _skip_transfer_purpose(self, purpose):
+	def _skip_transfer_purpose(self, purpose: str) -> bool:
 		return bool(
 			purpose == "Material Transfer for Manufacture"
 			and self.doc.operations
 			and self.doc.transfer_material_against == "Job Card"
 		)
 
-	def _qty_allowance(self, purpose):
+	def _qty_allowance(self, purpose: str) -> float:
 		allowance = flt(
 			frappe.db.get_single_value("Manufacturing Settings", "overproduction_percentage_for_work_order")
 		)
@@ -205,7 +212,7 @@ class StatusService:
 			)
 		return allowance
 
-	def _update_produced_qty_in_so(self):
+	def _update_produced_qty_in_so(self) -> None:
 		from erpnext.selling.doctype.sales_order.sales_order import update_produced_qty_in_so_item
 
 		if (
@@ -215,7 +222,7 @@ class StatusService:
 		):
 			update_produced_qty_in_so_item(self.doc.sales_order, self.doc.sales_order_item)
 
-	def update_disassembled_qty(self, qty, is_cancel=False):
+	def update_disassembled_qty(self, qty: float, is_cancel: bool = False) -> None:
 		if is_cancel:
 			self.doc.disassembled_qty = max(0, self.doc.disassembled_qty - qty)
 		else:
@@ -227,7 +234,7 @@ class StatusService:
 
 		self.doc.db_set("disassembled_qty", self.doc.disassembled_qty)
 
-	def get_transferred_or_manufactured_qty(self, purpose, fieldname):
+	def get_transferred_or_manufactured_qty(self, purpose: str, fieldname: str) -> float:
 		parent = frappe.qb.DocType("Stock Entry")
 		is_additional = cint(fieldname == "additional_transferred_qty")
 		query = frappe.qb.from_(parent).where(self._stock_entry_filter(parent, purpose, is_additional))
@@ -245,7 +252,7 @@ class StatusService:
 
 		return flt(query.run()[0][0])
 
-	def _stock_entry_filter(self, parent, purpose, is_additional):
+	def _stock_entry_filter(self, parent, purpose: str, is_additional: int):
 		return (
 			(parent.work_order == self.doc.name)
 			& (parent.docstatus == 1)
@@ -253,7 +260,7 @@ class StatusService:
 			& (parent.is_additional_transfer_entry == is_additional)
 		)
 
-	def set_process_loss_qty(self):
+	def set_process_loss_qty(self) -> None:
 		table = frappe.qb.DocType("Stock Entry")
 		process_loss_qty = (
 			frappe.qb.from_(table)
@@ -267,7 +274,7 @@ class StatusService:
 
 		self.doc.db_set("process_loss_qty", flt(process_loss_qty))
 
-	def update_production_plan_status(self):
+	def update_production_plan_status(self) -> None:
 		production_plan = frappe.get_doc("Production Plan", self.doc.production_plan)
 		produced_qty = 0
 		if self.doc.production_plan_item:
@@ -287,7 +294,7 @@ class StatusService:
 		self.update_status()
 		production_plan.run_method("update_produced_pending_qty", produced_qty, self.doc.production_plan_item)
 
-	def update_planned_qty(self):
+	def update_planned_qty(self) -> None:
 		if self.doc.track_semi_finished_goods:
 			return
 
@@ -297,7 +304,7 @@ class StatusService:
 			mr_obj = frappe.get_doc("Material Request", self.doc.material_request)
 			mr_obj.update_requested_qty([self.doc.material_request_item])
 
-	def _planned_qty_dict(self):
+	def _planned_qty_dict(self) -> dict:
 		from erpnext.manufacturing.doctype.production_plan.production_plan import (
 			get_reserved_qty_for_sub_assembly,
 		)
@@ -309,7 +316,7 @@ class StatusService:
 			)
 		return qty_dict
 
-	def set_produced_qty_for_sub_assembly_item(self):
+	def set_produced_qty_for_sub_assembly_item(self) -> None:
 		produced_qty = self._sub_assembly_produced_qty()
 		frappe.db.set_value(
 			"Production Plan Sub Assembly Item",
@@ -318,7 +325,7 @@ class StatusService:
 			produced_qty,
 		)
 
-	def _sub_assembly_produced_qty(self):
+	def _sub_assembly_produced_qty(self) -> float:
 		table = frappe.qb.DocType("Work Order")
 		query = (
 			frappe.qb.from_(table)
@@ -331,7 +338,7 @@ class StatusService:
 		).run()
 		return flt(query[0][0]) if query else 0
 
-	def update_ordered_qty(self):
+	def update_ordered_qty(self) -> None:
 		if not (
 			self.doc.production_plan
 			and (self.doc.production_plan_item or self.doc.production_plan_sub_assembly_item)
@@ -349,7 +356,7 @@ class StatusService:
 		doc.set_status()
 		doc.db_set("status", doc.status)
 
-	def _production_plan_ordered_qty(self):
+	def _production_plan_ordered_qty(self) -> float:
 		table = frappe.qb.DocType("Work Order")
 		query = (
 			frappe.qb.from_(table)
@@ -366,7 +373,7 @@ class StatusService:
 		result = query.run()
 		return flt(result[0][0]) if result else 0
 
-	def update_work_order_qty_in_so(self):
+	def update_work_order_qty_in_so(self) -> None:
 		if (
 			not self.doc.sales_order and not self.doc.sales_order_item
 		) or self.doc.production_plan_sub_assembly_item:
@@ -381,7 +388,7 @@ class StatusService:
 			flt(work_order_qty / total_bundle_qty, 2),
 		)
 
-	def _sales_order_work_order_qty(self):
+	def _sales_order_work_order_qty(self) -> float:
 		wo = frappe.qb.DocType("Work Order")
 		query = (
 			frappe.qb.from_(wo)
@@ -396,7 +403,7 @@ class StatusService:
 		qty = query.run(as_list=1)
 		return qty[0][0] if qty and qty[0][0] else 0
 
-	def update_work_order_qty_in_combined_so(self):
+	def update_work_order_qty_in_combined_so(self) -> None:
 		total_bundle_qty = self._total_bundle_qty()
 		prod_plan = frappe.get_doc("Production Plan", self.doc.production_plan)
 		item_reference = frappe.get_value(
@@ -410,7 +417,7 @@ class StatusService:
 			qty = flt(plan_reference.qty) / total_bundle_qty if self.doc.docstatus == 1 else 0.0
 			frappe.db.set_value("Sales Order Item", plan_reference.sales_order_item, "work_order_qty", qty)
 
-	def _total_bundle_qty(self):
+	def _total_bundle_qty(self) -> float:
 		if not self.doc.product_bundle_item:
 			return 1
 
@@ -421,7 +428,7 @@ class StatusService:
 		# product bundle is 0 (product bundle allows 0 qty for items)
 		return total_bundle_qty or 1
 
-	def update_completed_qty_in_material_request(self):
+	def update_completed_qty_in_material_request(self) -> None:
 		if self.doc.material_request and self.doc.material_request_item:
 			frappe.get_doc("Material Request", self.doc.material_request).update_completed_qty(
 				[self.doc.material_request_item]

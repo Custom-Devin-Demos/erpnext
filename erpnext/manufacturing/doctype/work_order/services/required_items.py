@@ -8,6 +8,10 @@ document (composition); work_order.py keeps thin delegating stubs so external
 callers and the whitelisted entry point keep working unchanged.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe.utils import flt
 from pypika import functions as fn
@@ -22,12 +26,15 @@ from erpnext.manufacturing.doctype.work_order.services.reservation import (
 from erpnext.manufacturing.doctype.work_order.services.status import StatusService
 from erpnext.stock.utils import get_bin, get_latest_stock_qty
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class RequiredItemsService:
-	def __init__(self, doc):
+	def __init__(self, doc: Document) -> None:
 		self.doc = doc
 
-	def update_required_items(self):
+	def update_required_items(self) -> None:
 		"""
 		update bin reserved_qty_for_production
 		called from Stock Entry for production, after submit, cancel
@@ -47,20 +54,20 @@ class RequiredItemsService:
 
 		WorkOrderStockReservation(self.doc).validate_reserved_qty()
 
-	def update_reserved_qty_for_production(self, items=None):
+	def update_reserved_qty_for_production(self, items: list | None = None) -> None:
 		"""update reserved_qty_for_production in bins"""
 		for d in self.doc.required_items:
 			if d.source_warehouse:
 				stock_bin = get_bin(d.item_code, d.source_warehouse)
 				stock_bin.update_reserved_qty_for_production()
 
-	def get_items_and_operations_from_bom(self):
+	def get_items_and_operations_from_bom(self) -> bool:
 		self.set_required_items()
 		self.doc.set_work_order_operations()
 
 		return check_if_scrap_warehouse_mandatory(self.doc.bom_no)
 
-	def set_available_qty(self):
+	def set_available_qty(self) -> None:
 		for d in self.doc.get("required_items"):
 			if d.source_warehouse:
 				d.available_qty_at_source_warehouse = get_latest_stock_qty(d.item_code, d.source_warehouse)
@@ -68,7 +75,7 @@ class RequiredItemsService:
 			if self.doc.wip_warehouse:
 				d.available_qty_at_wip_warehouse = get_latest_stock_qty(d.item_code, self.doc.wip_warehouse)
 
-	def set_required_items(self, reset_only_qty=False, reset_source_warehouse=False):
+	def set_required_items(self, reset_only_qty: bool = False, reset_source_warehouse: bool = False) -> None:
 		"""set required_items for production to keep track of reserved qty"""
 		if not reset_only_qty:
 			self.doc.required_items = []
@@ -88,7 +95,7 @@ class RequiredItemsService:
 			self._append_required_items(item_dict, operation, reset_source_warehouse)
 		self.set_available_qty()
 
-	def _reset_required_qty(self, item_dict, operation):
+	def _reset_required_qty(self, item_dict: dict, operation: str | None) -> None:
 		for d in self.doc.get("required_items"):
 			if item_dict.get(d.item_code):
 				d.required_qty = item_dict.get(d.item_code).get("qty")
@@ -96,7 +103,9 @@ class RequiredItemsService:
 			if not d.operation:
 				d.operation = operation
 
-	def _append_required_items(self, item_dict, operation, reset_source_warehouse):
+	def _append_required_items(
+		self, item_dict: dict, operation: str | None, reset_source_warehouse: bool
+	) -> None:
 		for item in sorted(item_dict.values(), key=lambda d: d["idx"] or float("inf")):
 			source_warehouse = self._item_source_warehouse(item, reset_source_warehouse)
 			self.doc.append("required_items", self._required_item_row(item, operation, source_warehouse))
@@ -109,12 +118,12 @@ class RequiredItemsService:
 			if not self.doc.project:
 				self.doc.project = item.get("project")
 
-	def _item_source_warehouse(self, item, reset_source_warehouse):
+	def _item_source_warehouse(self, item, reset_source_warehouse: bool) -> str | None:
 		if reset_source_warehouse:
 			return self.doc.source_warehouse
 		return self.doc.source_warehouse or item.source_warehouse or item.default_warehouse
 
-	def _required_item_row(self, item, operation, source_warehouse):
+	def _required_item_row(self, item, operation: str | None, source_warehouse: str | None) -> dict:
 		return {
 			"rate": item.rate,
 			"amount": item.rate * item.qty,
@@ -130,7 +139,7 @@ class RequiredItemsService:
 			"operation_row_id": item.operation_row_id,
 		}
 
-	def update_transferred_qty_for_required_items(self):
+	def update_transferred_qty_for_required_items(self) -> None:
 		if self.doc.skip_transfer:
 			return
 
@@ -149,7 +158,7 @@ class RequiredItemsService:
 
 		self.recompute_material_transferred_for_manufacturing(transferred_items)
 
-	def recompute_material_transferred_for_manufacturing(self, transferred_items):
+	def recompute_material_transferred_for_manufacturing(self, transferred_items: dict) -> None:
 		"""Set material_transferred_for_manufacturing based on actual item-level transfers, not fg_completed_qty."""
 		# When fg_completed_qty > 0 (direct stock entries, excess transfer), preserve the
 		# SUM(fg_completed_qty) approach so excess-transfer tracking works correctly.
@@ -179,12 +188,12 @@ class RequiredItemsService:
 		material_transferred = min_fraction * flt(self.doc.qty)
 		self.doc.db_set("material_transferred_for_manufacturing", material_transferred)
 
-	def update_returned_qty(self):
+	def update_returned_qty(self) -> None:
 		returned_dict = self._material_transfer_qty_by_item(is_return=1)
 		for row in self.doc.required_items:
 			row.db_set("returned_qty", (returned_dict.get(row.item_code) or 0.0), update_modified=False)
 
-	def _material_transfer_qty_by_item(self, is_return):
+	def _material_transfer_qty_by_item(self, is_return: int) -> dict:
 		ste = frappe.qb.DocType("Stock Entry")
 		ste_child = frappe.qb.DocType("Stock Entry Detail")
 		query = (
@@ -211,7 +220,7 @@ class RequiredItemsService:
 			qty_by_item[key] = (qty_by_item.get(key) or 0.0) + flt(d.qty)
 		return qty_by_item
 
-	def _material_transfer_filter(self, ste, is_return):
+	def _material_transfer_filter(self, ste, is_return: int):
 		return (
 			(ste.docstatus == 1)
 			& (ste.work_order == self.doc.name)
@@ -219,7 +228,7 @@ class RequiredItemsService:
 			& (ste.is_return == is_return)
 		)
 
-	def update_consumed_qty_for_required_items(self):
+	def update_consumed_qty_for_required_items(self) -> None:
 		"""
 		Update consumed qty from submitted stock entries
 		against a work order for each stock item
@@ -240,13 +249,13 @@ class RequiredItemsService:
 				item, consumed_qty, warehouse
 			)
 
-	def remove_additional_items(self, stock_entry):
+	def remove_additional_items(self, stock_entry) -> None:
 		for row in stock_entry.items:
 			for item in self.doc.required_items:
 				if row.item_code == item.item_code and row.name == item.voucher_detail_reference:
 					item.delete()
 
-	def add_additional_items(self, stock_entry):
+	def add_additional_items(self, stock_entry) -> None:
 		if frappe.db.get_single_value("Manufacturing Settings", "validate_components_quantities_per_bom"):
 			return
 
@@ -262,7 +271,7 @@ class RequiredItemsService:
 		self.doc.save()
 		stock_entry.reload()
 
-	def _additional_items_by_code(self, stock_entry):
+	def _additional_items_by_code(self, stock_entry) -> dict:
 		required_items = [d.item_code for d in self.doc.required_items]
 		additional_items = frappe._dict()
 		for row in stock_entry.items:
@@ -272,7 +281,7 @@ class RequiredItemsService:
 		return additional_items
 
 	@staticmethod
-	def _additional_item_row(row):
+	def _additional_item_row(row) -> dict:
 		return {
 			"item_code": row.original_item or row.item_code,
 			"source_warehouse": row.s_warehouse,
