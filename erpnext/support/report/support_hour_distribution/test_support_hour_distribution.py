@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import get_datetime, getdate
 
@@ -7,7 +9,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestSupportHourDistribution(ERPNextTestSuite):
-	def test_issue_buckets_into_expected_time_slot(self):
+	def test_issue_buckets_into_expected_time_slot(self) -> None:
 		# The report buckets Issues by `creation` into 3-hour slots over the
 		# from_date..to_date range. `creation` is auto-stamped on insert, so we
 		# force it afterwards to a known time. 14:00 sits squarely inside the

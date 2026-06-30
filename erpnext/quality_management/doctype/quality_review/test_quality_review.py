@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
@@ -10,7 +12,7 @@ from .quality_review import review
 
 
 class TestQualityReview(ERPNextTestSuite):
-	def test_review_creation(self):
+	def test_review_creation(self) -> None:
 		quality_goal = get_quality_goal()
 		review()
 

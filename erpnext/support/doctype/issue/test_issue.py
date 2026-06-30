@@ -1,6 +1,10 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors and Contributors
 # See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe import _
 from frappe.core.doctype.user_permission.test_user_permission import create_user
@@ -11,9 +15,14 @@ from erpnext.support.doctype.service_level_agreement.test_service_level_agreemen
 )
 from erpnext.tests.utils import ERPNextTestSuite
 
+if TYPE_CHECKING:
+	from datetime import datetime
+
+	from frappe.model.document import Document
+
 
 class TestSetUp(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		frappe.db.delete("Service Level Agreement")
 		frappe.db.delete("Service Level Priority")
 		frappe.db.delete("SLA Fulfilled On Status")
@@ -24,7 +33,7 @@ class TestSetUp(ERPNextTestSuite):
 
 
 class TestIssue(TestSetUp):
-	def test_response_time_and_resolution_time_based_on_different_sla(self):
+	def test_response_time_and_resolution_time_based_on_different_sla(self) -> None:
 		creation = get_datetime("2019-03-04 12:00")
 
 		# make issue with customer specific SLA
@@ -82,7 +91,7 @@ class TestIssue(TestSetUp):
 
 		self.assertEqual(issue.agreement_status, "Fulfilled")
 
-	def test_hold_time_on_replied(self):
+	def test_hold_time_on_replied(self) -> None:
 		creation = get_datetime("2020-03-04 4:00")
 
 		issue = make_issue(creation, index=1)
@@ -118,7 +127,7 @@ class TestIssue(TestSetUp):
 		issue.reload()
 		self.assertEqual(flt(issue.total_hold_time, 2), 2700)
 
-	def test_issue_close_after_on_hold(self):
+	def test_issue_close_after_on_hold(self) -> None:
 		frappe.flags.current_time = get_datetime("2021-11-01 19:00")
 
 		issue = make_issue(frappe.flags.current_time, index=1)
@@ -143,7 +152,7 @@ class TestIssue(TestSetUp):
 		self.assertEqual(issue.sla_resolution_date, get_datetime("2021-11-22 01:00:00"))
 		self.assertEqual(issue.agreement_status, "Fulfilled")
 
-	def test_issue_open_after_closed(self):
+	def test_issue_open_after_closed(self) -> None:
 		# Created on -> 1 pm, Response Time -> 4 hrs, Resolution Time -> 6 hrs
 		frappe.flags.current_time = get_datetime("2021-11-01 13:00")
 		issue = make_issue(
@@ -212,7 +221,7 @@ class TestIssue(TestSetUp):
 		self.assertEqual(issue.agreement_status, "Fulfilled")
 		self.assertEqual(issue.sla_resolution_date, frappe.flags.current_time)
 
-	def test_recording_of_assignment_on_first_reponse_failure(self):
+	def test_recording_of_assignment_on_first_reponse_failure(self) -> None:
 		from frappe.desk.form.assign_to import add as add_assignment
 
 		frappe.flags.current_time = get_datetime("2021-11-01 19:00")
@@ -240,7 +249,7 @@ class TestIssue(TestSetUp):
 		)
 		self.assertTrue(comment)
 
-	def test_agreement_status_on_response(self):
+	def test_agreement_status_on_response(self) -> None:
 		frappe.flags.current_time = get_datetime("2021-11-01 19:00")
 
 		issue = make_issue(frappe.flags.current_time, index=1)
@@ -261,7 +270,7 @@ class TestFirstResponseTime(TestSetUp):
 	# all dates are in the mm-dd-yyyy format
 
 	# issue creation and first response are on the same day
-	def test_first_response_time_case1(self):
+	def test_first_response_time_case1(self) -> None:
 		"""
 		Test frt when issue creation and first response are during working hours on the same day.
 		"""
@@ -270,7 +279,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 3600.0)
 
-	def test_first_response_time_case2(self):
+	def test_first_response_time_case2(self) -> None:
 		"""
 		Test frt when issue creation was during working hours, but first response is sent after working hours on the same day.
 		"""
@@ -279,7 +288,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 21600.0)
 
-	def test_first_response_time_case3(self):
+	def test_first_response_time_case3(self) -> None:
 		"""
 		Test frt when issue creation was before working hours but first response is sent during working hours on the same day.
 		"""
@@ -288,7 +297,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 7200.0)
 
-	def test_first_response_time_case4(self):
+	def test_first_response_time_case4(self) -> None:
 		"""
 		Test frt when both issue creation and first response were after working hours on the same day.
 		"""
@@ -297,7 +306,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 1.0)
 
-	def test_first_response_time_case5(self):
+	def test_first_response_time_case5(self) -> None:
 		"""
 		Test frt when both issue creation and first response are on the same day, but it's not a work day.
 		"""
@@ -307,7 +316,7 @@ class TestFirstResponseTime(TestSetUp):
 		self.assertEqual(issue.first_response_time, 1.0)
 
 	# issue creation and first response are on consecutive days
-	def test_first_response_time_case6(self):
+	def test_first_response_time_case6(self) -> None:
 		"""
 		Test frt when the issue was created before working hours and the first response is also sent before working hours, but on the next day.
 		"""
@@ -316,7 +325,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 28800.0)
 
-	def test_first_response_time_case7(self):
+	def test_first_response_time_case7(self) -> None:
 		"""
 		Test frt when the issue was created before working hours and the first response is sent during working hours, but on the next day.
 		"""
@@ -325,7 +334,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 32400.0)
 
-	def test_first_response_time_case8(self):
+	def test_first_response_time_case8(self) -> None:
 		"""
 		Test frt when the issue was created before working hours and the first response is sent after working hours, but on the next day.
 		"""
@@ -334,7 +343,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 57600.0)
 
-	def test_first_response_time_case9(self):
+	def test_first_response_time_case9(self) -> None:
 		"""
 		Test frt when the issue was created before working hours and the first response is sent on the next day, which is not a work day.
 		"""
@@ -343,7 +352,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 28800.0)
 
-	def test_first_response_time_case10(self):
+	def test_first_response_time_case10(self) -> None:
 		"""
 		Test frt when the issue was created during working hours and the first response is sent before working hours, but on the next day.
 		"""
@@ -352,7 +361,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 21600.0)
 
-	def test_first_response_time_case11(self):
+	def test_first_response_time_case11(self) -> None:
 		"""
 		Test frt when the issue was created during working hours and the first response is also sent during working hours, but on the next day.
 		"""
@@ -361,7 +370,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 25200.0)
 
-	def test_first_response_time_case12(self):
+	def test_first_response_time_case12(self) -> None:
 		"""
 		Test frt when the issue was created during working hours and the first response is sent after working hours, but on the next day.
 		"""
@@ -370,7 +379,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 50400.0)
 
-	def test_first_response_time_case13(self):
+	def test_first_response_time_case13(self) -> None:
 		"""
 		Test frt when the issue was created during working hours and the first response is sent on the next day, which is not a work day.
 		"""
@@ -379,7 +388,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 21600.0)
 
-	def test_first_response_time_case14(self):
+	def test_first_response_time_case14(self) -> None:
 		"""
 		Test frt when the issue was created after working hours and the first response is sent before working hours, but on the next day.
 		"""
@@ -388,7 +397,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 1.0)
 
-	def test_first_response_time_case15(self):
+	def test_first_response_time_case15(self) -> None:
 		"""
 		Test frt when the issue was created after working hours and the first response is sent during working hours, but on the next day.
 		"""
@@ -397,7 +406,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 3600.0)
 
-	def test_first_response_time_case16(self):
+	def test_first_response_time_case16(self) -> None:
 		"""
 		Test frt when the issue was created after working hours and the first response is also sent after working hours, but on the next day.
 		"""
@@ -406,7 +415,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 28800.0)
 
-	def test_first_response_time_case17(self):
+	def test_first_response_time_case17(self) -> None:
 		"""
 		Test frt when the issue was created after working hours and the first response is sent on the next day, which is not a work day.
 		"""
@@ -416,7 +425,7 @@ class TestFirstResponseTime(TestSetUp):
 		self.assertEqual(issue.first_response_time, 1.0)
 
 	# issue creation and first response are a few days apart
-	def test_first_response_time_case18(self):
+	def test_first_response_time_case18(self) -> None:
 		"""
 		Test frt when the issue was created before working hours and the first response is also sent before working hours, but after a few days.
 		"""
@@ -425,7 +434,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 86400.0)
 
-	def test_first_response_time_case19(self):
+	def test_first_response_time_case19(self) -> None:
 		"""
 		Test frt when the issue was created before working hours and the first response is sent during working hours, but after a few days.
 		"""
@@ -434,7 +443,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 90000.0)
 
-	def test_first_response_time_case20(self):
+	def test_first_response_time_case20(self) -> None:
 		"""
 		Test frt when the issue was created before working hours and the first response is sent after working hours, but after a few days.
 		"""
@@ -443,7 +452,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 115200.0)
 
-	def test_first_response_time_case21(self):
+	def test_first_response_time_case21(self) -> None:
 		"""
 		Test frt when the issue was created before working hours and the first response is sent after a few days, on a holiday.
 		"""
@@ -452,7 +461,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 28800.0)
 
-	def test_first_response_time_case22(self):
+	def test_first_response_time_case22(self) -> None:
 		"""
 		Test frt when the issue was created during working hours and the first response is sent before working hours, but after a few days.
 		"""
@@ -461,7 +470,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 79200.0)
 
-	def test_first_response_time_case23(self):
+	def test_first_response_time_case23(self) -> None:
 		"""
 		Test frt when the issue was created during working hours and the first response is also sent during working hours, but after a few days.
 		"""
@@ -470,7 +479,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 82800.0)
 
-	def test_first_response_time_case24(self):
+	def test_first_response_time_case24(self) -> None:
 		"""
 		Test frt when the issue was created during working hours and the first response is sent after working hours, but after a few days.
 		"""
@@ -479,7 +488,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 108000.0)
 
-	def test_first_response_time_case25(self):
+	def test_first_response_time_case25(self) -> None:
 		"""
 		Test frt when the issue was created during working hours and the first response is sent after a few days, on a holiday.
 		"""
@@ -488,7 +497,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 21600.0)
 
-	def test_first_response_time_case26(self):
+	def test_first_response_time_case26(self) -> None:
 		"""
 		Test frt when the issue was created after working hours and the first response is sent before working hours, but after a few days.
 		"""
@@ -497,7 +506,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 57600.0)
 
-	def test_first_response_time_case27(self):
+	def test_first_response_time_case27(self) -> None:
 		"""
 		Test frt when the issue was created after working hours and the first response is sent during working hours, but after a few days.
 		"""
@@ -506,7 +515,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 61200.0)
 
-	def test_first_response_time_case28(self):
+	def test_first_response_time_case28(self) -> None:
 		"""
 		Test frt when the issue was created after working hours and the first response is also sent after working hours, but after a few days.
 		"""
@@ -515,7 +524,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 86400.0)
 
-	def test_first_response_time_case29(self):
+	def test_first_response_time_case29(self) -> None:
 		"""
 		Test frt when the issue was created after working hours and the first response is sent after a few days, on a holiday.
 		"""
@@ -524,7 +533,7 @@ class TestFirstResponseTime(TestSetUp):
 		)
 		self.assertEqual(issue.first_response_time, 1.0)
 
-	def _get_no_perm_user(self):
+	def _get_no_perm_user(self) -> str:
 		email = "test_no_issue_perm@example.com"
 		if not frappe.db.exists("User", email):
 			user = frappe.new_doc("User")
@@ -534,7 +543,7 @@ class TestFirstResponseTime(TestSetUp):
 			user.insert(ignore_permissions=True)
 		return email
 
-	def test_set_status_requires_write_permission(self):
+	def test_set_status_requires_write_permission(self) -> None:
 		from erpnext.support.doctype.issue.issue import set_status
 
 		issue = frappe.new_doc("Issue")
@@ -544,7 +553,7 @@ class TestFirstResponseTime(TestSetUp):
 		self.assertRaises(frappe.PermissionError, set_status, issue.name, "Closed")
 		frappe.set_user("Administrator")
 
-	def test_set_multiple_status_requires_write_permission(self):
+	def test_set_multiple_status_requires_write_permission(self) -> None:
 		import json
 
 		from erpnext.support.doctype.issue.issue import set_multiple_status
@@ -557,7 +566,7 @@ class TestFirstResponseTime(TestSetUp):
 		frappe.set_user("Administrator")
 
 
-def create_issue_and_communication(issue_creation, first_responded_on):
+def create_issue_and_communication(issue_creation: datetime, first_responded_on: datetime) -> Document:
 	issue = make_issue(issue_creation, index=1)
 	sender = create_user("test@admin.com")
 	frappe.flags.current_time = first_responded_on
@@ -567,7 +576,13 @@ def create_issue_and_communication(issue_creation, first_responded_on):
 	return issue
 
 
-def make_issue(creation=None, customer=None, index=0, priority=None, issue_type=None):
+def make_issue(
+	creation: datetime | None = None,
+	customer: str | None = None,
+	index: int = 0,
+	priority: str | None = None,
+	issue_type: str | None = None,
+) -> Document:
 	if issue_type and not frappe.db.exists("Issue Type", issue_type):
 		doc = frappe.new_doc("Issue Type")
 		doc.name = issue_type
@@ -592,7 +607,7 @@ def make_issue(creation=None, customer=None, index=0, priority=None, issue_type=
 	return issue
 
 
-def create_customer(name, customer_group, territory):
+def create_customer(name: str, customer_group: str, territory: str) -> None:
 	create_customer_group(customer_group)
 	create_territory(territory)
 
@@ -607,14 +622,14 @@ def create_customer(name, customer_group, territory):
 		).insert(ignore_permissions=True)
 
 
-def create_customer_group(customer_group):
+def create_customer_group(customer_group: str) -> None:
 	if not frappe.db.exists("Customer Group", {"customer_group_name": customer_group}):
 		frappe.get_doc({"doctype": "Customer Group", "customer_group_name": customer_group}).insert(
 			ignore_permissions=True
 		)
 
 
-def create_territory(territory):
+def create_territory(territory: str) -> None:
 	if not frappe.db.exists("Territory", {"territory_name": territory}):
 		frappe.get_doc(
 			{
@@ -624,7 +639,7 @@ def create_territory(territory):
 		).insert(ignore_permissions=True)
 
 
-def create_communication(reference_name, sender, sent_or_received, creation):
+def create_communication(reference_name: str, sender: str, sent_or_received: str, creation: datetime) -> None:
 	communication = frappe.get_doc(
 		{
 			"doctype": "Communication",

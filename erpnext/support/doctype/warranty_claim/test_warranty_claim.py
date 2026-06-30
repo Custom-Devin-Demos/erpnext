@@ -1,15 +1,22 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors and Contributors
 # See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe.utils.data import today
 
 from erpnext.support.doctype.warranty_claim.warranty_claim import make_maintenance_visit
 from erpnext.tests.utils import ERPNextTestSuite
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class TestWarrantyClaim(ERPNextTestSuite):
-	def make_warranty_claim(self):
+	def make_warranty_claim(self) -> Document:
 		# Warranty Claim is not a submittable doctype; it stays at docstatus 0.
 		claim = frappe.new_doc("Warranty Claim")
 		claim.status = "Open"
@@ -21,7 +28,7 @@ class TestWarrantyClaim(ERPNextTestSuite):
 		claim.insert(ignore_permissions=True)
 		return claim
 
-	def make_maintenance_visit_for_claim(self, claim, completion_status):
+	def make_maintenance_visit_for_claim(self, claim: Document, completion_status: str) -> Document:
 		visit = frappe.new_doc("Maintenance Visit")
 		visit.company = "_Test Company"
 		visit.customer = "_Test Customer"
@@ -43,7 +50,7 @@ class TestWarrantyClaim(ERPNextTestSuite):
 		visit.submit()
 		return visit
 
-	def test_make_maintenance_visit_maps_new_visit_when_none_completed(self):
+	def test_make_maintenance_visit_maps_new_visit_when_none_completed(self) -> None:
 		# No "Fully Completed" visit yet -> converted query returns nothing,
 		# so a fresh Maintenance Visit draft is mapped from the claim.
 		claim = self.make_warranty_claim()
@@ -60,7 +67,7 @@ class TestWarrantyClaim(ERPNextTestSuite):
 		self.assertEqual(row.prevdoc_doctype, "Warranty Claim")
 		self.assertEqual(row.prevdoc_docname, claim.name)
 
-	def test_make_maintenance_visit_returns_none_when_fully_completed_exists(self):
+	def test_make_maintenance_visit_returns_none_when_fully_completed_exists(self) -> None:
 		# A submitted, "Fully Completed" visit pointing at the claim must be
 		# found by the converted join query -> no new visit is mapped.
 		claim = self.make_warranty_claim()
@@ -73,7 +80,7 @@ class TestWarrantyClaim(ERPNextTestSuite):
 
 		self.assertIsNone(make_maintenance_visit(claim.name))
 
-	def test_make_maintenance_visit_ignores_partially_completed(self):
+	def test_make_maintenance_visit_ignores_partially_completed(self) -> None:
 		# A "Partially Completed" visit must NOT satisfy the query, so a new
 		# visit is still mapped (the completion_status filter is exercised).
 		claim = self.make_warranty_claim()
@@ -85,7 +92,7 @@ class TestWarrantyClaim(ERPNextTestSuite):
 		self.assertTrue(target.is_new())
 		self.assertEqual(target.doctype, "Maintenance Visit")
 
-	def test_on_cancel_blocked_by_active_maintenance_visit(self):
+	def test_on_cancel_blocked_by_active_maintenance_visit(self) -> None:
 		# on_cancel's converted query joins Maintenance Visit Purpose -> Maintenance Visit and
 		# filters the PARENT visit's docstatus != 2; a submitted (non-cancelled) visit referencing
 		# the claim must block cancellation.
@@ -94,7 +101,7 @@ class TestWarrantyClaim(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, claim.on_cancel)
 
-	def test_on_cancel_allowed_when_no_active_visit(self):
+	def test_on_cancel_allowed_when_no_active_visit(self) -> None:
 		# No referencing visit -> the query returns nothing -> the claim is marked Cancelled.
 		claim = self.make_warranty_claim()
 
