@@ -2,19 +2,21 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Max, Sum
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns = get_columns()
 	data = get_data()
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		{
 			"label": _("Item Code"),
@@ -49,7 +51,7 @@ def get_columns():
 	return columns
 
 
-def get_data():
+def get_data() -> list:
 	so = frappe.qb.DocType("Sales Order")
 	so_item = frappe.qb.DocType("Sales Order Item")
 	sales_order_entry = (
@@ -144,7 +146,7 @@ def get_data():
 	return pending_so
 
 
-def get_items_with_product_bundle(item_list):
+def get_items_with_product_bundle(item_list: list) -> list:
 	bundled_items = frappe.get_all(
 		"Product Bundle",
 		filters=[("new_item_code", "IN", item_list), ("is_active", "=", 1), ("docstatus", "=", 1)],
@@ -154,7 +156,7 @@ def get_items_with_product_bundle(item_list):
 	return [d.new_item_code for d in bundled_items]
 
 
-def get_packed_items(sales_order_list):
+def get_packed_items(sales_order_list: list) -> dict:
 	packed_items = frappe.get_all(
 		"Packed Item",
 		filters=[("parent", "IN", sales_order_list)],

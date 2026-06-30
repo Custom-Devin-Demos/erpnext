@@ -3,6 +3,8 @@
 
 """Stock reservation logic for Sales Order."""
 
+from __future__ import annotations
+
 from typing import Literal
 
 import frappe
@@ -16,7 +18,7 @@ from erpnext.stock.stock_balance import get_reserved_qty, update_bin_qty
 
 
 class SalesOrderStockReservation:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def validate_reserved_stock(self) -> None:

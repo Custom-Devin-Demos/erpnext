@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import Case
@@ -9,7 +11,7 @@ from frappe.query_builder.functions import Count, CurDate, DateDiff, Max, Sum
 from frappe.utils import cint
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -33,7 +35,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_sales_details(doctype):
+def get_sales_details(doctype: str) -> list:
 	customer = frappe.qb.DocType("Customer")
 	sales_doctype = frappe.qb.DocType(doctype)
 
@@ -77,7 +79,7 @@ def get_sales_details(doctype):
 	).run(as_list=True)
 
 
-def get_last_sales_amt(customer, doctype):
+def get_last_sales_amt(customer: str, doctype: str) -> float:
 	sales_doctype = frappe.qb.DocType(doctype)
 	date_col = sales_doctype.transaction_date if doctype == "Sales Order" else sales_doctype.posting_date
 
@@ -90,10 +92,10 @@ def get_last_sales_amt(customer, doctype):
 		.limit(1)
 	).run()
 
-	return res and res[0][0] or 0
+	return (res and res[0][0]) or 0
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		_("Customer") + ":Link/Customer:120",
 		_("Customer Name") + ":Data:120",

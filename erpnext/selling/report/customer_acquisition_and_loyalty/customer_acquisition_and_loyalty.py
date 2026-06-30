@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import calendar
 
 import frappe
@@ -9,7 +11,7 @@ from frappe import _
 from frappe.utils import cint, cstr, getdate
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	common_columns = [
 		{
 			"label": _("New Customers"),
@@ -54,7 +56,7 @@ def execute(filters=None):
 		return get_data_by_territory(filters, common_columns)
 
 
-def get_data_by_time(filters, common_columns):
+def get_data_by_time(filters: dict, common_columns: list) -> tuple:
 	# key yyyy-mm
 	columns = [
 		{"label": _("Year"), "fieldname": "year", "fieldtype": "Data", "width": 100},
@@ -65,8 +67,8 @@ def get_data_by_time(filters, common_columns):
 	customers_in = get_customer_stats(filters)
 
 	# time series
-	from_year, from_month, temp = filters.get("from_date").split("-")
-	to_year, to_month, temp = filters.get("to_date").split("-")
+	from_year, from_month, _temp = filters.get("from_date").split("-")
+	to_year, to_month, _temp = filters.get("to_date").split("-")
 
 	from_year, from_month, to_year, to_month = (
 		cint(from_year),
@@ -97,7 +99,7 @@ def get_data_by_time(filters, common_columns):
 	return columns, out
 
 
-def get_data_by_territory(filters, common_columns):
+def get_data_by_territory(filters: dict, common_columns: list) -> tuple:
 	columns = [
 		{
 			"label": _("Territory"),
@@ -153,7 +155,7 @@ def get_data_by_territory(filters, common_columns):
 	return columns, data, None, None, None, 1
 
 
-def get_customer_stats(filters, tree_view=False):
+def get_customer_stats(filters: dict, tree_view: bool = False) -> dict:
 	"""Calculates number of new and repeated customers and revenue."""
 	customers = []
 	customers_in = {}

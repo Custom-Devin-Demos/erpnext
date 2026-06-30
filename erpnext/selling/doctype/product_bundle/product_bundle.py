@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import re
 
 import frappe
@@ -32,7 +34,7 @@ class ProductBundle(Document):
 		new_item_code: DF.Link
 	# end: auto-generated types
 
-	def autoname(self):
+	def autoname(self) -> None:
 		"""BOM-style versioned name: ``PB-<parent item>-001``.
 
 		Amended copies are excluded while computing the current index so that an
@@ -47,7 +49,7 @@ class ProductBundle(Document):
 		index = get_next_version_index(existing)
 		self.name = build_bundle_name(self.new_item_code, index)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_main_item()
 		self.validate_child_items()
 		self.validate_child_items_qty_non_zero()
@@ -55,13 +57,13 @@ class ProductBundle(Document):
 
 		validate_uom_is_integer(self, "uom", "qty")
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.make_active()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.db_set("is_active", 0)
 
-	def on_update_after_submit(self):
+	def on_update_after_submit(self) -> None:
 		# `is_active` and `disabled` are the only fields editable after submit; keep a
 		# single active version per parent item in sync when the user (re)activates a
 		# version. `disabled` is orthogonal: it parks a version without ceding the
@@ -69,7 +71,7 @@ class ProductBundle(Document):
 		if self.is_active:
 			self.make_active()
 
-	def make_active(self):
+	def make_active(self) -> None:
 		"""Mark this version active and deactivate every other submitted version
 		of the same parent item."""
 		if not self.is_active:
@@ -88,7 +90,7 @@ class ProductBundle(Document):
 		for name in others:
 			frappe.db.set_value("Product Bundle", name, "is_active", 0)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		linked_doctypes = [
 			"Delivery Note",
 			"Sales Invoice",
@@ -124,14 +126,14 @@ class ProductBundle(Document):
 				title=_("Not Allowed"),
 			)
 
-	def validate_main_item(self):
+	def validate_main_item(self) -> None:
 		"""Validates, main Item is not a stock item"""
 		if frappe.db.get_value("Item", self.new_item_code, "is_stock_item"):
 			frappe.throw(_("Parent Item {0} must not be a Stock Item").format(self.new_item_code))
 		if frappe.db.get_value("Item", self.new_item_code, "is_fixed_asset"):
 			frappe.throw(_("Parent Item {0} must not be a Fixed Asset").format(self.new_item_code))
 
-	def validate_child_items(self):
+	def validate_child_items(self) -> None:
 		for item in self.items:
 			if get_active_product_bundle(item.item_code):
 				frappe.throw(
@@ -140,7 +142,7 @@ class ProductBundle(Document):
 					).format(item.idx, frappe.bold(item.item_code))
 				)
 
-	def validate_child_items_qty_non_zero(self):
+	def validate_child_items_qty_non_zero(self) -> None:
 		for item in self.items:
 			if item.qty <= 0:
 				frappe.throw(
@@ -152,7 +154,7 @@ class ProductBundle(Document):
 
 def build_bundle_name(item_code: str, index: int) -> str:
 	"""Build a ``PB-<item>-NNN`` name, truncating the item part to stay within 140 chars."""
-	suffix = "%.3i" % index
+	suffix = f"{index:03d}"
 	name = f"{NAME_PREFIX}-{item_code}-{suffix}"
 	if len(name) <= 140:
 		return name
@@ -191,7 +193,7 @@ def get_active_product_bundle(item_code: str) -> str | None:
 
 
 @frappe.whitelist()
-def make_new_version(source_name: str, target_doc: str | None = None):
+def make_new_version(source_name: str, target_doc: str | None = None) -> Document:
 	"""Create a fresh draft bundle copied from an existing (typically submitted) one.
 
 	The copy keeps the same parent item and component rows but gets a new version
@@ -223,7 +225,9 @@ def make_new_version(source_name: str, target_doc: str | None = None):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_new_item_code(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_new_item_code(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	# Items that already have a bundle are intentionally *not* excluded: creating a
 	# bundle for such an item produces a new version that supersedes the active one
 	# on submit (same as the "Create New Version" action).

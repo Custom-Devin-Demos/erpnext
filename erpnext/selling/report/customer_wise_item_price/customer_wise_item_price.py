@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb
 from frappe.query_builder import Criterion
@@ -10,7 +12,7 @@ from erpnext import get_default_company
 from erpnext.accounts.party import _get_party_details
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -23,7 +25,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns(filters=None):
+def get_columns(filters: dict | None = None) -> list:
 	return [
 		{
 			"label": _("Item Code"),
@@ -55,7 +57,7 @@ def fetch_item_prices(
 	price_list: str | None = None,
 	selling_price_list: str | None = None,
 	items: list | None = None,
-):
+) -> dict:
 	price_list_map = frappe._dict()
 	ip = qb.DocType("Item Price")
 	and_conditions = []
@@ -89,7 +91,7 @@ def fetch_item_prices(
 	return price_list_map
 
 
-def get_data(filters=None):
+def get_data(filters: dict | None = None) -> list:
 	data = []
 	customer_details = get_customer_details(filters)
 
@@ -124,7 +126,7 @@ def get_data(filters=None):
 	return data
 
 
-def get_customer_details(filters):
+def get_customer_details(filters: dict) -> dict:
 	customer_details = _get_party_details(party=filters.get("customer"), party_type="Customer")
 	customer_details.update(
 		{"company": get_default_company(), "price_list": customer_details.get("selling_price_list")}
@@ -133,7 +135,7 @@ def get_customer_details(filters):
 	return customer_details
 
 
-def get_selling_items(filters):
+def get_selling_items(filters: dict) -> list:
 	if filters.get("item"):
 		item_filters = {"item_code": filters.get("item"), "is_sales_item": 1, "disabled": 0}
 	else:

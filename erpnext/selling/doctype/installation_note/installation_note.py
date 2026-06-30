@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cstr, getdate
@@ -44,7 +46,7 @@ class InstallationNote(TransactionBase):
 		territory: DF.Link
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.status_updater = [
 			{
@@ -63,7 +65,7 @@ class InstallationNote(TransactionBase):
 			}
 		]
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_installation_date()
 		self.check_item_table()
 
@@ -71,30 +73,30 @@ class InstallationNote(TransactionBase):
 
 		set_default_income_account_for_item(self)
 
-	def is_serial_no_added(self, item_code, serial_no):
+	def is_serial_no_added(self, item_code: str, serial_no: str | None) -> None:
 		has_serial_no = frappe.db.get_value("Item", item_code, "has_serial_no")
 		if has_serial_no == 1 and not serial_no:
 			frappe.throw(_("Serial No is mandatory for Item {0}").format(item_code))
 		elif has_serial_no != 1 and cstr(serial_no).strip():
 			frappe.throw(_("Item {0} is not a serialized Item").format(item_code))
 
-	def is_serial_no_exist(self, item_code, serial_no):
+	def is_serial_no_exist(self, item_code: str, serial_no: list) -> None:
 		for x in serial_no:
 			if not frappe.db.exists("Serial No", x):
 				frappe.throw(_("Serial No {0} does not exist").format(x))
 
-	def get_prevdoc_serial_no(self, prevdoc_detail_docname):
+	def get_prevdoc_serial_no(self, prevdoc_detail_docname: str) -> list:
 		serial_nos = frappe.db.get_value("Delivery Note Item", prevdoc_detail_docname, "serial_no")
 		return get_valid_serial_nos(serial_nos)
 
-	def is_serial_no_match(self, cur_s_no, prevdoc_s_no, prevdoc_docname):
+	def is_serial_no_match(self, cur_s_no: list, prevdoc_s_no: list, prevdoc_docname: str) -> None:
 		for sr in cur_s_no:
 			if sr not in prevdoc_s_no:
 				frappe.throw(
 					_("Serial No {0} does not belong to Delivery Note {1}").format(sr, prevdoc_docname)
 				)
 
-	def validate_serial_no(self):
+	def validate_serial_no(self) -> None:
 		prevdoc_s_no, sr_list = [], []
 		for d in self.get("items"):
 			self.is_serial_no_added(d.item_code, d.serial_no)
@@ -106,7 +108,7 @@ class InstallationNote(TransactionBase):
 				if prevdoc_s_no:
 					self.is_serial_no_match(sr_list, prevdoc_s_no, d.prevdoc_docname)
 
-	def validate_installation_date(self):
+	def validate_installation_date(self) -> None:
 		for d in self.get("items"):
 			if d.prevdoc_docname:
 				d_date = frappe.db.get_value("Delivery Note", d.prevdoc_docname, "posting_date")
@@ -115,18 +117,18 @@ class InstallationNote(TransactionBase):
 						_("Installation date cannot be before delivery date for Item {0}").format(d.item_code)
 					)
 
-	def check_item_table(self):
+	def check_item_table(self) -> None:
 		if not (self.get("items")):
 			frappe.throw(_("Please pull items from Delivery Note"))
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.db_set("status", "Draft")
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.validate_serial_no()
 		self.update_prevdoc_status()
 		self.db_set("status", "Submitted")
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_prevdoc_status()
 		self.db_set("status", "Cancelled")

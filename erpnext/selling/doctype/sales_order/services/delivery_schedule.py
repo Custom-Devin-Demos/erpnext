@@ -3,12 +3,14 @@
 
 """Delivery schedule management for Sales Order Items."""
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import parse_json
 
 
 class DeliveryScheduleService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def get_delivery_schedule(self, sales_order_item: str) -> list[dict]:
