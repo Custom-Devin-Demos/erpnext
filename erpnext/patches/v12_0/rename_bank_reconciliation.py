@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.table_exists("Bank Reconciliation"):
 		frappe.rename_doc("DocType", "Bank Reconciliation", "Bank Clearance", force=True)
 		frappe.reload_doc("Accounts", "doctype", "Bank Clearance")

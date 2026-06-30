@@ -2,12 +2,14 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.stock_balance import get_reserved_qty, update_bin_qty
 
 
-def execute():
+def execute() -> None:
 	for doctype in ("Sales Order Item", "Bin"):
 		frappe.reload_doctype(doctype)
 

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	1. Get submitted Work Orders with MR, MR Item and SO set
 	2. Get SO Item detail from MR Item detail in WO, and set in WO

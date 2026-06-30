@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	from erpnext.setup.setup_wizard.operations.install_fixtures import add_uom_data
 
 	frappe.reload_doc("setup", "doctype", "UOM Conversion Factor")

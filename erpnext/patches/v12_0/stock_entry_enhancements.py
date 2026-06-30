@@ -2,11 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 
-def execute():
+def execute() -> None:
 	create_stock_entry_types()
 
 	company = frappe.db.get_value("Company", {"country": "India"}, "name")
@@ -14,7 +16,7 @@ def execute():
 		add_gst_hsn_code_field()
 
 
-def create_stock_entry_types():
+def create_stock_entry_types() -> None:
 	frappe.reload_doc("stock", "doctype", "stock_entry_type")
 	frappe.reload_doc("stock", "doctype", "stock_entry")
 
@@ -41,7 +43,7 @@ def create_stock_entry_types():
 	frappe.db.sql(" UPDATE `tabStock Entry` set stock_entry_type = purpose ")
 
 
-def add_gst_hsn_code_field():
+def add_gst_hsn_code_field() -> None:
 	custom_fields = {
 		"Stock Entry Detail": [
 			dict(

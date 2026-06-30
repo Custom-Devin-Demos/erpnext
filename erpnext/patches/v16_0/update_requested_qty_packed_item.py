@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import Sum
 
 
-def execute():
+def execute() -> None:
 	MaterialRequestItem = frappe.qb.DocType("Material Request Item")
 
 	mri_query = (

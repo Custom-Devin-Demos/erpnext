@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_table("Serial and Batch Entry"):
 		frappe.db.sql(
 			"""

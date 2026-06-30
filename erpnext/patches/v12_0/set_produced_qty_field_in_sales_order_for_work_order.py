@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.selling.doctype.sales_order.sales_order import update_produced_qty_in_so_item
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doctype("Sales Order Item")
 	frappe.reload_doctype("Sales Order")
 

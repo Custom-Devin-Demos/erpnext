@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	AssetValueAdjustment = frappe.qb.DocType("Asset Value Adjustment")
 
 	frappe.qb.update(AssetValueAdjustment).set(

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	# handle type casting for is_cancelled field
 	module_doctypes = (
 		("stock", "Stock Ledger Entry"),

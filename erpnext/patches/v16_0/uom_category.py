@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 
 import frappe
 
 
-def execute():
+def execute() -> None:
 	uom_data = json.loads(
 		open(frappe.get_app_path("erpnext", "setup", "setup_wizard", "data", "uom_data.json")).read()
 	)

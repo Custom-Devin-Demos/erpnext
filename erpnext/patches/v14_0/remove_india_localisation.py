@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import click
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if "india_compliance" in frappe.get_installed_apps():
 		return
 
@@ -20,7 +22,7 @@ def execute():
 	)
 
 
-def delete_docs():
+def delete_docs() -> None:
 	to_delete = {
 		"DocType": [
 			"C-Form",
@@ -63,7 +65,7 @@ def delete_docs():
 		)
 
 
-def unlink_custom_fields():
+def unlink_custom_fields() -> None:
 	frappe.db.set_value(
 		"Custom Field",
 		{"dt": "Item", "fieldname": "gst_hsn_code"},

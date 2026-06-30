@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 
-def execute():
+def execute() -> None:
 	broken_sles = frappe.db.sql(
 		"""
 			select name, serial_no

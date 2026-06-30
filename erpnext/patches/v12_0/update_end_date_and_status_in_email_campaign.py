@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, getdate, today
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.exists("DocType", "Email Campaign"):
 		email_campaign = frappe.get_all("Email Campaign")
 		for campaign in email_campaign:

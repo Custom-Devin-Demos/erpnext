@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("accounts", "doctype", "purchase_invoice_advance")
 	frappe.reload_doc("accounts", "doctype", "sales_invoice_advance")
 

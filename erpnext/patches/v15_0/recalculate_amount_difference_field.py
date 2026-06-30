@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import Sum
 from frappe.utils import flt, getdate
@@ -6,7 +8,7 @@ from erpnext.accounts.utils import get_fiscal_year
 from erpnext.stock.doctype.purchase_receipt.services.billing_status import adjust_incoming_rate_for_pr
 
 
-def execute():
+def execute() -> None:
 	if not frappe.db.get_single_value("Buying Settings", "set_landed_cost_based_on_purchase_invoice_rate"):
 		return
 
@@ -106,7 +108,7 @@ def execute():
 				adjust_incoming_rate_for_pr(frappe.get_doc("Purchase Receipt", pr))
 
 
-def get_billed_qty_against_purchase_receipt(pr_names):
+def get_billed_qty_against_purchase_receipt(pr_names: list) -> dict:
 	table = frappe.qb.DocType("Purchase Invoice Item")
 	query = (
 		frappe.qb.from_(table)

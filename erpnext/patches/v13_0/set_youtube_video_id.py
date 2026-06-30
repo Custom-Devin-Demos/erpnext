@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.utilities.doctype.video.video import get_id_from_url
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("utilities", "doctype", "video")
 
 	for video in frappe.get_all("Video", fields=["name", "url", "youtube_video_id"]):

@@ -1,10 +1,12 @@
 # Copyright (c) 2019, Frappe and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.table_exists("Supplier Item Group"):
 		frappe.reload_doc("selling", "doctype", "party_specific_item")
 		sig = frappe.db.get_all("Supplier Item Group", fields=["name", "supplier", "item_group"])

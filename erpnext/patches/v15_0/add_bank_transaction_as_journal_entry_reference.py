@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Append Bank Transaction in custom reference_type options."""
 	new_reference_type = "Bank Transaction"
 	property_setters = frappe.get_all(

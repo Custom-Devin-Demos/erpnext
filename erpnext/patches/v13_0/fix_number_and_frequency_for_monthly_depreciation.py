@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	assets = frappe.get_all("Asset", filters={"allow_monthly_depreciation": 1})
 
 	for d in assets:

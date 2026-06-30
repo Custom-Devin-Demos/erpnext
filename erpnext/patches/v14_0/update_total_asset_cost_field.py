@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	asset = frappe.qb.DocType("Asset")
 	frappe.qb.update(asset).set(asset.total_asset_cost, asset.net_purchase_amount).run()
 

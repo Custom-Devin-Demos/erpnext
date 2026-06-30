@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_months, flt, get_first_day, get_last_day
 
@@ -6,7 +8,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 
 
-def execute():
+def execute() -> None:
 	remove_old_property_setter()
 
 	budget_names = frappe.db.get_list(
@@ -19,7 +21,7 @@ def execute():
 		migrate_single_budget(budget)
 
 
-def remove_old_property_setter():
+def remove_old_property_setter() -> None:
 	old_property_setter = frappe.db.get_value(
 		"Property Setter",
 		{
@@ -35,7 +37,7 @@ def remove_old_property_setter():
 		frappe.delete_doc("Property Setter", old_property_setter, force=1)
 
 
-def migrate_single_budget(budget_name):
+def migrate_single_budget(budget_name: str) -> None:
 	budget_doc = frappe.get_doc("Budget", budget_name)
 
 	account_rows = frappe.get_all(
@@ -68,7 +70,7 @@ def migrate_single_budget(budget_name):
 		frappe.delete_doc("Budget", budget_name)
 
 
-def get_percentage_allocations(budget_doc):
+def get_percentage_allocations(budget_doc) -> list:
 	if budget_doc.monthly_distribution:
 		distribution_doc = frappe.get_cached_doc("Monthly Distribution", budget_doc.monthly_distribution)
 		return [flt(row.percentage_allocation) for row in distribution_doc.percentages]
@@ -76,7 +78,7 @@ def get_percentage_allocations(budget_doc):
 	return [100 / 12] * 12
 
 
-def create_new_budget_from_row(budget_doc, fiscal_year, account_row, percentage_allocations):
+def create_new_budget_from_row(budget_doc, fiscal_year, account_row, percentage_allocations) -> None:
 	new_budget = frappe.new_doc("Budget")
 
 	core_fields = ["budget_against", "company", "cost_center", "project"]

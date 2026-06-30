@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if not frappe.db.get_single_value("POS Settings", "invoice_type"):
 		frappe.db.set_single_value("POS Settings", "invoice_type", "POS Invoice")

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	pr_table = frappe.qb.DocType("Pricing Rule")
 	(
 		frappe.qb.update(pr_table)

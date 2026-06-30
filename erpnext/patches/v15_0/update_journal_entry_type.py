@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	custom_je_type = frappe.db.get_value(
 		"Property Setter",
 		{"doc_type": "Journal Entry", "field_name": "voucher_type", "property": "options"},

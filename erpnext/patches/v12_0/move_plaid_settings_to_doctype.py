@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("erpnext_integrations", "doctype", "plaid_settings")
 	plaid_settings = frappe.get_single("Plaid Settings")
 	if plaid_settings.enabled:

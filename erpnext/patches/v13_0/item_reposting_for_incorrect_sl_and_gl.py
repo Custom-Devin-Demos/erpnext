@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import get_time, getdate, today
 
@@ -5,7 +7,7 @@ from erpnext.accounts.utils import update_gl_entries_after
 from erpnext.stock.stock_ledger import update_entries_after
 
 
-def execute():
+def execute() -> None:
 	doctypes_to_reload = [
 		("setup", "company"),
 		("stock", "repost_item_valuation"),

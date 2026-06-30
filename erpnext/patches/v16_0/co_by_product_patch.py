@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	copy_doctypes()
 	rename_fields()
 
 
-def copy_doctypes():
+def copy_doctypes() -> None:
 	previous = frappe.db.auto_commit_on_many_writes
 	frappe.db.auto_commit_on_many_writes = True
 	try:
@@ -21,7 +23,7 @@ def copy_doctypes():
 		frappe.db.auto_commit_on_many_writes = previous
 
 
-def insert_into_bom():
+def insert_into_bom() -> None:
 	fields = ["item_code", "item_name", "stock_uom", "stock_qty", "rate"]
 	data = frappe.get_all("BOM Scrap Item", {"docstatus": ("<", 2)}, ["parent", *fields])
 	grouped_data = defaultdict(list)
@@ -47,7 +49,7 @@ def insert_into_bom():
 			secondary_item.insert()
 
 
-def insert_into_job_card():
+def insert_into_job_card() -> None:
 	fields = ["item_code", "item_name", "description", "stock_qty", "stock_uom"]
 	bulk_insert(
 		"Job Card",
@@ -59,7 +61,7 @@ def insert_into_job_card():
 	)
 
 
-def insert_into_subcontracting_inward():
+def insert_into_subcontracting_inward() -> None:
 	fields = [
 		"item_code",
 		"fg_item_code",
@@ -79,7 +81,7 @@ def insert_into_subcontracting_inward():
 	)
 
 
-def bulk_insert(parent_doctype, old_doctype, new_doctype, old_fields, new_fields, new_values):
+def bulk_insert(parent_doctype, old_doctype, new_doctype, old_fields, new_fields, new_values) -> None:
 	data = frappe.get_all(old_doctype, {"docstatus": ("<", 2)}, ["parent", *old_fields])
 	grouped_data = defaultdict(list)
 
@@ -97,7 +99,7 @@ def bulk_insert(parent_doctype, old_doctype, new_doctype, old_fields, new_fields
 			secondary_item.insert()
 
 
-def rename_fields():
+def rename_fields() -> None:
 	rename_field("BOM", "scrap_material_cost", "secondary_items_cost")
 	rename_field("BOM", "base_scrap_material_cost", "base_secondary_items_cost")
 	rename_field("Stock Entry Detail", "is_scrap_item", "is_legacy_scrap_item")

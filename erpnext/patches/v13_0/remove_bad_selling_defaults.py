@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doctype("Selling Settings")
 	selling_settings = frappe.get_single("Selling Settings")
 

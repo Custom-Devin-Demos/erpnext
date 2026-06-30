@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_column("Asset", "purchase_invoice_item") and frappe.db.has_column(
 		"Asset", "purchase_receipt_item"
 	):
@@ -45,7 +47,7 @@ def execute():
 				frappe.db.set_value("Asset", asset.name, "purchase_receipt_item", purchase_receipt_item)
 
 
-def get_linked_item(doctype, parent, item_code, amount, quantity):
+def get_linked_item(doctype: str, parent: str, item_code: str, amount, quantity) -> str | None:
 	items = frappe.get_all(
 		doctype,
 		filters={

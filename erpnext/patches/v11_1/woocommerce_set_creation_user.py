@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cint
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("erpnext_integrations", "doctype", "woocommerce_settings")
 	doc = frappe.get_doc("Woocommerce Settings")
 

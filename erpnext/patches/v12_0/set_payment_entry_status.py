@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doctype("Payment Entry")
 	frappe.db.sql(
 		"""update `tabPayment Entry` set status = CASE

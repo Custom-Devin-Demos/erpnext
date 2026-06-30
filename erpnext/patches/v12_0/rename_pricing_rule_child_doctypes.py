@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 doctypes = {
@@ -13,7 +15,7 @@ doctypes = {
 }
 
 
-def execute():
+def execute() -> None:
 	for old_doc, new_doc in doctypes.items():
 		if not frappe.db.table_exists(new_doc) and frappe.db.table_exists(old_doc):
 			frappe.rename_doc("DocType", old_doc, new_doc)

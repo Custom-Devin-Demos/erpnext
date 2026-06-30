@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.exists("DocType", "Issue") and frappe.db.count("Issue"):
 		invalid_issues = frappe.get_all(
 			"Issue",

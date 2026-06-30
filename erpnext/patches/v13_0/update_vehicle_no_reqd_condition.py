@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("custom", "doctype", "custom_field", force=True)
 	company = frappe.get_all("Company", filters={"country": "India"})
 	if not company:

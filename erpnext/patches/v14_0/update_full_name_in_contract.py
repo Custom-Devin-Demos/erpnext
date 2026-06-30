@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 
 
-def execute():
+def execute() -> None:
 	con = qb.DocType("Contract")
 	for c in (
 		qb.from_(con)

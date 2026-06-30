@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
@@ -5,7 +7,7 @@ from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_sched
 )
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_column("Asset Finance Book", "total_number_of_booked_depreciations"):
 		assets = frappe.get_all(
 			"Asset", filters={"docstatus": 1}, fields=["name", "opening_number_of_booked_depreciations"]

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	purchase_receipts = frappe.db.sql(
 		"""
 		SELECT

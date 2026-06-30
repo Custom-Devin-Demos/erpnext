@@ -2,11 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("setup", "doctype", "company")
 	if frappe.db.has_column("Company", "default_terms"):
 		rename_field("Company", "default_terms", "default_selling_terms")

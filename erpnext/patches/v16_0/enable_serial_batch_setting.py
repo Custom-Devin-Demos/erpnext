@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if not frappe.get_all("Serial No", limit=1) and not frappe.get_all("Batch", limit=1):
 		return
 

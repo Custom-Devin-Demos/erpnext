@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.db.sql(
 		"""
 		UPDATE `tabStock Ledger Entry`
@@ -12,7 +14,7 @@ def execute():
 	drop_indexes()
 
 
-def drop_indexes():
+def drop_indexes() -> None:
 	if not frappe.db.has_index("tabStock Ledger Entry", "posting_sort_index"):
 		return
 

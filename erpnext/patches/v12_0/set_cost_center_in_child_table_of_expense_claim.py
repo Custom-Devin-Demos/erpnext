@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("hr", "doctype", "expense_claim_detail")
 	frappe.db.sql(
 		"""

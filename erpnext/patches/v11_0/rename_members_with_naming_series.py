@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("non_profit", "doctype", "member")
 	old_named_members = frappe.get_all("Member", filters={"name": ("not like", "MEM-%")})
 	correctly_named_members = frappe.get_all("Member", filters={"name": ("like", "MEM-%")})

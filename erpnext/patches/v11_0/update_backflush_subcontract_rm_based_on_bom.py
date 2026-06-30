@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("buying", "doctype", "buying_settings")
 	frappe.db.set_single_value("Buying Settings", "backflush_raw_materials_of_subcontract_based_on", "BOM")
 

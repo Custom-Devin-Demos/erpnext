@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	This patch corrects the titles of doctypes set to
 	the text strings "{customer_name}" or "{supplier_name}"

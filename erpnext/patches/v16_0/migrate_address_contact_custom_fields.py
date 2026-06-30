@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.setup.install import create_address_and_contact_custom_fields
 
 
-def execute():
+def execute() -> None:
 	"""Replace fixture-based custom fields on Address and Contact with programmatic ones."""
 	for custom_field in (
 		"Address-tax_category",

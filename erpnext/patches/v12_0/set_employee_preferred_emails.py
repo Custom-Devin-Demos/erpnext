@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	employees = frappe.get_all(
 		"Employee",
 		filters={"prefered_email": ""},

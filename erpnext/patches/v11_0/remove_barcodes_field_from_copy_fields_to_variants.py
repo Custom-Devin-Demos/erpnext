@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Remove barcodes field from "Copy Fields to Variants" table because barcodes must be unique"""
 
 	settings = frappe.get_doc("Item Variant Settings")

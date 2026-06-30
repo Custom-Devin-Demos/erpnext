@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import DocType
 
 
-def execute():
+def execute() -> None:
 	default_accounting_dimension()
 	ADF = DocType("Accounting Dimension Filter")
 	AD = DocType("Accounting Dimension")
@@ -25,7 +27,7 @@ def execute():
 		)
 
 
-def default_accounting_dimension():
+def default_accounting_dimension() -> None:
 	ADF = DocType("Accounting Dimension Filter")
 	for dim in ("Cost Center", "Project"):
 		(

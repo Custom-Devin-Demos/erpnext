@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.utils.rename_field import rename_field
 from frappe.utils.nestedset import rebuild_tree
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.table_exists("Supplier Group"):
 		frappe.reload_doc("setup", "doctype", "supplier_group")
 	elif frappe.db.table_exists("Supplier Type"):
@@ -23,7 +25,7 @@ def execute():
 	build_tree()
 
 
-def build_tree():
+def build_tree() -> None:
 	frappe.db.sql(
 		"""update `tabSupplier Group` set parent_supplier_group = '{}'
 		where is_group = 0""".format(_("All Supplier Groups"))

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt
 
 
-def execute():
+def execute() -> None:
 	"""Sanitize the free-text commission_rate values before the Data -> Percent column change.
 
 	Sales Person and Sales Team stored ``commission_rate`` as Data (varchar). This runs in

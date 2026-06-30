@@ -2,11 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import getdate
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("setup", "doctype", "transaction_deletion_record")
 
 	if has_deleted_company_transactions():
@@ -23,11 +25,11 @@ def execute():
 					frappe.db.delete(doctype, {"name": doc["name"]})
 
 
-def has_deleted_company_transactions():
+def has_deleted_company_transactions() -> list:
 	return frappe.get_all("Transaction Deletion Record")
 
 
-def get_child_doctypes_whose_parent_doctypes_were_affected():
+def get_child_doctypes_whose_parent_doctypes_were_affected() -> list:
 	parent_doctypes = get_affected_doctypes()
 	child_doctypes = frappe.get_all(
 		"DocField", filters={"fieldtype": "Table", "parent": ["in", parent_doctypes]}, pluck="options"
@@ -36,7 +38,7 @@ def get_child_doctypes_whose_parent_doctypes_were_affected():
 	return child_doctypes
 
 
-def get_affected_doctypes():
+def get_affected_doctypes() -> list:
 	affected_doctypes = []
 	tdr_docs = frappe.get_all("Transaction Deletion Record", pluck="name")
 
@@ -51,15 +53,15 @@ def get_affected_doctypes():
 	return affected_doctypes
 
 
-def is_not_child_table(doctype):
+def is_not_child_table(doctype: str) -> bool:
 	return not bool(frappe.get_value("DocType", doctype, "istable"))
 
 
-def remove_duplicate_items(affected_doctypes):
+def remove_duplicate_items(affected_doctypes: list) -> list:
 	return list(set(affected_doctypes))
 
 
-def check_for_new_doc_with_same_name_as_deleted_parent(doc):
+def check_for_new_doc_with_same_name_as_deleted_parent(doc: dict) -> bool:
 	"""
 	Compares creation times of parent and child docs.
 	Since Transaction Deletion Record resets the naming series after deletion,

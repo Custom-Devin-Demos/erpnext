@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 
 
-def execute():
+def execute() -> None:
 	accounting_dimensions = frappe.db.get_all(
 		"Accounting Dimension", fields=["fieldname", "label", "document_type", "disabled"]
 	)

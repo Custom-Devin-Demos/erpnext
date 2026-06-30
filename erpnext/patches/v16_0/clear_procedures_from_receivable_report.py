@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.db.sql("drop function if exists ar_genkey")
 	frappe.db.sql("drop procedure if exists ar_init_tmp_table")
 	frappe.db.sql("drop procedure if exists ar_allocate_to_tmp_table")

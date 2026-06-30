@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from frappe import qb
 
 
-def execute():
+def execute() -> None:
 	# Set "update_outstanding_for_self" flag in Credit/Debit Notes
 	# Fetch Credit/Debit notes that does have 'return_against' but still post ledger entries against themselves.
 

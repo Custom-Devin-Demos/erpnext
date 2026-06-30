@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	settings = frappe.db.get_singles_dict("Selling Settings", cast=True)
 
 	frappe.reload_doc("crm", "doctype", "crm_settings")

@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.inventory_dimension.inventory_dimension import get_inventory_dimensions
 
 
-def execute():
+def execute() -> None:
 	for dimension in get_inventory_dimensions():
 		if frappe.db.exists(
 			"Custom Field",

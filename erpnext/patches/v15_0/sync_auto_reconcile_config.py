@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.utils import sync_auto_reconcile_config
 
 
-def execute():
+def execute() -> None:
 	"""
 	Set default Cron Interval and Queue size
 	"""

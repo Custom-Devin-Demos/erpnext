@@ -2,11 +2,13 @@
 # License: MIT. See LICENSE
 
 
+from __future__ import annotations
+
 import frappe
 from pypika.terms import ExistsCriterion
 
 
-def execute():
+def execute() -> None:
 	pl = frappe.qb.DocType("Pick List")
 	se = frappe.qb.DocType("Stock Entry")
 	dn = frappe.qb.DocType("Delivery Note")

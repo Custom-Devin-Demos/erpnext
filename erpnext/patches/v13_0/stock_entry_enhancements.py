@@ -2,10 +2,12 @@
 # License: GNU General Public License v3.See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "stock_entry")
 	if frappe.db.has_column("Stock Entry", "add_to_transit"):
 		frappe.db.sql(

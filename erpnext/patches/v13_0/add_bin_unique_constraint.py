@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.stock_balance import (
@@ -10,17 +12,17 @@ from erpnext.stock.stock_balance import (
 from erpnext.stock.utils import get_bin
 
 
-def execute():
+def execute() -> None:
 	delete_broken_bins()
 	delete_and_patch_duplicate_bins()
 
 
-def delete_broken_bins():
+def delete_broken_bins() -> None:
 	# delete useless bins
 	frappe.db.sql("delete from `tabBin` where item_code is null or warehouse is null")
 
 
-def delete_and_patch_duplicate_bins():
+def delete_and_patch_duplicate_bins() -> None:
 	duplicate_bins = frappe.db.sql(
 		"""
 		SELECT

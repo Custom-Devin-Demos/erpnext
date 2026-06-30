@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cstr, strip_html
 
 
-def execute():
+def execute() -> None:
 	for doctype in ("Lead", "Prospect", "Opportunity"):
 		if not frappe.db.has_column(doctype, "notes"):
 			continue

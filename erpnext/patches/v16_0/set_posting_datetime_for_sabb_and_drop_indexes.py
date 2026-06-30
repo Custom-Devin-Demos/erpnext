@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import click
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.db.sql(
 		"""
 		UPDATE `tabSerial and Batch Bundle`
@@ -16,7 +18,7 @@ def execute():
 	drop_indexes()
 
 
-def drop_indexes():
+def drop_indexes() -> None:
 	table = "tabSerial and Batch Bundle"
 	index_list = ["voucher_no_index", "item_code_index", "warehouse_index", "company_index"]
 

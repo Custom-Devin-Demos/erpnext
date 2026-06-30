@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 VALUE_MAP = {
@@ -7,7 +9,7 @@ VALUE_MAP = {
 }
 
 
-def execute():
+def execute() -> None:
 	subscription = frappe.qb.DocType("Subscription")
 	for old_value, new_value in VALUE_MAP.items():
 		(

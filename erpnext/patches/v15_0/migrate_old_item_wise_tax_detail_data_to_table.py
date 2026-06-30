@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import click
 import frappe
 from frappe import parse_json
 from frappe.model.document import bulk_insert
 from frappe.utils import flt
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 DOCTYPES_TO_PATCH = {
 	"Sales Taxes and Charges": [
@@ -28,7 +35,7 @@ TAX_WITHHOLDING_DOCS = (
 )
 
 
-def execute():
+def execute() -> None:
 	for tax_doctype, doctypes in DOCTYPES_TO_PATCH.items():
 		for doctype in doctypes:
 			docnames = frappe.get_all(
@@ -76,7 +83,7 @@ def execute():
 						bulk_insert("Item Wise Tax Detail", rows_to_insert, commit_chunks=True)
 
 
-def get_taxes_for_docs(parents, tax_doctype, doctype):
+def get_taxes_for_docs(parents: list, tax_doctype: str, doctype: str) -> list:
 	tax = frappe.qb.DocType(tax_doctype)
 
 	return (
@@ -88,7 +95,7 @@ def get_taxes_for_docs(parents, tax_doctype, doctype):
 	)
 
 
-def get_items_for_docs(parents, doctype):
+def get_items_for_docs(parents: list, doctype: str) -> list:
 	item = frappe.qb.DocType(f"{doctype} Item")
 	additional_fields = []
 
@@ -113,7 +120,7 @@ def get_items_for_docs(parents, doctype):
 	)
 
 
-def get_doc_details(parents, doctype):
+def get_doc_details(parents: list, doctype: str) -> list:
 	inv = frappe.qb.DocType(doctype)
 	additional_fields = []
 	if doctype in TAX_WITHHOLDING_DOCS:
@@ -132,7 +139,7 @@ def get_doc_details(parents, doctype):
 	)
 
 
-def compile_docs(doc_info, taxes, items, doctype, tax_doctype):
+def compile_docs(doc_info: list, taxes: list, items: list, doctype: str, tax_doctype: str):
 	"""
 	Compile docs, so that each one could be accessed as if it's a single doc.
 	"""
@@ -149,7 +156,7 @@ def compile_docs(doc_info, taxes, items, doctype, tax_doctype):
 	return response.values()
 
 
-def delete_existing_tax_details(doc_names, doctype):
+def delete_existing_tax_details(doc_names: list, doctype: str) -> None:
 	"""
 	Delete existing Item Wise Tax Detail records for the given documents
 	to avoid duplicates when re-running the migration.
@@ -161,7 +168,7 @@ def delete_existing_tax_details(doc_names, doctype):
 
 
 class ItemTax:
-	def get_item_wise_tax_details(self, doc):
+	def get_item_wise_tax_details(self, doc) -> list:
 		"""
 		This method calculates tax amounts for each item-tax combination.
 		"""
@@ -231,7 +238,7 @@ class ItemTax:
 
 		return item_wise_tax_details
 
-	def _handle_rounding_differences(self, tax_differences, last_taxable_items):
+	def _handle_rounding_differences(self, tax_differences, last_taxable_items) -> None:
 		"""
 		Handle rounding errors by applying the difference to the last taxable item
 		"""
@@ -245,14 +252,14 @@ class ItemTax:
 				last_item_tax_doc = last_taxable_items[tax_row]
 				last_item_tax_doc.amount = flt(last_item_tax_doc.amount + rounded_difference, 5)
 
-	def _get_item_tax_details(self, tax_row):
+	def _get_item_tax_details(self, tax_row) -> dict:
 		# temp cache
 		if not getattr(tax_row, "__tax_details", None):
 			tax_row.__tax_details = parse_item_wise_tax_details(tax_row.get("item_wise_tax_detail") or "{}")
 
 		return tax_row.__tax_details
 
-	def _get_item_tax_rate(self, item, tax_row):
+	def _get_item_tax_rate(self, item, tax_row) -> float:
 		# NOTE: Use item tax rate as same item code
 		# could have different tax rates in same invoice
 
@@ -264,7 +271,7 @@ class ItemTax:
 		return flt(tax_row.rate)
 
 
-def get_item_tax_doc(item, tax, rate, tax_value, idx, precision=2):
+def get_item_tax_doc(item, tax, rate, tax_value, idx: int, precision: int = 2) -> Document:
 	return frappe.get_doc(
 		{
 			"doctype": "Item Wise Tax Detail",
@@ -283,7 +290,7 @@ def get_item_tax_doc(item, tax, rate, tax_value, idx, precision=2):
 	)
 
 
-def parse_item_wise_tax_details(item_wise_tax_detail):
+def parse_item_wise_tax_details(item_wise_tax_detail) -> dict:
 	updated_tax_details = {}
 	try:
 		item_iterator = parse_json(item_wise_tax_detail)

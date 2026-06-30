@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("accounts", "doctype", "tax_category")
 	frappe.reload_doc("stock", "doctype", "item_manufacturer")
 	company = frappe.get_all("Company", filters={"country": "India"})

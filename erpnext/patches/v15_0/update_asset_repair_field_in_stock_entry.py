@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import DocType
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_column("Asset Repair", "stock_entry"):
 		AssetRepair = DocType("Asset Repair")
 		StockEntry = DocType("Stock Entry")

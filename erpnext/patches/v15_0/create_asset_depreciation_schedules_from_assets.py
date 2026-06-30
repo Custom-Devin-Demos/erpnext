@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cstr
 
 
-def execute():
+def execute() -> None:
 	asset_finance_books_map = get_asset_finance_books_map()
 	asset_depreciation_schedules_map = get_asset_depreciation_schedules_map()
 
@@ -26,7 +28,7 @@ def execute():
 		update_depreciation_schedules(depreciation_schedules, asset_depr_schedule_doc.name)
 
 
-def get_asset_finance_books_map():
+def get_asset_finance_books_map() -> dict:
 	afb = frappe.qb.DocType("Asset Finance Book")
 	asset = frappe.qb.DocType("Asset")
 
@@ -63,7 +65,7 @@ def get_asset_finance_books_map():
 	return asset_finance_books_map
 
 
-def get_asset_depreciation_schedules_map():
+def get_asset_depreciation_schedules_map() -> dict:
 	ds = frappe.qb.DocType("Depreciation Schedule")
 	asset = frappe.qb.DocType("Asset")
 
@@ -93,9 +95,9 @@ def get_asset_depreciation_schedules_map():
 
 
 def update_depreciation_schedules(
-	depreciation_schedules,
+	depreciation_schedules: list,
 	asset_depr_schedule_name,
-):
+) -> None:
 	ds = frappe.qb.DocType("Depreciation Schedule")
 
 	for idx, depr_schedule in enumerate(depreciation_schedules, start=1):

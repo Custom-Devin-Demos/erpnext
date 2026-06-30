@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.regional.united_states.setup import make_custom_fields
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("accounts", "doctype", "allowed_to_transact_with", force=True)
 	frappe.reload_doc("accounts", "doctype", "pricing_rule_detail", force=True)
 	frappe.reload_doc("crm", "doctype", "lost_reason_detail", force=True)

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "item_variant_attribute")
 	frappe.db.sql(
 		"""

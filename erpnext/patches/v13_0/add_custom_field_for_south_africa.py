@@ -1,12 +1,14 @@
 # Copyright (c) 2020, Frappe and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.regional.south_africa.setup import add_permissions, make_custom_fields
 
 
-def execute():
+def execute() -> None:
 	company = frappe.get_all("Company", filters={"country": "South Africa"})
 	if not company:
 		return

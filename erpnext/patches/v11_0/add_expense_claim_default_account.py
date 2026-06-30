@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("setup", "doctype", "company")
 
 	companies = frappe.get_all("Company", fields=["name", "default_payable_account"])

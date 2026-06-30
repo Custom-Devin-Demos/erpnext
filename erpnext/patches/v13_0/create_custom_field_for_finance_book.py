@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 
-def execute():
+def execute() -> None:
 	company = frappe.get_all("Company", filters={"country": "India"})
 	if not company:
 		return

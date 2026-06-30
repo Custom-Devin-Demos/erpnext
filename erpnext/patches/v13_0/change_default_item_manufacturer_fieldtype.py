@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	# Erase all default item manufacturers that dont exist.
 	item = frappe.qb.DocType("Item")
 	manufacturer = frappe.qb.DocType("Manufacturer")

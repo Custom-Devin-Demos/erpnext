@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 
 from erpnext.accounts.utils import update_voucher_outstanding
 
 
-def get_valid_against_voucher_ref(pos_returns):
+def get_valid_against_voucher_ref(pos_returns: list) -> list:
 	sinv = qb.DocType("Sales Invoice")
 	res = (
 		qb.from_(sinv)
@@ -16,7 +18,7 @@ def get_valid_against_voucher_ref(pos_returns):
 	return res
 
 
-def build_dict_of_valid_against_reference(pos_returns):
+def build_dict_of_valid_against_reference(pos_returns: list) -> dict:
 	_against_ref_dict = frappe._dict()
 	res = get_valid_against_voucher_ref(pos_returns)
 	for x in res:
@@ -24,7 +26,7 @@ def build_dict_of_valid_against_reference(pos_returns):
 	return _against_ref_dict
 
 
-def fix_incorrect_against_voucher_ref(affected_pos_returns):
+def fix_incorrect_against_voucher_ref(affected_pos_returns) -> None:
 	if affected_pos_returns:
 		valid_against_voucher_dict = build_dict_of_valid_against_reference(affected_pos_returns)
 
@@ -58,7 +60,7 @@ def fix_incorrect_against_voucher_ref(affected_pos_returns):
 			).run()
 
 
-def get_pos_returns_with_invalid_against_ref():
+def get_pos_returns_with_invalid_against_ref() -> list | None:
 	sinv = qb.DocType("Sales Invoice")
 	pos_returns_without_self = (
 		qb.from_(sinv)
@@ -107,7 +109,7 @@ def get_pos_returns_with_invalid_against_ref():
 	return None
 
 
-def update_outstanding_for_affected(affected_pos_returns):
+def update_outstanding_for_affected(affected_pos_returns) -> None:
 	if affected_pos_returns:
 		sinv = qb.DocType("Sales Invoice")
 		pos_with_accounts = (
@@ -121,7 +123,7 @@ def update_outstanding_for_affected(affected_pos_returns):
 			update_voucher_outstanding("Sales Invoice", x.return_against, x.debit_to, "Customer", x.customer)
 
 
-def execute():
+def execute() -> None:
 	affected_pos_returns = get_pos_returns_with_invalid_against_ref()
 	fix_incorrect_against_voucher_ref(affected_pos_returns)
 	update_outstanding_for_affected(affected_pos_returns)

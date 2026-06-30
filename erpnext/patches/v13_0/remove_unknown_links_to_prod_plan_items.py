@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	Remove "production_plan_item" field where linked field doesn't exist in tha table.
 	"""

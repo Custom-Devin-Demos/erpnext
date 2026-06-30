@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	Reset Clearance Date for Payment Entries of type Internal Transfer that have only been reconciled with one Bank Transaction.
 	This will allow the Payment Entries to be reconciled with the second Bank Transaction using the Bank Reconciliation Tool.
@@ -19,7 +21,7 @@ def execute():
 			frappe.db.set_value("Payment Entry", payment_entry, "clearance_date", None)
 
 
-def get_intra_company_payment_entries_with_clearance_dates():
+def get_intra_company_payment_entries_with_clearance_dates() -> list:
 	return frappe.get_all(
 		"Payment Entry",
 		filters={"payment_type": "Internal Transfer", "clearance_date": ["not in", None]},
@@ -27,7 +29,7 @@ def get_intra_company_payment_entries_with_clearance_dates():
 	)
 
 
-def get_reconciled_bank_transactions(intra_company_pe):
+def get_reconciled_bank_transactions(intra_company_pe: list) -> dict:
 	"""Returns dictionary where each key:value pair is Payment Entry : List of Bank Transactions reconciled with Payment Entry"""
 
 	reconciled_bank_transactions = {}
