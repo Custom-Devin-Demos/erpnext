@@ -2,11 +2,13 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns = get_columns(filters.item)
 	data = get_data(filters.item)
 	return columns, data

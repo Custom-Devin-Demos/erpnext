@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -20,7 +22,7 @@ class TestIncorrectStockValueReport(ERPNextTestSuite):
 	never surface as discrepancy rows.
 	"""
 
-	def run_report(self, **extra):
+	def run_report(self, **extra) -> list:
 		filters = frappe._dict(
 			company=COMPANY,
 			from_date="2026-01-01",
@@ -29,7 +31,7 @@ class TestIncorrectStockValueReport(ERPNextTestSuite):
 		filters.update(extra)
 		return list(execute(filters)[1])
 
-	def test_balanced_account_has_no_discrepancy(self):
+	def test_balanced_account_has_no_discrepancy(self) -> None:
 		warehouse = create_warehouse("_Test ISV WH", company=COMPANY)
 		account = frappe.get_value("Warehouse", warehouse, "account")
 		item = "_Test Item"

@@ -1,5 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+from __future__ import annotations
+
 import datetime
 
 import frappe
@@ -13,7 +15,7 @@ from erpnext.stock.doctype.warehouse.warehouse import apply_warehouse_filter
 from erpnext.stock.utils import is_reposting_item_valuation_in_progress
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	is_reposting_item_valuation_in_progress()
 	filters = frappe._dict(filters or {})
 	period_columns = get_period_columns(filters)

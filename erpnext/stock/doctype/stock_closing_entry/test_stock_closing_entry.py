@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, today
 
@@ -19,7 +21,7 @@ class TestStockClosingEntry(ERPNextTestSuite):
 	Use this class for testing interactions between multiple components.
 	"""
 
-	def test_closing_entry_reads_previous_closing_balance(self):
+	def test_closing_entry_reads_previous_closing_balance(self) -> None:
 		"""A closing entry created after another one must read the previous balance.
 
 		Regression for the query that filtered `Stock Closing Balance` by a

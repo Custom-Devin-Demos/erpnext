@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -29,12 +31,12 @@ class ItemStandardCost(Document):
 		standard_rate: DF.Currency
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_item()
 		self.validate_effective_date()
 		self.validate_rate()
 
-	def validate_item(self):
+	def validate_item(self) -> None:
 		if not frappe.get_cached_value("Item", self.item_code, "is_stock_item"):
 			frappe.throw(_("{0} is not a stock item.").format(frappe.bold(self.item_code)))
 
@@ -45,7 +47,7 @@ class ItemStandardCost(Document):
 				)
 			)
 
-	def validate_effective_date(self):
+	def validate_effective_date(self) -> None:
 		# Standard cost is set "as of now"; future-dating would leave a gap where new receipts
 		# are valued at a rate that is not yet effective.
 		if getdate(self.effective_date) > getdate(today()):
@@ -61,7 +63,7 @@ class ItemStandardCost(Document):
 				)
 			)
 
-	def validate_rate(self):
+	def validate_rate(self) -> None:
 		if flt(self.standard_rate) <= 0:
 			frappe.throw(_("Standard Valuation Rate must be greater than zero."))
 
@@ -86,19 +88,19 @@ class ItemStandardCost(Document):
 				)
 			)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		# This record is now the effective rate. Drop any request-cached lookup that may have read the
 		# previous (or missing) rate earlier in the request, so the revaluation below — and anything
 		# else in this request — reads the newly submitted rate.
 		clear_item_standard_rate_cache()
 		self.create_revaluation_entry()
 
-	def before_cancel(self):
+	def before_cancel(self) -> None:
 		frappe.throw(
 			_("Item Standard Cost cannot be cancelled. Submit a new record to change the standard rate.")
 		)
 
-	def create_revaluation_entry(self):
+	def create_revaluation_entry(self) -> None:
 		"""Revalue on-hand stock to the new standard rate via a Stock Reconciliation.
 
 		Submitted atomically: if the reconciliation cannot be submitted (closed period, frozen
@@ -197,7 +199,7 @@ class ItemStandardCost(Document):
 		).run()
 		return result[0][0] if result and result[0][0] else None
 
-	def has_any_sle(self):
+	def has_any_sle(self) -> bool:
 		return bool(
 			frappe.db.exists(
 				"Stock Ledger Entry",
@@ -230,7 +232,7 @@ def get_item_standard_rate(item_code, company, posting_date=None):
 	return flt(rate[0]) if rate else None
 
 
-def clear_item_standard_rate_cache():
+def clear_item_standard_rate_cache() -> None:
 	"""Drop the request-cached results of `get_item_standard_rate` so reads after a new Item Standard
 	Cost is submitted see the fresh rate instead of a value cached earlier in the same request."""
 	cache = getattr(frappe.local, "request_cache", None)

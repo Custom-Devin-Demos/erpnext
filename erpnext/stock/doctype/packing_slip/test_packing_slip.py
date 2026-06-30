@@ -2,6 +2,8 @@
 # See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
@@ -12,7 +14,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestPackingSlip(ERPNextTestSuite):
-	def test_packing_slip(self):
+	def test_packing_slip(self) -> None:
 		# Step - 1: Create a Product Bundle
 		items = create_items()
 		make_product_bundle(items[0], items[1:], 5)

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, bold
 from frappe.model.document import Document
@@ -43,7 +45,7 @@ class ItemPrice(Document):
 		valid_upto: DF.Date | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_item()
 		self.validate_from_to_dates("valid_from", "valid_upto")
 		self.update_price_list_details()
@@ -51,7 +53,7 @@ class ItemPrice(Document):
 		self.check_duplicates()
 		self.validate_item_template()
 
-	def validate_item(self):
+	def validate_item(self) -> None:
 		if not frappe.db.exists("Item", self.item_code):
 			frappe.throw(_("Item {0} not found.").format(self.item_code))
 
@@ -60,7 +62,7 @@ class ItemPrice(Document):
 		):
 			frappe.throw(_("UOM {0} not found in Item {1}").format(self.uom, self.item_code))
 
-	def update_price_list_details(self):
+	def update_price_list_details(self) -> None:
 		if self.price_list:
 			price_list_details = frappe.db.get_value(
 				"Price List", {"name": self.price_list, "enabled": 1}, ["buying", "selling", "currency"]
@@ -72,19 +74,19 @@ class ItemPrice(Document):
 
 			self.buying, self.selling, self.currency = price_list_details
 
-	def update_item_details(self):
+	def update_item_details(self) -> None:
 		if self.item_code:
 			self.item_name, self.item_description = frappe.db.get_value(
 				"Item", self.item_code, ["item_name", "description"]
 			)
 
-	def validate_item_template(self):
+	def validate_item_template(self) -> None:
 		if frappe.get_cached_value("Item", self.item_code, "has_variants"):
 			msg = f"Item Price cannot be created for the template item {bold(self.item_code)}"
 
 			frappe.throw(_(msg))
 
-	def check_duplicates(self):
+	def check_duplicates(self) -> None:
 		item_price = frappe.qb.DocType("Item Price")
 
 		query = (
@@ -143,7 +145,7 @@ class ItemPrice(Document):
 				ItemPriceDuplicateItem,
 			)
 
-	def before_save(self):
+	def before_save(self) -> None:
 		if self.selling:
 			self.reference = self.customer
 		if self.buying:

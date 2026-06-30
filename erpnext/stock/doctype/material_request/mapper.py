@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -14,14 +16,14 @@ from erpnext.subcontracting.doctype.subcontracting_bom.subcontracting_bom import
 )
 
 
-def set_missing_values(source, target_doc):
+def set_missing_values(source, target_doc) -> None:
 	if target_doc.doctype == "Purchase Order" and getdate(target_doc.schedule_date) < getdate(nowdate()):
 		target_doc.schedule_date = None
 	target_doc.run_method("set_missing_values")
 	target_doc.run_method("calculate_taxes_and_totals")
 
 
-def update_item(obj, target, source_parent):
+def update_item(obj, target, source_parent) -> None:
 	target.conversion_factor = obj.conversion_factor
 
 	qty = obj.ordered_qty or obj.received_qty
@@ -59,7 +61,7 @@ def make_purchase_order(
 		frappe.db.get_value("Material Request", source_name, "material_request_type") == "Subcontracting"
 	)
 
-	def postprocess(source, target_doc):
+	def postprocess(source, target_doc) -> None:
 		target_doc.is_subcontracted = is_subcontracted
 		set_missing_values(source, target_doc)
 
@@ -160,7 +162,7 @@ def make_purchase_order_based_on_supplier(
 
 	supplier_items = get_items_based_on_default_supplier(args.get("supplier"))
 
-	def postprocess(source, target_doc):
+	def postprocess(source, target_doc) -> None:
 		target_doc.supplier = args.get("supplier")
 		if getdate(target_doc.schedule_date) < getdate(nowdate()):
 			target_doc.schedule_date = None
@@ -199,7 +201,7 @@ def make_purchase_order_based_on_supplier(
 
 @frappe.whitelist()
 def make_supplier_quotation(source_name: str, target_doc: str | Document | None = None):
-	def postprocess(source, target_doc):
+	def postprocess(source, target_doc) -> None:
 		set_missing_values(source, target_doc)
 
 	doclist = get_mapped_doc(
@@ -229,7 +231,7 @@ def make_supplier_quotation(source_name: str, target_doc: str | Document | None 
 
 @frappe.whitelist()
 def make_stock_entry(source_name: str, target_doc: str | Document | None = None):
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		qty = (
 			flt(flt(obj.stock_qty) - flt(obj.ordered_qty)) / target.conversion_factor
 			if flt(obj.stock_qty) > flt(obj.ordered_qty)
@@ -253,7 +255,7 @@ def make_stock_entry(source_name: str, target_doc: str | Document | None = None)
 		if source_parent.material_request_type == "Material Transfer":
 			target.s_warehouse = obj.from_warehouse
 
-	def set_missing_values(source, target):
+	def set_missing_values(source, target) -> None:
 		target.purpose = source.material_request_type
 		target.from_warehouse = source.set_from_warehouse
 		target.to_warehouse = source.set_warehouse
@@ -321,7 +323,7 @@ def make_stock_entry(source_name: str, target_doc: str | Document | None = None)
 
 @frappe.whitelist()
 def create_pick_list(source_name: str, target_doc: str | Document | None = None):
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		qty = flt((obj.stock_qty - obj.picked_qty) / target.conversion_factor, obj.precision("qty"))
 		target.qty = qty
 		target.stock_qty = qty * obj.conversion_factor

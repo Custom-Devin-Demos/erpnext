@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_to_date, flt, today
@@ -8,7 +10,7 @@ from frappe.utils import add_to_date, flt, today
 from erpnext.stock.report.stock_ledger.stock_ledger import execute as stock_ledger_execute
 
 
-def execute(filters: dict | None = None):
+def execute(filters: dict | None = None) -> tuple:
 	"""Return columns and data for the report.
 
 	This is the main entry point for the report. It accepts the filters as a

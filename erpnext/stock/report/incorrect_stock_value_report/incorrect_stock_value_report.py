@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder import Field
@@ -13,7 +15,7 @@ from erpnext.accounts.utils import get_stock_and_account_balance
 from erpnext.stock.utils import get_stock_value_on
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	if not erpnext.is_perpetual_inventory_enabled(filters.company):
 		frappe.throw(
 			_("Perpetual inventory required for the company {0} to view this report.").format(filters.company)
@@ -92,7 +94,7 @@ def get_data(report_filters):
 	return result
 
 
-def get_columns(filters):
+def get_columns(filters) -> list:
 	return [
 		{
 			"label": _("Stock Ledger ID"),

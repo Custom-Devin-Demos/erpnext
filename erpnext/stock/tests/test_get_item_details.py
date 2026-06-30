@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.get_item_details import get_item_details
@@ -5,7 +7,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestGetItemDetail(ERPNextTestSuite):
-	def test_get_item_detail_purchase_order(self):
+	def test_get_item_detail_purchase_order(self) -> None:
 		args = frappe._dict(
 			{
 				"item_code": "_Test Item",
@@ -29,7 +31,7 @@ class TestGetItemDetail(ERPNextTestSuite):
 		self.assertEqual(details.get("price_list_rate"), 100)
 
 	# making this test in get_item_details test file as feat/fix is present in that method
-	def test_fetch_price_from_list_rate_on_doc_save(self):
+	def test_fetch_price_from_list_rate_on_doc_save(self) -> None:
 		# create item
 		item = frappe.get_doc(
 			{

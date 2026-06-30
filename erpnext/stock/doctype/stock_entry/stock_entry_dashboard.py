@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from frappe import _
 
 
 # Todo: non_standard_fieldnames is to be decided
-def get_data():
+def get_data() -> dict:
 	return {
 		"fieldname": "stock_entry",
 		"non_standard_fieldnames": {

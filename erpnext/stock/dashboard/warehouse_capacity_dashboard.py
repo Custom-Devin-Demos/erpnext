@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.desk.reportview import build_match_conditions
 from frappe.utils import escape_html, flt, nowdate
@@ -47,7 +49,7 @@ def get_filters(item_code=None, warehouse=None, parent_warehouse=None, company=N
 	return filters
 
 
-def get_warehouse_filter_based_on_permissions(filters):
+def get_warehouse_filter_based_on_permissions(filters) -> tuple:
 	try:
 		# check if user has any restrictions based on user permissions on warehouse
 		if build_match_conditions("Warehouse", user=frappe.session.user):

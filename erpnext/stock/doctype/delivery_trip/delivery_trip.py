@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import datetime
 
 import frappe
@@ -39,7 +41,7 @@ class DeliveryTrip(Document):
 		vehicle: DF.Link
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 
 		# Google Maps returns distances in meters by default
@@ -50,11 +52,11 @@ class DeliveryTrip(Document):
 			"UOM Conversion Factor", {"from_uom": "Meter", "to_uom": self.default_distance_uom}, "value"
 		)
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.update_status()
 		self.update_delivery_notes(delete=True)
 
-	def validate(self):
+	def validate(self) -> None:
 		if self._action == "submit" and not self.driver:
 			frappe.throw(_("A driver must be set to submit."))
 
@@ -62,28 +64,28 @@ class DeliveryTrip(Document):
 			self.validate_delivery_note_not_draft()
 		self.validate_stop_addresses()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.update_delivery_notes()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self.update_delivery_notes(delete=True)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.update_status()
 
-	def on_update_after_submit(self):
+	def on_update_after_submit(self) -> None:
 		self.update_status()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_status()
 		self.update_delivery_notes(delete=True)
 
-	def validate_stop_addresses(self):
+	def validate_stop_addresses(self) -> None:
 		for stop in self.delivery_stops:
 			if not stop.customer_address:
 				stop.customer_address = get_address_display(frappe.get_doc("Address", stop.address).as_dict())
 
-	def validate_delivery_note_not_draft(self):
+	def validate_delivery_note_not_draft(self) -> None:
 		delivery_notes = list(set(stop.delivery_note for stop in self.delivery_stops if stop.delivery_note))
 		draft_delivery_notes = frappe.get_all(
 			"Delivery Note",
@@ -97,7 +99,7 @@ class DeliveryTrip(Document):
 				).format(", ".join(draft_delivery_notes))
 			)
 
-	def update_status(self):
+	def update_status(self) -> None:
 		status = {0: "Draft", 1: "Scheduled", 2: "Cancelled"}[self.docstatus]
 
 		if self.docstatus == 1:
@@ -109,7 +111,7 @@ class DeliveryTrip(Document):
 
 		self.db_set("status", status)
 
-	def update_delivery_notes(self, delete=False):
+	def update_delivery_notes(self, delete: bool = False) -> None:
 		"""
 		Update all connected Delivery Notes with Delivery Trip details
 		(Driver, Vehicle, etc.). If `delete` is `True`, then details
@@ -150,7 +152,7 @@ class DeliveryTrip(Document):
 		frappe.msgprint(_("Delivery Notes {0} updated").format(", ".join(delivery_notes_updated)))
 
 	@frappe.whitelist()
-	def process_route(self, optimize: bool):
+	def process_route(self, optimize: bool) -> None:
 		"""
 		Estimate the arrival times for each stop in the Delivery Trip.
 		If `optimize` is True, the stops will be re-arranged, based
@@ -241,7 +243,7 @@ class DeliveryTrip(Document):
 
 		return route_list
 
-	def rearrange_stops(self, optimized_order, start):
+	def rearrange_stops(self, optimized_order, start) -> None:
 		"""
 		Re-arrange delivery stops based on order optimized
 		for vehicle routing problems.
@@ -397,7 +399,7 @@ def sanitize_address(address):
 
 
 @frappe.whitelist()
-def notify_customers(delivery_trip: str):
+def notify_customers(delivery_trip: str) -> None:
 	delivery_trip = frappe.get_doc("Delivery Trip", delivery_trip)
 	delivery_trip.check_permission()
 
@@ -444,7 +446,7 @@ def notify_customers(delivery_trip: str):
 		frappe.msgprint(_("No contacts with email IDs found."))
 
 
-def get_attachments(delivery_stop):
+def get_attachments(delivery_stop) -> list:
 	if not (
 		frappe.db.get_single_value("Delivery Settings", "send_with_attachment")
 		and delivery_stop.delivery_note
@@ -463,7 +465,7 @@ def get_attachments(delivery_stop):
 
 
 @frappe.whitelist()
-def get_driver_email(driver: str):
+def get_driver_email(driver: str) -> dict:
 	frappe.has_permission("Driver", "read", doc=driver, throw=True)
 
 	employee = frappe.db.get_value("Driver", driver, "employee")

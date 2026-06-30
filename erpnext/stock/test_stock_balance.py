@@ -2,12 +2,14 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from erpnext.stock.stock_balance import get_indented_qty, get_reserved_qty
 from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestStockBalance(ERPNextTestSuite):
-	def test_get_reserved_qty_for_sales_order_item(self):
+	def test_get_reserved_qty_for_sales_order_item(self) -> None:
 		"""get_reserved_qty (converted from a UNION of correlated subqueries) must add a submitted
 		Sales Order's open qty for the direct SO-item branch. No delivery, so it stays clear of the
 		unrelated #39 SLE-repost path and runs on Postgres."""
@@ -20,7 +22,7 @@ class TestStockBalance(ERPNextTestSuite):
 
 		self.assertEqual(get_reserved_qty(item_code, warehouse), before + 10)
 
-	def test_get_reserved_qty_for_packed_bundle_item(self):
+	def test_get_reserved_qty_for_packed_bundle_item(self) -> None:
 		"""The packed-item branch of get_reserved_qty (the correlated-subquery -> inner_join rewrite)
 		must reserve the bundle component qty against an open Sales Order: 2 bundles x 3 per bundle = 6."""
 		from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
@@ -38,7 +40,7 @@ class TestStockBalance(ERPNextTestSuite):
 
 		self.assertEqual(get_reserved_qty(component, warehouse), before + 6)
 
-	def test_get_indented_qty_for_material_request(self):
+	def test_get_indented_qty_for_material_request(self) -> None:
 		"""get_indented_qty inward branch (comma-join -> qb inner_join) must reflect a submitted
 		Purchase Material Request's not-yet-ordered qty."""
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request

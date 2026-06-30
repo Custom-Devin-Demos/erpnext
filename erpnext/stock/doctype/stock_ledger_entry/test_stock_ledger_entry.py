@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import json
 import time
 from uuid import uuid4
@@ -30,11 +32,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		create_items()
 		reset("Stock Entry")
 
-	def test_incoming_value_for_transferred_serial_no_is_deterministic(self):
+	def test_incoming_value_for_transferred_serial_no_is_deterministic(self) -> None:
 		"""get_incoming_value_for_serial_nos picks the latest SLE (posting_date desc, limit 1) for a
 		serial transferred to another company. posting_date alone is non-total, so two same-date SLEs
 		with different incoming_rate could be resolved differently on MariaDB vs Postgres. creation/name
@@ -50,7 +52,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 			{"doctype": "Serial No", "serial_no": serial, "item_code": item, "company": company_b}
 		).insert(ignore_permissions=True)
 
-		def mk_sle(name, rate):
+		def mk_sle(name, rate) -> None:
 			if frappe.db.exists("Stock Ledger Entry", name):
 				frappe.delete_doc("Stock Ledger Entry", name, force=1)
 			doc = frappe.get_doc(
@@ -82,7 +84,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		# the latest (creation/name desc) same-date SLE wins -> 200 on both engines
 		self.assertEqual(value, 200.0)
 
-	def test_item_cost_reposting(self):
+	def test_item_cost_reposting(self) -> None:
 		company = "_Test Company"
 
 		# _Test Item for Reposting at Stores warehouse on 10-04-2020: Qty = 50, Rate = 100
@@ -203,7 +205,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(repack.items[0].get("basic_rate"), 150)
 		self.assertEqual(repack.items[1].get("basic_rate"), 750)
 
-	def test_purchase_return_valuation_reposting(self):
+	def test_purchase_return_valuation_reposting(self) -> None:
 		pr = make_purchase_receipt(
 			company="_Test Company",
 			posting_date="2020-04-10",
@@ -244,7 +246,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(outgoing_rate, 110)
 		self.assertEqual(stock_value_difference, -220)
 
-	def test_sales_return_valuation_reposting(self):
+	def test_sales_return_valuation_reposting(self) -> None:
 		company = "_Test Company"
 		item_code = "_Test Item for Reposting"
 
@@ -344,7 +346,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		lcv.cancel()
 		pr.cancel()
 
-	def test_reposting_of_sales_return_for_packed_item(self):
+	def test_reposting_of_sales_return_for_packed_item(self) -> None:
 		company = "_Test Company"
 		packed_item_code = "_Test Item for Reposting"
 		bundled_item = "_Test Bundled Item for Reposting"
@@ -446,7 +448,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		lcv.cancel()
 		pr.cancel()
 
-	def test_back_dated_entry_not_allowed(self):
+	def test_back_dated_entry_not_allowed(self) -> None:
 		# Back dated stock transactions are only allowed to stock managers
 		frappe.db.set_single_value(
 			"Stock Settings", "role_allowed_to_create_edit_back_dated_transactions", "Stock Manager"
@@ -489,7 +491,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 			)
 			user.remove_roles("Stock Manager")
 
-	def test_batchwise_item_valuation_fifo(self):
+	def test_batchwise_item_valuation_fifo(self) -> None:
 		item, warehouses, batches = setup_item_valuation_test(valuation_method="FIFO")
 
 		# Incoming Entries for Stock Value check
@@ -528,7 +530,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 
 		frappe.flags.use_serial_and_batch_fields = False
 
-	def test_batchwise_item_valuation_moving_average(self):
+	def test_batchwise_item_valuation_moving_average(self) -> None:
 		item, warehouses, batches = setup_item_valuation_test(valuation_method="Moving Average")
 
 		# Incoming Entries for Stock Value check
@@ -567,11 +569,11 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 
 		frappe.flags.use_serial_and_batch_fields = False
 
-	def test_batchwise_item_valuation_stock_reco(self):
+	def test_batchwise_item_valuation_stock_reco(self) -> None:
 		item, warehouses, batches = setup_item_valuation_test()
 		state = {"stock_value": 0.0, "qty": 0.0}
 
-		def update_invariants(exp_sles):
+		def update_invariants(exp_sles) -> None:
 			for sle in exp_sles:
 				state["stock_value"] += sle["stock_value_difference"]
 				state["qty"] += sle["actual_qty"]
@@ -620,7 +622,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		update_invariants(expected_sles)
 		self.assertSLEs(sr2, expected_sles)
 
-	def test_batch_wise_valuation_across_warehouse(self):
+	def test_batch_wise_valuation_across_warehouse(self) -> None:
 		item_code, warehouses, batches = setup_item_valuation_test()
 		source = warehouses[0]
 		target = warehouses[1]
@@ -709,7 +711,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 			],
 		)
 
-	def test_intermediate_average_batch_wise_valuation(self):
+	def test_intermediate_average_batch_wise_valuation(self) -> None:
 		"""A batch has moving average up until posting time,
 		check if same is respected when backdated entry is inserted in middle"""
 		item_code, warehouses, batches = setup_item_valuation_test()
@@ -779,7 +781,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 			],
 		)
 
-	def test_legacy_item_valuation_stock_entry(self):
+	def test_legacy_item_valuation_stock_entry(self) -> None:
 		columns = [
 			"stock_value_difference",
 			"stock_value",
@@ -789,7 +791,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		]
 		item, warehouses, batches = setup_item_valuation_test()
 
-		def check_sle_details_against_expected(sle_details, expected_sle_details, detail, columns):
+		def check_sle_details_against_expected(sle_details, expected_sle_details, detail, columns) -> None:
 			for i, (sle_vals, ex_sle_vals) in enumerate(zip(sle_details, expected_sle_details, strict=False)):
 				for col, sle_val, ex_sle_val in zip(columns, sle_vals, ex_sle_vals, strict=False):
 					if col == "stock_queue":
@@ -970,7 +972,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 	# 		),
 	# 	)
 
-	def test_fifo_dependent_consumption(self):
+	def test_fifo_dependent_consumption(self) -> None:
 		item = make_item("_TestFifoTransferRates")
 		source = "_Test Warehouse - _TC"
 		target = "Stores - _TC"
@@ -1004,7 +1006,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		# same exact queue should be transferred
 		self.assertSLEs(transfer, expected_queues, sle_filters={"warehouse": target})
 
-	def test_fifo_multi_item_repack_consumption(self):
+	def test_fifo_multi_item_repack_consumption(self) -> None:
 		rm = make_item("_TestFifoRepackRM")
 		packed = make_item("_TestFifoRepackFinished")
 		warehouse = "_Test Warehouse - _TC"
@@ -1043,7 +1045,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		# same exact queue should be transferred
 		self.assertSLEs(repack, [{"incoming_rate": sum(rates) * 10}], sle_filters={"item_code": packed.name})
 
-	def test_negative_fifo_valuation(self):
+	def test_negative_fifo_valuation(self) -> None:
 		"""
 		When stock goes negative discard FIFO queue.
 		Only pervailing valuation rate should be used for making transactions in such cases.
@@ -1174,7 +1176,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		backdated.cancel()
 		self.assertEqual([1], ordered_qty_after_transaction())
 
-	def test_timestamp_clash(self):
+	def test_timestamp_clash(self) -> None:
 		item = make_item().name
 		warehouse = "_Test Warehouse - _TC"
 
@@ -1209,7 +1211,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		except Exception:
 			self.fail("Double processing of qty for clashing timestamp.")
 
-	def test_previous_sle_with_clashed_timestamp(self):
+	def test_previous_sle_with_clashed_timestamp(self) -> None:
 		item = make_item().name
 		warehouse = "_Test Warehouse - _TC"
 
@@ -1249,7 +1251,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(sle[0].qty_after_transaction, 105)
 		self.assertEqual(sle[0].actual_qty, 5)
 
-	def test_backdated_sle_with_same_timestamp(self):
+	def test_backdated_sle_with_same_timestamp(self) -> None:
 		item = make_item().name
 		warehouse = "_Test Warehouse - _TC"
 
@@ -1349,7 +1351,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(frappe.db.get_value("Stock Ledger Entry", sle2.name, "qty_after_transaction"), 35)
 		self.assertEqual(frappe.db.get_value("Stock Ledger Entry", sle1.name, "qty_after_transaction"), 10)
 
-	def test_get_next_stock_reco_respects_creation_order(self):
+	def test_get_next_stock_reco_respects_creation_order(self) -> None:
 		# A stock reco sharing the exact posting timestamp of the current entry must only count as the
 		# "next" reco when it was created after that entry. A reco created before it actually precedes
 		# the entry and must not bound (truncate) the qty-shift range.
@@ -1392,7 +1394,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(result[0].voucher_no, reco.name)
 
 	@ERPNextTestSuite.change_settings("System Settings", {"float_precision": 3, "currency_precision": 2})
-	def test_transfer_invariants(self):
+	def test_transfer_invariants(self) -> None:
 		"""Extact stock value should be transferred."""
 
 		item = make_item(
@@ -1431,7 +1433,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(abs(sles[0].stock_value_difference), sles[1].stock_value_difference)
 
 	@ERPNextTestSuite.change_settings("System Settings", {"float_precision": 4})
-	def test_negative_qty_with_precision(self):
+	def test_negative_qty_with_precision(self) -> None:
 		"Test if system precision is respected while validating negative qty."
 		from erpnext.stock.doctype.item.test_item import create_item
 		from erpnext.stock.utils import get_stock_balance
@@ -1471,7 +1473,7 @@ class TestStockLedgerEntry(ERPNextTestSuite, StockTestMixin):
 		self.assertEqual(flt(get_stock_balance(item_code, warehouse), 3), 0.000)
 
 	@ERPNextTestSuite.change_settings("System Settings", {"float_precision": 4})
-	def test_future_negative_qty_with_precision(self):
+	def test_future_negative_qty_with_precision(self) -> None:
 		"""
 		Ledger:
 		| Voucher | Qty		| Balance
@@ -1564,7 +1566,7 @@ def create_repack_entry(**args):
 	return repack
 
 
-def create_product_bundle_item(new_item_code, packed_items):
+def create_product_bundle_item(new_item_code, packed_items) -> None:
 	from erpnext.selling.doctype.product_bundle.product_bundle import get_active_product_bundle
 
 	if not get_active_product_bundle(new_item_code):
@@ -1600,8 +1602,8 @@ def create_items(items=None, uoms=None):
 
 
 def setup_item_valuation_test(
-	valuation_method="FIFO", suffix=None, use_batchwise_valuation=1, batches_list=None
-):
+	valuation_method: str = "FIFO", suffix=None, use_batchwise_valuation=1, batches_list=None
+) -> tuple:
 	from erpnext.stock.doctype.item.test_item import make_item
 	from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 

@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -60,11 +62,11 @@ class SerialNo(StockController):
 		work_order: DF.Link | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.via_stock_ledger = False
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.get("__islocal") and self.warehouse and not self.via_stock_ledger:
 			frappe.throw(
 				_(
@@ -76,7 +78,7 @@ class SerialNo(StockController):
 		self.set_maintenance_status()
 		self.validate_warehouse()
 
-	def validate_warehouse(self):
+	def validate_warehouse(self) -> None:
 		if not self.get("__islocal"):
 			item_code, warehouse = frappe.db.get_value("Serial No", self.name, ["item_code", "warehouse"])
 			if not self.via_stock_ledger and item_code != self.item_code:
@@ -84,7 +86,7 @@ class SerialNo(StockController):
 			if not self.via_stock_ledger and warehouse != self.warehouse:
 				frappe.throw(_("Warehouse cannot be changed for Serial No."), SerialNoCannotCannotChangeError)
 
-	def set_maintenance_status(self):
+	def set_maintenance_status(self) -> None:
 		if not self.warranty_expiry_date and not self.amc_expiry_date:
 			self.maintenance_status = None
 
@@ -100,7 +102,7 @@ class SerialNo(StockController):
 		if self.warranty_expiry_date and getdate(self.warranty_expiry_date) >= getdate(nowdate()):
 			self.maintenance_status = "Under Warranty"
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		sl_entries = frappe.get_all(
 			"Stock Ledger Entry",
 			filters={"serial_no": ["like", f"%{self.name}%"], "item_code": self.item_code, "is_cancelled": 0},
@@ -135,7 +137,7 @@ def get_new_serial_number(series):
 	return sr_no
 
 
-def get_items_html(serial_nos, item_code):
+def get_items_html(serial_nos, item_code) -> str:
 	body = ", ".join(serial_nos)
 	return f"""<details><summary>
 		<b>{item_code}:</b> {len(serial_nos)} Serial Numbers <span class="caret"></span>
@@ -170,7 +172,7 @@ def clean_serial_no_string(serial_no: str) -> str:
 	return "\n".join(serial_no_list)
 
 
-def update_maintenance_status():
+def update_maintenance_status() -> None:
 	serial_nos = frappe.get_all(
 		"Serial No",
 		filters={"maintenance_status": ["not in", ["Out of Warranty", "Out of AMC"]]},
@@ -292,7 +294,7 @@ def fetch_serial_numbers(filters, qty, do_not_include=None):
 	return serial_numbers
 
 
-def get_serial_nos_for_outward(kwargs):
+def get_serial_nos_for_outward(kwargs) -> list:
 	from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle import (
 		get_available_serial_nos,
 	)
@@ -305,5 +307,5 @@ def get_serial_nos_for_outward(kwargs):
 	return [d.serial_no for d in serial_nos]
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Serial No", ["item_code", "warehouse"])

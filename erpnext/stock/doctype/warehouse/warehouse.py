@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import json
 from typing import Any
 
@@ -52,7 +54,7 @@ class Warehouse(NestedSet):
 
 	nsm_parent_field = "parent_warehouse"
 
-	def autoname(self):
+	def autoname(self) -> None:
 		if self.company:
 			suffix = " - " + frappe.get_cached_value("Company", self.company, "abbr")
 			if not self.warehouse_name.endswith(suffix):
@@ -61,7 +63,7 @@ class Warehouse(NestedSet):
 
 		self.name = self.warehouse_name
 
-	def onload(self):
+	def onload(self) -> None:
 		if self.company and cint(frappe.db.get_value("Company", self.company, "enable_perpetual_inventory")):
 			account = self.account or get_warehouse_account(self)
 
@@ -70,16 +72,16 @@ class Warehouse(NestedSet):
 		load_address_and_contact(self)
 		self.set_onload("stock_exists", self.check_if_sle_exists(non_cancelled_only=True))
 
-	def validate(self):
+	def validate(self) -> None:
 		self.warn_about_multiple_warehouse_account()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.update_nsm_model()
 
-	def update_nsm_model(self):
+	def update_nsm_model(self) -> None:
 		frappe.utils.nestedset.update_nsm(self)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		# delete bin
 		bins = frappe.get_all("Bin", fields="*", filters={"warehouse": self.name})
 		for d in bins:
@@ -107,7 +109,7 @@ class Warehouse(NestedSet):
 		self.update_nsm_model()
 		self.unlink_from_items()
 
-	def warn_about_multiple_warehouse_account(self):
+	def warn_about_multiple_warehouse_account(self) -> None:
 		"If Warehouse value is split across multiple accounts, warn."
 
 		if not frappe.db.count("Stock Ledger Entry", {"warehouse": self.name}):
@@ -128,7 +130,7 @@ class Warehouse(NestedSet):
 			alert=True,
 		)
 
-	def check_if_sle_exists(self, non_cancelled_only=False):
+	def check_if_sle_exists(self, non_cancelled_only: bool = False):
 		filters = {"warehouse": self.name}
 		if non_cancelled_only:
 			filters["is_cancelled"] = 0
@@ -137,13 +139,13 @@ class Warehouse(NestedSet):
 	def check_if_child_exists(self):
 		return frappe.db.exists("Warehouse", {"parent_warehouse": self.name})
 
-	def convert_to_group_or_ledger(self):
+	def convert_to_group_or_ledger(self) -> None:
 		if self.is_group:
 			self.convert_to_ledger()
 		else:
 			self.convert_to_group()
 
-	def convert_to_ledger(self):
+	def convert_to_ledger(self) -> int:
 		if self.check_if_child_exists():
 			frappe.throw(_("Warehouses with child nodes cannot be converted to ledger"))
 		elif self.check_if_sle_exists():
@@ -153,7 +155,7 @@ class Warehouse(NestedSet):
 			self.save()
 			return 1
 
-	def convert_to_group(self):
+	def convert_to_group(self) -> int:
 		if self.check_if_sle_exists():
 			throw(_("Warehouses with existing transaction can not be converted to group."))
 		else:
@@ -161,7 +163,7 @@ class Warehouse(NestedSet):
 			self.save()
 			return 1
 
-	def unlink_from_items(self):
+	def unlink_from_items(self) -> None:
 		frappe.db.set_value("Item Default", {"default_warehouse": self.name}, "default_warehouse", None)
 
 
@@ -192,7 +194,7 @@ def get_children(
 
 
 @frappe.whitelist()
-def add_node():
+def add_node() -> None:
 	from frappe.desk.treeview import make_tree_args
 
 	args = make_tree_args(**frappe.form_dict)
@@ -211,7 +213,7 @@ def convert_to_group_or_ledger(docname: str | None = None):
 
 
 @request_cache
-def get_child_warehouses(warehouse):
+def get_child_warehouses(warehouse) -> list:
 	from frappe.utils.nestedset import get_descendants_of
 
 	children = get_descendants_of("Warehouse", warehouse, ignore_permissions=True, order_by="lft")

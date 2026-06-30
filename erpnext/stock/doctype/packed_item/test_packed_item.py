@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_to_date, nowdate
 
@@ -52,7 +54,7 @@ class TestPackedItem(ERPNextTestSuite):
 
 		self.normal_item = make_item().name
 
-	def test_adding_bundle_item(self):
+	def test_adding_bundle_item(self) -> None:
 		"Test impact on packed items if bundle item row is added."
 		so = make_sales_order(item_code=self.bundle, qty=1, do_not_submit=True)
 
@@ -61,7 +63,7 @@ class TestPackedItem(ERPNextTestSuite):
 		self.assertEqual(so.packed_items[0].item_code, self.bundle_items[0])
 		self.assertEqual(so.packed_items[0].qty, 2)
 
-	def test_updating_bundle_item(self):
+	def test_updating_bundle_item(self) -> None:
 		"Test impact on packed items if bundle item row is updated."
 		so = make_sales_order(item_code=self.bundle, qty=1, do_not_submit=True)
 
@@ -77,7 +79,7 @@ class TestPackedItem(ERPNextTestSuite):
 
 		self.assertEqual(len(so.packed_items), 0)
 
-	def test_item_and_packed_rows_record_bundle_version(self):
+	def test_item_and_packed_rows_record_bundle_version(self) -> None:
 		"The item row and its packed items record the resolved Product Bundle version."
 		from erpnext.selling.doctype.product_bundle.product_bundle import get_active_product_bundle
 
@@ -97,7 +99,7 @@ class TestPackedItem(ERPNextTestSuite):
 		for pi in dn.packed_items:
 			self.assertEqual(pi.product_bundle, version)
 
-	def test_clearing_version_keeps_bundle_flag_and_redefaults(self):
+	def test_clearing_version_keeps_bundle_flag_and_redefaults(self) -> None:
 		"Clearing the version must not lose the bundle flag (keeps the field visible)."
 		so = make_sales_order(item_code=self.bundle, qty=1, warehouse=self.warehouse, do_not_submit=True)
 		version = so.items[0].product_bundle
@@ -112,7 +114,7 @@ class TestPackedItem(ERPNextTestSuite):
 		self.assertEqual(so.items[0].is_product_bundle, 1)
 		self.assertEqual(so.items[0].product_bundle, version)
 
-	def test_backfill_patch_stamps_existing_rows(self):
+	def test_backfill_patch_stamps_existing_rows(self) -> None:
 		"The backfill patch stamps the version on rows that predate the field."
 		from erpnext.patches.v16_0.submit_existing_product_bundles import (
 			stamp_versions_on_transactions as stamp_versions,
@@ -135,7 +137,7 @@ class TestPackedItem(ERPNextTestSuite):
 		for pi in so.packed_items:
 			self.assertEqual(frappe.db.get_value("Packed Item", pi.name, "product_bundle"), version)
 
-	def test_choosing_an_older_version_packs_its_components(self):
+	def test_choosing_an_older_version_packs_its_components(self) -> None:
 		"Default picks the active version; choosing an older version re-packs its components."
 		from erpnext.selling.doctype.product_bundle.product_bundle import (
 			get_active_product_bundle,
@@ -165,7 +167,7 @@ class TestPackedItem(ERPNextTestSuite):
 		self.assertEqual(so.items[0].product_bundle, v1)
 		self.assertEqual(sorted(pi.item_code for pi in so.packed_items), sorted(self.bundle_items))
 
-	def test_disabled_bundle_blocks_transaction(self):
+	def test_disabled_bundle_blocks_transaction(self) -> None:
 		"A row that explicitly references a disabled version cannot be saved."
 		from erpnext.selling.doctype.product_bundle.product_bundle import get_active_product_bundle
 
@@ -176,7 +178,7 @@ class TestPackedItem(ERPNextTestSuite):
 		frappe.db.set_value("Product Bundle", version, "disabled", 1)
 		self.assertRaises(frappe.ValidationError, so.save)
 
-	def test_disabled_bundle_is_not_packed(self):
+	def test_disabled_bundle_is_not_packed(self) -> None:
 		"Without an explicit version, a disabled bundle is not treated as a bundle at all."
 		from erpnext.selling.doctype.product_bundle.product_bundle import get_active_product_bundle
 
@@ -188,7 +190,7 @@ class TestPackedItem(ERPNextTestSuite):
 		self.assertFalse(so.items[0].product_bundle)
 		self.assertFalse(so.get("packed_items"))
 
-	def test_get_items_from_product_bundle_endpoint(self):
+	def test_get_items_from_product_bundle_endpoint(self) -> None:
 		"The buying dialog passes the chosen version by document name (legacy: parent item code)."
 		import json
 
@@ -240,7 +242,7 @@ class TestPackedItem(ERPNextTestSuite):
 		)
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"allow_multiple_items": 1})
-	def test_recurring_bundle_item(self):
+	def test_recurring_bundle_item(self) -> None:
 		"Test impact on packed items if same bundle item is added and removed."
 		so_items = []
 		for qty in [2, 4, 6, 8]:
@@ -279,7 +281,7 @@ class TestPackedItem(ERPNextTestSuite):
 		self.assertEqual(so.packed_items[3].qty, 12)
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"editable_bundle_item_rates": 1})
-	def test_bundle_item_cumulative_price(self):
+	def test_bundle_item_cumulative_price(self) -> None:
 		"Test if Bundle Item rate is cumulative from packed items."
 		so = make_sales_order(item_code=self.bundle, qty=2, do_not_submit=True)
 
@@ -291,7 +293,7 @@ class TestPackedItem(ERPNextTestSuite):
 		self.assertEqual(so.items[0].amount, 1400)
 
 	@ERPNextTestSuite.change_settings("Selling Settings", {"allow_multiple_items": 1})
-	def test_newly_mapped_doc_packed_items(self):
+	def test_newly_mapped_doc_packed_items(self) -> None:
 		"Test impact on packed items in newly mapped DN from SO."
 		so_items = []
 		for qty in [2, 4]:
@@ -310,7 +312,7 @@ class TestPackedItem(ERPNextTestSuite):
 		self.assertEqual(dn.packed_items[2].qty, 6)
 		self.assertEqual(dn.packed_items[3].qty, 6)
 
-	def test_reposting_packed_items(self):
+	def test_reposting_packed_items(self) -> None:
 		warehouse = "Stores - TCP1"
 		company = "_Test Company with perpetual inventory"
 
@@ -339,10 +341,10 @@ class TestPackedItem(ERPNextTestSuite):
 		self.assertNotEqual(credit_before_repost, credit_after_reposting)
 		self.assertAlmostEqual(credit_after_reposting, 2 * credit_before_repost)
 
-	def assertReturns(self, original, returned):
+	def assertReturns(self, original, returned) -> tuple:
 		self.assertEqual(len(original), len(returned))
 
-		def sort_function(p):
+		def sort_function(p) -> tuple:
 			return p.parent_item, p.item_code, p.qty
 
 		for sent_item, returned_item in zip(
@@ -352,7 +354,7 @@ class TestPackedItem(ERPNextTestSuite):
 			self.assertEqual(sent_item.parent_item, returned_item.parent_item)
 			self.assertEqual(sent_item.qty, -1 * returned_item.qty)
 
-	def test_returning_full_bundles(self):
+	def test_returning_full_bundles(self) -> None:
 		from erpnext.stock.doctype.delivery_note.mapper import make_sales_return
 
 		item_list = [
@@ -381,7 +383,7 @@ class TestPackedItem(ERPNextTestSuite):
 		dn_ret.submit()
 		self.assertReturns(dn.packed_items, dn_ret.packed_items)
 
-	def test_returning_partial_bundles(self):
+	def test_returning_partial_bundles(self) -> None:
 		from erpnext.stock.doctype.delivery_note.mapper import make_sales_return
 
 		item_list = [
@@ -418,7 +420,7 @@ class TestPackedItem(ERPNextTestSuite):
 		expected_returns = [d for d in dn.packed_items if d.parent_item == self.bundle]
 		self.assertReturns(expected_returns, dn_ret.packed_items)
 
-	def test_returning_partial_bundle_qty(self):
+	def test_returning_partial_bundle_qty(self) -> None:
 		from erpnext.stock.doctype.delivery_note.mapper import make_sales_return
 
 		so = make_sales_order(item_code=self.bundle, warehouse=self.warehouse, qty=2)

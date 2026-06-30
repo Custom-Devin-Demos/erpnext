@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from frappe.permissions import add_user_permission, remove_user_permission
 from frappe.utils import add_days, cstr, flt, get_time, getdate, nowtime, today
 
@@ -50,11 +52,11 @@ def get_sle(**args):
 
 
 class TestStockEntry(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.load_test_records("Stock Entry")
 		frappe.local.flags.dont_execute_stock_reposts = False
 
-	def test_stock_entry_qty(self):
+	def test_stock_entry_qty(self) -> None:
 		item_code = "_Test Item 2"
 		warehouse = "_Test Warehouse - _TC"
 		se = make_stock_entry(item_code=item_code, target=warehouse, qty=0, do_not_save=True)
@@ -66,7 +68,7 @@ class TestStockEntry(ERPNextTestSuite):
 		se.save()
 		self.assertEqual(se.items[0].qty, 1)
 
-	def test_fifo(self):
+	def test_fifo(self) -> None:
 		frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 1)
 		item_code = "_Test Item 2"
 		warehouse = "_Test Warehouse - _TC"
@@ -105,18 +107,18 @@ class TestStockEntry(ERPNextTestSuite):
 
 		frappe.db.set_default("allow_negative_stock", 0)
 
-	def test_auto_material_request(self):
+	def test_auto_material_request(self) -> None:
 		make_item_variant()
 		self._test_auto_material_request("_Test Item")
 		self._test_auto_material_request("_Test Item", material_request_type="Transfer")
 
-	def test_barcode_item_stock_entry(self):
+	def test_barcode_item_stock_entry(self) -> None:
 		item_code = make_item("_Test Item Stock Entry For Barcode", barcode="BDD-1234567890")
 
 		se = make_stock_entry(item_code=item_code.name, target="_Test Warehouse - _TC", qty=1, basic_rate=100)
 		self.assertEqual(se.items[0].barcode, "BDD-1234567890")
 
-	def test_auto_material_request_for_variant(self):
+	def test_auto_material_request_for_variant(self) -> None:
 		fields = [{"field_name": "reorder_levels"}]
 		set_item_variant_settings(fields)
 		make_item_variant()
@@ -136,14 +138,14 @@ class TestStockEntry(ERPNextTestSuite):
 		template.save()
 		self._test_auto_material_request("_Test Variant Item-S")
 
-	def test_auto_material_request_for_warehouse_group(self):
+	def test_auto_material_request_for_warehouse_group(self) -> None:
 		self._test_auto_material_request(
 			"_Test Item Warehouse Group Wise Reorder", warehouse="_Test Warehouse Group-C1 - _TC"
 		)
 
 	def _test_auto_material_request(
-		self, item_code, material_request_type="Purchase", warehouse="_Test Warehouse - _TC"
-	):
+		self, item_code, material_request_type: str = "Purchase", warehouse: str = "_Test Warehouse - _TC"
+	) -> None:
 		variant = frappe.get_doc("Item", item_code)
 
 		projected_qty, actual_qty = frappe.db.get_value(
@@ -180,7 +182,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertIn(item_code, items)
 
-	def test_add_to_transit_entry(self):
+	def test_add_to_transit_entry(self) -> None:
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 		item_code = "_Test Transit Item"
@@ -238,7 +240,7 @@ class TestStockEntry(ERPNextTestSuite):
 		transit_entry.reload()
 		self.assertEqual(transit_entry.per_transferred, 100)
 
-	def test_material_receipt_gl_entry(self):
+	def test_material_receipt_gl_entry(self) -> None:
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 
 		mr = make_stock_entry(
@@ -267,7 +269,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertTrue(frappe.db.exists("GL Entry", {"voucher_type": "Stock Entry", "voucher_no": mr.name}))
 
-	def test_material_issue_gl_entry(self):
+	def test_material_issue_gl_entry(self) -> None:
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 		make_stock_entry(
 			item_code="_Test Item",
@@ -309,7 +311,7 @@ class TestStockEntry(ERPNextTestSuite):
 		)
 		mi.cancel()
 
-	def test_material_transfer_gl_entry(self):
+	def test_material_transfer_gl_entry(self) -> None:
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 
 		item_code = "Hand Sanitizer - 001"
@@ -369,7 +371,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		mtn.cancel()
 
-	def test_repack_multiple_fg(self):
+	def test_repack_multiple_fg(self) -> None:
 		"Test `is_finished_item` for one item repacked into two items."
 		make_stock_entry(item_code="_Test Item", target="_Test Warehouse - _TC", qty=100, basic_rate=100)
 
@@ -416,7 +418,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		repack.delete()  # teardown
 
-	def test_repack_no_change_in_valuation(self):
+	def test_repack_no_change_in_valuation(self) -> None:
 		make_stock_entry(item_code="_Test Item", target="_Test Warehouse - _TC", qty=50, basic_rate=100)
 		make_stock_entry(
 			item_code="_Test Item Home Desktop 100", target="_Test Warehouse - _TC", qty=50, basic_rate=100
@@ -442,7 +444,7 @@ class TestStockEntry(ERPNextTestSuite):
 			frappe.db.exists("GL Entry", {"voucher_type": "Stock Entry", "voucher_no": repack.name})
 		)
 
-	def test_repack_with_additional_costs(self):
+	def test_repack_with_additional_costs(self) -> None:
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 
 		make_stock_entry(
@@ -516,7 +518,7 @@ class TestStockEntry(ERPNextTestSuite):
 			sorted([[stock_in_hand_account, 1200, 0.0], ["Cost of Goods Sold - TCP1", 0.0, 1200.0]]),
 		)
 
-	def test_additional_cost_no_rounding_residual_on_stock_adjustment(self):
+	def test_additional_cost_no_rounding_residual_on_stock_adjustment(self) -> None:
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 		warehouse = "Stores - TCP1"
 		items = [
@@ -570,7 +572,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(flt(gl_map[stock_in_hand_account].debit, 2), 99.99)
 		self.assertEqual(flt(gl_map["Expenses Included In Valuation - TCP1"].credit, 2), 99.99)
 
-	def check_stock_ledger_entries(self, voucher_type, voucher_no, expected_sle):
+	def check_stock_ledger_entries(self, voucher_type, voucher_no, expected_sle) -> None:
 		expected_sle.sort(key=lambda x: x[1])
 
 		# check stock ledger entries
@@ -589,7 +591,7 @@ class TestStockEntry(ERPNextTestSuite):
 			self.assertEqual(expected_sle[i][1], sle_value[1])
 			self.assertEqual(expected_sle[i][2], sle_value[2])
 
-	def check_gl_entries(self, voucher_type, voucher_no, expected_gl_entries):
+	def check_gl_entries(self, voucher_type, voucher_no, expected_gl_entries) -> None:
 		expected_gl_entries.sort(key=lambda x: x[0])
 
 		gl_entries = frappe.get_all(
@@ -607,7 +609,7 @@ class TestStockEntry(ERPNextTestSuite):
 			self.assertEqual(expected_gl_entries[i][1], gle[1])
 			self.assertEqual(expected_gl_entries[i][2], gle[2])
 
-	def test_serial_no_not_reqd(self):
+	def test_serial_no_not_reqd(self) -> None:
 		se = frappe.copy_doc(self.globalTestRecords["Stock Entry"][0])
 		se.get("items")[0].serial_no = "ABCD"
 
@@ -629,7 +631,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, bundle_id.make_serial_and_batch_bundle)
 
-	def test_serial_no_reqd(self):
+	def test_serial_no_reqd(self) -> None:
 		se = frappe.copy_doc(self.globalTestRecords["Stock Entry"][0])
 		se.get("items")[0].item_code = "_Test Serialized Item"
 		se.get("items")[0].qty = 2
@@ -652,7 +654,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, bundle_id.make_serial_and_batch_bundle)
 
-	def test_serial_no_qty_less(self):
+	def test_serial_no_qty_less(self) -> None:
 		se = frappe.copy_doc(self.globalTestRecords["Stock Entry"][0])
 		se.get("items")[0].item_code = "_Test Serialized Item"
 		se.get("items")[0].qty = 2
@@ -677,7 +679,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, bundle_id.make_serial_and_batch_bundle)
 
-	def test_serial_no_transfer_in(self):
+	def test_serial_no_transfer_in(self) -> None:
 		serial_nos = ["ABCD1", "EFGH1"]
 		for serial_no in serial_nos:
 			if not frappe.db.exists("Serial No", serial_no):
@@ -718,7 +720,7 @@ class TestStockEntry(ERPNextTestSuite):
 		se.cancel()
 		self.assertFalse(frappe.db.get_value("Serial No", "ABCD1", "warehouse"))
 
-	def test_serial_by_series(self):
+	def test_serial_by_series(self) -> tuple:
 		se = make_serialized_item(self)
 
 		serial_nos = get_serial_nos_from_bundle(se.get("items")[0].serial_and_batch_bundle)
@@ -728,7 +730,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		return se, serial_nos
 
-	def test_serial_move(self):
+	def test_serial_move(self) -> None:
 		se = make_serialized_item(self)
 		serial_no = get_serial_nos_from_bundle(se.get("items")[0].serial_and_batch_bundle)[0]
 		frappe.flags.use_serial_and_batch_fields = True
@@ -750,7 +752,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertTrue(frappe.db.get_value("Serial No", serial_no, "warehouse"), "_Test Warehouse - _TC")
 		frappe.flags.use_serial_and_batch_fields = False
 
-	def test_serial_cancel(self):
+	def test_serial_cancel(self) -> None:
 		se, serial_nos = self.test_serial_by_series()
 		se.load_from_db()
 		serial_no = get_serial_nos_from_bundle(se.get("items")[0].serial_and_batch_bundle)[0]
@@ -758,7 +760,7 @@ class TestStockEntry(ERPNextTestSuite):
 		se.cancel()
 		self.assertFalse(frappe.db.get_value("Serial No", serial_no, "warehouse"))
 
-	def test_serial_batch_item_stock_entry(self):
+	def test_serial_batch_item_stock_entry(self) -> None:
 		"""
 		Behaviour: 1) Submit Stock Entry (Receipt) with Serial & Batched Item
 		2) Cancel same Stock Entry
@@ -794,7 +796,7 @@ class TestStockEntry(ERPNextTestSuite):
 		batch_in_serial_no = frappe.db.get_value("Serial No", serial_no, "batch_no")
 		self.assertEqual(frappe.db.get_value("Serial No", serial_no, "warehouse"), None)
 
-	def test_warehouse_company_validation(self):
+	def test_warehouse_company_validation(self) -> None:
 		frappe.db.get_value("Warehouse", "_Test Warehouse 2 - _TC1", "company")
 		frappe.get_doc("User", "test2@example.com").add_roles(
 			"Sales User", "Sales Manager", "Stock User", "Stock Manager"
@@ -809,7 +811,7 @@ class TestStockEntry(ERPNextTestSuite):
 			self.assertRaises(InvalidWarehouseCompany, st1.submit)
 
 	# permission tests
-	def test_warehouse_user(self):
+	def test_warehouse_user(self) -> None:
 		add_user_permission("Warehouse", "_Test Warehouse 1 - _TC", "test@example.com")
 		add_user_permission("Warehouse", "_Test Warehouse 2 - _TC1", "test2@example.com")
 		add_user_permission("Company", "_Test Company 1", "test2@example.com")
@@ -845,7 +847,7 @@ class TestStockEntry(ERPNextTestSuite):
 		remove_user_permission("Warehouse", "_Test Warehouse 2 - _TC1", "test2@example.com")
 		remove_user_permission("Company", "_Test Company 1", "test2@example.com")
 
-	def test_freeze_stocks(self):
+	def test_freeze_stocks(self) -> None:
 		frappe.db.set_single_value("Stock Settings", "stock_auth_role", "")
 
 		# test freeze_stocks_upto
@@ -865,7 +867,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertRaises(StockFreezeError, se.submit)
 		frappe.db.set_single_value("Stock Settings", "stock_frozen_upto_days", 0)
 
-	def test_work_order(self):
+	def test_work_order(self) -> None:
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as _make_stock_entry,
 		)
@@ -903,7 +905,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(fg_cost, flt(rm_cost + bom_operation_cost + work_order.additional_operating_cost, 2))
 
 	@ERPNextTestSuite.change_settings("Manufacturing Settings", {"material_consumption": 1})
-	def test_work_order_manufacture_with_material_consumption(self):
+	def test_work_order_manufacture_with_material_consumption(self) -> None:
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as _make_stock_entry,
 		)
@@ -964,7 +966,7 @@ class TestStockEntry(ERPNextTestSuite):
 		fg_cost = next(filter(lambda x: x.item_code == "_Test FG Item", s.get("items"))).amount
 		self.assertEqual(flt(fg_cost, 2), flt(expected_fg_cost, 2))
 
-	def test_variant_work_order(self):
+	def test_variant_work_order(self) -> None:
 		bom_no = frappe.db.get_value("BOM", {"item": "_Test Variant Item", "is_default": 1, "docstatus": 1})
 
 		make_item_variant()  # make variant of _Test Variant Item if absent
@@ -991,7 +993,7 @@ class TestStockEntry(ERPNextTestSuite):
 		stock_entry.insert()
 		self.assertIn("_Test Variant Item-S", [d.item_code for d in stock_entry.items])
 
-	def test_nagative_stock_for_batch(self):
+	def test_nagative_stock_for_batch(self) -> None:
 		item = make_item(
 			"_Test Batch Negative Item",
 			{
@@ -1027,7 +1029,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, ste.submit)
 
-	def test_quality_check_for_secondary_item(self):
+	def test_quality_check_for_secondary_item(self) -> None:
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as _make_stock_entry,
 		)
@@ -1107,7 +1109,7 @@ class TestStockEntry(ERPNextTestSuite):
 			else:
 				self.assertTrue(row.quality_inspection)
 
-	def test_quality_check(self):
+	def test_quality_check(self) -> None:
 		item_code = "_Test Item For QC"
 		if not frappe.db.exists("Item", item_code):
 			create_item(item_code)
@@ -1125,7 +1127,7 @@ class TestStockEntry(ERPNextTestSuite):
 		repack.insert()
 		self.assertRaises(frappe.ValidationError, repack.submit)
 
-	def test_check_item_quality_inspection_returns_items_for_stock_entry(self):
+	def test_check_item_quality_inspection_returns_items_for_stock_entry(self) -> None:
 		from erpnext.controllers.stock_controller import check_item_quality_inspection
 
 		items = [
@@ -1140,7 +1142,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(check_item_quality_inspection("Material Request", 0, items), [])
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"action_if_quality_inspection_is_rejected": "Stop"})
-	def test_quality_inspection_across_stock_entry_purposes(self):
+	def test_quality_inspection_across_stock_entry_purposes(self) -> None:
 		from erpnext.controllers.stock_controller import check_item_quality_inspection
 		from erpnext.exceptions import QualityInspectionRejectedError, QualityInspectionRequiredError
 		from erpnext.stock.doctype.quality_inspection.test_quality_inspection import (
@@ -1232,7 +1234,7 @@ class TestStockEntry(ERPNextTestSuite):
 				self.assertEqual(se_ok.docstatus, 1)
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"action_if_quality_inspection_is_rejected": "Stop"})
-	def test_quality_inspection_required_for_manufacture(self):
+	def test_quality_inspection_required_for_manufacture(self) -> None:
 		from erpnext.exceptions import QualityInspectionRejectedError, QualityInspectionRequiredError
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as make_wo_stock_entry,
@@ -1279,7 +1281,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(mfg.docstatus, 1)
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"action_if_quality_inspection_is_rejected": "Stop"})
-	def test_quality_inspection_required_for_material_transfer_for_manufacture(self):
+	def test_quality_inspection_required_for_material_transfer_for_manufacture(self) -> None:
 		from erpnext.exceptions import QualityInspectionRejectedError, QualityInspectionRequiredError
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as make_wo_stock_entry,
@@ -1325,7 +1327,7 @@ class TestStockEntry(ERPNextTestSuite):
 		transfer.submit()
 		self.assertEqual(transfer.docstatus, 1)
 
-	def test_quality_inspection_required_for_send_to_subcontractor(self):
+	def test_quality_inspection_required_for_send_to_subcontractor(self) -> None:
 		from erpnext.controllers.subcontracting_controller import make_rm_stock_entry
 		from erpnext.controllers.tests.test_subcontracting_controller import (
 			get_subcontracting_order,
@@ -1375,7 +1377,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(se.docstatus, 1)
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"action_if_quality_inspection_is_rejected": "Stop"})
-	def test_quality_inspection_required_for_disassemble(self):
+	def test_quality_inspection_required_for_disassemble(self) -> None:
 		from erpnext.exceptions import QualityInspectionRejectedError, QualityInspectionRequiredError
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 		from erpnext.manufacturing.doctype.work_order.mapper import (
@@ -1435,7 +1437,7 @@ class TestStockEntry(ERPNextTestSuite):
 		dis.submit()
 		self.assertEqual(dis.docstatus, 1)
 
-	def test_customer_provided_parts_se(self):
+	def test_customer_provided_parts_se(self) -> None:
 		create_item("CUST-0987", is_customer_provided_item=1, customer="_Test Customer", is_purchase_item=0)
 		se = make_stock_entry(
 			item_code="CUST-0987", purpose="Material Receipt", qty=4, to_warehouse="_Test Warehouse - _TC"
@@ -1443,7 +1445,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(se.get("items")[0].allow_zero_valuation_rate, 1)
 		self.assertEqual(se.get("items")[0].amount, 0)
 
-	def test_zero_incoming_rate(self):
+	def test_zero_incoming_rate(self) -> None:
 		"""Make sure incoming rate of 0 is allowed while consuming.
 
 		qty  | rate | valuation rate
@@ -1480,7 +1482,7 @@ class TestStockEntry(ERPNextTestSuite):
 		)
 		self.assertEqual(value_diff, 0)
 
-	def test_gle_for_opening_stock_entry(self):
+	def test_gle_for_opening_stock_entry(self) -> None:
 		mr = make_stock_entry(
 			item_code="_Test Item",
 			target="Stores - TCP1",
@@ -1506,7 +1508,7 @@ class TestStockEntry(ERPNextTestSuite):
 		)
 		self.assertEqual(is_opening, "Yes")
 
-	def test_total_basic_amount_zero(self):
+	def test_total_basic_amount_zero(self) -> None:
 		se = frappe.get_doc(
 			{
 				"doctype": "Stock Entry",
@@ -1554,7 +1556,7 @@ class TestStockEntry(ERPNextTestSuite):
 			sorted([["Stock Adjustment - TCP1", 100.0, 0.0], ["Miscellaneous Expenses - TCP1", 0.0, 100.0]]),
 		)
 
-	def test_conversion_factor_change(self):
+	def test_conversion_factor_change(self) -> None:
 		frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 1)
 		repack_entry = frappe.copy_doc(self.globalTestRecords["Stock Entry"][3])
 		repack_entry.posting_date = nowdate()
@@ -1580,7 +1582,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		frappe.db.set_default("allow_negative_stock", 0)
 
-	def test_additional_cost_distribution_manufacture(self):
+	def test_additional_cost_distribution_manufacture(self) -> None:
 		se = frappe.get_doc(
 			doctype="Stock Entry",
 			purpose="Manufacture",
@@ -1597,7 +1599,7 @@ class TestStockEntry(ERPNextTestSuite):
 		distributed_costs = [d.additional_cost for d in se.items]
 		self.assertEqual([0.0, 100.0, 0.0], distributed_costs)
 
-	def test_additional_cost_distribution_non_manufacture(self):
+	def test_additional_cost_distribution_non_manufacture(self) -> None:
 		se = frappe.get_doc(
 			doctype="Stock Entry",
 			purpose="Material Receipt",
@@ -1613,7 +1615,7 @@ class TestStockEntry(ERPNextTestSuite):
 		distributed_costs = [d.additional_cost for d in se.items]
 		self.assertEqual([40.0, 60.0], distributed_costs)
 
-	def test_independent_manufacture_entry(self):
+	def test_independent_manufacture_entry(self) -> None:
 		"Test FG items and incoming rate calculation in Maniufacture Entry without WO or BOM linked."
 		se = frappe.get_doc(
 			doctype="Stock Entry",
@@ -1649,7 +1651,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(se.items[1].expense_account, "_Test Account Cost for Goods Sold - _TC")
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"allow_negative_stock": 0})
-	def test_future_negative_sle(self):
+	def test_future_negative_sle(self) -> None:
 		# Initialize item, batch, warehouse, opening qty
 		item_code = "_Test Future Neg Item"
 		batch_no = "_Test Future Neg Batch"
@@ -1692,7 +1694,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertRaises(NegativeStockError, create_stock_entries, sequence_of_entries)
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"allow_negative_stock": 0})
-	def test_future_negative_sle_batch(self):
+	def test_future_negative_sle_batch(self) -> None:
 		from erpnext.stock.doctype.batch.test_batch import TestBatch
 
 		# Initialize item, batch, warehouse, opening qty
@@ -1729,7 +1731,7 @@ class TestStockEntry(ERPNextTestSuite):
 				purpose="Material Issue",
 			)
 
-	def test_multi_batch_value_diff(self):
+	def test_multi_batch_value_diff(self) -> None:
 		"""Test value difference on stock entry in case of multi-batch.
 		| Stock entry | batch | qty | rate | value diff on SE             |
 		| ---         | ---   | --- | ---  | ---                          |
@@ -1778,14 +1780,14 @@ class TestStockEntry(ERPNextTestSuite):
 		issue.reload()  # reload because reposting current voucher updates rate
 		self.assertEqual(issue.value_difference, -30)
 
-	def test_transfer_qty_validation(self):
+	def test_transfer_qty_validation(self) -> None:
 		se = make_stock_entry(item_code="_Test Item", do_not_save=True, qty=0.001, rate=100)
 		se.items[0].uom = "Kg"
 		se.items[0].conversion_factor = 0.002
 
 		self.assertRaises(frappe.ValidationError, se.save)
 
-	def test_mapped_stock_entry(self):
+	def test_mapped_stock_entry(self) -> None:
 		"Check if rate and stock details are populated in mapped SE given warehouse."
 		from erpnext.stock.doctype.purchase_receipt.mapper import make_stock_entry
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
@@ -1804,7 +1806,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(mapped_se.items[0].basic_rate, 100)
 		self.assertEqual(mapped_se.items[0].basic_amount, 200)
 
-	def test_stock_entry_item_details(self):
+	def test_stock_entry_item_details(self) -> None:
 		item = make_item()
 
 		se = make_stock_entry(
@@ -1820,7 +1822,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(se.items[0].stock_uom, item.stock_uom)
 
 	@ERPNextTestSuite.change_settings("Stock Reposting Settings", {"item_based_reposting": 0})
-	def test_reposting_for_depedent_warehouse(self):
+	def test_reposting_for_depedent_warehouse(self) -> None:
 		from erpnext.stock.doctype.repost_item_valuation.repost_item_valuation import repost_sl_entries
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
@@ -1952,7 +1954,7 @@ class TestStockEntry(ERPNextTestSuite):
 			self.assertEqual(obj.items[index].basic_rate, 200)
 			self.assertEqual(obj.items[index].basic_amount, 2000)
 
-	def test_batch_expiry(self):
+	def test_batch_expiry(self) -> None:
 		from erpnext.controllers.stock_controller import BatchExpiredError
 		from erpnext.stock.doctype.batch.test_batch import make_new_batch
 
@@ -1978,7 +1980,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertRaises(BatchExpiredError, se.save)
 
-	def test_negative_stock_reco(self):
+	def test_negative_stock_reco(self) -> None:
 		frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 0)
 
 		item_code = "Test Negative Item - 001"
@@ -2015,7 +2017,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, sr_doc.submit)
 
-	def test_negative_batch(self):
+	def test_negative_batch(self) -> None:
 		item_code = "Test Negative Batch Item - 001"
 		make_item(
 			item_code,
@@ -2054,7 +2056,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, se1.cancel)
 
-	def test_auto_reorder_level(self):
+	def test_auto_reorder_level(self) -> None:
 		from erpnext.stock.reorder_item import reorder_item
 
 		item_doc = make_item(
@@ -2096,7 +2098,7 @@ class TestStockEntry(ERPNextTestSuite):
 			mr.cancel()
 			mr.delete()
 
-	def test_auto_reorder_level_with_lead_time_days(self):
+	def test_auto_reorder_level_with_lead_time_days(self) -> None:
 		from erpnext.stock.reorder_item import reorder_item
 
 		item_doc = make_item(
@@ -2136,7 +2138,7 @@ class TestStockEntry(ERPNextTestSuite):
 			mr.cancel()
 			mr.delete()
 
-	def test_use_serial_and_batch_fields(self):
+	def test_use_serial_and_batch_fields(self) -> None:
 		item = make_item(
 			"Test Use Serial and Batch Item SN Item - A",
 			{"has_serial_no": 1, "is_stock_item": 1},
@@ -2181,7 +2183,7 @@ class TestStockEntry(ERPNextTestSuite):
 			self.assertTrue(frappe.db.exists("Serial No", serial_no))
 			self.assertEqual(frappe.db.get_value("Serial No", serial_no, "status"), "Consumed")
 
-	def test_serial_batch_bundle_type_of_transaction(self):
+	def test_serial_batch_bundle_type_of_transaction(self) -> None:
 		item = make_item(
 			"Test Use Serial and Batch Item SN Item",
 			{
@@ -2216,7 +2218,7 @@ class TestStockEntry(ERPNextTestSuite):
 		frappe.db.set_value("Serial and Batch Bundle", sbb, "type_of_transaction", "Inward")
 		self.assertRaises(frappe.ValidationError, se.submit)
 
-	def test_stock_entry_for_same_posting_date_and_time(self):
+	def test_stock_entry_for_same_posting_date_and_time(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		item_code = "Test Stock Entry For Same Posting Datetime 1"
 		make_item(item_code, {"is_stock_item": 1})
@@ -2284,7 +2286,7 @@ class TestStockEntry(ERPNextTestSuite):
 			self.assertEqual(sle.stock_value_difference, 100)
 			self.assertEqual(sle.stock_value, 100 * i)
 
-	def test_stock_entry_amount(self):
+	def test_stock_entry_amount(self) -> None:
 		warehouse = "_Test Warehouse - _TC"
 		rm_item_code = "Test Stock Entry Amount 1"
 		make_item(rm_item_code, {"is_stock_item": 1})
@@ -2337,7 +2339,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(se.items[0].amount, 300)
 		self.assertEqual(se.items[0].basic_amount, 300)
 
-	def test_use_batch_wise_valuation_for_moving_average_item(self):
+	def test_use_batch_wise_valuation_for_moving_average_item(self) -> None:
 		item_code = "_Test Use Batch Wise MA Valuation Item"
 
 		make_item(
@@ -2384,7 +2386,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertEqual(se.items[0].basic_rate, 300)
 
-	def test_periodic_accounting_entries(self):
+	def test_periodic_accounting_entries(self) -> None:
 		item_code = "_Test Periodic Accounting Item"
 		make_item(item_code, {"is_stock_item": 1})
 
@@ -2454,7 +2456,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(jv.accounts[0].account, "Stock In Hand - _TPC")
 		self.assertEqual(jv.accounts[1].account, "Stock Adjustment - _TPC")
 
-	def test_batch_item_additional_cost_for_material_transfer_entry(self):
+	def test_batch_item_additional_cost_for_material_transfer_entry(self) -> None:
 		item_code = "_Test Batch Item Additional Cost MTE"
 		make_item(
 			item_code,
@@ -2518,7 +2520,7 @@ class TestStockEntry(ERPNextTestSuite):
 
 		self.assertEqual(incoming_rate, 125.0)
 
-	def test_prevent_reuse_delivered_serial_no_in_repack(self):
+	def test_prevent_reuse_delivered_serial_no_in_repack(self) -> None:
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 
 		item = "Test Prevent Reuse Delivered Serial No"
@@ -2557,7 +2559,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual(se.purpose, "Repack")
 		self.assertRaises(frappe.ValidationError, se.submit)
 
-	def test_transferred_qty_in_material_transfer(self):
+	def test_transferred_qty_in_material_transfer(self) -> None:
 		item_code = "_Test Item"
 		source_warehouse = "_Test Warehouse - _TC"
 		target_warehouse = "_Test Warehouse 1 - _TC"
@@ -2610,7 +2612,7 @@ class TestStockEntry(ERPNextTestSuite):
 		material_request.reload()
 		self.assertEqual(material_request.transfer_status, "Completed")
 
-	def test_manufacture_entry_without_wo(self):
+	def test_manufacture_entry_without_wo(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 
 		fg_item = make_item("_Mobiles", properties={"is_stock_item": 1}).name
@@ -2637,7 +2639,7 @@ class TestStockEntry(ERPNextTestSuite):
 		se.save()
 		se.submit()
 
-	def test_disassemble_entry_without_wo(self):
+	def test_disassemble_entry_without_wo(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 
 		fg_item = make_item("_Disassemble Mobile", properties={"is_stock_item": 1}).name
@@ -2681,7 +2683,7 @@ class TestStockEntry(ERPNextTestSuite):
 		se.save()
 		se.submit()
 
-	def test_disassemble_blocks_finished_good_qty_tampering(self):
+	def test_disassemble_blocks_finished_good_qty_tampering(self) -> None:
 		# A disassembly consuming N finished goods must consume exactly N (in stock UOM).
 		# Switching the finished-good row to a larger UOM with a tiny conversion_factor previously
 		# let a user consume ~0 finished goods while still producing the full raw materials --
@@ -2725,7 +2727,7 @@ class TestStockEntry(ERPNextTestSuite):
 	@ERPNextTestSuite.change_settings(
 		"Stock Settings", {"sample_retention_warehouse": "_Test Warehouse 1 - _TC"}
 	)
-	def test_sample_retention_stock_entry(self):
+	def test_sample_retention_stock_entry(self) -> None:
 		from erpnext.stock.doctype.stock_entry.services.manufacturing import (
 			move_sample_to_retention_warehouse,
 		)
@@ -2765,7 +2767,7 @@ class TestStockEntry(ERPNextTestSuite):
 		self.assertEqual([entry.serial_no for entry in target_sabb.entries], serial_nos[:2])
 
 	@ERPNextTestSuite.change_settings("Manufacturing Settings", {"material_consumption": 0})
-	def test_raw_material_missing_validation(self):
+	def test_raw_material_missing_validation(self) -> None:
 		stock_entry = make_stock_entry(
 			item_code="_Test Item",
 			qty=1,
@@ -2790,7 +2792,7 @@ class TestStockEntry(ERPNextTestSuite):
 			"validate_components_quantities_per_bom": 1,
 		},
 	)
-	def test_validation_as_per_bom_with_continuous_raw_material_consumption(self):
+	def test_validation_as_per_bom_with_continuous_raw_material_consumption(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 		from erpnext.manufacturing.doctype.work_order.mapper import make_stock_entry as _make_stock_entry
 		from erpnext.manufacturing.doctype.work_order.work_order import make_work_order
@@ -2813,7 +2815,7 @@ class TestStockEntry(ERPNextTestSuite):
 		frappe.get_doc(_make_stock_entry(work_order.name, "Material Consumption for Manufacture", 5)).submit()
 		frappe.get_doc(_make_stock_entry(work_order.name, "Manufacture", 5)).submit()
 
-	def test_qi_creation_with_naming_rule_company_condition(self):
+	def test_qi_creation_with_naming_rule_company_condition(self) -> None:
 		"""
 		Unit test case to check the document naming rule with company condition
 		For Quality Inspection, when created from Stock Entry.
@@ -2860,7 +2862,7 @@ class TestStockEntry(ERPNextTestSuite):
 		# delete naming rule
 		frappe.delete_doc("Document Naming Rule", qc_naming_rule.name)
 
-	def test_co_by_product(self):
+	def test_co_by_product(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 
 		frappe.set_value("UOM", "Nos", "must_be_whole_number", 0)
@@ -2895,7 +2897,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── ceil_qty_if_uom_has_whole_number ──────────────────────────────────────
 
-	def test_ceil_qty_rounds_up_for_whole_number_uom(self):
+	def test_ceil_qty_rounds_up_for_whole_number_uom(self) -> None:
 		from erpnext.stock.doctype.stock_entry.services.manufacturing import (
 			ceil_qty_if_uom_has_whole_number,
 		)
@@ -2904,7 +2906,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 		self.assertEqual(ceil_qty_if_uom_has_whole_number(2.3, "Nos"), 3)
 		frappe.set_value("UOM", "Nos", "must_be_whole_number", 0)
 
-	def test_ceil_qty_no_rounding_for_decimal_uom(self):
+	def test_ceil_qty_no_rounding_for_decimal_uom(self) -> None:
 		from erpnext.stock.doctype.stock_entry.services.manufacturing import (
 			ceil_qty_if_uom_has_whole_number,
 		)
@@ -2914,7 +2916,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── get_uom_details ────────────────────────────────────────────────────────
 
-	def test_get_uom_details_returns_conversion_factor_and_transfer_qty(self):
+	def test_get_uom_details_returns_conversion_factor_and_transfer_qty(self) -> None:
 		from erpnext.stock.doctype.stock_entry.stock_entry import get_uom_details
 
 		result = get_uom_details("_Test Item", "Nos", 5)
@@ -2923,7 +2925,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── get_warehouse_details ──────────────────────────────────────────────────
 
-	def test_get_warehouse_details_returns_actual_qty_and_rate(self):
+	def test_get_warehouse_details_returns_actual_qty_and_rate(self) -> None:
 		import json
 
 		from frappe.utils import nowdate, nowtime
@@ -2947,14 +2949,14 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 		self.assertGreater(result.get("actual_qty", 0), 0)
 		self.assertGreater(result.get("basic_rate", 0), 0)
 
-	def test_get_warehouse_details_empty_args_returns_empty_dict(self):
+	def test_get_warehouse_details_empty_args_returns_empty_dict(self) -> None:
 		from erpnext.stock.doctype.stock_entry.stock_entry import get_warehouse_details
 
 		self.assertEqual(get_warehouse_details({}), {})
 
 	# ── get_work_order_details ─────────────────────────────────────────────────
 
-	def test_get_work_order_details_returns_correct_fields(self):
+	def test_get_work_order_details_returns_correct_fields(self) -> None:
 		from erpnext.stock.doctype.stock_entry.stock_entry import get_work_order_details
 
 		bom_no = frappe.db.get_value("BOM", {"item": "_Test FG Item 2", "is_default": 1, "docstatus": 1})
@@ -2981,7 +2983,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── get_production_item_details ────────────────────────────────────────────
 
-	def test_get_production_item_details_from_bom(self):
+	def test_get_production_item_details_from_bom(self) -> None:
 		from erpnext.stock.doctype.stock_entry.services.manufacturing import (
 			get_production_item_details,
 		)
@@ -2991,7 +2993,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 		self.assertEqual(result.name, "_Test FG Item 2")
 		self.assertIsNotNone(result.stock_uom)
 
-	def test_get_production_item_details_from_work_order(self):
+	def test_get_production_item_details_from_work_order(self) -> None:
 		from erpnext.stock.doctype.stock_entry.services.manufacturing import (
 			get_production_item_details,
 		)
@@ -3017,7 +3019,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── get_bom_items ──────────────────────────────────────────────────────────
 
-	def test_get_bom_items_returns_raw_materials_with_structure(self):
+	def test_get_bom_items_returns_raw_materials_with_structure(self) -> None:
 		from erpnext.stock.doctype.stock_entry.services.manufacturing import get_bom_items
 
 		bom_no = frappe.db.get_value("BOM", {"item": "_Test FG Item 2", "is_default": 1, "docstatus": 1})
@@ -3027,7 +3029,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 			self.assertIn("item_code", item)
 			self.assertIn("qty", item)
 
-	def test_get_bom_items_scales_qty_proportionally(self):
+	def test_get_bom_items_scales_qty_proportionally(self) -> None:
 		from erpnext.stock.doctype.stock_entry.services.manufacturing import get_bom_items
 
 		bom_no = frappe.db.get_value("BOM", {"item": "_Test FG Item 2", "is_default": 1, "docstatus": 1})
@@ -3041,7 +3043,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 	@ERPNextTestSuite.change_settings(
 		"Stock Settings", {"sample_retention_warehouse": "_Test Warehouse 1 - _TC"}
 	)
-	def test_validate_sample_quantity_raises_when_sample_exceeds_received_qty(self):
+	def test_validate_sample_quantity_raises_when_sample_exceeds_received_qty(self) -> None:
 		from erpnext.stock.doctype.stock_entry.services.manufacturing import (
 			validate_sample_quantity,
 		)
@@ -3054,7 +3056,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── get_expired_batches ────────────────────────────────────────────────────
 
-	def test_get_expired_batches_includes_expired_batch(self):
+	def test_get_expired_batches_includes_expired_batch(self) -> None:
 		from erpnext.stock.doctype.batch.test_batch import make_new_batch
 		from erpnext.stock.doctype.stock_entry.services.serial_batch import (
 			get_expired_batches,
@@ -3071,7 +3073,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 		self.assertIn(batch.name, expired)
 		self.assertEqual(expired[batch.name].item, item.name)
 
-	def test_get_expired_batches_excludes_future_batch(self):
+	def test_get_expired_batches_excludes_future_batch(self) -> None:
 		from erpnext.stock.doctype.batch.test_batch import make_new_batch
 		from erpnext.stock.doctype.stock_entry.services.serial_batch import (
 			get_expired_batches,
@@ -3089,12 +3091,12 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── validate_source_stock_entry ────────────────────────────────────────────
 
-	def test_validate_source_stock_entry_skips_when_no_source(self):
+	def test_validate_source_stock_entry_skips_when_no_source(self) -> None:
 		se = frappe.new_doc("Stock Entry")
 		se.source_stock_entry = None
 		se.validate_source_stock_entry()  # must not raise
 
-	def test_validate_source_stock_entry_throws_on_work_order_mismatch(self):
+	def test_validate_source_stock_entry_throws_on_work_order_mismatch(self) -> None:
 		source_se = make_stock_entry(
 			item_code="_Test Item",
 			target="_Test Warehouse - _TC",
@@ -3109,7 +3111,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, se.validate_source_stock_entry)
 
-	def test_validate_source_stock_entry_passes_with_matching_work_order(self):
+	def test_validate_source_stock_entry_passes_with_matching_work_order(self) -> None:
 		source_se = make_stock_entry(
 			item_code="_Test Item",
 			target="_Test Warehouse - _TC",
@@ -3125,12 +3127,12 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── validate_job_card_fg_item ──────────────────────────────────────────────
 
-	def test_validate_job_card_fg_item_skips_when_no_job_card(self):
+	def test_validate_job_card_fg_item_skips_when_no_job_card(self) -> None:
 		se = frappe.new_doc("Stock Entry")
 		se.job_card = None
 		se.validate_job_card_fg_item()  # must not raise
 
-	def test_validate_job_card_fg_item_throws_when_fg_item_mismatches(self):
+	def test_validate_job_card_fg_item_throws_when_fg_item_mismatches(self) -> None:
 		wrong_fg = make_item("_JC Wrong FG Item", {"is_stock_item": 1}).name
 
 		jc_name = frappe.db.get_value("Job Card", {"docstatus": 1, "finished_good": ("!=", "")})
@@ -3148,19 +3150,19 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── validate_job_card_item ─────────────────────────────────────────────────
 
-	def test_validate_job_card_item_skips_when_no_job_card(self):
+	def test_validate_job_card_item_skips_when_no_job_card(self) -> None:
 		se = frappe.new_doc("Stock Entry")
 		se.job_card = None
 		se.validate_job_card_item()  # must not raise
 
-	def test_validate_job_card_item_skips_for_manufacture_purpose(self):
+	def test_validate_job_card_item_skips_for_manufacture_purpose(self) -> None:
 		se = frappe.new_doc("Stock Entry")
 		se.job_card = "SOME-JC-001"
 		se.purpose = "Manufacture"
 		se.validate_job_card_item()  # must not raise even with a job card set
 
 	@ERPNextTestSuite.change_settings("Manufacturing Settings", {"job_card_excess_transfer": 0})
-	def test_validate_job_card_item_throws_when_job_card_item_ref_missing(self):
+	def test_validate_job_card_item_throws_when_job_card_item_ref_missing(self) -> None:
 		jc_name = frappe.db.get_value("Job Card", {"docstatus": 1})
 		if not jc_name:
 			return  # skip if no job cards in test data
@@ -3181,7 +3183,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	# ── get_available_materials ────────────────────────────────────────────────
 
-	def test_get_available_materials_tracks_transferred_qty(self):
+	def test_get_available_materials_tracks_transferred_qty(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as _make_stock_entry,
@@ -3226,7 +3228,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 		self.assertIn(key, materials)
 		self.assertGreater(materials[key].qty, 0)
 
-	def test_get_available_materials_reduces_qty_after_consumption(self):
+	def test_get_available_materials_reduces_qty_after_consumption(self) -> None:
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as _make_stock_entry,
@@ -3275,7 +3277,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	@ERPNextTestSuite.change_settings("Manufacturing Settings", {"make_serial_no_batch_from_work_order": 1})
 	@ERPNextTestSuite.change_settings("Global Defaults", {"default_company": "_Test Company"})
-	def test_validate_fg_resets_invalid_serial_no_on_manufacture(self):
+	def test_validate_fg_resets_invalid_serial_no_on_manufacture(self) -> None:
 		from erpnext.manufacturing.doctype.bom.test_bom import create_nested_bom
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as _make_stock_entry,
@@ -3315,7 +3317,7 @@ class TestStockEntryCoverage(ERPNextTestSuite):
 
 	@ERPNextTestSuite.change_settings("Manufacturing Settings", {"make_serial_no_batch_from_work_order": 1})
 	@ERPNextTestSuite.change_settings("Global Defaults", {"default_company": "_Test Company"})
-	def test_validate_fg_resets_invalid_batch_no_on_manufacture(self):
+	def test_validate_fg_resets_invalid_batch_no_on_manufacture(self) -> None:
 		from erpnext.manufacturing.doctype.bom.test_bom import create_nested_bom
 		from erpnext.manufacturing.doctype.work_order.mapper import (
 			make_stock_entry as _make_stock_entry,
@@ -3406,7 +3408,7 @@ def make_serialized_item(self, **args):
 	return se
 
 
-def get_qty_after_transaction(**args):
+def get_qty_after_transaction(**args) -> float:
 	args = frappe._dict(args)
 	last_sle = get_previous_sle(
 		{
@@ -3419,7 +3421,7 @@ def get_qty_after_transaction(**args):
 	return flt(last_sle.get("qty_after_transaction"))
 
 
-def get_multiple_items():
+def get_multiple_items() -> list:
 	return [
 		{
 			"conversion_factor": 1.0,
@@ -3475,6 +3477,6 @@ def initialize_records_for_future_negative_sle_test(
 	return warehouse_names
 
 
-def create_stock_entries(sequence_of_entries):
+def create_stock_entries(sequence_of_entries) -> None:
 	for entry_detail in sequence_of_entries:
 		make_stock_entry(**entry_detail)

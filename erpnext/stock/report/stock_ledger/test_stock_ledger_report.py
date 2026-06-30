@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, today
 
@@ -20,11 +22,11 @@ class TestStockLedgerReport(ERPNextTestSuite):
 	starts clean (zero balance) for these items.
 	"""
 
-	def make_movements(self, item_code, movements):
+	def make_movements(self, item_code, movements) -> None:
 		for movement in movements:
 			make_stock_entry(item_code=item_code, **movement)
 
-	def run_report(self, item_code, from_date=None, to_date=None):
+	def run_report(self, item_code, from_date=None, to_date=None) -> list:
 		filters = frappe._dict(
 			company="_Test Company",
 			from_date=from_date or add_days(today(), -1),
@@ -34,7 +36,7 @@ class TestStockLedgerReport(ERPNextTestSuite):
 		)
 		return list(execute(filters)[1])
 
-	def test_in_out_quantities_and_running_balance(self):
+	def test_in_out_quantities_and_running_balance(self) -> None:
 		item = "_Test Item"
 		self.make_movements(
 			item,
@@ -53,7 +55,7 @@ class TestStockLedgerReport(ERPNextTestSuite):
 		self.assertEqual(issue["out_qty"], -4)
 		self.assertEqual(issue["qty_after_transaction"], 6)
 
-	def test_opening_balance_reflects_movements_before_from_date(self):
+	def test_opening_balance_reflects_movements_before_from_date(self) -> None:
 		item = "_Test Item"
 		self.make_movements(
 			item,
@@ -78,7 +80,7 @@ class TestStockLedgerReport(ERPNextTestSuite):
 		issue = next(row for row in rows if row.get("out_qty"))
 		self.assertEqual(issue["qty_after_transaction"], 6)
 
-	def test_filters_to_requested_item_only(self):
+	def test_filters_to_requested_item_only(self) -> None:
 		item_a = "_Test Item"
 		item_b = "_Test Item 2"
 		self.make_movements(item_a, [{"qty": 5, "to_warehouse": WAREHOUSE, "basic_rate": 100}])

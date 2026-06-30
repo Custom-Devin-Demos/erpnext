@@ -1,13 +1,15 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestStockEntryType(ERPNextTestSuite):
-	def test_stock_entry_type_non_standard(self):
+	def test_stock_entry_type_non_standard(self) -> None:
 		stock_entry_type = "Test Manufacturing"
 
 		doc = frappe.get_doc(
@@ -21,7 +23,7 @@ class TestStockEntryType(ERPNextTestSuite):
 
 		self.assertRaises(frappe.ValidationError, doc.insert)
 
-	def test_stock_entry_type_is_standard(self):
+	def test_stock_entry_type_is_standard(self) -> None:
 		for stock_entry_type in [
 			"Material Issue",
 			"Material Receipt",

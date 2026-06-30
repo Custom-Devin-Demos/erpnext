@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import cint, flt
@@ -14,7 +16,7 @@ from erpnext.stock.report.stock_ledger.stock_ledger import (
 from erpnext.stock.utils import is_reposting_item_valuation_in_progress
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	is_reposting_item_valuation_in_progress()
 	columns = get_columns(filters)
 	items = get_items(filters)
@@ -51,7 +53,7 @@ def process_stock_ledger_entries(sl_entries, item_details, opening_row, precisio
 	return data
 
 
-def update_stock_ledger_entry(sle, item_details, precision):
+def update_stock_ledger_entry(sle, item_details, precision) -> None:
 	item_detail = item_details[sle.item_code]
 	sle.update(item_detail)
 
@@ -63,7 +65,7 @@ def update_stock_ledger_entry(sle, item_details, precision):
 		sle["in_out_rate"] = sle.valuation_rate
 
 
-def update_available_serial_nos(available_serial_nos, sle):
+def update_available_serial_nos(available_serial_nos, sle) -> None:
 	serial_nos = (
 		get_serial_nos(sle.serial_no)
 		if sle.serial_no

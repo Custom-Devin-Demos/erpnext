@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # License: GNU GPL v3. See LICENSE
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -28,7 +30,7 @@ SLE_FIELDS = (
 )
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns = get_columns()
 	data = get_data(filters)
 	return columns, data
@@ -122,7 +124,7 @@ def add_invariant_check_fields(sles, filters):
 	return sles
 
 
-def is_sle_has_correct_data(sle, precision):
+def is_sle_has_correct_data(sle, precision) -> bool:
 	if flt(sle.difference_in_qty, precision) != 0.0 or flt(sle.diff_value_diff, precision) != 0:
 		print(flt(sle.difference_in_qty, precision), flt(sle.diff_value_diff, precision))
 		return False
@@ -130,7 +132,7 @@ def is_sle_has_correct_data(sle, precision):
 	return True
 
 
-def get_columns():
+def get_columns() -> list:
 	return [
 		{
 			"fieldname": "name",
@@ -296,7 +298,9 @@ def get_columns():
 
 
 @frappe.whitelist()
-def create_reposting_entries(rows: str | list, item_code: str | None = None, warehouse: str | None = None):
+def create_reposting_entries(
+	rows: str | list, item_code: str | None = None, warehouse: str | None = None
+) -> None:
 	if isinstance(rows, str):
 		rows = parse_json(rows)
 

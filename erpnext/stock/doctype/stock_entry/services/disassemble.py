@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
@@ -25,15 +27,15 @@ def _qty_tolerance(precision: int) -> float:
 
 
 class DisassembleStockEntry(BaseStockEntry):
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_warehouse()
 
-	def validate_warehouse(self):
+	def validate_warehouse(self) -> None:
 		for row in self.doc.items:
 			if not row.s_warehouse and not row.t_warehouse:
 				frappe.throw(_("Source or Target Warehouse is required for item {0}").format(row.item_code))
 
-	def validate_fg_completed_qty(self):
+	def validate_fg_completed_qty(self) -> None:
 		if not self.doc.source_stock_entry:
 			return
 
@@ -53,12 +55,12 @@ class DisassembleStockEntry(BaseStockEntry):
 				title=_("Excess Disassembly"),
 			)
 
-	def validate_disassembly_quantities(self):
+	def validate_disassembly_quantities(self) -> None:
 		self.validate_fg_completed_qty()
 		self.validate_finished_good_consumption()
 		self.validate_materials_against_source()
 
-	def validate_finished_good_consumption(self):
+	def validate_finished_good_consumption(self) -> None:
 		"""The finished good consumed (in stock UOM) must equal the quantity to disassemble."""
 		precision = frappe.get_precision("Stock Entry Detail", "transfer_qty")
 		tolerance = _qty_tolerance(precision)
@@ -76,7 +78,7 @@ class DisassembleStockEntry(BaseStockEntry):
 				title=_("Invalid Disassembly Quantity"),
 			)
 
-	def validate_materials_against_source(self):
+	def validate_materials_against_source(self) -> None:
 		"""Every non-finished-good row's posted stock qty must equal the source qty x scale."""
 		scale_factor = self._get_disassembly_scale_factor()
 		if not scale_factor:
@@ -171,7 +173,7 @@ class DisassembleStockEntry(BaseStockEntry):
 
 		return self._add_items_for_disassembly_from_bom()
 
-	def _add_items_for_disassembly_from_stock_entry(self):
+	def _add_items_for_disassembly_from_stock_entry(self) -> None:
 		source_fg_qty = frappe.db.get_value("Stock Entry", self.doc.source_stock_entry, "fg_completed_qty")
 		if not source_fg_qty:
 			frappe.throw(
@@ -186,7 +188,7 @@ class DisassembleStockEntry(BaseStockEntry):
 			scale_factor=scale_factor,
 		)
 
-	def _add_items_for_disassembly_from_work_order(self):
+	def _add_items_for_disassembly_from_work_order(self) -> None:
 		wo_produced_qty = frappe.db.get_value("Work Order", self.doc.work_order, "produced_qty")
 
 		wo_produced_qty = flt(wo_produced_qty)
@@ -204,11 +206,11 @@ class DisassembleStockEntry(BaseStockEntry):
 			scale_factor=scale_factor,
 		)
 
-	def _append_disassembly_row_from_source(self, disassemble_qty, scale_factor):
+	def _append_disassembly_row_from_source(self, disassemble_qty, scale_factor) -> None:
 		for source_row in self.get_items_from_manufacture_stock_entry():
 			self._append_disassembly_item(source_row, disassemble_qty, scale_factor)
 
-	def _get_disassembly_warehouses(self, source_row, disassemble_qty, scale_factor):
+	def _get_disassembly_warehouses(self, source_row, disassemble_qty, scale_factor) -> tuple:
 		if source_row.is_finished_item:
 			return disassemble_qty, self.doc.from_warehouse or source_row.t_warehouse, ""
 		elif source_row.s_warehouse:
@@ -216,7 +218,7 @@ class DisassembleStockEntry(BaseStockEntry):
 		else:
 			return flt(source_row.qty * scale_factor), source_row.t_warehouse, ""
 
-	def _build_disassembly_item_dict(self, source_row, qty, s_warehouse, t_warehouse):
+	def _build_disassembly_item_dict(self, source_row, qty, s_warehouse, t_warehouse) -> dict:
 		return {
 			"item_code": source_row.item_code,
 			"item_name": source_row.item_name,
@@ -236,7 +238,7 @@ class DisassembleStockEntry(BaseStockEntry):
 			"use_serial_batch_fields": 1 if (source_row.batch_no or source_row.serial_no) else 0,
 		}
 
-	def _append_disassembly_item(self, source_row, disassemble_qty, scale_factor):
+	def _append_disassembly_item(self, source_row, disassemble_qty, scale_factor) -> None:
 		qty, s_warehouse, t_warehouse = self._get_disassembly_warehouses(
 			source_row, disassemble_qty, scale_factor
 		)
@@ -245,7 +247,7 @@ class DisassembleStockEntry(BaseStockEntry):
 			item.update({"against_stock_entry": self.doc.source_stock_entry, "ste_detail": source_row.name})
 		self.doc.append("items", item)
 
-	def _add_items_for_disassembly_from_bom(self):
+	def _add_items_for_disassembly_from_bom(self) -> None:
 		if not self.doc.bom_no or not self.doc.fg_completed_qty:
 			frappe.throw(_("BOM and Finished Good Quantity is mandatory for Disassembly"))
 
@@ -253,7 +255,7 @@ class DisassembleStockEntry(BaseStockEntry):
 		self.add_secondary_items()
 		self.add_finished_goods()
 
-	def add_raw_materials(self):
+	def add_raw_materials(self) -> None:
 		# Raw materials will be available after disassembly in target warehouse
 		items = get_bom_items(self.doc.bom_no, self.doc.use_multi_level_bom)
 
@@ -265,7 +267,7 @@ class DisassembleStockEntry(BaseStockEntry):
 			row["uom"] = row.get("uom") or row.get("stock_uom")
 			self.doc.append("items", row)
 
-	def add_secondary_items(self):
+	def add_secondary_items(self) -> None:
 		# Secondary items will be removed from source warehouse
 
 		secondary_items = get_secondary_items(self.doc.bom_no, self.doc.work_order)
@@ -296,7 +298,7 @@ class DisassembleStockEntry(BaseStockEntry):
 
 			self.doc.append("items", item_args)
 
-	def add_finished_goods(self):
+	def add_finished_goods(self) -> None:
 		item_details = get_production_item_details(self.doc.work_order, self.doc.bom_no)
 
 		item_details.update(
@@ -385,20 +387,20 @@ class DisassembleStockEntry(BaseStockEntry):
 			.run(as_dict=True)
 		)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.set_serial_batch_for_disassembly()
 		self.update_disassembled_order()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_disassembled_order()
 
-	def set_serial_batch_for_disassembly(self):
+	def set_serial_batch_for_disassembly(self) -> None:
 		if self.doc.get("source_stock_entry"):
 			self._set_serial_batch_for_disassembly_from_stock_entry()
 		else:
 			self._set_serial_batch_for_disassembly_from_available_materials()
 
-	def _set_serial_batch_for_disassembly_from_stock_entry(self):
+	def _set_serial_batch_for_disassembly_from_stock_entry(self) -> None:
 		from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle import (
 			get_voucher_wise_serial_batch_from_bundle,
 		)
@@ -416,7 +418,7 @@ class DisassembleStockEntry(BaseStockEntry):
 			if source_row:
 				self._apply_bundle_to_disassembly_row(row, source_row, bundle_data, scale_factor)
 
-	def _apply_bundle_to_disassembly_row(self, row, source_row, bundle_data, scale_factor):
+	def _apply_bundle_to_disassembly_row(self, row, source_row, bundle_data, scale_factor) -> None:
 		source_warehouse = source_row.s_warehouse or source_row.t_warehouse
 		key = (source_row.item_code, source_warehouse, self.doc.source_stock_entry)
 		source_bundle = bundle_data.get(key, {})
@@ -432,7 +434,7 @@ class DisassembleStockEntry(BaseStockEntry):
 			batches[source_row.batch_no] = row.transfer_qty
 		return batches
 
-	def _allocate_batches(self, batches, batch_nos, transfer_qty, scale_factor):
+	def _allocate_batches(self, batches, batch_nos, transfer_qty, scale_factor) -> None:
 		qty_remaining = transfer_qty
 		for batch_no, batch_qty in batch_nos.items():
 			if qty_remaining <= 0:
@@ -448,7 +450,7 @@ class DisassembleStockEntry(BaseStockEntry):
 			return get_serial_nos(source_row.serial_no)[: int(row.transfer_qty)]
 		return []
 
-	def _set_serial_batch_for_disassembly_from_available_materials(self):
+	def _set_serial_batch_for_disassembly_from_available_materials(self) -> None:
 		available_materials = get_available_materials(self.doc.work_order, self.doc)
 		for row in self.doc.items:
 			warehouse = row.s_warehouse or row.t_warehouse
@@ -456,7 +458,7 @@ class DisassembleStockEntry(BaseStockEntry):
 			if materials:
 				self._apply_available_material_bundle(row, materials)
 
-	def _apply_available_material_bundle(self, row, materials):
+	def _apply_available_material_bundle(self, row, materials) -> None:
 		batches = self._collect_available_batches(materials.batch_details, row.transfer_qty)
 		serial_nos = materials.serial_nos[: int(row.transfer_qty)] if materials.serial_nos else []
 		self._set_serial_batch_bundle_for_disassembly_row(row, serial_nos, batches)
@@ -473,7 +475,7 @@ class DisassembleStockEntry(BaseStockEntry):
 				batches[batch_no], qty = qty, 0
 		return batches
 
-	def _set_serial_batch_bundle_for_disassembly_row(self, row, serial_nos, batches):
+	def _set_serial_batch_bundle_for_disassembly_row(self, row, serial_nos, batches) -> None:
 		if not serial_nos and not batches:
 			return
 
@@ -496,7 +498,7 @@ class DisassembleStockEntry(BaseStockEntry):
 		row.serial_and_batch_bundle = bundle_doc.name
 		row.use_serial_batch_fields = 0
 
-	def update_disassembled_order(self):
+	def update_disassembled_order(self) -> None:
 		if not self.doc.work_order:
 			return
 
@@ -520,7 +522,7 @@ def get_available_materials(work_order, stock_entry_doc=None) -> dict:
 	return available_materials
 
 
-def _get_material_key(row, stock_entry_doc):
+def _get_material_key(row, stock_entry_doc) -> tuple:
 	if stock_entry_doc and stock_entry_doc.purpose == "Disassemble":
 		return (row.item_code, row.s_warehouse or row.warehouse)
 	if row.purpose != "Material Transfer for Manufacture":
@@ -528,7 +530,7 @@ def _get_material_key(row, stock_entry_doc):
 	return (row.item_code, row.warehouse)
 
 
-def _update_material_qty(item_data, row, stock_entry_doc):
+def _update_material_qty(item_data, row, stock_entry_doc) -> None:
 	is_inward = row.purpose == "Material Transfer for Manufacture" or (
 		stock_entry_doc and stock_entry_doc.purpose == "Disassemble" and row.purpose == "Manufacture"
 	)
@@ -538,7 +540,7 @@ def _update_material_qty(item_data, row, stock_entry_doc):
 		_deduct_consumed_material_qty(item_data, row)
 
 
-def _add_inward_material_qty(item_data, row):
+def _add_inward_material_qty(item_data, row) -> None:
 	item_data.qty += row.qty
 	if row.batch_no:
 		item_data.batch_details[row.batch_no] += row.qty
@@ -548,14 +550,14 @@ def _add_inward_material_qty(item_data, row):
 	_extend_serial_nos_from_row(item_data, row)
 
 
-def _extend_serial_nos_from_row(item_data, row):
+def _extend_serial_nos_from_row(item_data, row) -> None:
 	sn = row.serial_no or row.serial_nos
 	if sn:
 		item_data.serial_nos.extend(get_serial_nos(sn))
 		item_data.serial_nos.sort()
 
 
-def _deduct_consumed_material_qty(item_data, row):
+def _deduct_consumed_material_qty(item_data, row) -> None:
 	item_data.qty -= row.qty
 	if row.batch_no:
 		item_data.batch_details[row.batch_no] -= row.qty
@@ -565,7 +567,7 @@ def _deduct_consumed_material_qty(item_data, row):
 	_remove_serial_nos_from_available(item_data, row)
 
 
-def _remove_serial_nos_from_available(item_data, row):
+def _remove_serial_nos_from_available(item_data, row) -> None:
 	sn = row.serial_no or row.serial_nos
 	if not sn:
 		return
@@ -628,7 +630,7 @@ def _apply_stock_entry_purpose_filter(query, se, sed, stock_entry_doc):
 	return query.where(sed.s_warehouse.isnotnull())
 
 
-def _enrich_with_bundle_data(data, stock_entry_doc):
+def _enrich_with_bundle_data(data, stock_entry_doc) -> None:
 	from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle import (
 		get_voucher_wise_serial_batch_from_bundle,
 	)
@@ -643,7 +645,7 @@ def _enrich_with_bundle_data(data, stock_entry_doc):
 			row.update(bundle_data.get(key))
 
 
-def _get_bundle_key(row, stock_entry_doc):
+def _get_bundle_key(row, stock_entry_doc) -> tuple:
 	if stock_entry_doc and stock_entry_doc.purpose == "Disassemble":
 		return (row.item_code, row.s_warehouse or row.warehouse, row.name)
 	if row.purpose != "Material Transfer for Manufacture":

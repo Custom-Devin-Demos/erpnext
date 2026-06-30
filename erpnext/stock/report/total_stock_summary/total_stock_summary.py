@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Max, Sum
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	if not filters:
 		filters = {}
 	columns = get_columns(filters)

@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, bold
 from frappe.model.document import Document
@@ -84,7 +86,7 @@ class StockEntryDetail(Document):
 		valuation_rate: DF.Currency
 	# end: auto-generated types
 
-	def validate_batch(self):
+	def validate_batch(self) -> None:
 		if not self.batch_no:
 			return
 
@@ -97,7 +99,7 @@ class StockEntryDetail(Document):
 		if expiry_date and getdate(self.parent_doc.posting_date) > getdate(expiry_date):
 			frappe.throw(_("Batch {0} of Item {1} has expired.").format(self.batch_no, self.item_code))
 
-	def validate_and_update_item_details(self, item_details, company, purpose):
+	def validate_and_update_item_details(self, item_details, company, purpose) -> None:
 		if flt(self.qty) and flt(self.qty) < 0:
 			frappe.throw(
 				_("Row {0}: The item {1}, quantity must be a positive number").format(
@@ -134,7 +136,7 @@ class StockEntryDetail(Document):
 		if purpose == "Subcontracting Delivery":
 			self.expense_account = frappe.get_value("Company", company, "default_expense_account")
 
-	def validate_expense_account(self, is_opening, purpose):
+	def validate_expense_account(self, is_opening, purpose) -> None:
 		if not self.expense_account:
 			frappe.throw(
 				_(
@@ -179,7 +181,7 @@ class StockEntryDetail(Document):
 				alert=1,
 			)
 
-	def set_transfer_qty(self):
+	def set_transfer_qty(self) -> None:
 		if not flt(self.conversion_factor):
 			frappe.throw(_("Row {0}: UOM Conversion Factor is mandatory").format(self.idx))
 
@@ -190,7 +192,7 @@ class StockEntryDetail(Document):
 				_("Row {0}: Qty in Stock UOM can not be zero.").format(self.idx), title=_("Zero quantity")
 			)
 
-	def set_actual_qty(self, posting_date, posting_time):
+	def set_actual_qty(self, posting_date, posting_time) -> None:
 		previous_sle = get_previous_sle(
 			{
 				"item_code": self.item_code,
@@ -203,7 +205,7 @@ class StockEntryDetail(Document):
 		# get actual stock at source warehouse
 		self.actual_qty = previous_sle.get("qty_after_transaction") or 0
 
-	def delink_asset_repair_sabb(self, asset_repair):
+	def delink_asset_repair_sabb(self, asset_repair) -> None:
 		if not self.serial_and_batch_bundle:
 			return
 

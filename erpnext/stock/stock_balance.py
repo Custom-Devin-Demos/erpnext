@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import Coalesce, Sum
 from frappe.utils import cstr, flt, now, nowdate, nowtime
@@ -9,7 +11,12 @@ from frappe.utils import cstr, flt, now, nowdate, nowtime
 from erpnext.controllers.stock_controller import create_repost_item_valuation_entry
 
 
-def repost(only_actual=False, allow_negative_stock=False, allow_zero_rate=False, only_bin=False):
+def repost(
+	only_actual: bool = False,
+	allow_negative_stock: bool = False,
+	allow_zero_rate: bool = False,
+	only_bin: bool = False,
+) -> None:
 	"""
 	Repost everything!
 	"""
@@ -40,11 +47,11 @@ def repost(only_actual=False, allow_negative_stock=False, allow_zero_rate=False,
 def repost_stock(
 	item_code,
 	warehouse,
-	allow_zero_rate=False,
-	only_actual=False,
-	only_bin=False,
-	allow_negative_stock=False,
-):
+	allow_zero_rate: bool = False,
+	only_actual: bool = False,
+	only_bin: bool = False,
+	allow_negative_stock: bool = False,
+) -> None:
 	if not only_bin:
 		repost_actual_qty(item_code, warehouse, allow_zero_rate, allow_negative_stock)
 
@@ -61,7 +68,9 @@ def repost_stock(
 		update_bin_qty(item_code, warehouse, qty_dict)
 
 
-def repost_actual_qty(item_code, warehouse, allow_zero_rate=False, allow_negative_stock=False):
+def repost_actual_qty(
+	item_code, warehouse, allow_zero_rate: bool = False, allow_negative_stock: bool = False
+) -> None:
 	create_repost_item_valuation_entry(
 		{
 			"item_code": item_code,
@@ -271,7 +280,7 @@ def get_planned_qty(item_code, warehouse):
 	return flt(planned_qty[0][0]) if planned_qty else 0
 
 
-def update_bin_qty(item_code, warehouse, qty_dict=None):
+def update_bin_qty(item_code, warehouse, qty_dict=None) -> None:
 	from erpnext.stock.utils import get_bin
 
 	bin = get_bin(item_code, warehouse)
@@ -290,7 +299,7 @@ def update_bin_qty(item_code, warehouse, qty_dict=None):
 
 def set_stock_balance_as_per_serial_no(
 	item_code=None, posting_date=None, posting_time=None, fiscal_year=None
-):
+) -> None:
 	if not posting_date:
 		posting_date = nowdate()
 	if not posting_time:

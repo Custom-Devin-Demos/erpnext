@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import datetime
 from collections import OrderedDict, defaultdict
 
@@ -31,7 +33,7 @@ def get_name_from_hash():
 	return temp
 
 
-def batch_uses_naming_series():
+def batch_uses_naming_series() -> bool:
 	"""
 	Verify if the Batch is to be named using a naming series
 	:return: bool
@@ -114,7 +116,7 @@ class Batch(Document):
 		use_batchwise_valuation: DF.Check
 	# end: auto-generated types
 
-	def autoname(self):
+	def autoname(self) -> None:
 		"""Generate random ID for batch if not specified"""
 
 		if self.batch_id:
@@ -142,22 +144,22 @@ class Batch(Document):
 
 		self.name = self.batch_id
 
-	def onload(self):
+	def onload(self) -> None:
 		self.image = frappe.db.get_value("Item", self.item, "image")
 
-	def after_delete(self):
+	def after_delete(self) -> None:
 		revert_series_if_last(get_batch_naming_series(), self.name)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.item_has_batch_enabled()
 		self.set_batchwise_valuation()
 
-	def item_has_batch_enabled(self):
+	def item_has_batch_enabled(self) -> None:
 		if frappe.db.get_value("Item", self.item, "has_batch_no") == 0:
 			frappe.throw(_("The selected item cannot have Batch"))
 
 	@frappe.whitelist()
-	def recalculate_batch_qty(self):
+	def recalculate_batch_qty(self) -> None:
 		batches = get_batch_qty(
 			batch_no=self.name,
 			item_code=self.item,
@@ -176,7 +178,7 @@ class Batch(Document):
 
 		frappe.msgprint(_("Batch Qty updated to {0}").format(batch_qty), alert=True)
 
-	def set_batchwise_valuation(self):
+	def set_batchwise_valuation(self) -> None:
 		from erpnext.stock.utils import get_valuation_method
 
 		if self.is_new():
@@ -188,10 +190,10 @@ class Batch(Document):
 
 			self.use_batchwise_valuation = 1
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.set_expiry_date()
 
-	def set_expiry_date(self):
+	def set_expiry_date(self) -> None:
 		has_expiry_date, shelf_life_in_days = frappe.db.get_value(
 			"Item", self.item, ["has_expiry_date", "shelf_life_in_days"]
 		)
@@ -380,7 +382,7 @@ def make_batch_bundle(
 	)
 
 
-def validate_serial_no_with_batch(serial_nos, item_code):
+def validate_serial_no_with_batch(serial_nos, item_code) -> None:
 	if frappe.get_cached_value("Serial No", serial_nos[0], "item_code") != item_code:
 		frappe.throw(
 			_("The serial no {0} does not belong to item {1}").format(

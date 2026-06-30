@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import json
 from collections import defaultdict
@@ -18,7 +20,7 @@ class DeprecatedSerialNoValuation:
 		"v16",
 		"No known instructions.",
 	)
-	def calculate_stock_value_from_deprecarated_ledgers(self):
+	def calculate_stock_value_from_deprecarated_ledgers(self) -> None:
 		serial_nos = []
 		if hasattr(self, "old_serial_nos"):
 			serial_nos = self.old_serial_nos
@@ -101,7 +103,7 @@ class DeprecatedBatchNoValuation:
 		"v16",
 		"No known instructions.",
 	)
-	def calculate_avg_rate_from_deprecarated_ledgers(self):
+	def calculate_avg_rate_from_deprecarated_ledgers(self) -> None:
 		entries = self.get_sle_for_batches()
 		for ledger in entries:
 			self.stock_value_differece[ledger.batch_no] += flt(ledger.batch_value)
@@ -171,7 +173,7 @@ class DeprecatedBatchNoValuation:
 		"v16",
 		"No known instructions.",
 	)
-	def calculate_avg_rate_for_non_batchwise_valuation(self):
+	def calculate_avg_rate_for_non_batchwise_valuation(self) -> None:
 		if not self.non_batchwise_valuation_batches:
 			return
 
@@ -217,7 +219,7 @@ class DeprecatedBatchNoValuation:
 		"v16",
 		"No known instructions.",
 	)
-	def set_balance_value_for_non_batchwise_valuation_batches(self):
+	def set_balance_value_for_non_batchwise_valuation_batches(self) -> None:
 		if hasattr(self, "prev_sle"):
 			self.last_sle = self.prev_sle
 		else:

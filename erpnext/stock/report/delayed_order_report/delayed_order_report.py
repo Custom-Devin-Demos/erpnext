@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from frappe import _
 
 from erpnext.stock.report.delayed_item_report.delayed_item_report import DelayedItemReport
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	columns, data = [], []
 
 	columns, data = DelayedOrderReport(filters).run()
@@ -16,10 +18,10 @@ def execute(filters=None):
 
 
 class DelayedOrderReport(DelayedItemReport):
-	def run(self):
+	def run(self) -> tuple:
 		return self.get_columns(), self.get_data(consolidated=True) or []
 
-	def get_data(self, consolidated=False):
+	def get_data(self, consolidated: bool = False):
 		data = super().get_data(consolidated) or []
 
 		so_list = []
@@ -31,7 +33,7 @@ class DelayedOrderReport(DelayedItemReport):
 
 		return result
 
-	def get_columns(self):
+	def get_columns(self) -> list:
 		based_on = self.filters.get("based_on")
 
 		return [

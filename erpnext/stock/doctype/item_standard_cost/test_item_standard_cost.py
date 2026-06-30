@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, flt, today
 
@@ -23,7 +25,9 @@ def create_standard_cost_item(**properties):
 	return make_item(properties=props)
 
 
-def create_item_standard_cost(item_code, rate, company=TEST_COMPANY, effective_date=None, submit=True):
+def create_item_standard_cost(
+	item_code, rate, company=TEST_COMPANY, effective_date=None, submit: bool = True
+):
 	doc = frappe.new_doc("Item Standard Cost")
 	doc.item_code = item_code
 	doc.company = company
@@ -59,11 +63,11 @@ def ensure_ppv_account(company):
 
 
 class TestItemStandardCost(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		ensure_ppv_account(TEST_COMPANY)
 		ensure_ppv_account(PI_COMPANY)
 
-	def test_only_for_standard_cost_items(self):
+	def test_only_for_standard_cost_items(self) -> None:
 		item = make_item(properties={"valuation_method": "FIFO", "is_stock_item": 1})
 		isc = frappe.new_doc("Item Standard Cost")
 		isc.item_code = item.name
@@ -71,20 +75,20 @@ class TestItemStandardCost(ERPNextTestSuite):
 		isc.standard_rate = 100
 		self.assertRaises(frappe.ValidationError, isc.insert)
 
-	def test_item_link_query_lists_only_standard_cost_items(self):
+	def test_item_link_query_lists_only_standard_cost_items(self) -> bool:
 		from erpnext.stock.doctype.item_standard_cost.item_standard_cost import get_standard_cost_items
 
 		sc_item = create_standard_cost_item().name
 		fifo_item = make_item(properties={"valuation_method": "FIFO", "is_stock_item": 1}).name
 
-		def listed(item_code):
+		def listed(item_code) -> bool:
 			rows = get_standard_cost_items("Item", item_code, "name", 0, 20, {"company": TEST_COMPANY})
 			return item_code in [row[0] for row in rows]
 
 		self.assertTrue(listed(sc_item))
 		self.assertFalse(listed(fifo_item))
 
-	def test_rate_must_be_positive(self):
+	def test_rate_must_be_positive(self) -> None:
 		item = create_standard_cost_item()
 		isc = frappe.new_doc("Item Standard Cost")
 		isc.item_code = item.name
@@ -92,7 +96,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		isc.standard_rate = 0
 		self.assertRaises(frappe.ValidationError, isc.insert)
 
-	def test_future_effective_date_blocked(self):
+	def test_future_effective_date_blocked(self) -> None:
 		item = create_standard_cost_item()
 		isc = frappe.new_doc("Item Standard Cost")
 		isc.item_code = item.name
@@ -101,7 +105,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		isc.effective_date = add_days(today(), 5)
 		self.assertRaises(frappe.ValidationError, isc.insert)
 
-	def test_first_record_requires_no_stock_ledger_entry(self):
+	def test_first_record_requires_no_stock_ledger_entry(self) -> None:
 		# An item that already has stock movement cannot be moved onto Standard Cost retroactively.
 		item = make_item(properties={"valuation_method": "FIFO", "is_stock_item": 1})
 		make_stock_entry(item_code=item.name, target=TEST_WAREHOUSE, qty=5, basic_rate=100)
@@ -117,7 +121,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		isc.standard_rate = 100
 		self.assertRaises(frappe.ValidationError, isc.insert)
 
-	def test_receipt_valued_at_standard(self):
+	def test_receipt_valued_at_standard(self) -> None:
 		item = create_standard_cost_item()
 		create_item_standard_cost(item.name, rate=100)
 
@@ -133,7 +137,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		self.assertEqual(flt(sle.stock_value), 1000)
 		self.assertEqual(flt(sle.incoming_rate), 100)
 
-	def test_rate_change_revalues_on_hand_stock(self):
+	def test_rate_change_revalues_on_hand_stock(self) -> None:
 		# Effective dates must strictly increase, so stage the rate change on a later date.
 		item = create_standard_cost_item()
 		create_item_standard_cost(item.name, rate=100, effective_date=add_days(today(), -10))
@@ -208,12 +212,12 @@ class TestItemStandardCost(ERPNextTestSuite):
 
 		self.assertFalse(frappe.db.exists("Repost Item Valuation", {"voucher_no": se0.name}))
 
-	def test_cannot_cancel(self):
+	def test_cannot_cancel(self) -> None:
 		item = create_standard_cost_item()
 		isc = create_item_standard_cost(item.name, rate=100)
 		self.assertRaises(frappe.ValidationError, isc.cancel)
 
-	def test_direct_stock_reconciliation_blocked(self):
+	def test_direct_stock_reconciliation_blocked(self) -> None:
 		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
 			create_stock_reconciliation,
 		)
@@ -231,7 +235,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 			rate=120,
 		)
 
-	def test_backdated_transaction_blocked(self):
+	def test_backdated_transaction_blocked(self) -> None:
 		item = create_standard_cost_item()
 		create_item_standard_cost(item.name, rate=100, effective_date=today())
 
@@ -246,7 +250,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		)
 		self.assertRaises(frappe.ValidationError, se.submit)
 
-	def test_manufacturing_variance_books_to_stock_adjustment(self):
+	def test_manufacturing_variance_books_to_stock_adjustment(self) -> None:
 		# RM standard 50, FG standard 200. Consuming 5 RM (250) to produce 1 FG (200) leaves a
 		# 50 manufacturing variance, which must land in the company's Stock Adjustment account.
 		rm = create_standard_cost_item()
@@ -282,7 +286,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		)[0][0]
 		self.assertEqual(flt(net), 50)
 
-	def test_valuation_method_change_blocked_with_stock(self):
+	def test_valuation_method_change_blocked_with_stock(self) -> None:
 		item = create_standard_cost_item()
 		create_item_standard_cost(item.name, rate=100)
 		make_stock_entry(item_code=item.name, target=TEST_WAREHOUSE, qty=10, basic_rate=100)
@@ -291,7 +295,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		item.valuation_method = "FIFO"
 		self.assertRaises(frappe.ValidationError, item.save)
 
-	def test_batched_item_revalued_across_warehouses(self):
+	def test_batched_item_revalued_across_warehouses(self) -> None:
 		# A rate change must revalue a batched Standard Cost item in every warehouse, posted as a
 		# pure value change without a serial/batch bundle.
 		item = create_standard_cost_item(
@@ -329,7 +333,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 			)
 			self.assertEqual(flt(stock_value), qty * 150)
 
-	def test_serialized_item_revalued_across_warehouses(self):
+	def test_serialized_item_revalued_across_warehouses(self) -> None:
 		item = create_standard_cost_item(has_serial_no=1, serial_no_series="SC-SER-.####")
 		create_item_standard_cost(
 			item.name, rate=100, company=PI_COMPANY, effective_date=add_days(today(), -5)
@@ -363,7 +367,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 			)
 			self.assertEqual(flt(stock_value), qty * 150)
 
-	def test_standard_rate_cache_invalidated_after_submit(self):
+	def test_standard_rate_cache_invalidated_after_submit(self) -> None:
 		from erpnext.stock.doctype.item_standard_cost.item_standard_cost import get_item_standard_rate
 
 		item = create_standard_cost_item()
@@ -376,7 +380,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		# The submit must have invalidated the cache, so this reads the freshly submitted rate.
 		self.assertEqual(flt(get_item_standard_rate(item.name, TEST_COMPANY)), 100)
 
-	def test_pr_stock_value_excludes_rejected_warehouse(self):
+	def test_pr_stock_value_excludes_rejected_warehouse(self) -> float:
 		# Accepted and rejected stock for one receipt row share voucher_detail_no. The standard-cost
 		# SRBNB split must clear only the accepted warehouse's value, not accepted + rejected.
 		from erpnext.accounts.doctype.purchase_invoice.services.gl_composer import (
@@ -402,7 +406,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		)
 
 		# Method body uses only `item`, so it can be called unbound.
-		def pr_value(stock_qty):
+		def pr_value(stock_qty) -> float:
 			mock_item = frappe._dict(
 				purchase_receipt=pr.name, pr_detail=pr.items[0].name, stock_qty=stock_qty
 			)
@@ -413,7 +417,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		# Billing only 4 of the 10 accepted units: pro-rated to the invoiced qty (4 * 100).
 		self.assertEqual(pr_value(4), 400)
 
-	def test_pr_books_variance_to_ppv_account(self):
+	def test_pr_books_variance_to_ppv_account(self) -> float:
 		# Receiving a Standard Cost item at a rate above the standard must book the difference to the
 		# Purchase Price Variance account, not the default expense (COGS) account.
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
@@ -429,7 +433,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 			item_code=item.name, company=PI_COMPANY, warehouse=PI_STORES, qty=1, rate=200
 		)
 
-		def booked(account):
+		def booked(account) -> float:
 			return flt(
 				frappe.db.sql(
 					"select sum(debit - credit) from `tabGL Entry` where voucher_no=%s and account=%s and is_cancelled=0",
@@ -440,7 +444,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 		self.assertEqual(booked(ppv_account), 70)
 		self.assertEqual(booked(cogs_account), 0)
 
-	def test_pr_throws_without_ppv_account(self):
+	def test_pr_throws_without_ppv_account(self) -> None:
 		# Receiving a Standard Cost item with a variance but no PPV account configured must error.
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
@@ -463,7 +467,7 @@ class TestItemStandardCost(ERPNextTestSuite):
 			frappe.db.set_value("Company", PI_COMPANY, "default_purchase_price_variance_account", previous)
 			frappe.clear_cache(doctype="Company")
 
-	def test_revaluation_posted_after_same_day_movement(self):
+	def test_revaluation_posted_after_same_day_movement(self) -> None:
 		# A movement earlier on the effective date must not end up after the revaluation, otherwise the
 		# reco would backdate the current quantity ahead of it.
 		item = create_standard_cost_item()

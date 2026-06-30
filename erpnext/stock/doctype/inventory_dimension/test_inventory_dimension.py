@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 from frappe.utils import nowdate, nowtime
@@ -21,7 +23,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestInventoryDimension(ERPNextTestSuite):
-	def test_validate_inventory_dimension(self):
+	def test_validate_inventory_dimension(self) -> None:
 		# Can not be child doc
 		inv_dim1 = create_inventory_dimension(
 			reference_document="Stock Entry Detail",
@@ -46,7 +48,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 
 		self.assertRaises(CanNotBeDefaultDimension, inv_dim1.insert)
 
-	def test_delete_inventory_dimension(self):
+	def test_delete_inventory_dimension(self) -> None:
 		inv_dim1 = create_inventory_dimension(
 			reference_document="Shelf",
 			type_of_transaction="Outward",
@@ -72,7 +74,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 
 		self.assertFalse(custom_field)
 
-	def test_inventory_dimension(self):
+	def test_inventory_dimension(self) -> None:
 		create_warehouse("Shelf Warehouse")
 		warehouse = "Shelf Warehouse - _TC"
 		item_code = "_Test Item"
@@ -143,7 +145,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 		self.assertTrue(inv_dim1.has_stock_ledger())
 		self.assertRaises(DoNotChangeError, inv_dim1.save)
 
-	def test_inventory_dimension_for_purchase_receipt_and_delivery_note(self):
+	def test_inventory_dimension_for_purchase_receipt_and_delivery_note(self) -> None:
 		inv_dimension = create_inventory_dimension(
 			reference_document="Rack", dimension_name="Rack", apply_to_all_doctypes=1
 		)
@@ -193,7 +195,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 
 		self.assertEqual(sle_rack, "Rack 1")
 
-	def test_check_standard_dimensions(self):
+	def test_check_standard_dimensions(self) -> None:
 		create_inventory_dimension(
 			reference_document="Project",
 			type_of_transaction="Outward",
@@ -206,7 +208,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 			frappe.db.get_value("Custom Field", {"fieldname": "project", "dt": "Stock Ledger Entry"}, "name")
 		)
 
-	def test_check_mandatory_dimensions(self):
+	def test_check_mandatory_dimensions(self) -> None:
 		doc = create_inventory_dimension(
 			reference_document="Pallet",
 			type_of_transaction="Outward",
@@ -227,7 +229,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 		doc.reqd = 0
 		doc.save()
 
-	def test_check_mandatory_depends_on_dimensions(self):
+	def test_check_mandatory_depends_on_dimensions(self) -> None:
 		doc = create_inventory_dimension(
 			reference_document="Pallet",
 			type_of_transaction="Outward",
@@ -247,7 +249,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 			)
 		)
 
-	def test_for_purchase_sales_and_stock_transaction(self):
+	def test_for_purchase_sales_and_stock_transaction(self) -> None:
 		from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
 		create_inventory_dimension(
@@ -362,7 +364,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 		self.assertEqual(entries[0].store, "Store 1")
 		self.assertEqual(entries[0].actual_qty, -10.0)
 
-	def test_inter_transfer_return_against_inventory_dimension(self):
+	def test_inter_transfer_return_against_inventory_dimension(self) -> None:
 		from erpnext.controllers.sales_and_purchase_return import make_return_doc
 		from erpnext.stock.doctype.delivery_note.mapper import make_inter_company_purchase_receipt
 
@@ -428,7 +430,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 			else:
 				self.assertEqual(d.store, "Inter Transfer Store 2")
 
-	def test_validate_negative_stock_for_inventory_dimension(self):
+	def test_validate_negative_stock_for_inventory_dimension(self) -> None:
 		item_code = "Test Negative Inventory Dimension Item"
 		frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 1)
 		create_item(item_code)
@@ -493,7 +495,7 @@ class TestInventoryDimension(ERPNextTestSuite):
 		self.assertEqual(site_name, "Site 1")
 
 	@ERPNextTestSuite.change_settings("Stock Settings", {"allow_negative_stock": 0})
-	def test_validate_negative_stock_with_multiple_dimension(self):
+	def test_validate_negative_stock_with_multiple_dimension(self) -> None:
 		item_code = "Test Negative Multi Inventory Dimension Item"
 		create_item(item_code)
 
@@ -567,7 +569,7 @@ def create_inventory_dimension(**args):
 	return doc
 
 
-def prepare_data_for_internal_transfer():
+def prepare_data_for_internal_transfer() -> dict:
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
 	from erpnext.selling.doctype.customer.test_customer import create_internal_customer
 	from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt

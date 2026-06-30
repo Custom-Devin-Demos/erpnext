@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.doctype.item.test_item import make_item
@@ -23,13 +25,13 @@ class TestBatchWiseBalanceHistory(ERPNextTestSuite):
 			}
 		).name
 
-	def run_report(self, item, from_date="2026-01-01", to_date="2026-12-31"):
+	def run_report(self, item, from_date: str = "2026-01-01", to_date: str = "2026-12-31"):
 		filters = frappe._dict(
 			{"company": "_Test Company", "item_code": item, "from_date": from_date, "to_date": to_date}
 		)
 		return execute(filters)[1]
 
-	def test_in_out_balance_and_valuation(self):
+	def test_in_out_balance_and_valuation(self) -> None:
 		item = self.make_batch_item()
 		make_stock_entry(item_code=item, to_warehouse=WH, qty=10, rate=100, posting_date="2026-06-01")
 		make_stock_entry(item_code=item, from_warehouse=WH, qty=4, posting_date="2026-06-02")
@@ -42,7 +44,7 @@ class TestBatchWiseBalanceHistory(ERPNextTestSuite):
 		self.assertEqual(row[9], 100)  # valuation rate
 		self.assertEqual(row[10], 600)  # balance value
 
-	def test_opening_qty_from_prior_period(self):
+	def test_opening_qty_from_prior_period(self) -> None:
 		item = self.make_batch_item()
 		make_stock_entry(item_code=item, to_warehouse=WH, qty=8, rate=50, posting_date="2025-12-01")
 

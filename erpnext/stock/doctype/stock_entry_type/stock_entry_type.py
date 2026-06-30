@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
@@ -41,12 +43,12 @@ class StockEntryType(Document):
 		]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_standard_type()
 		if self.add_to_transit and self.purpose != "Material Transfer":
 			self.add_to_transit = 0
 
-	def validate_standard_type(self):
+	def validate_standard_type(self) -> None:
 		if self.is_standard and self.name not in [
 			"Material Issue",
 			"Material Receipt",
@@ -70,7 +72,7 @@ class ManufactureEntry:
 		for key, value in kwargs.items():
 			setattr(self, key, value)
 
-	def make_stock_entry(self):
+	def make_stock_entry(self) -> None:
 		self.stock_entry = frappe.new_doc("Stock Entry")
 		self.stock_entry.purpose = self.purpose
 		self.stock_entry.company = self.company
@@ -91,7 +93,7 @@ class ManufactureEntry:
 		self.add_raw_materials()
 		self.add_finished_good()
 
-	def prepare_source_warehouse(self):
+	def prepare_source_warehouse(self) -> None:
 		self.source_wh = {}
 		if self.skip_material_transfer:
 			if not self.backflush_from_wip_warehouse:
@@ -104,7 +106,7 @@ class ManufactureEntry:
 					)
 				)
 
-	def add_raw_materials(self):
+	def add_raw_materials(self) -> None:
 		if self.job_card:
 			item_dict = {}
 			if not item_dict:
@@ -141,7 +143,7 @@ class ManufactureEntry:
 
 				self.stock_entry.append("items", _dict)
 
-	def parse_available_serial_batches(self, item_dict, available_serial_batches):
+	def parse_available_serial_batches(self, item_dict, available_serial_batches) -> tuple:
 		key = (item_dict.item_code, item_dict.from_warehouse)
 		if key not in available_serial_batches:
 			return [], {}
@@ -177,7 +179,7 @@ class ManufactureEntry:
 
 		return serial_nos, batches
 
-	def update_available_serial_batches(self, item_dict, available_serial_batches):
+	def update_available_serial_batches(self, item_dict, available_serial_batches) -> None:
 		serial_nos, batches = self.parse_available_serial_batches(item_dict, available_serial_batches)
 		if serial_nos or batches:
 			sabb = SerialBatchCreation(
@@ -304,7 +306,7 @@ class ManufactureEntry:
 
 		return item_dict
 
-	def add_finished_good(self):
+	def add_finished_good(self) -> None:
 		from erpnext.stock.doctype.item.item import get_item_defaults
 
 		item = get_item_defaults(self.production_item, self.company)

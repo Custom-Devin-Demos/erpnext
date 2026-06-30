@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import copy
 
 import frappe
@@ -24,10 +26,10 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestLandedCostVoucher(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.load_test_records("Currency Exchange")
 
-	def test_get_vendor_invoices_runs(self):
+	def test_get_vendor_invoices_runs(self) -> None:
 		# get_vendor_invoice_query filters unclaimed vendor invoices; the threshold moved from a HAVING
 		# (which referenced a SELECT alias with no GROUP BY -- invalid on Postgres) to a WHERE.
 		from erpnext.stock.doctype.landed_cost_voucher.landed_cost_voucher import get_vendor_invoices
@@ -41,7 +43,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 		self.assertTrue(any(r[0] == pi.name for r in rows))
 
 	@staticmethod
-	def _cancel_and_delete_pi(name):
+	def _cancel_and_delete_pi(name) -> None:
 		if not frappe.db.exists("Purchase Invoice", name):
 			return
 		doc = frappe.get_doc("Purchase Invoice", name)
@@ -49,7 +51,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 			doc.cancel()
 		frappe.delete_doc("Purchase Invoice", name, force=1)
 
-	def test_landed_cost_voucher(self):
+	def test_landed_cost_voucher(self) -> None:
 		frappe.db.set_single_value("Buying Settings", "allow_multiple_items", 1)
 
 		pr = make_purchase_receipt(
@@ -115,7 +117,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 		# reassert after reposting
 		self.assertPurchaseReceiptLCVGLEntries(pr)
 
-	def assertPurchaseReceiptLCVGLEntries(self, pr):
+	def assertPurchaseReceiptLCVGLEntries(self, pr) -> None:
 		gl_entries = get_gl_entries("Purchase Receipt", pr.name)
 
 		self.assertTrue(gl_entries)
@@ -148,7 +150,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 					expected_values[gle.account][1], gle.credit, msg=f"incorrect credit for {gle.account}"
 				)
 
-	def test_landed_cost_voucher_stock_impact(self):
+	def test_landed_cost_voucher_stock_impact(self) -> None:
 		"Test impact of LCV on future stock balances."
 		from erpnext.stock.doctype.item.test_item import make_item
 
@@ -201,7 +203,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 		self.assertEqual(last_sle.qty_after_transaction, last_sle_after_landed_cost.qty_after_transaction)
 		self.assertEqual(last_sle_after_landed_cost.stock_value - last_sle.stock_value, 50.0)
 
-	def test_lcv_validates_company(self):
+	def test_lcv_validates_company(self) -> None:
 		from erpnext import is_perpetual_inventory_enabled
 		from erpnext.accounts.doctype.account.test_account import create_account
 		from erpnext.stock.doctype.landed_cost_voucher.landed_cost_voucher import (
@@ -253,7 +255,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 		frappe.db.set_value("Company", company_a, "enable_perpetual_inventory", epi)
 		frappe.local.enable_perpetual_inventory = {}
 
-	def test_landed_cost_voucher_for_zero_purchase_rate(self):
+	def test_landed_cost_voucher_for_zero_purchase_rate(self) -> None:
 		"Test impact of LCV on future stock balances."
 		from erpnext.stock.doctype.item.test_item import make_item
 
@@ -306,7 +308,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 			100,
 		)
 
-	def test_landed_cost_voucher_against_purchase_invoice(self):
+	def test_landed_cost_voucher_against_purchase_invoice(self) -> None:
 		pi = make_purchase_invoice(
 			update_stock=1,
 			posting_date=frappe.utils.nowdate(),
@@ -371,7 +373,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 				self.assertEqual(expected_values[gle.account][0], gle.debit)
 				self.assertEqual(expected_values[gle.account][1], gle.credit)
 
-	def test_landed_cost_voucher_for_serialized_item(self):
+	def test_landed_cost_voucher_for_serialized_item(self) -> None:
 		frappe.db.set_value("Item", "_Test Serialized Item", "serial_no_series", "SNJJ.###")
 
 		pr = make_purchase_receipt(
@@ -421,7 +423,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 
 		self.assertEqual(new_serial_no_rate - serial_no_rate, 5.0)
 
-	def test_serialized_lcv_delivered(self):
+	def test_serialized_lcv_delivered(self) -> None:
 		"""In some cases you'd want to deliver before you can know all the
 		landed costs, this should be allowed for serial nos too.
 
@@ -498,7 +500,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 		# reposting should update the purchase rate in future delivery
 		self.assertEqual(stock_value_difference, -new_purchase_rate)
 
-	def test_landed_cost_voucher_for_odd_numbers(self):
+	def test_landed_cost_voucher_for_odd_numbers(self) -> None:
 		pr = make_purchase_receipt(
 			company="_Test Company with perpetual inventory",
 			warehouse="Stores - TCP1",
@@ -524,7 +526,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 		self.assertEqual(flt(lcv.items[0].applicable_charges, 2), 41.07)
 		self.assertEqual(flt(lcv.items[2].applicable_charges, 2), 41.08)
 
-	def test_multiple_landed_cost_voucher_against_pr(self):
+	def test_multiple_landed_cost_voucher_against_pr(self) -> None:
 		pr = make_purchase_receipt(
 			company="_Test Company with perpetual inventory",
 			warehouse="Stores - TCP1",
@@ -578,7 +580,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 		self.assertEqual(pr.items[0].landed_cost_voucher_amount, 100)
 		self.assertEqual(pr.items[1].landed_cost_voucher_amount, 100)
 
-	def test_multi_currency_lcv(self):
+	def test_multi_currency_lcv(self) -> None:
 		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import save_new_records
 
 		save_new_records(self.globalTestRecords["Currency Exchange"])
@@ -637,7 +639,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 			self.assertEqual(entry.credit, amounts[0])
 			self.assertEqual(entry.credit_in_account_currency, amounts[1])
 
-	def test_asset_lcv(self):
+	def test_asset_lcv(self) -> None:
 		"Check if LCV for an Asset updates the Assets Net Purchase Amount correctly."
 		frappe.db.set_value(
 			"Company", "_Test Company", "capital_work_in_progress_account", "CWIP Account - _TC"
@@ -670,7 +672,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 		lcv.cancel()
 		pr.cancel()
 
-	def test_landed_cost_voucher_with_serial_batch_for_legacy_pr(self):
+	def test_landed_cost_voucher_with_serial_batch_for_legacy_pr(self) -> None:
 		from erpnext.stock.doctype.item.test_item import make_item
 
 		frappe.flags.ignore_serial_batch_bundle_validation = True
@@ -820,7 +822,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 				frappe.db.get_value("Serial and Batch Bundle", row.serial_and_batch_bundle, "avg_rate"),
 			)
 
-	def test_do_not_validate_landed_cost_voucher_with_serial_batch_for_legacy_pr(self):
+	def test_do_not_validate_landed_cost_voucher_with_serial_batch_for_legacy_pr(self) -> None:
 		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle import get_auto_batch_nos
 
@@ -1022,7 +1024,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 				frappe.db.get_value("Serial and Batch Bundle", row.serial_and_batch_bundle, "avg_rate"),
 			)
 
-	def test_do_not_validate_against_landed_cost_voucher_for_serial_for_legacy_pr(self):
+	def test_do_not_validate_against_landed_cost_voucher_for_serial_for_legacy_pr(self) -> None:
 		from erpnext.stock.doctype.item.test_item import make_item
 
 		frappe.flags.ignore_serial_batch_bundle_validation = True
@@ -1144,7 +1146,7 @@ class TestLandedCostVoucher(ERPNextTestSuite):
 				frappe.db.get_value("Serial and Batch Bundle", row.serial_and_batch_bundle, "avg_rate"),
 			)
 
-	def test_lcv_for_work_order_scr(self):
+	def test_lcv_for_work_order_scr(self) -> None:
 		from erpnext.controllers.tests.test_subcontracting_controller import (
 			get_rm_items,
 			get_subcontracting_order,
@@ -1411,12 +1413,12 @@ def create_landed_cost_voucher(receipt_document_type, receipt_document, company,
 	return lcv
 
 
-def get_expense_account(company):
+def get_expense_account(company) -> str:
 	company_abbr = frappe.get_cached_value("Company", company, "abbr")
 	return f"Expenses Included In Valuation - {company_abbr}"
 
 
-def distribute_landed_cost_on_items(lcv):
+def distribute_landed_cost_on_items(lcv) -> None:
 	based_on = lcv.distribute_charges_based_on.lower()
 	total = sum(flt(d.get(based_on)) for d in lcv.get("items"))
 

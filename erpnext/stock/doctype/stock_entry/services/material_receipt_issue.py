@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
@@ -7,48 +9,48 @@ from .stock_entry_base import BaseStockEntry
 
 
 class MaterialReceiptStockEntry(BaseStockEntry):
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_default_warehouse()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_warehouse()
 
-	def set_default_warehouse(self):
+	def set_default_warehouse(self) -> None:
 		for row in self.doc.items:
 			row.s_warehouse = None
 			if not row.t_warehouse and self.doc.to_warehouse:
 				row.t_warehouse = self.doc.to_warehouse
 
-	def validate_warehouse(self):
+	def validate_warehouse(self) -> None:
 		for row in self.doc.items:
 			if not row.t_warehouse:
 				frappe.throw(_("Target Warehouse is required for item {0}").format(row.item_code))
 
 
 class BaseMaterialIssueStockEntry(BaseStockEntry):
-	def set_default_warehouse(self):
+	def set_default_warehouse(self) -> None:
 		for row in self.doc.items:
 			row.t_warehouse = None
 			if not row.s_warehouse and self.doc.from_warehouse:
 				row.s_warehouse = self.doc.from_warehouse
 
-	def validate_warehouse(self):
+	def validate_warehouse(self) -> None:
 		for row in self.doc.items:
 			if not row.s_warehouse:
 				frappe.throw(_("Source Warehouse is required for item {0}").format(row.item_code))
 
 
 class MaterialIssueStockEntry(BaseMaterialIssueStockEntry):
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_default_warehouse()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_warehouse()
 
-	def add_items(self):
+	def add_items(self) -> None:
 		self.add_raw_materials_based_on_bom()
 
-	def add_raw_materials_based_on_bom(self):
+	def add_raw_materials_based_on_bom(self) -> None:
 		bom_items = get_bom_items(self.doc.bom_no, self.doc.use_multi_level_bom)
 
 		for row in bom_items:

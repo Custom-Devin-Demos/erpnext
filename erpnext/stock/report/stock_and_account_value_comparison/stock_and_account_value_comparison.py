@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import get_datetime, get_link_to_form, parse_json
@@ -12,7 +14,7 @@ from erpnext.stock.doctype.stock_reposting_settings.stock_reposting_settings imp
 from erpnext.stock.doctype.warehouse.warehouse import get_warehouses_based_on_account
 
 
-def execute(filters=None):
+def execute(filters=None) -> tuple:
 	if not erpnext.is_perpetual_inventory_enabled(filters.company):
 		frappe.throw(
 			_("Perpetual inventory required for the company {0} to view this report.").format(filters.company)
@@ -137,7 +139,7 @@ def get_gl_data(report_filters, filters):
 	return voucher_wise_gl_data
 
 
-def get_columns(filters):
+def get_columns(filters) -> list:
 	return [
 		{
 			"label": _("Stock Ledger ID"),
@@ -178,7 +180,7 @@ def get_columns(filters):
 
 
 @frappe.whitelist()
-def create_reposting_entries(rows: str | list, company: str):
+def create_reposting_entries(rows: str | list, company: str) -> None:
 	if isinstance(rows, str):
 		rows = parse_json(rows)
 
@@ -227,7 +229,7 @@ def create_reposting_entries(rows: str | list, company: str):
 		frappe.msgprint(_("Reposting entries created: {0}").format(entries))
 
 
-def repost_based_on_transaction(rows, company=None, entries=None):
+def repost_based_on_transaction(rows, company=None, entries=None) -> None:
 	if entries is None:
 		entries = []
 

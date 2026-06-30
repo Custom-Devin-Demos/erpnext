@@ -1,6 +1,8 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt, random_string
 
@@ -28,11 +30,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestItemAlternative(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		super().setUp()
 		make_items()
 
-	def test_alternative_item_for_subcontract_rm(self):
+	def test_alternative_item_for_subcontract_rm(self) -> None:
 		set_backflush_based_on("BOM")
 
 		create_stock_reconciliation(
@@ -119,7 +121,7 @@ class TestItemAlternative(ERPNextTestSuite):
 		self.assertEqual(status, True)
 		set_backflush_based_on("Material Transferred for Subcontract")
 
-	def test_alternative_item_for_production_rm(self):
+	def test_alternative_item_for_production_rm(self) -> None:
 		create_stock_reconciliation(
 			item_code="Alternate Item For A RW 1", warehouse="_Test Warehouse - _TC", qty=5, rate=2000
 		)
@@ -167,7 +169,7 @@ class TestItemAlternative(ERPNextTestSuite):
 		self.assertEqual(status, True)
 		ste1.submit()
 
-	def test_get_used_alternative_items_returns_substitution(self):
+	def test_get_used_alternative_items_returns_substitution(self) -> None:
 		# get_used_alternative_items (raw SQL -> frappe.qb) returns the alternative items substituted
 		# into a work order's transfer entries, keyed by the original item. Exercises the converted
 		# query on both engines.
@@ -200,7 +202,7 @@ class TestItemAlternative(ERPNextTestSuite):
 		self.assertIn("Test FG A RW 1", used)
 		self.assertEqual(used["Test FG A RW 1"].item_code, "Alternate Item For A RW 1")
 
-	def test_get_used_alternative_items_for_subcontract_order(self):
+	def test_get_used_alternative_items_for_subcontract_order(self) -> None:
 		# Covers the subcontract_order branch of get_used_alternative_items (including the dynamic
 		# subcontract_order_field column) on both engines.
 		from erpnext.stock.doctype.stock_entry.stock_entry import get_used_alternative_items
@@ -267,7 +269,7 @@ class TestItemAlternative(ERPNextTestSuite):
 		self.assertEqual(used["Test FG A RW 1"].item_code, "Alternate Item For A RW 1")
 		set_backflush_based_on("Material Transferred for Subcontract")
 
-	def test_get_alternative_items_both_directions_and_dedup(self):
+	def test_get_alternative_items_both_directions_and_dedup(self) -> None:
 		"""get_alternative_items must return forward alternatives, reverse-only
 		two_way alternatives, exclude one-way reverse rows, and dedupe an item
 		that matches in both the forward and reverse legs of the old UNION."""
@@ -319,7 +321,7 @@ class TestItemAlternative(ERPNextTestSuite):
 		self.assertIn(dup, returned)
 		self.assertEqual(returned.count(dup), 1)
 
-	def test_get_alternative_items_respects_txt_filter(self):
+	def test_get_alternative_items_respects_txt_filter(self) -> None:
 		"""The txt LIKE filter must actually narrow the result set so a
 		non-matching alternate is excluded (guards against a broken WHERE)."""
 		suffix = random_string(8)
@@ -344,7 +346,7 @@ class TestItemAlternative(ERPNextTestSuite):
 		self.assertIn(matching, returned)
 		self.assertNotIn(other, returned)
 
-	def test_get_alternative_items_case_insensitive_match(self):
+	def test_get_alternative_items_case_insensitive_match(self) -> None:
 		"""The txt match must stay case-insensitive on BOTH engines: MariaDB LIKE is
 		case-insensitive by default, and frappe compiles the `like` filter to ILIKE on
 		Postgres. A case-shifted search must still find an alternate whose stored code
@@ -372,7 +374,7 @@ class TestItemAlternative(ERPNextTestSuite):
 
 		self.assertIn(alt, returned)
 
-	def test_get_alternative_items_pagination(self):
+	def test_get_alternative_items_pagination(self) -> None:
 		"""start/page_len must slice the deduped, order-preserving result."""
 		suffix = random_string(8)
 		base = f"_Test IA Page Base {suffix}"
@@ -399,7 +401,7 @@ class TestItemAlternative(ERPNextTestSuite):
 		self.assertEqual(len(page), 1)
 		self.assertEqual(page[0], full[1])
 
-	def test_get_alternative_items_pagination_is_bounded_and_exact(self):
+	def test_get_alternative_items_pagination_is_bounded_and_exact(self) -> None:
 		"""Each get_all is bounded to start+page_len rows, so the DB round trip stays small
 		instead of fetching every alternative per keystroke. Walking the result in small pages
 		must still reconstruct the complete deduped set — including an alternate that appears in
@@ -454,7 +456,7 @@ def make_item_alternative(item_code, alternative_item_code, two_way=0):
 	return doc
 
 
-def make_items():
+def make_items() -> None:
 	items = [
 		"Test Finished Goods - A",
 		"Test FG A RW 1",

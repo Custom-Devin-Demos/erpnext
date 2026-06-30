@@ -6,6 +6,7 @@
 Purchase Invoice imports the module-level allocation helpers from here —
 Purchase Receipt owns the shared buying billing logic.
 """
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -15,7 +16,7 @@ from pypika import functions as fn
 
 
 class BillingStatusService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def update_billing_status(self, update_modified: bool = True) -> None:

@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
@@ -15,7 +17,7 @@ WAREHOUSE = "Stores - _TC"
 class TestStockProjectedQty(ERPNextTestSuite):
 	"""Correctness tests for the Stock Projected Qty report (a current-Bin snapshot)."""
 
-	def run_report(self, item_code, warehouse=None):
+	def run_report(self, item_code, warehouse=None) -> list:
 		filters = frappe._dict(company="_Test Company", item_code=item_code)
 		if warehouse:
 			filters.warehouse = warehouse
@@ -23,7 +25,7 @@ class TestStockProjectedQty(ERPNextTestSuite):
 		fields = [column["fieldname"] for column in columns]
 		return [dict(zip(fields, row, strict=False)) for row in data]
 
-	def test_projected_qty_includes_actual_and_ordered(self):
+	def test_projected_qty_includes_actual_and_ordered(self) -> None:
 		item = "_Test Item"
 		make_stock_entry(item_code=item, qty=10, to_warehouse=WAREHOUSE, basic_rate=100)
 		create_purchase_order(item_code=item, qty=5, rate=100, warehouse=WAREHOUSE)
@@ -33,7 +35,7 @@ class TestStockProjectedQty(ERPNextTestSuite):
 		self.assertEqual(row["ordered_qty"], 5)
 		self.assertEqual(row["projected_qty"], 15)
 
-	def test_projected_qty_includes_all_quantity_components(self):
+	def test_projected_qty_includes_all_quantity_components(self) -> None:
 		"""projected_qty = actual + ordered + requested + planned
 		- reserved - reserved_for_production - reserved_for_subcontract - reserved_for_production_plan
 		and every component is surfaced as its own column."""
@@ -70,7 +72,7 @@ class TestStockProjectedQty(ERPNextTestSuite):
 		self.assertEqual(row["reserved_qty_for_production_plan"], 4)
 		self.assertEqual(row["projected_qty"], 172)
 
-	def test_shortage_qty_from_reorder_level(self):
+	def test_shortage_qty_from_reorder_level(self) -> None:
 		item = "_Test Item"
 		doc = frappe.get_doc("Item", item)
 		doc.append(
@@ -90,7 +92,7 @@ class TestStockProjectedQty(ERPNextTestSuite):
 		self.assertEqual(row["projected_qty"], 10)
 		self.assertEqual(row["shortage_qty"], 10)  # reorder level 20 - projected 10
 
-	def test_item_filter_returns_only_requested_item(self):
+	def test_item_filter_returns_only_requested_item(self) -> None:
 		item_a = "_Test Item"
 		item_b = "_Test Item 2"
 		make_stock_entry(item_code=item_a, qty=5, to_warehouse=WAREHOUSE, basic_rate=100)

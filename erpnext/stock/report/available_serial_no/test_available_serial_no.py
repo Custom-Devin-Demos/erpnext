@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, today
 
@@ -24,7 +26,7 @@ class TestStockLedgerReeport(ERPNextTestSuite):
 			item_code="_Test Item With Serial No",
 		)
 
-	def test_available_serial_no(self):
+	def test_available_serial_no(self) -> None:
 		report = frappe.get_doc("Report", "Available Serial No")
 
 		make_purchase_receipt(qty=10, item_code="_Test Item with Serial No")

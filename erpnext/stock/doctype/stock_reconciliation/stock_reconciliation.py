@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from datetime import timedelta
 
 import frappe
@@ -61,11 +63,11 @@ class StockReconciliation(StockController):
 		set_warehouse: DF.Link | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.head_row = ["Item Code", "Warehouse", "Quantity", "Valuation Rate"]
 
-	def validate(self):
+	def validate(self) -> None:
 		from erpnext.stock.doctype.putaway_rule.putaway_rule import validate_putaway_capacity
 		from erpnext.stock.services.serial_batch_bundle_service import SerialBatchBundleService
 
@@ -98,11 +100,11 @@ class StockReconciliation(StockController):
 		if self._action == "submit":
 			self.validate_reserved_stock()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		super().on_update()
 		self.set_serial_and_batch_bundle(ignore_validate=True)
 
-	def validate_inventory_dimension(self):
+	def validate_inventory_dimension(self) -> None:
 		dimensions = get_inventory_dimensions()
 		for dimension in dimensions:
 			for row in self.items:
@@ -113,14 +115,14 @@ class StockReconciliation(StockController):
 						).format(row.idx, bold(dimension.get("doctype")))
 					)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.make_bundle_for_current_qty()
 		self.make_bundle_using_old_serial_batch_fields()
 		self.update_stock_ledger()
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.validate_reserved_stock()
 		self.ignore_linked_doctypes = (
 			"GL Entry",
@@ -133,7 +135,7 @@ class StockReconciliation(StockController):
 		self.repost_future_sle_and_gle()
 		self.delete_auto_created_batches()
 
-	def make_bundle_for_current_qty(self):
+	def make_bundle_for_current_qty(self) -> None:
 		from erpnext.stock.serial_batch_bundle import SerialBatchCreation
 
 		for row in self.items:
@@ -173,7 +175,7 @@ class StockReconciliation(StockController):
 					}
 				)
 
-	def validate_standard_cost_items(self):
+	def validate_standard_cost_items(self) -> None:
 		"""Stock Reconciliation is not allowed for Standard Cost items — their rate is changed
 		only through the Item Standard Cost doctype (which creates the revaluation reco itself)."""
 		if self.flags.via_item_standard_cost:
@@ -187,7 +189,7 @@ class StockReconciliation(StockController):
 					).format(item.idx, get_link_to_form("Item", item.item_code))
 				)
 
-	def set_current_serial_and_batch_bundle(self, voucher_detail_no=None, save=False) -> None:
+	def set_current_serial_and_batch_bundle(self, voucher_detail_no=None, save: bool = False) -> None:
 		"""Set Serial and Batch Bundle for each item"""
 		for item in self.items:
 			if voucher_detail_no and voucher_detail_no != item.name:
@@ -447,7 +449,7 @@ class StockReconciliation(StockController):
 
 		return False
 
-	def set_new_serial_and_batch_bundle(self):
+	def set_new_serial_and_batch_bundle(self) -> None:
 		for item in self.items:
 			if not item.item_code:
 				continue
@@ -494,7 +496,7 @@ class StockReconciliation(StockController):
 			elif item.serial_and_batch_bundle and item.qty:
 				self.update_existing_serial_and_batch_bundle(item)
 
-	def update_existing_serial_and_batch_bundle(self, item):
+	def update_existing_serial_and_batch_bundle(self, item) -> None:
 		batch_details = frappe.get_all(
 			"Serial and Batch Entry",
 			fields=["batch_no", "qty", "name"],
@@ -513,13 +515,13 @@ class StockReconciliation(StockController):
 
 			frappe.db.set_value("Serial and Batch Entry", batch.name, update_values)
 
-	def remove_items_with_no_change(self):
+	def remove_items_with_no_change(self) -> bool:
 		from erpnext.stock.stock_ledger import get_stock_value_difference
 
 		"""Remove items if qty or rate is not changed"""
 		self.difference_amount = 0.0
 
-		def _changed(item):
+		def _changed(item) -> bool:
 			if item.current_serial_and_batch_bundle:
 				bundle_data = frappe.get_all(
 					"Serial and Batch Bundle",
@@ -601,7 +603,7 @@ class StockReconciliation(StockController):
 			self.change_idx = True
 			frappe.msgprint(_("Removed items with no change in quantity or value."))
 
-	def calculate_difference_amount(self, item, item_dict):
+	def calculate_difference_amount(self, item, item_dict) -> None:
 		qty_precision = item.precision("qty")
 		amount_precision = item.precision("amount")
 
@@ -698,19 +700,19 @@ class StockReconciliation(StockController):
 
 			raise frappe.ValidationError(self.validation_messages)
 
-	def change_row_indexes(self):
+	def change_row_indexes(self) -> None:
 		if getattr(self, "change_idx", False):
 			for i, item in enumerate(self.items):
 				item.idx = i + 1
 
-	def validate_item(self, item_code, row):
+	def validate_item(self, item_code, row) -> None:
 		from erpnext.stock.doctype.item.item import (
 			validate_cancelled_item,
 			validate_end_of_life,
 			validate_is_stock_item,
 		)
 
-		def validate_serial_batch_items():
+		def validate_serial_batch_items() -> None:
 			has_batch_no, has_serial_no = frappe.get_value(
 				"Item", item_code, ["has_batch_no", "has_serial_no"]
 			)
@@ -779,7 +781,7 @@ class StockReconciliation(StockController):
 				title=_("Stock Reservation"),
 			)
 
-	def update_stock_ledger(self, allow_negative_stock=False):
+	def update_stock_ledger(self, allow_negative_stock: bool = False) -> None:
 		"""find difference between current and expected entries
 		and create stock ledger entries based on the difference"""
 		from erpnext.stock.stock_ledger import get_previous_sle
@@ -853,7 +855,7 @@ class StockReconciliation(StockController):
 				)
 			)
 
-	def make_adjustment_entry(self, row, sl_entries):
+	def make_adjustment_entry(self, row, sl_entries) -> None:
 		from erpnext.stock.stock_ledger import get_stock_value_difference
 
 		difference_amount = get_stock_value_difference(
@@ -868,7 +870,7 @@ class StockReconciliation(StockController):
 
 		sl_entries.append(args)
 
-	def get_sle_for_serialized_items(self, row, sl_entries):
+	def get_sle_for_serialized_items(self, row, sl_entries) -> None:
 		if row.current_serial_and_batch_bundle:
 			args = self.get_sle_for_items(row)
 			args.update(
@@ -893,7 +895,7 @@ class StockReconciliation(StockController):
 
 			sl_entries.append(args)
 
-	def get_sle_for_items(self, row, serial_nos=None, current_bundle=True):
+	def get_sle_for_items(self, row, serial_nos=None, current_bundle: bool = True):
 		"""Insert Stock Ledger Entries"""
 
 		if not serial_nos and row.serial_no:
@@ -953,7 +955,7 @@ class StockReconciliation(StockController):
 
 		return data
 
-	def make_sle_on_cancel(self):
+	def make_sle_on_cancel(self) -> None:
 		sl_entries = []
 
 		has_serial_no = False
@@ -1005,7 +1007,7 @@ class StockReconciliation(StockController):
 
 		return StockReconciliationGLComposer(self).compose(inventory_account_map)
 
-	def validate_expense_account(self):
+	def validate_expense_account(self) -> None:
 		if not cint(erpnext.is_perpetual_inventory_enabled(self.company)):
 			return
 
@@ -1020,7 +1022,7 @@ class StockReconciliation(StockController):
 					OpeningEntryAccountError,
 				)
 
-	def set_zero_value_for_customer_provided_items(self):
+	def set_zero_value_for_customer_provided_items(self) -> None:
 		changed_any_values = False
 
 		for d in self.get("items"):
@@ -1037,7 +1039,7 @@ class StockReconciliation(StockController):
 				indicator="blue",
 			)
 
-	def set_total_qty_and_amount(self):
+	def set_total_qty_and_amount(self) -> None:
 		for d in self.get("items"):
 			d.amount = flt(flt(d.qty) * flt(d.valuation_rate), d.precision("amount"))
 			d.current_amount = flt(
@@ -1047,7 +1049,7 @@ class StockReconciliation(StockController):
 			d.quantity_difference = flt(d.qty) - flt(d.current_qty)
 			d.amount_difference = flt(d.amount) - flt(d.current_amount)
 
-	def recalculate_difference_amount_from_ledger(self):
+	def recalculate_difference_amount_from_ledger(self) -> None:
 		"""Sync the displayed current qty/rate and difference amount with the (reposted) ledger.
 
 		Submitted reconciliations freeze ``difference_amount`` and the per-row current values at
@@ -1143,7 +1145,7 @@ class StockReconciliation(StockController):
 
 		return flt(previous_sle[0][0], row.precision("current_qty")) if previous_sle else 0.0
 
-	def submit(self):
+	def submit(self) -> None:
 		if len(self.items) > 100:
 			msgprint(
 				_(
@@ -1154,7 +1156,7 @@ class StockReconciliation(StockController):
 		else:
 			self._submit()
 
-	def cancel(self):
+	def cancel(self) -> None:
 		if len(self.items) > 100:
 			msgprint(
 				_(
@@ -1166,7 +1168,7 @@ class StockReconciliation(StockController):
 			self._cancel()
 
 
-def is_standard_cost_item(item_code, company):
+def is_standard_cost_item(item_code, company) -> bool:
 	return get_valuation_method(item_code, company) == "Standard Cost"
 
 
@@ -1310,7 +1312,7 @@ def get_items_for_stock_reco(warehouse, company):
 	return items
 
 
-def get_item_data(row, qty, valuation_rate, serial_no=None):
+def get_item_data(row, qty, valuation_rate, serial_no=None) -> dict:
 	return {
 		"item_code": row.item_code,
 		"warehouse": row.warehouse,
@@ -1384,7 +1386,7 @@ def get_stock_balance_for(
 	inventory_dimensions_dict: dict | None = None,
 	row: StockReconciliationItem | str | dict | None = None,
 	company: str | None = None,
-):
+) -> dict:
 	frappe.has_permission("Stock Reconciliation", "write", throw=True)
 
 	item_dict = frappe.get_cached_value("Item", item_code, ["has_serial_no", "has_batch_no"], as_dict=1)

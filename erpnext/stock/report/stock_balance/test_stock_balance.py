@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
@@ -10,7 +12,7 @@ from erpnext.stock.report.stock_balance.stock_balance import execute, get_stock_
 from erpnext.tests.utils import ERPNextTestSuite
 
 
-def stock_balance(filters):
+def stock_balance(filters) -> list:
 	"""Get rows from stock balance report"""
 	return [_dict(row) for row in execute(filters)[1]]
 
@@ -22,7 +24,7 @@ class TestStockBalance(ERPNextTestSuite):
 	# so transacting here keeps exact qty/value assertions deterministic.
 	test_warehouse = "Stores - _TC"
 
-	def setUp(self):
+	def setUp(self) -> None:
 		self.item = frappe.get_doc("Item", "_Test Item")
 		self.filters = _dict(
 			{
@@ -34,17 +36,17 @@ class TestStockBalance(ERPNextTestSuite):
 			}
 		)
 
-	def assertPartialDictEq(self, expected: dict[str, Any], actual: dict[str, Any]):
+	def assertPartialDictEq(self, expected: dict[str, Any], actual: dict[str, Any]) -> None:
 		for k, v in expected.items():
 			self.assertEqual(v, actual[k], msg=f"{expected=}\n{actual=}")
 
-	def generate_stock_ledger(self, item_code: str, movements):
+	def generate_stock_ledger(self, item_code: str, movements) -> None:
 		for movement in map(_dict, movements):
 			if "to_warehouse" not in movement:
 				movement.to_warehouse = self.test_warehouse
 			make_stock_entry(item_code=item_code, **movement)
 
-	def assertInvariants(self, rows):
+	def assertInvariants(self, rows) -> None:
 		item_wh_stock = _dict()
 
 		# Latest balance per (item_code, warehouse): first row wins because of the desc ordering.
@@ -76,7 +78,7 @@ class TestStockBalance(ERPNextTestSuite):
 
 	# ----------- tests
 
-	def test_basic_stock_balance(self):
+	def test_basic_stock_balance(self) -> None:
 		"""Check very basic functionality and item info"""
 		rows = stock_balance(self.filters)
 		self.assertEqual(rows, [])
@@ -99,7 +101,7 @@ class TestStockBalance(ERPNextTestSuite):
 		)
 		self.assertInvariants(rows)
 
-	def test_include_zero_stock_items(self):
+	def test_include_zero_stock_items(self) -> None:
 		"""Items whose balance nets to zero are hidden by default and shown only when the filter is on."""
 		self.generate_stock_ledger(
 			self.item.name,
@@ -116,7 +118,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertEqual(rows[0].bal_qty, 0)
 		self.assertEqual(rows[0].bal_val, 0)
 
-	def test_show_stock_ageing_data_adds_ageing_columns(self):
+	def test_show_stock_ageing_data_adds_ageing_columns(self) -> None:
 		"""The ageing columns appear only when 'show stock ageing data' is on."""
 		self.generate_stock_ledger(self.item.name, [_dict(qty=5, rate=10, posting_date="2021-01-01")])
 
@@ -127,7 +129,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertGreater(rows[0].average_age, 0)  # stock has been held since 2021
 
 	@ERPNextTestSuite.change_settings("System Settings", {"float_precision": 3, "currency_precision": 3})
-	def test_opening_balance(self):
+	def test_opening_balance(self) -> None:
 		self.generate_stock_ledger(
 			self.item.name,
 			[
@@ -147,7 +149,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertInvariants(rows)
 		self.assertPartialDictEq({"opening_qty": 6, "in_qty": 0}, rows[0])
 
-	def test_uom_converted_info(self):
+	def test_uom_converted_info(self) -> None:
 		self.item.append("uoms", {"conversion_factor": 5, "uom": "Box"})
 		self.item.save()
 
@@ -157,7 +159,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertEqual(rows[0].bal_qty_alt, 1)
 		self.assertInvariants(rows)
 
-	def test_item_group(self):
+	def test_item_group(self) -> None:
 		self.generate_stock_ledger(self.item.name, [_dict(qty=5, rate=10)])
 
 		self.filters.pop("item_code", None)
@@ -165,7 +167,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertTrue(rows)
 		self.assertTrue(all(r.item_group == self.item.item_group for r in rows))
 
-	def test_child_warehouse_balances(self):
+	def test_child_warehouse_balances(self) -> None:
 		# This is default
 		self.generate_stock_ledger(self.item.name, [_dict(qty=5, rate=10, to_warehouse="Stores - _TC")])
 
@@ -177,7 +179,7 @@ class TestStockBalance(ERPNextTestSuite):
 			msg=f"Expected child warehouse balances \n{rows}",
 		)
 
-	def test_show_item_attr(self):
+	def test_show_item_attr(self) -> None:
 		from erpnext.controllers.item_variant import create_variant
 
 		attributes = {"Test Size": "Large"}
@@ -196,7 +198,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.filters.update({"item_code": [item.name]})
 		return item
 
-	def test_alt_uom_balance_single_uom(self):
+	def test_alt_uom_balance_single_uom(self) -> None:
 		"""Alt UOM columns show correct name and converted qty for an item with one alternate UOM."""
 		item = self.make_alt_uom_item(uoms=[{"conversion_factor": 12, "uom": "Box"}])
 
@@ -207,7 +209,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertEqual(rows[0].get("alt_uom"), "Box")
 		self.assertAlmostEqual(rows[0].get("alt_uom_bal_qty"), 2.0)  # 24 / 12
 
-	def test_alt_uom_balance_no_alternate_uom(self):
+	def test_alt_uom_balance_no_alternate_uom(self) -> None:
 		"""Alt UOM columns are not added when no items in the report have alt UOMs."""
 		item = self.make_alt_uom_item()
 		self.generate_stock_ledger(item.name, [_dict(qty=5, rate=10)])
@@ -217,7 +219,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertNotIn("alt_uom", col_fieldnames)
 		self.assertNotIn("alt_uom_bal_qty", col_fieldnames)
 
-	def test_alt_uom_balance_filter_disabled(self):
+	def test_alt_uom_balance_filter_disabled(self) -> None:
 		"""No alt UOM columns are injected when show_alt_uom_balance is not set."""
 		item = self.make_alt_uom_item(uoms=[{"conversion_factor": 12, "uom": "Box"}])
 
@@ -228,7 +230,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertNotIn("alt_uom", col_fieldnames)
 		self.assertNotIn("alt_uom_bal_qty", col_fieldnames)
 
-	def test_alt_uom_balance_uses_first_alternate_uom(self):
+	def test_alt_uom_balance_uses_first_alternate_uom(self) -> None:
 		"""When an item has multiple alt UOMs, only the first (lowest idx) is shown."""
 		frappe.get_doc({"doctype": "UOM", "uom_name": "Carton"}).insert(ignore_if_duplicate=True)
 		item = self.make_alt_uom_item(
@@ -245,7 +247,7 @@ class TestStockBalance(ERPNextTestSuite):
 		self.assertEqual(rows[0].get("alt_uom"), "Box")
 		self.assertAlmostEqual(rows[0].get("alt_uom_bal_qty"), 12.0)  # 144 / 12, not 144 / 144
 
-	def test_stock_ageing_data_accepts_batchwise_valuation_slots(self):
+	def test_stock_ageing_data_accepts_batchwise_valuation_slots(self) -> None:
 		fifo_queue = [
 			["SA-BATCH-NEWER", 1, 2.0, "2021-12-05", 20.0],
 			["SA-BATCH-OLDER", 1, 3.0, "2021-12-01", 30.0],

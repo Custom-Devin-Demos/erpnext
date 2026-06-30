@@ -8,6 +8,7 @@ Serial and Batch Bundles for a stock voucher. The controller keeps thin
 delegators for methods reached from other doctypes / ``run_method``; internal
 helpers live here only.
 """
+from __future__ import annotations
 
 import frappe
 from frappe import _, bold
@@ -29,7 +30,7 @@ class SerialBatchBundleService:
 	def __init__(self, doc) -> None:
 		self.doc = doc
 
-	def validate_warehouse_of_sabb(self):
+	def validate_warehouse_of_sabb(self) -> None:
 		if self.doc.is_internal_transfer():
 			return
 
@@ -68,7 +69,7 @@ class SerialBatchBundleService:
 					sabb_doc = frappe.get_doc("Serial and Batch Bundle", row.serial_and_batch_bundle)
 					sabb_doc.validate_serial_no_status()
 
-	def validate_duplicate_serial_and_batch_bundle(self, table_name):
+	def validate_duplicate_serial_and_batch_bundle(self, table_name) -> None:
 		if not self.doc.get(table_name):
 			return
 
@@ -101,7 +102,7 @@ class SerialBatchBundleService:
 					)
 				)
 
-	def validate_serialized_batch(self):
+	def validate_serialized_batch(self) -> None:
 		from erpnext.exceptions import BatchExpiredError
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
@@ -144,7 +145,7 @@ class SerialBatchBundleService:
 						BatchExpiredError,
 					)
 
-	def clean_serial_nos(self):
+	def clean_serial_nos(self) -> None:
 		from erpnext.stock.doctype.serial_no.serial_no import clean_serial_no_string
 
 		for row in self.doc.get("items"):
@@ -157,7 +158,9 @@ class SerialBatchBundleService:
 				# remove extra whitespace and store one serial no on each line
 				row.serial_no = clean_serial_no_string(row.serial_no)
 
-	def make_bundle_using_old_serial_batch_fields(self, table_name=None, via_landed_cost_voucher=False):
+	def make_bundle_using_old_serial_batch_fields(
+		self, table_name=None, via_landed_cost_voucher: bool = False
+	) -> None:
 		if self.doc.get("_action") == "update_after_submit":
 			return
 
@@ -230,7 +233,7 @@ class SerialBatchBundleService:
 
 		return parent_details
 
-	def make_bundle_for_sales_purchase_return(self, table_name=None):
+	def make_bundle_for_sales_purchase_return(self, table_name=None) -> None:
 		if not self.doc.get("is_return"):
 			return
 
@@ -242,7 +245,7 @@ class SerialBatchBundleService:
 		if self.doc.doctype in ["Purchase Invoice", "Purchase Receipt"]:
 			self.make_bundle_for_rejected_qty(table_name)
 
-	def make_bundle_for_rejected_qty(self, table_name=None):
+	def make_bundle_for_rejected_qty(self, table_name=None) -> None:
 		field, reference_ids = self.get_reference_ids(
 			table_name, "rejected_qty", "rejected_serial_and_batch_bundle"
 		)
@@ -291,7 +294,7 @@ class SerialBatchBundleService:
 						}
 					)
 
-	def make_bundle_for_non_rejected_qty(self, table_name):
+	def make_bundle_for_non_rejected_qty(self, table_name) -> None:
 		field, reference_ids = self.get_reference_ids(table_name)
 		if not reference_ids:
 			return
@@ -326,7 +329,7 @@ class SerialBatchBundleService:
 						"incoming_rate", frappe.db.get_value("Serial and Batch Bundle", bundle, "avg_rate")
 					)
 
-	def get_value_for_packed_item(self, row):
+	def get_value_for_packed_item(self, row) -> tuple | None:
 		parent_items = self.doc.get("items", {"name": row.parent_detail_docname})
 		if parent_items:
 			ref = parent_items[0].get("dn_detail")
@@ -385,7 +388,9 @@ class SerialBatchBundleService:
 
 		return bool(item_details.has_serial_no or item_details.has_batch_no)
 
-	def update_bundle_details(self, bundle_details, table_name, row, is_rejected=False, parent_details=None):
+	def update_bundle_details(
+		self, bundle_details, table_name, row, is_rejected: bool = False, parent_details=None
+	) -> None:
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 		# Since qty field is different for different doctypes
@@ -447,7 +452,7 @@ class SerialBatchBundleService:
 			}
 		)
 
-	def create_serial_batch_bundle(self, bundle_details, row):
+	def create_serial_batch_bundle(self, bundle_details, row) -> None:
 		from erpnext.stock.serial_batch_bundle import SerialBatchCreation
 
 		sn_doc = SerialBatchCreation(bundle_details).make_serial_and_batch_bundle()
@@ -459,7 +464,7 @@ class SerialBatchBundleService:
 		row.set(field, sn_doc.name)
 		row.db_set({field: sn_doc.name})
 
-	def validate_serial_nos_and_batches_with_bundle(self, row):
+	def validate_serial_nos_and_batches_with_bundle(self, row) -> None:
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 		throw_error = False
@@ -500,12 +505,12 @@ class SerialBatchBundleService:
 				).format(row.idx, row.serial_and_batch_bundle)
 			)
 
-	def set_use_serial_batch_fields(self):
+	def set_use_serial_batch_fields(self) -> None:
 		if frappe.get_single_value("Stock Settings", "use_serial_batch_fields"):
 			for row in self.doc.items:
 				row.use_serial_batch_fields = 1
 
-	def delete_auto_created_batches(self):
+	def delete_auto_created_batches(self) -> None:
 		for table_name in ["items", "packed_items", "supplied_items"]:
 			if not self.doc.get(table_name):
 				continue
@@ -544,7 +549,7 @@ class SerialBatchBundleService:
 				if row.get("current_serial_and_batch_bundle"):
 					row.db_set("current_serial_and_batch_bundle", None)
 
-	def set_serial_and_batch_bundle(self, table_name=None, ignore_validate=False):
+	def set_serial_and_batch_bundle(self, table_name=None, ignore_validate: bool = False) -> None:
 		if not table_name:
 			table_name = "items"
 
@@ -578,7 +583,7 @@ class SerialBatchBundleService:
 			qty=qty,
 		)
 
-	def validate_reserved_batches(self):
+	def validate_reserved_batches(self) -> None:
 		if not frappe.db.get_single_value("Stock Settings", "enable_stock_reservation"):
 			return
 

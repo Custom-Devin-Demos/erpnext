@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
@@ -12,7 +14,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestItemShortageReport(ERPNextTestSuite):
-	def test_item_shortage_report(self):
+	def test_item_shortage_report(self) -> None:
 		item = make_item().name
 		so = make_sales_order(item_code=item)
 

@@ -1,6 +1,8 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 from collections import OrderedDict, defaultdict
 from typing import Any
@@ -75,7 +77,7 @@ class PickList(TransactionBase):
 		work_order: DF.Link | None
 	# end: auto-generated types
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 		self.status_updater = [
 			{
@@ -105,14 +107,14 @@ class PickList(TransactionBase):
 			for item in self.get("locations"):
 				item.update(get_item_details(item.item_code, item.uom, item.warehouse, company))
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_expired_batches()
 		self.validate_for_qty()
 		self.validate_stock_qty()
 		self.check_serial_no_status()
 		self.validate_with_previous_doc()
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.update_status()
 		if not self.pick_manually:
 			self.set_item_locations()
@@ -121,7 +123,7 @@ class PickList(TransactionBase):
 			self.validate_sales_order_percentage()
 			self.validate_warehouses()
 
-	def validate_stock_qty(self):
+	def validate_stock_qty(self) -> None:
 		from erpnext.stock.doctype.batch.batch import get_batch_qty
 
 		for row in self.get("locations"):
@@ -164,7 +166,7 @@ class PickList(TransactionBase):
 					title=_("Insufficient Stock"),
 				)
 
-	def validate_warehouses(self):
+	def validate_warehouses(self) -> None:
 		for location in self.locations:
 			if not location.warehouse:
 				frappe.throw(
@@ -189,7 +191,7 @@ class PickList(TransactionBase):
 					exc=IncorrectWarehouseValidationError,
 				)
 
-	def check_serial_no_status(self):
+	def check_serial_no_status(self) -> None:
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 		for row in self.get("locations"):
@@ -212,7 +214,7 @@ class PickList(TransactionBase):
 					title=_("Incorrect Warehouse"),
 				)
 
-	def validate_with_previous_doc(self):
+	def validate_with_previous_doc(self) -> None:
 		super().validate_with_previous_doc(
 			{
 				"Sales Order": {
@@ -224,7 +226,7 @@ class PickList(TransactionBase):
 			}
 		)
 
-	def validate_sales_order_percentage(self):
+	def validate_sales_order_percentage(self) -> None:
 		# set percentage picked in SO
 		for location in self.get("locations"):
 			if (
@@ -235,11 +237,11 @@ class PickList(TransactionBase):
 					_("Row #{0}: item {1} has been picked already.").format(location.idx, location.item_code)
 				)
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.validate_sales_order()
 		self.validate_picked_items()
 
-	def validate_sales_order(self):
+	def validate_sales_order(self) -> None:
 		"""Raises an exception if the `Sales Order` has reserved stock."""
 
 		if self.purpose != "Delivery":
@@ -258,7 +260,7 @@ class PickList(TransactionBase):
 							).format(frappe.bold(so))
 						)
 
-	def validate_picked_items(self):
+	def validate_picked_items(self) -> None:
 		for item in self.locations:
 			if self.scan_mode and item.picked_qty < item.stock_qty:
 				frappe.throw(
@@ -272,7 +274,7 @@ class PickList(TransactionBase):
 				# if the user has not entered any picked qty, set it to stock_qty, before submit
 				item.picked_qty = item.stock_qty
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.validate_serial_and_batch_bundle()
 		self.make_bundle_using_old_serial_batch_fields()
 		self.update_status()
@@ -281,7 +283,7 @@ class PickList(TransactionBase):
 		self.update_sales_order_picking_status()
 		self.update_prevdoc_status()
 
-	def validate_expired_batches(self):
+	def validate_expired_batches(self) -> None:
 		batches = []
 		for row in self.get("locations"):
 			if row.get("batch_no") and row.get("picked_qty"):
@@ -308,7 +310,7 @@ class PickList(TransactionBase):
 					title=_("Expired Batches"),
 				)
 
-	def make_bundle_using_old_serial_batch_fields(self):
+	def make_bundle_using_old_serial_batch_fields(self) -> None:
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 		for row in self.locations:
@@ -345,7 +347,7 @@ class PickList(TransactionBase):
 			)
 			frappe.throw(msg)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.ignore_linked_doctypes = [
 			"Serial and Batch Bundle",
 			"Stock Reservation Entry",
@@ -359,7 +361,7 @@ class PickList(TransactionBase):
 		self.delink_serial_and_batch_bundle()
 		self.update_prevdoc_status()
 
-	def delink_serial_and_batch_bundle(self):
+	def delink_serial_and_batch_bundle(self) -> None:
 		for row in self.locations:
 			if (
 				row.serial_and_batch_bundle
@@ -375,33 +377,33 @@ class PickList(TransactionBase):
 				frappe.get_doc("Serial and Batch Bundle", row.serial_and_batch_bundle).cancel()
 				row.db_set("serial_and_batch_bundle", None)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		if self.get("locations"):
 			self.linked_serial_and_batch_bundle()
 
-	def linked_serial_and_batch_bundle(self):
+	def linked_serial_and_batch_bundle(self) -> None:
 		for row in self.get("locations"):
 			if row.serial_and_batch_bundle:
 				frappe.get_doc(
 					"Serial and Batch Bundle", row.serial_and_batch_bundle
 				).set_serial_and_batch_values(self, row)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self.remove_serial_and_batch_bundle()
 
-	def remove_serial_and_batch_bundle(self):
+	def remove_serial_and_batch_bundle(self) -> None:
 		for row in self.locations:
 			if row.serial_and_batch_bundle:
 				frappe.delete_doc("Serial and Batch Bundle", row.serial_and_batch_bundle)
 
-	def validate_serial_and_batch_bundle(self):
+	def validate_serial_and_batch_bundle(self) -> None:
 		for row in self.locations:
 			if row.serial_and_batch_bundle:
 				doc = frappe.get_doc("Serial and Batch Bundle", row.serial_and_batch_bundle)
 				if doc.docstatus == 0:
 					doc.submit()
 
-	def update_status(self, status=None, update_modified=True):
+	def update_status(self, status=None, update_modified: bool = True) -> None:
 		if not status:
 			status = self.get_status().get("status")
 
@@ -417,7 +419,7 @@ class PickList(TransactionBase):
 
 		return stock_entry_exists(self.name)
 
-	def update_reference_qty(self):
+	def update_reference_qty(self) -> None:
 		packed_items = []
 		so_items = []
 
@@ -433,7 +435,7 @@ class PickList(TransactionBase):
 		if so_items:
 			self.update_sales_order_item_qty(so_items)
 
-	def update_packed_items_qty(self, packed_items):
+	def update_packed_items_qty(self, packed_items) -> None:
 		picked_items = get_picked_items_qty(packed_items, contains_packed_items=True)
 		self.validate_picked_qty(picked_items)
 
@@ -444,7 +446,7 @@ class PickList(TransactionBase):
 		if doc_updates:
 			frappe.db.bulk_update("Packed Item", doc_updates, update_modified=False)
 
-	def update_sales_order_item_qty(self, so_items):
+	def update_sales_order_item_qty(self, so_items) -> None:
 		picked_items = get_picked_items_qty(so_items)
 		self.validate_picked_qty(picked_items)
 
@@ -503,7 +505,7 @@ class PickList(TransactionBase):
 			from_voucher_type="Pick List", from_voucher_no=self.name, notify=notify
 		)
 
-	def validate_picked_qty(self, data):
+	def validate_picked_qty(self, data) -> None:
 		over_delivery_receipt_allowance = 100 + flt(
 			frappe.get_single_value("Stock Settings", "over_delivery_receipt_allowance")
 		)
@@ -517,7 +519,7 @@ class PickList(TransactionBase):
 				)
 
 	@frappe.whitelist()
-	def set_item_locations(self, save: bool = False):
+	def set_item_locations(self, save: bool = False) -> None:
 		self.validate_for_qty()
 		items = self.aggregate_item_qty()
 		picked_items_details = self.get_picked_items_details(items)
@@ -670,17 +672,17 @@ class PickList(TransactionBase):
 			self.item_count_map[item_code] += flt(item.stock_qty, item.precision("stock_qty"))
 		return item_map.values()
 
-	def validate_for_qty(self):
+	def validate_for_qty(self) -> None:
 		if self.purpose == "Material Transfer for Manufacture" and (
 			self.for_qty is None or self.for_qty == 0
 		):
 			frappe.throw(_("Qty of Finished Goods Item should be greater than 0."))
 
-	def before_print(self, settings=None):
+	def before_print(self, settings=None) -> None:
 		if self.group_same_items:
 			self.group_similar_items()
 
-	def group_similar_items(self):
+	def group_similar_items(self) -> None:
 		group_item_qty = defaultdict(float)
 		group_picked_qty = defaultdict(float)
 
@@ -704,7 +706,7 @@ class PickList(TransactionBase):
 		for idx, item in enumerate(self.locations, start=1):
 			item.idx = idx
 
-	def update_bundle_picked_qty(self):
+	def update_bundle_picked_qty(self) -> None:
 		product_bundles = self._get_product_bundles()
 		product_bundle_qty_map = self._get_product_bundle_qty_map(product_bundles.values())
 
@@ -768,7 +770,7 @@ class PickList(TransactionBase):
 		self.update_picked_item_from_current_pick_list(picked_items)
 		return picked_items
 
-	def update_picked_item_from_current_pick_list(self, picked_items):
+	def update_picked_item_from_current_pick_list(self, picked_items) -> None:
 		for row in self.locations:
 			if flt(row.picked_qty) > 0:
 				key = (row.warehouse, row.batch_no) if row.batch_no else row.warehouse
@@ -868,7 +870,7 @@ class PickList(TransactionBase):
 
 		return int(flt(min(possible_bundles.values()), precision or 6)) if possible_bundles else 0
 
-	def has_unreserved_stock(self):
+	def has_unreserved_stock(self) -> bool:
 		if self.purpose == "Delivery":
 			for location in self.locations:
 				if (
@@ -880,7 +882,7 @@ class PickList(TransactionBase):
 
 		return False
 
-	def has_reserved_stock(self):
+	def has_reserved_stock(self) -> bool:
 		if self.purpose == "Delivery":
 			for location in self.locations:
 				if (
@@ -893,13 +895,13 @@ class PickList(TransactionBase):
 		return False
 
 
-def update_pick_list_status(pick_list):
+def update_pick_list_status(pick_list) -> None:
 	if pick_list:
 		doc = frappe.get_doc("Pick List", pick_list)
 		doc.run_method("update_status")
 
 
-def get_picked_items_qty(items, contains_packed_items=False) -> list[dict]:
+def get_picked_items_qty(items, contains_packed_items: bool = False) -> list[dict]:
 	pi_item = frappe.qb.DocType("Pick List Item")
 
 	group_field = pi_item.product_bundle_item if contains_packed_items else pi_item.sales_order_item
@@ -992,9 +994,9 @@ def get_available_item_locations(
 	from_warehouses,
 	required_qty,
 	company,
-	ignore_validation=False,
+	ignore_validation: bool = False,
 	picked_item_details=None,
-	consider_rejected_warehouses=False,
+	consider_rejected_warehouses: bool = False,
 	priority_warehouses=None,
 ):
 	locations = []
@@ -1064,7 +1066,7 @@ def get_locations_based_on_required_qty(locations, required_qty, priority_wareho
 	return filtered_locations
 
 
-def validate_picked_materials(item_code, required_qty, locations, picked_item_details=None):
+def validate_picked_materials(item_code, required_qty, locations, picked_item_details=None) -> None:
 	for location in list(locations):
 		if location["qty"] < 0:
 			locations.remove(location)
@@ -1121,7 +1123,7 @@ def get_available_item_locations_for_serial_and_batched_item(
 	from_warehouses,
 	required_qty,
 	company,
-	consider_rejected_warehouses=False,
+	consider_rejected_warehouses: bool = False,
 ):
 	# Get batch nos by FIFO
 	locations = get_available_item_locations_for_batched_item(
@@ -1160,7 +1162,7 @@ def get_available_item_locations_for_serialized_item(
 	item_code,
 	from_warehouses,
 	company,
-	consider_rejected_warehouses=False,
+	consider_rejected_warehouses: bool = False,
 ):
 	sn = frappe.qb.DocType("Serial No")
 	query = (
@@ -1209,7 +1211,7 @@ def get_available_item_locations_for_batched_item(
 	item_code,
 	from_warehouses,
 	company,
-	consider_rejected_warehouses=False,
+	consider_rejected_warehouses: bool = False,
 ):
 	locations = []
 	data = get_auto_batch_nos(
@@ -1255,7 +1257,7 @@ def get_available_item_locations_for_other_item(
 	item_code,
 	from_warehouses,
 	company,
-	consider_rejected_warehouses=False,
+	consider_rejected_warehouses: bool = False,
 ):
 	bin = frappe.qb.DocType("Bin")
 	query = (

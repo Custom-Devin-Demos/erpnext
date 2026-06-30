@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 from typing import Any
 
 import frappe
@@ -56,7 +58,7 @@ class LandedCostVoucher(Document):
 	# end: auto-generated types
 
 	@frappe.whitelist()
-	def get_items_from_purchase_receipts(self):
+	def get_items_from_purchase_receipts(self) -> None:
 		self.set("items", [])
 		for pr in self.get("purchase_receipts"):
 			if pr.receipt_document_type and pr.receipt_document:
@@ -79,7 +81,7 @@ class LandedCostVoucher(Document):
 					else:
 						item.purchase_receipt_item = d.name
 
-	def validate(self):
+	def validate(self) -> None:
 		self.check_mandatory()
 		self.validate_receipt_documents()
 		self.validate_line_items()
@@ -92,12 +94,12 @@ class LandedCostVoucher(Document):
 		self.set_applicable_charges_on_item()
 		self.set_total_vendor_invoices_cost()
 
-	def set_total_vendor_invoices_cost(self):
+	def set_total_vendor_invoices_cost(self) -> None:
 		self.total_vendor_invoices_cost = 0.0
 		for row in self.vendor_invoices:
 			self.total_vendor_invoices_cost += flt(row.amount)
 
-	def validate_line_items(self):
+	def validate_line_items(self) -> None:
 		for d in self.get("items"):
 			if (
 				d.docstatus == 0
@@ -117,11 +119,11 @@ class LandedCostVoucher(Document):
 					title=_("Incorrect Reference Document (Purchase Receipt Item)"),
 				)
 
-	def check_mandatory(self):
+	def check_mandatory(self) -> None:
 		if not self.get("purchase_receipts"):
 			frappe.throw(_("Please enter Receipt Document"))
 
-	def validate_receipt_documents(self):
+	def validate_receipt_documents(self) -> None:
 		receipt_documents = []
 
 		for d in self.get("purchase_receipts"):
@@ -180,7 +182,7 @@ class LandedCostVoucher(Document):
 					_("Row {0}: Cost center is required for an item {1}").format(item.idx, item.item_code)
 				)
 
-	def validate_expense_accounts(self):
+	def validate_expense_accounts(self) -> None:
 		if not is_perpetual_inventory_enabled(self.company):
 			return
 
@@ -201,10 +203,10 @@ class LandedCostVoucher(Document):
 					exc=IncorrectCompanyValidationError,
 				)
 
-	def set_total_taxes_and_charges(self):
+	def set_total_taxes_and_charges(self) -> None:
 		self.total_taxes_and_charges = sum(flt(d.base_amount) for d in self.get("taxes"))
 
-	def set_applicable_charges_on_item(self):
+	def set_applicable_charges_on_item(self) -> None:
 		if self.get("taxes") and self.distribute_charges_based_on != "Distribute Manually":
 			total_item_cost = 0.0
 			total_charges = 0.0
@@ -234,7 +236,7 @@ class LandedCostVoucher(Document):
 				diff = self.total_taxes_and_charges - total_charges
 				self.get("items")[item_count - 1].applicable_charges += diff
 
-	def validate_applicable_charges_for_item(self):
+	def validate_applicable_charges_for_item(self) -> None:
 		based_on = self.distribute_charges_based_on.lower()
 
 		if based_on != "distribute manually":
@@ -291,16 +293,16 @@ class LandedCostVoucher(Document):
 			as_dict=True,
 		)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.validate_applicable_charges_for_item()
 		self.update_landed_cost()
 		self.update_claimed_landed_cost()
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.update_landed_cost()
 		self.update_claimed_landed_cost()
 
-	def update_claimed_landed_cost(self):
+	def update_claimed_landed_cost(self) -> None:
 		for row in self.vendor_invoices:
 			frappe.db.set_value(
 				"Purchase Invoice",
@@ -309,7 +311,7 @@ class LandedCostVoucher(Document):
 				flt(row.amount, row.precision("amount")) if self.docstatus == 1 else 0.0,
 			)
 
-	def update_landed_cost(self):
+	def update_landed_cost(self) -> None:
 		for d in self.get("purchase_receipts"):
 			doc = frappe.get_doc(d.receipt_document_type, d.receipt_document)
 			# check if there are {qty} assets created and linked to this receipt document
@@ -354,7 +356,7 @@ class LandedCostVoucher(Document):
 				doc.make_gl_entries()
 			doc.repost_future_sle_and_gle(via_landed_cost_voucher=True)
 
-	def validate_asset_qty_and_status(self, receipt_document_type, receipt_document):
+	def validate_asset_qty_and_status(self, receipt_document_type, receipt_document) -> None:
 		for item in self.get("items"):
 			if item.is_fixed_asset:
 				receipt_document_type = (
@@ -392,7 +394,7 @@ class LandedCostVoucher(Document):
 								).format(item.receipt_document_type, item.receipt_document, item.item_code)
 							)
 
-	def update_rate_in_serial_no_for_non_asset_items(self, receipt_document):
+	def update_rate_in_serial_no_for_non_asset_items(self, receipt_document) -> None:
 		for item in receipt_document.get("items"):
 			if not item.is_fixed_asset and item.serial_no:
 				serial_nos = get_serial_nos(item.serial_no)
@@ -405,7 +407,7 @@ class LandedCostVoucher(Document):
 					).run()
 
 	@frappe.whitelist()
-	def get_vendor_invoice_amount(self, vendor_invoice: str):
+	def get_vendor_invoice_amount(self, vendor_invoice: str) -> dict:
 		filters = frappe._dict(
 			{
 				"name": vendor_invoice,
@@ -529,7 +531,7 @@ def get_vendor_invoice_query(filters):
 	return query
 
 
-def set_landed_cost_voucher_amount(doc):
+def set_landed_cost_voucher_amount(doc) -> None:
 	"""Set landed_cost_voucher_amount on the receipt document's items from submitted LCVs."""
 	for d in doc.get("items"):
 		lcv_item = frappe.qb.DocType("Landed Cost Item")
@@ -551,7 +553,7 @@ def set_landed_cost_voucher_amount(doc):
 			d.db_set("cost_center", lc_voucher_data[0][1])
 
 
-def has_landed_cost_amount(doc):
+def has_landed_cost_amount(doc) -> bool:
 	for row in doc.items:
 		if row.get("landed_cost_voucher_amount"):
 			return True
