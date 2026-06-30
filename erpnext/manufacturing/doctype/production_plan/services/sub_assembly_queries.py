@@ -3,6 +3,8 @@
 
 """Sub-assembly resolution helpers for Production Plan."""
 
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import IfNull, Max, Sum
 from frappe.utils import flt
@@ -15,16 +17,16 @@ from erpnext.manufacturing.doctype.production_plan.services.planning_queries imp
 
 
 def get_sub_assembly_items(
-	sub_assembly_items,
-	bin_details,
-	bom_no,
-	bom_data,
-	to_produce_qty,
-	company,
-	warehouse=None,
-	indent=0,
-	skip_available_sub_assembly_item=False,
-):
+	sub_assembly_items: list,
+	bin_details: dict,
+	bom_no: str,
+	bom_data: list,
+	to_produce_qty: float,
+	company: str,
+	warehouse: str | None = None,
+	indent: int = 0,
+	skip_available_sub_assembly_item: bool = False,
+) -> None:
 	precision = frappe.get_precision("Production Plan Sub Assembly Item", "qty")
 	parent_item_code = frappe.get_cached_value("BOM", bom_no, "item")
 
@@ -62,18 +64,18 @@ def get_sub_assembly_items(
 
 def _add_sub_assembly_child(
 	d,
-	parent_item_code,
-	bom_no,
-	bom_data,
-	sub_assembly_items,
-	bin_details,
-	to_produce_qty,
-	company,
-	warehouse,
-	indent,
-	precision,
-	skip_available,
-):
+	parent_item_code: str,
+	bom_no: str,
+	bom_data: list,
+	sub_assembly_items: list,
+	bin_details: dict,
+	to_produce_qty: float,
+	company: str,
+	warehouse: str | None,
+	indent: int,
+	precision: int,
+	skip_available: bool,
+) -> float:
 	required_qty = (d.stock_qty / d.parent_bom_qty) * flt(to_produce_qty)
 	stock_qty = _resolve_available_sub_assembly(
 		d, required_qty, sub_assembly_items, bin_details, company, warehouse, skip_available
@@ -88,8 +90,14 @@ def _add_sub_assembly_child(
 
 
 def _resolve_available_sub_assembly(
-	d, stock_qty, sub_assembly_items, bin_details, company, warehouse, skip_available
-):
+	d,
+	stock_qty: float,
+	sub_assembly_items: list,
+	bin_details: dict,
+	company: str,
+	warehouse: str | None,
+	skip_available: bool,
+) -> float:
 	if skip_available and d.item_code not in sub_assembly_items:
 		bin_details.setdefault(d.item_code, get_bin_details(d, company, for_warehouse=warehouse))
 		return _consume_projected_qty(d, stock_qty, sub_assembly_items, bin_details)
@@ -99,7 +107,7 @@ def _resolve_available_sub_assembly(
 	return stock_qty
 
 
-def _consume_projected_qty(d, stock_qty, sub_assembly_items, bin_details):
+def _consume_projected_qty(d, stock_qty: float, sub_assembly_items: list, bin_details: dict) -> float:
 	for _bin_dict in bin_details[d.item_code]:
 		_bin_dict.original_projected_qty = _bin_dict.projected_qty
 		if _bin_dict.original_projected_qty <= 0:
@@ -115,7 +123,16 @@ def _consume_projected_qty(d, stock_qty, sub_assembly_items, bin_details):
 	return stock_qty
 
 
-def _sub_assembly_row(d, parent_item_code, bom_no, bin_details, stock_qty, required_qty, indent, precision):
+def _sub_assembly_row(
+	d,
+	parent_item_code: str,
+	bom_no: str,
+	bin_details: dict,
+	stock_qty: float,
+	required_qty: float,
+	indent: int,
+	precision: int,
+) -> dict:
 	bins = bin_details.get(d.item_code)
 	actual_qty = bins[0].get("actual_qty", 0) if bins else 0
 	projected_qty = bins[0].get("projected_qty", 0) if bins else 0
@@ -141,14 +158,14 @@ def _sub_assembly_row(d, parent_item_code, bom_no, bin_details, stock_qty, requi
 
 
 def get_raw_materials_of_sub_assembly_items(
-	existing_sub_assembly_items,
-	item_details,
-	company,
-	bom_no,
-	include_non_stock_items,
-	sub_assembly_items,
-	planned_qty=1,
-):
+	existing_sub_assembly_items: set,
+	item_details: dict,
+	company: str,
+	bom_no: str,
+	include_non_stock_items: bool,
+	sub_assembly_items: dict,
+	planned_qty: float = 1,
+) -> dict:
 	for item in _sub_assembly_rm_query(company, bom_no, include_non_stock_items, planned_qty):
 		_process_sub_assembly_rm(
 			item,
@@ -161,7 +178,9 @@ def get_raw_materials_of_sub_assembly_items(
 	return item_details
 
 
-def _sub_assembly_rm_query(company, bom_no, include_non_stock_items, planned_qty):
+def _sub_assembly_rm_query(
+	company: str, bom_no: str, include_non_stock_items: bool, planned_qty: float
+) -> list:
 	bei = frappe.qb.DocType("BOM Item")
 	bom = frappe.qb.DocType("BOM")
 	item = frappe.qb.DocType("Item")
@@ -183,7 +202,7 @@ def _sub_assembly_rm_query(company, bom_no, include_non_stock_items, planned_qty
 	).run(as_dict=True)
 
 
-def _sub_assembly_rm_columns(bei, bom, item, item_default, item_uom, planned_qty):
+def _sub_assembly_rm_columns(bei, bom, item, item_default, item_uom, planned_qty: float) -> list:
 	# Grouped by item_code/stock_uom plus bom_no/is_phantom_item: those two MUST come from the same
 	# BOM Item row -- the consumer keys on (item_code, bom_no) and recurses on is_phantom_item, so an
 	# independent Max() per column could pair a bom_no from one line with is_phantom_item from another
@@ -211,7 +230,7 @@ def _sub_assembly_rm_columns(bei, bom, item, item_default, item_uom, planned_qty
 	]
 
 
-def _sub_assembly_rm_filter(bei, bom, item, bom_no, include_non_stock_items):
+def _sub_assembly_rm_filter(bei, bom, item, bom_no: str, include_non_stock_items: bool):
 	stock_filter = item.is_stock_item.isin([0, 1]) if include_non_stock_items else item.is_stock_item == 1
 	return (
 		(bei.docstatus == 1)
@@ -222,8 +241,13 @@ def _sub_assembly_rm_filter(bei, bom, item, bom_no, include_non_stock_items):
 
 
 def _process_sub_assembly_rm(
-	item, existing_sub_assembly_items, item_details, company, include_non_stock_items, sub_assembly_items
-):
+	item,
+	existing_sub_assembly_items: set,
+	item_details: dict,
+	company: str,
+	include_non_stock_items: bool,
+	sub_assembly_items: dict,
+) -> None:
 	key = (item.item_code, item.bom_no)
 	existing_key = (item.item_code, item.bom_no or item.main_bom)
 
@@ -250,7 +274,7 @@ def _process_sub_assembly_rm(
 		existing_sub_assembly_items.add(existing_key)
 
 
-def _merge_sub_assembly_rm(item, item_details):
+def _merge_sub_assembly_rm(item, item_details: dict) -> None:
 	if not item.conversion_factor and item.purchase_uom:
 		item.conversion_factor = get_uom_conversion_factor(item.item_code, item.purchase_uom)
 
