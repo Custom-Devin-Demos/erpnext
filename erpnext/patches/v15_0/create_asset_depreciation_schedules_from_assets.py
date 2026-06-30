@@ -28,7 +28,7 @@ def execute() -> None:
 		update_depreciation_schedules(depreciation_schedules, asset_depr_schedule_doc.name)
 
 
-def get_asset_finance_books_map():
+def get_asset_finance_books_map() -> dict:
 	afb = frappe.qb.DocType("Asset Finance Book")
 	asset = frappe.qb.DocType("Asset")
 
@@ -65,7 +65,7 @@ def get_asset_finance_books_map():
 	return asset_finance_books_map
 
 
-def get_asset_depreciation_schedules_map():
+def get_asset_depreciation_schedules_map() -> dict:
 	ds = frappe.qb.DocType("Depreciation Schedule")
 	asset = frappe.qb.DocType("Asset")
 

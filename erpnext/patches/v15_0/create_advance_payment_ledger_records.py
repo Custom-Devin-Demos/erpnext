@@ -114,7 +114,7 @@ def bulk_insert_advance_entries(entries: list) -> None:
 	frappe.db.bulk_insert(DOCTYPE, fields=FIELDS, values=details)
 
 
-def get_values(user, now, entry):
+def get_values(user: str, now, entry: dict) -> tuple:
 	return (
 		_generate_random_string(10),
 		now,

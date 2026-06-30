@@ -47,7 +47,7 @@ def execute() -> None:
 				frappe.db.set_value("Asset", asset.name, "purchase_receipt_item", purchase_receipt_item)
 
 
-def get_linked_item(doctype: str, parent: str, item_code: str, amount, quantity):
+def get_linked_item(doctype: str, parent: str, item_code: str, amount, quantity) -> str | None:
 	items = frappe.get_all(
 		doctype,
 		filters={

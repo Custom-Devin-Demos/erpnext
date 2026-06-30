@@ -154,7 +154,7 @@ def update_account_cache(accounts: list, account_cache: dict) -> None:
 		account_cache[account.name] = account
 
 
-def get_account_identifier(account: str, identifier_field: str, account_cache: dict):
+def get_account_identifier(account: str, identifier_field: str, account_cache: dict) -> tuple | None:
 	cached_account = account_cache.get(account)
 	if not cached_account:
 		return None

@@ -102,13 +102,13 @@ def execute() -> None:
 
 
 def get_item_tax_template(
-	item_tax_templates,
+	item_tax_templates: dict,
 	item_tax_map: dict,
 	item_code: str,
 	parenttype: str | None = None,
 	parent: str | None = None,
-	tax_types=None,
-):
+	tax_types: list | None = None,
+) -> str | None:
 	# search for previously created item tax template by comparing tax maps
 	for template, item_tax_template_map in item_tax_templates.items():
 		if item_tax_map == item_tax_template_map:
@@ -206,7 +206,7 @@ def get_item_tax_template(
 		return item_tax_template.name
 
 
-def get_company(company_abbr: str, parenttype: str | None = None, parent: str | None = None):
+def get_company(company_abbr: str, parenttype: str | None = None, parent: str | None = None) -> str | None:
 	if parenttype and parent:
 		company = frappe.get_cached_value(parenttype, parent, "company")
 	else:

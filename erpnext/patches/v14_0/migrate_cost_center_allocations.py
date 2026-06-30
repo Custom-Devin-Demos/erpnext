@@ -29,7 +29,7 @@ def create_new_cost_center_allocation_records(cc_allocations: list) -> None:
 		cca.submit()
 
 
-def get_existing_cost_center_allocations():
+def get_existing_cost_center_allocations() -> dict | None:
 	if not frappe.db.exists("DocType", "Distributed Cost Center"):
 		return
 

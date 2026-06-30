@@ -36,7 +36,7 @@ def update_account_categories() -> None:
 	frappe.db.bulk_update("Account", mapped_account_categories)
 
 
-def get_standard_account_category_mapping():
+def get_standard_account_category_mapping() -> dict:
 	account_mapping = {}
 
 	def _extract_account_mapping(chart_data, prefix="") -> None:

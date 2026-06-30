@@ -12,7 +12,7 @@ def execute() -> None:
 		frappe.log_error("Failed to migrate deferred accounts in Item Defaults.")
 
 
-def get_deferred_accounts():
+def get_deferred_accounts() -> list:
 	item = frappe.qb.DocType("Item")
 	return (
 		frappe.qb.from_(item)

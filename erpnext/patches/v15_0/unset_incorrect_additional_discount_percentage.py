@@ -73,14 +73,14 @@ def execute() -> None:
 			)
 
 
-def get_semantic_version(version: str):
+def get_semantic_version(version: str) -> Version | None:
 	try:
 		return Version(version)
 	except Exception:
 		pass
 
 
-def should_run_patch():
+def should_run_patch() -> bool:
 	installed_app = frappe.db.get_value(
 		"Installed Application",
 		{"app_name": "erpnext"},

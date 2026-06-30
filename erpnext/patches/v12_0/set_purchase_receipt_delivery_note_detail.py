@@ -22,7 +22,7 @@ def execute() -> None:
 			)
 		)  # nosec
 
-	def row_is_mappable(doc_row, return_doc_row, detail_field: str):
+	def row_is_mappable(doc_row, return_doc_row, detail_field: str) -> bool | None:
 		"""Checks if two rows are similar enough to be mapped."""
 
 		if doc_row.item_code == return_doc_row.item_code and not return_doc_row.get(detail_field):
@@ -46,7 +46,7 @@ def execute() -> None:
 		else:
 			return False
 
-	def make_return_document_map(doctype: str, return_document_map):
+	def make_return_document_map(doctype: str, return_document_map: dict) -> dict:
 		"""Returns a map of documents and it's return documents.
 		Format => { 'document' : ['return_document_1','return_document_2'] }"""
 

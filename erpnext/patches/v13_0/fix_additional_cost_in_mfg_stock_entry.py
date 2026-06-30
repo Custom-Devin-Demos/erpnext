@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import NewType
+from typing import TYPE_CHECKING, NewType
 
 import frappe
+
+if TYPE_CHECKING:
+	from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 
 StockEntryCode = NewType("StockEntryCode", str)
 
@@ -41,7 +44,7 @@ def find_broken_stock_entries() -> list[StockEntryCode]:
 	return [d.name for d in stock_entries_to_patch]
 
 
-def patch_additional_cost(code: StockEntryCode):
+def patch_additional_cost(code: StockEntryCode) -> StockEntry:
 	stock_entry = frappe.get_doc("Stock Entry", code)
 	stock_entry.distribute_additional_costs()
 	stock_entry.update_valuation_rate()

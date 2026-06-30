@@ -70,7 +70,7 @@ def migrate_single_budget(budget_name: str) -> None:
 		frappe.delete_doc("Budget", budget_name)
 
 
-def get_percentage_allocations(budget_doc):
+def get_percentage_allocations(budget_doc) -> list:
 	if budget_doc.monthly_distribution:
 		distribution_doc = frappe.get_cached_doc("Monthly Distribution", budget_doc.monthly_distribution)
 		return [flt(row.percentage_allocation) for row in distribution_doc.percentages]

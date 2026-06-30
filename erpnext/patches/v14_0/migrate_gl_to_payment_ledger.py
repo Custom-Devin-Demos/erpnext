@@ -37,7 +37,7 @@ def generate_name_and_calculate_amount(gl_entries: list, start, receivable_accou
 			)
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		"name",
 		"creation",
