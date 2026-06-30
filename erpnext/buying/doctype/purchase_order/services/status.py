@@ -3,6 +3,8 @@
 
 """Status transitions and receiving progress for Purchase Order."""
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.desk.notifications import clear_doctype_notifications
@@ -12,7 +14,7 @@ from erpnext.buying.doctype.purchase_order.services.subcontracting import Subcon
 
 
 class StatusService:
-	def __init__(self, doc):
+	def __init__(self, doc) -> None:
 		self.doc = doc
 
 	def update_status(self, status: str) -> None:

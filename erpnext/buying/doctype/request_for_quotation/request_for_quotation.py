@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -66,12 +67,12 @@ class RequestforQuotation(BuyingController):
 		vendor: DF.Link | None
 	# end: auto-generated types
 
-	def before_validate(self):
+	def before_validate(self) -> None:
 		self.set_has_unit_price_items()
 		self.flags.allow_zero_qty = self.has_unit_price_items
 		self.set_data_for_supplier()
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_duplicate_supplier()
 		self.validate_supplier_list()
 		super().validate_qty_is_not_zero()
@@ -83,7 +84,7 @@ class RequestforQuotation(BuyingController):
 			# after amend and save, status still shows as cancelled, until submit
 			self.db_set("status", "Draft")
 
-	def set_has_unit_price_items(self):
+	def set_has_unit_price_items(self) -> None:
 		"""
 		If permitted in settings and any item has 0 qty, the RFQ has unit price items.
 		"""
@@ -94,7 +95,7 @@ class RequestforQuotation(BuyingController):
 			not row.qty for row in self.get("items") if (row.item_code and not row.qty)
 		)
 
-	def set_data_for_supplier(self):
+	def set_data_for_supplier(self) -> None:
 		if self.email_template:
 			data = frappe.get_value(
 				"Email Template",
@@ -115,12 +116,12 @@ class RequestforQuotation(BuyingController):
 			if not self.subject:
 				self.subject = data.subject
 
-	def validate_duplicate_supplier(self):
+	def validate_duplicate_supplier(self) -> None:
 		supplier_list = [d.supplier for d in self.suppliers]
 		if len(supplier_list) != len(set(supplier_list)):
 			frappe.throw(_("Same supplier has been entered multiple times"))
 
-	def validate_supplier_list(self):
+	def validate_supplier_list(self) -> None:
 		for d in self.suppliers:
 			prevent_rfqs = frappe.db.get_value("Supplier", d.supplier, "prevent_rfqs")
 			if prevent_rfqs:
@@ -141,12 +142,12 @@ class RequestforQuotation(BuyingController):
 					indicator="orange",
 				)
 
-	def update_email_id(self):
+	def update_email_id(self) -> None:
 		for rfq_supplier in self.suppliers:
 			if not rfq_supplier.email_id:
 				rfq_supplier.email_id = frappe.db.get_value("Contact", rfq_supplier.contact, "email_id")
 
-	def validate_email_id(self, args):
+	def validate_email_id(self, args) -> None:
 		if not args.email_id:
 			frappe.throw(
 				_("Row {0}: For Supplier {1}, Email Address is Required to send an email").format(
@@ -154,14 +155,14 @@ class RequestforQuotation(BuyingController):
 				)
 			)
 
-	def on_submit(self):
+	def on_submit(self) -> None:
 		self.db_set("status", "Submitted")
 		for supplier in self.suppliers:
 			supplier.email_sent = 0
 			supplier.quote_status = "Pending"
 		self.send_to_supplier()
 
-	def before_print(self, settings=None):
+	def before_print(self, settings: dict | None = None) -> None:
 		"""Use the first suppliers data to render the print preview."""
 		if self.vendor or not self.suppliers:
 			# If a specific supplier is already set, via Tools > Download PDF,
@@ -170,11 +171,11 @@ class RequestforQuotation(BuyingController):
 
 		self.update_supplier_part_no(self.suppliers[0].supplier)
 
-	def on_cancel(self):
+	def on_cancel(self) -> None:
 		self.db_set("status", "Cancelled")
 
 	@frappe.whitelist()
-	def get_supplier_email_preview(self, supplier: str):
+	def get_supplier_email_preview(self, supplier: str) -> dict:
 		"""Returns formatted email preview as string."""
 		rfq_suppliers = list(filter(lambda row: row.supplier == supplier, self.suppliers))
 		rfq_supplier = rfq_suppliers[0]
@@ -185,7 +186,7 @@ class RequestforQuotation(BuyingController):
 
 		return message
 
-	def send_to_supplier(self):
+	def send_to_supplier(self) -> None:
 		"""Sends RFQ mail to involved suppliers."""
 		for rfq_supplier in self.suppliers:
 			if rfq_supplier.email_id is not None and rfq_supplier.send_email:
@@ -201,7 +202,7 @@ class RequestforQuotation(BuyingController):
 					rfq_supplier.contact = contact
 				rfq_supplier.save()
 
-	def get_link(self):
+	def get_link(self) -> str:
 		# RFQ link for supplier portal
 		route = frappe.db.get_value(
 			"Portal Menu Item", {"reference_doctype": "Request for Quotation"}, ["route"]
@@ -211,14 +212,14 @@ class RequestforQuotation(BuyingController):
 
 		return get_url(f"{route}/{self.name}")
 
-	def update_supplier_part_no(self, supplier):
+	def update_supplier_part_no(self, supplier: str) -> None:
 		self.vendor = supplier
 		for item in self.items:
 			item.supplier_part_no = frappe.db.get_value(
 				"Item Supplier", {"parent": item.item_code, "supplier": supplier}, "supplier_part_no"
 			)
 
-	def update_supplier_contact(self, rfq_supplier, link):
+	def update_supplier_contact(self, rfq_supplier, link: str) -> tuple:
 		"""Create a new user for the supplier if not set in contact"""
 		update_password_link, contact = "", ""
 
@@ -231,7 +232,7 @@ class RequestforQuotation(BuyingController):
 
 		return update_password_link, contact
 
-	def link_supplier_contact(self, rfq_supplier, user):
+	def link_supplier_contact(self, rfq_supplier, user) -> str | None:
 		"""If no Contact, create a new contact against Supplier. If Contact exists, check if email and user id set."""
 		if rfq_supplier.contact:
 			contact = frappe.get_doc("Contact", rfq_supplier.contact)
@@ -254,7 +255,7 @@ class RequestforQuotation(BuyingController):
 			# return contact to later update, RFQ supplier row's contact
 			return contact.name
 
-	def update_user_in_supplier(self, supplier, user):
+	def update_user_in_supplier(self, supplier: str, user: str) -> None:
 		"""Update user in Supplier."""
 		if not frappe.db.exists("Portal User", {"parent": supplier, "user": user}):
 			supplier_doc = frappe.get_doc("Supplier", supplier)
@@ -271,7 +272,7 @@ class RequestforQuotation(BuyingController):
 
 			supplier_doc.save()
 
-	def create_user(self, rfq_supplier, link):
+	def create_user(self, rfq_supplier, link: str) -> tuple:
 		contact_name = None
 		if rfq_supplier.contact:
 			name_fields = frappe.get_value(
@@ -295,7 +296,9 @@ class RequestforQuotation(BuyingController):
 
 		return user, update_password_link
 
-	def supplier_rfq_mail(self, data, update_password_link, rfq_link, preview=False):
+	def supplier_rfq_mail(
+		self, data, update_password_link: str, rfq_link: str, preview: bool = False
+	) -> dict | None:
 		full_name = get_user_fullname(frappe.session["user"])
 		if full_name == "Guest":
 			full_name = "Administrator"
@@ -364,7 +367,7 @@ class RequestforQuotation(BuyingController):
 			attachments,
 		)
 
-	def send_email(self, data, sender, subject, message, attachments):
+	def send_email(self, data, sender: str | None, subject: str, message: str, attachments: list) -> None:
 		make(
 			subject=subject,
 			content=message,
@@ -378,10 +381,10 @@ class RequestforQuotation(BuyingController):
 
 		frappe.msgprint(_("Email Sent to Supplier {0}").format(data.supplier))
 
-	def get_attachments(self):
+	def get_attachments(self) -> list:
 		return [d.name for d in get_attachments(self.doctype, self.name)]
 
-	def update_rfq_supplier_status(self, sup_name=None):
+	def update_rfq_supplier_status(self, sup_name: str | None = None) -> None:
 		from frappe.query_builder.functions import Count
 
 		SQ = frappe.qb.DocType("Supplier Quotation")
@@ -410,14 +413,14 @@ class RequestforQuotation(BuyingController):
 
 
 @frappe.whitelist()
-def send_supplier_emails(rfq_name: str):
+def send_supplier_emails(rfq_name: str) -> None:
 	check_portal_enabled("Request for Quotation")
 	rfq = frappe.get_doc("Request for Quotation", rfq_name)
 	if rfq.docstatus == 1:
 		rfq.send_to_supplier()
 
 
-def check_portal_enabled(reference_doctype):
+def check_portal_enabled(reference_doctype: str) -> None:
 	if not frappe.db.get_value("Portal Menu Item", {"reference_doctype": reference_doctype}, "enabled"):
 		frappe.throw(
 			_(
@@ -449,7 +452,7 @@ def get_pdf(
 	print_format: str | None = None,
 	language: str | None = None,
 	letterhead: str | None = None,
-):
+) -> None:
 	doc = frappe.get_doc("Request for Quotation", name)
 	if supplier:
 		doc.update_supplier_part_no(supplier)
@@ -466,7 +469,7 @@ def get_pdf(
 
 
 @frappe.whitelist()
-def get_supplier_tag():
+def get_supplier_tag() -> list:
 	filters = {"document_type": "Supplier"}
 	tags = list(set(tag.tag for tag in frappe.get_all("Tag Link", filters=filters, fields=["tag"]) if tag))
 
@@ -477,7 +480,7 @@ def get_supplier_tag():
 @frappe.validate_and_sanitize_search_inputs
 def get_rfq_containing_supplier(
 	doctype: str | None, txt: str, searchfield: str | None, start: int, page_len: int, filters: dict
-):
+) -> list:
 	rfq = frappe.qb.DocType("Request for Quotation")
 	rfq_supplier = frappe.qb.DocType("Request for Quotation Supplier")
 
