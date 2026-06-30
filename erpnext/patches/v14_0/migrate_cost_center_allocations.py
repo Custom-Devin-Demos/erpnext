@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
 
-def execute():
+def execute() -> None:
 	for dt in ("cost_center_allocation", "cost_center_allocation_percentage"):
 		frappe.reload_doc("accounts", "doctype", dt)
 
@@ -13,7 +15,7 @@ def execute():
 	frappe.delete_doc("DocType", "Distributed Cost Center", ignore_missing=True)
 
 
-def create_new_cost_center_allocation_records(cc_allocations):
+def create_new_cost_center_allocation_records(cc_allocations) -> None:
 	for main_cc, allocations in cc_allocations.items():
 		cca = frappe.new_doc("Cost Center Allocation")
 		cca.main_cost_center = main_cc

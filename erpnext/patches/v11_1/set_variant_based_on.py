@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.db.sql(
 		"""update tabItem set variant_based_on = 'Item Attribute'
 		where ifnull(variant_based_on, '') = ''

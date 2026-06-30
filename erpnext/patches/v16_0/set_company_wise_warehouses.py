@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	warehouses = frappe.get_single_value(
 		"Manufacturing Settings",
 		["default_wip_warehouse", "default_fg_warehouse", "default_scrap_warehouse"],

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 
@@ -40,7 +42,7 @@ def get_display_depends_on(doctype, fieldname):
 	return f"{fieldname_start_with}_{fieldname}", display_depends_on
 
 
-def execute():
+def execute() -> None:
 	for dimension in get_inventory_dimensions():
 		if frappe.db.exists(
 			"Custom Field", {"fieldname": dimension.source_fieldname, "dt": "Stock Entry Detail"}

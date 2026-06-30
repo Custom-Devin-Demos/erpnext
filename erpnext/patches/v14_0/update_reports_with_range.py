@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -11,12 +13,12 @@ REFERENCE_REPORTS = [
 ]
 
 
-def execute():
+def execute() -> None:
 	for report in REFERENCE_REPORTS:
 		update_reference_reports(report)
 
 
-def update_reference_reports(reference_report):
+def update_reference_reports(reference_report) -> None:
 	reports = frappe.get_all(
 		"Report", filters={"reference_report": reference_report}, fields={"json", "name"}
 	)
@@ -26,7 +28,7 @@ def update_reference_reports(reference_report):
 		update_reference_reports(report.name)
 
 
-def update_report_json(report):
+def update_report_json(report) -> None:
 	report_json = json.loads(report.json) if report.get("json") else {}
 	report_filter = report_json.get("filters")
 

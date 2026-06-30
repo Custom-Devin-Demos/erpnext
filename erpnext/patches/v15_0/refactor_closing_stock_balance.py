@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
@@ -8,7 +10,7 @@ from erpnext.stock.doctype.inventory_dimension.inventory_dimension import (
 )
 
 
-def execute():
+def execute() -> None:
 	if not frappe.db.has_table("Closing Stock Balance"):
 		return
 
@@ -16,7 +18,7 @@ def execute():
 	create_stock_closing_entries()
 
 
-def add_inventory_dimensions_to_stock_closing_balance():
+def add_inventory_dimensions_to_stock_closing_balance() -> None:
 	inventory_dimensions = get_inventory_dimensions()
 
 	dimension_fields_list = []
@@ -49,7 +51,7 @@ def add_inventory_dimensions_to_stock_closing_balance():
 		create_custom_fields({"Stock Closing Balance": dimension_fields_list})
 
 
-def create_stock_closing_entries():
+def create_stock_closing_entries() -> None:
 	for row in frappe.get_all(
 		"Closing Stock Balance",
 		fields=["company", "status", "from_date", "to_date"],

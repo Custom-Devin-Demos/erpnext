@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	# Update the reference_name, reference_doctype fields for Serial No where it is null
 
 	if not frappe.db.has_column("Serial and Batch Bundle", "posting_date"):

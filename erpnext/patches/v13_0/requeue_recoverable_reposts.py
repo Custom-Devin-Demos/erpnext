@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	recoverable = ("QueryDeadlockError", "QueryTimeoutError", "JobTimeoutException")
 
 	failed_reposts = frappe.get_all(

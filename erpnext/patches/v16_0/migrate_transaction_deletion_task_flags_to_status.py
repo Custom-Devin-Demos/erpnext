@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	Migrate Transaction Deletion Record boolean task flags to status Select fields.
 	Renames fields from old names to new names with _status suffix.

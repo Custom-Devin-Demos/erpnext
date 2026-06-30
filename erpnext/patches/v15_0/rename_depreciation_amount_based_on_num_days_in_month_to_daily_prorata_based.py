@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	try:
 		rename_field(
 			"Asset Finance Book", "depreciation_amount_based_on_num_days_in_month", "daily_prorata_based"

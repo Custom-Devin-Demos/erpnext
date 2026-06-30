@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 
@@ -64,7 +66,7 @@ doctype_series_map = {
 }
 
 
-def execute():
+def execute() -> None:
 	frappe.db.sql(
 		"""
 		update `tabProperty Setter`
@@ -77,8 +79,8 @@ def execute():
 		set_series(doctype, opts["options"], opts["default"])
 
 
-def set_series(doctype, options, default):
-	def _make_property_setter(property_name, value):
+def set_series(doctype, options, default) -> None:
+	def _make_property_setter(property_name, value) -> None:
 		property_setter = frappe.db.exists(
 			"Property Setter",
 			{"doc_type": doctype, "field_name": "naming_series", "property": property_name},

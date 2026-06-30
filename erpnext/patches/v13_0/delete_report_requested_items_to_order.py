@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Check for one or multiple Auto Email Reports and delete"""
 	auto_email_reports = frappe.db.get_values(
 		"Auto Email Report", {"report": "Requested Items to Order"}, ["name"]

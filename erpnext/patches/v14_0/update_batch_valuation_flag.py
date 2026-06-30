@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	- Don't use batchwise valuation for existing batches.
 	- Only batches created after this patch shoule use it.

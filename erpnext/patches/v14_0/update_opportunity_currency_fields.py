@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import click
 import frappe
 from frappe.utils import flt
@@ -6,7 +8,7 @@ import erpnext
 from erpnext.setup.utils import get_exchange_rate
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc(
 		"accounts", "doctype", "currency_exchange_settings"
 	)  # get_exchange_rate depends on Currency Exchange Settings

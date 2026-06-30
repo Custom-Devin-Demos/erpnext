@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	process_statement_of_accounts = frappe.qb.DocType("Process Statement Of Accounts")
 
 	data = (

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Move billing-period data to the renamed fields.
 
 	`current_invoice_start/end` used to hold the open (next) billing period and now

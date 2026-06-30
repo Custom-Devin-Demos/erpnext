@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import IfNull
 
 
-def execute():
+def execute() -> None:
 	columns = frappe.db.get_table_columns("Stock Reservation Entry")
 
 	if set(["against_pick_list", "against_pick_list_item"]).issubset(set(columns)):

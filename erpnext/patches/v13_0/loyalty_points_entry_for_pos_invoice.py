@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""`sales_invoice` field from loyalty point entry is splitted into `invoice_type` & `invoice` fields"""
 
 	frappe.reload_doc("Accounts", "doctype", "loyalty_point_entry")

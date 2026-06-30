@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 
 
 # not able to use frappe.qb because of this bug https://github.com/frappe/frappe/issues/20292
-def execute():
+def execute() -> None:
 	if frappe.db.has_column("Asset Repair", "warehouse"):
 		# nosemgrep
 		frappe.db.sql(

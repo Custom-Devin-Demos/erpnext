@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	subscription_invoices = frappe.get_all(
 		"Subscription Invoice", fields=["document_type", "invoice", "parent"]
 	)

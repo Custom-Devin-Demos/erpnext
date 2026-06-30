@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.exists("DocType", "Lost Reason Detail"):
 		frappe.reload_doc("crm", "doctype", "opportunity_lost_reason")
 		frappe.reload_doc("crm", "doctype", "opportunity_lost_reason_detail")

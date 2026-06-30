@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.table_exists("Membership Settings"):
 		frappe.rename_doc("DocType", "Membership Settings", "Non Profit Settings")
 		frappe.reload_doctype("Non Profit Settings", force=True)

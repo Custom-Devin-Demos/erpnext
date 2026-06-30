@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.stock.stock_balance import get_indented_qty, update_bin_qty
 
 
-def execute():
+def execute() -> None:
 	bin_details = frappe.db.sql(
 		"""
 		SELECT item_code, warehouse

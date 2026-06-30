@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt, getdate
 
@@ -9,7 +11,7 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import (
 TODAY = getdate()
 
 
-def execute():
+def execute() -> None:
 	# This fix is not related to Party Specific Item,
 	# but it is needed for code introduced after Party Specific Item was
 	# If your DB doesn't have this doctype yet, you should be fine

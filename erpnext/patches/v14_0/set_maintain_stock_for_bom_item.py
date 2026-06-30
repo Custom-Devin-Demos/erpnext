@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if not frappe.db.exists("BOM", {"docstatus": 1}):
 		return
 

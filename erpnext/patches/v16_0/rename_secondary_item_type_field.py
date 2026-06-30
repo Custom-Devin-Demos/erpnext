@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	doctypes = [
 		"BOM Secondary Item",
 		"Job Card Secondary Item",

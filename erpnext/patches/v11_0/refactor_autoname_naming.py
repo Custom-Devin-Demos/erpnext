@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 
@@ -81,13 +83,13 @@ doctype_series_map = {
 }
 
 
-def execute():
+def execute() -> None:
 	series_to_set = get_series()
 	for doctype, opts in series_to_set.items():
 		set_series(doctype, opts["value"])
 
 
-def set_series(doctype, value):
+def set_series(doctype, value) -> None:
 	doc = frappe.db.exists("Property Setter", {"doc_type": doctype, "property": "autoname"})
 	if doc:
 		frappe.db.set_value("Property Setter", doc, "value", value)

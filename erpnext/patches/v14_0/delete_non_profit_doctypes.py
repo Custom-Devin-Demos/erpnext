@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.delete_doc("Module Def", "Non Profit", ignore_missing=True, force=True)
 
 	frappe.delete_doc("Workspace", "Non Profit", ignore_missing=True, force=True)

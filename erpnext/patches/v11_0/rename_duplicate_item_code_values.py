@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	items = []
 	items = frappe.db.sql(
 		"""select item_code from `tabItem` group by item_code having count(*) > 1""", as_dict=True

@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import frappe
 from frappe.permissions import add_permission, update_permission_property
 
 from erpnext.regional.italy.setup import make_custom_fields
 
 
-def execute():
+def execute() -> None:
 	company = frappe.get_all("Company", filters={"country": "Italy"})
 
 	if not company:

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	company = frappe.get_all("Company", filters={"country": "India"})
 	if not company:
 		return

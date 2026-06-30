@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("automation", "doctype", "auto_repeat")
 
 	doctypes_to_rename = {
@@ -31,7 +33,7 @@ def execute():
 	drop_columns_from_subscription()
 
 
-def drop_columns_from_subscription():
+def drop_columns_from_subscription() -> None:
 	fields_to_drop = {"Subscription": []}
 	for field in [
 		"naming_series",

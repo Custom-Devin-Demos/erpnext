@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	# not using frappe.qb because https://github.com/frappe/frappe/issues/20292
 	frappe.db.sql(
 		"""UPDATE `tabAsset Depreciation Schedule`

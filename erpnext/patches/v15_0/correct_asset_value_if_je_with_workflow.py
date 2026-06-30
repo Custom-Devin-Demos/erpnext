@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.workflow import get_workflow_name
 from frappe.query_builder.functions import IfNull, Sum
 
 
-def execute():
+def execute() -> None:
 	active_je_workflow = get_workflow_name("Journal Entry")
 	if not active_je_workflow:
 		return
@@ -19,7 +21,7 @@ def execute():
 	correct_value_for_assets_with_auto_depr()
 
 
-def correct_value_for_assets_with_manual_depr_entries():
+def correct_value_for_assets_with_manual_depr_entries() -> None:
 	asset = frappe.qb.DocType("Asset")
 	gle = frappe.qb.DocType("GL Entry")
 	aca = frappe.qb.DocType("Asset Category Account")
@@ -57,7 +59,7 @@ def correct_value_for_assets_with_manual_depr_entries():
 	).run()
 
 
-def correct_value_for_assets_with_auto_depr(fb_name=None):
+def correct_value_for_assets_with_auto_depr(fb_name=None) -> None:
 	asset = frappe.qb.DocType("Asset")
 	gle = frappe.qb.DocType("GL Entry")
 	aca = frappe.qb.DocType("Asset Category Account")

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	for gateway_account in frappe.get_list("Payment Gateway Account", fields=["name", "payment_account"]):
 		company = frappe.db.get_value("Account", gateway_account.payment_account, "company")
 		frappe.db.set_value("Payment Gateway Account", gateway_account.name, "company", company)

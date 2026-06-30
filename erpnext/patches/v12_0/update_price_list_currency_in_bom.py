@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import getdate
 
 from erpnext.setup.utils import get_exchange_rate
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("manufacturing", "doctype", "bom")
 	frappe.reload_doc("manufacturing", "doctype", "bom_item")
 

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import Sum
 
 
-def execute():
+def execute() -> None:
 	sre = frappe.qb.DocType("Stock Reservation Entry")
 	query = (
 		frappe.qb.from_(sre)

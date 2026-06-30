@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	# fixes status of quotations which have status 'Expired' despite having valid sales order created
 
 	# filter out submitted expired quotations which has sales order created

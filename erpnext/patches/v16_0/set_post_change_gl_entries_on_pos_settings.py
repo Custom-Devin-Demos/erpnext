@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	Singles = frappe.qb.DocType("Singles")
 	query = (
 		frappe.qb.from_(Singles)

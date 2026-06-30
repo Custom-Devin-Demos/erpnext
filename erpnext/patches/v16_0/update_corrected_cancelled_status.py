@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	stock_closing_entry = frappe.qb.DocType("Stock Closing Entry")
 	call_log = frappe.qb.DocType("Call Log")
 

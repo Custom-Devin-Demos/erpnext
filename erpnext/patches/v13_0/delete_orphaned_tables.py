@@ -2,11 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import getdate
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("setup", "doctype", "transaction_deletion_record")
 
 	if has_deleted_company_transactions():

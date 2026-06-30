@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	try:
 		item_dict = get_deferred_accounts()
 		add_to_item_defaults(item_dict)
@@ -20,13 +22,13 @@ def get_deferred_accounts():
 	)
 
 
-def add_to_item_defaults(item_dict):
+def add_to_item_defaults(item_dict) -> None:
 	for item in item_dict:
 		add_company_wise_item_default(item, "deferred_expense_account")
 		add_company_wise_item_default(item, "deferred_revenue_account")
 
 
-def add_company_wise_item_default(item, account_type):
+def add_company_wise_item_default(item, account_type) -> None:
 	company = frappe.get_cached_value("Account", item[account_type], "company")
 	if company and item[account_type]:
 		item_defaults = frappe.get_cached_value("Item", item["name"], "item_defaults")

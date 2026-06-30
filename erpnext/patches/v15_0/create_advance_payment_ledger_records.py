@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.naming import _generate_random_string
 from frappe.query_builder import Case
@@ -25,7 +27,7 @@ FIELDS = [
 ]
 
 
-def execute():
+def execute() -> None:
 	"""
 	Description:
 	Create Advance Payment Ledger Entry for all Payments made against Sales / Purchase Orders
@@ -100,7 +102,7 @@ def make_advance_ledger_entries_for_journal_entries(advance_doctpyes) -> list:
 	bulk_insert_advance_entries(entries)
 
 
-def bulk_insert_advance_entries(entries):
+def bulk_insert_advance_entries(entries) -> None:
 	details = []
 	user = frappe.session.user
 	now = now_datetime()

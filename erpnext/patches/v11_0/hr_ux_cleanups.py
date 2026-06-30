@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doctype("Employee")
 	frappe.db.sql("update tabEmployee set first_name = employee_name")
 

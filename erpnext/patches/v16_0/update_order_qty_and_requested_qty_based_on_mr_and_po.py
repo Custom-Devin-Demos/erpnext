@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import DocType
 from frappe.query_builder.functions import Sum
 
 
-def execute():
+def execute() -> None:
 	PurchaseOrderItem = DocType("Purchase Order Item")
 	MaterialRequestItem = DocType("Material Request Item")
 

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cint
 
 
-def execute():
+def execute() -> None:
 	"""Get 'Disable CWIP Accounting value' from Asset Settings, set it in 'Enable Capital Work in Progress Accounting' field
 	in Company, delete Asset Settings"""
 

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from frappe import qb
 
 
-def execute():
+def execute() -> None:
 	"""
 	Clear `tabSingles` and Payment Reconciliation tables of values
 	"""

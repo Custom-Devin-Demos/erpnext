@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	Update Propery Setters for Journal Entry with new 'Entry Type'
 	"""

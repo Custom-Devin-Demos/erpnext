@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 
 import frappe
 
 
-def execute():
+def execute() -> None:
 	custom_reports = frappe.get_all(
 		"Report",
 		filters={

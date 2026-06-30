@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import frappe
 from pypika.terms import ValueWrapper
 
 from erpnext.accounts.general_ledger import make_reverse_gl_entries
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("accounts", "doctype", "overdue_payment")
 	frappe.reload_doc("accounts", "doctype", "dunning")
 

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	Fetch and Set is_return & return_against from POS Invoice in POS Invoice References table.
 	"""

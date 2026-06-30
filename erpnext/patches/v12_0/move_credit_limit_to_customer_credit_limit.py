@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Move credit limit and bypass credit limit to the child table of customer credit limit"""
 	frappe.reload_doc("Selling", "doctype", "Customer Credit Limit")
 	frappe.reload_doc("Selling", "doctype", "Customer")
@@ -17,7 +19,7 @@ def execute():
 	move_credit_limit_to_child_table()
 
 
-def move_credit_limit_to_child_table():
+def move_credit_limit_to_child_table() -> None:
 	"""maps data from old field to the new field in the child table"""
 
 	companies = frappe.get_all("Company", "name")

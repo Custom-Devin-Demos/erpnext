@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	stock_settings = frappe.get_doc("Stock Settings")
 	if stock_settings.default_warehouse and not frappe.db.exists(
 		"Warehouse", stock_settings.default_warehouse

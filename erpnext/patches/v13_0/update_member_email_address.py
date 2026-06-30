@@ -2,11 +2,13 @@
 # MIT License. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	"""add value to email_id column from email"""
 
 	if frappe.db.has_column("Member", "email"):

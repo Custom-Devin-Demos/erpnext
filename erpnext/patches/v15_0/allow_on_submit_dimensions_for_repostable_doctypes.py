@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
@@ -8,7 +10,7 @@ from erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger 
 )
 
 
-def execute():
+def execute() -> None:
 	for dt in get_allowed_types_from_settings(child_doc=True):
 		for dimension in get_accounting_dimensions():
 			frappe.db.set_value("Custom Field", dt + "-" + dimension, "allow_on_submit", 1)

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if "Education" in frappe.get_active_domains() and not frappe.db.exists("Role", "Guardian"):
 		doc = frappe.new_doc("Role")
 		doc.update({"role_name": "Guardian", "desk_access": 0})

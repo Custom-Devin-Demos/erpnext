@@ -1,14 +1,16 @@
-""" This patch fixes old purchase receipts (PR) where even after submitting
-	the PR, the `status` remains "Draft". `per_billed` field was copied over from previous
-	doc (PO), hence it is recalculated for setting new correct status of PR.
+"""This patch fixes old purchase receipts (PR) where even after submitting
+the PR, the `status` remains "Draft". `per_billed` field was copied over from previous
+doc (PO), hence it is recalculated for setting new correct status of PR.
 """
+
+from __future__ import annotations
 
 import frappe
 
 logger = frappe.logger("patch", allow_site=True, file_count=50)
 
 
-def execute():
+def execute() -> None:
 	affected_purchase_receipts = frappe.db.sql(
 		"""select name from `tabPurchase Receipt`
 		where status = 'Draft' and per_billed = 100 and docstatus = 1"""

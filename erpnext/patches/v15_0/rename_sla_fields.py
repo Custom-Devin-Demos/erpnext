@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import rename_fieldname
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	doctypes = frappe.get_all("Service Level Agreement", pluck="document_type", distinct=True)
 	for doctype in doctypes:
 		if doctype == "Issue":

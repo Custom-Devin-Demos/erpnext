@@ -1,11 +1,13 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.functions import Sum
 
 
-def execute():
+def execute() -> None:
 	ps = frappe.qb.DocType("Packing Slip")
 	dn = frappe.qb.DocType("Delivery Note")
 	ps_item = frappe.qb.DocType("Packing Slip Item")

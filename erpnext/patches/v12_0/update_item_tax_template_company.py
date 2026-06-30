@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("accounts", "doctype", "item_tax_template")
 
 	item_tax_template_list = frappe.get_list("Item Tax Template")

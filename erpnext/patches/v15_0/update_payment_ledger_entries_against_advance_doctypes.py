@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.accounts.utils import get_advance_payment_doctypes
@@ -5,7 +7,7 @@ from erpnext.accounts.utils import get_advance_payment_doctypes
 DOCTYPE = "Payment Ledger Entry"
 
 
-def execute():
+def execute() -> None:
 	"""
 	Description:
 	Set against_voucher as entry for Payment Ledger Entry against advance vouchers.

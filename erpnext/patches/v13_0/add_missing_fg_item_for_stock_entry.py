@@ -1,6 +1,8 @@
 # Copyright (c) 2020, Frappe and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cint, cstr, flt
 
@@ -8,7 +10,7 @@ from erpnext.controllers.stock_controller import create_repost_item_valuation_en
 from erpnext.stock.stock_ledger import make_sl_entries
 
 
-def execute():
+def execute() -> None:
 	if not frappe.db.has_column("Work Order", "has_batch_no"):
 		return
 
@@ -70,13 +72,13 @@ def execute():
 		repost_future_sle_and_gle(repost_doc)
 
 
-def set_expense_account(doc):
+def set_expense_account(doc) -> None:
 	for row in doc.items:
 		if row.is_finished_item and not row.expense_account:
 			row.expense_account = frappe.get_cached_value("Company", doc.company, "stock_adjustment_account")
 
 
-def repost_stock_entry(doc):
+def repost_stock_entry(doc) -> None:
 	doc.db_update()
 	for child_row in doc.items:
 		if child_row.is_finished_item:
@@ -94,7 +96,7 @@ def repost_stock_entry(doc):
 			doc.log_error("Stock respost failed")
 
 
-def get_sle_for_target_warehouse(doc, sl_entries, finished_item_row):
+def get_sle_for_target_warehouse(doc, sl_entries, finished_item_row) -> None:
 	for d in doc.get("items"):
 		if cstr(d.t_warehouse) and finished_item_row and d.name == finished_item_row.name:
 			sle = doc.get_sl_entries(
@@ -110,7 +112,7 @@ def get_sle_for_target_warehouse(doc, sl_entries, finished_item_row):
 			sl_entries.append(sle)
 
 
-def repost_future_sle_and_gle(doc):
+def repost_future_sle_and_gle(doc) -> None:
 	args = frappe._dict(
 		{
 			"posting_date": doc.posting_date,

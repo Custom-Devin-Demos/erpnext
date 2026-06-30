@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	try:
 		from erpnext.patches.v16_0.update_currency_exchange_settings_for_frankfurter import execute
 
@@ -10,7 +12,7 @@ def execute():
 		update_frankfurter_app_parameter_and_result()
 
 
-def update_frankfurter_app_parameter_and_result():
+def update_frankfurter_app_parameter_and_result() -> None:
 	settings = frappe.get_doc("Currency Exchange Settings")
 	if settings.service_provider != "frankfurter.app":
 		return

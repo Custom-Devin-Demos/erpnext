@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	doctype = "Stock Reconciliation Item"
 
 	if not frappe.db.has_column(doctype, "current_serial_no"):

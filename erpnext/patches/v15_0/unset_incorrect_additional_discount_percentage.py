@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import scrub
 from frappe.model.meta import get_field_precision
@@ -10,7 +12,7 @@ from erpnext.accounts.report.calculated_discount_mismatch.calculated_discount_mi
 )
 
 
-def execute():
+def execute() -> None:
 	# run this patch only if erpnext version before update is v15.64.0 or higher
 	if not should_run_patch():
 		return

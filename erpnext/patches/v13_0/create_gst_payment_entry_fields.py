@@ -1,11 +1,13 @@
 # Copyright (c) 2021, Frappe and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 
 
 # Patch kept for users outside India
-def execute():
+def execute() -> None:
 	if frappe.db.exists("Company", {"country": "India"}):
 		return
 

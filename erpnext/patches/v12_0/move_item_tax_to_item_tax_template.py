@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import json
 
 import frappe
 from frappe.model.naming import make_autoname
 
 
-def execute():
+def execute() -> None:
 	if "tax_type" not in frappe.db.get_table_columns("Item Tax"):
 		return
 	old_item_taxes = {}

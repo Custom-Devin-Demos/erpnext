@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 from collections import defaultdict
 
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "delivery_note_item", force=True)
 	frappe.reload_doc("stock", "doctype", "purchase_receipt_item", force=True)
 
-	def map_rows(doc_row, return_doc_row, detail_field, doctype):
+	def map_rows(doc_row, return_doc_row, detail_field, doctype) -> None:
 		"""Map rows after identifying similar ones."""
 
 		frappe.db.sql(
@@ -63,7 +65,7 @@ def execute():
 
 		return return_document_map
 
-	def set_document_detail_in_return_document(doctype):
+	def set_document_detail_in_return_document(doctype) -> None:
 		"""Map each row of the original document in the return document."""
 		mapped = []
 		return_document_map = defaultdict(list)

@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 
 	Fields to move from item group to item defaults child table
@@ -48,7 +50,7 @@ def execute():
 		for item_group in item_groups:
 			item_group_defaults = []
 
-			def insert_into_item_defaults(doc_field_name, doc_field_value, company):
+			def insert_into_item_defaults(doc_field_name, doc_field_value, company) -> None:
 				for d in item_group_defaults:
 					if d.get("company") == company:
 						d[doc_field_name[0]] = doc_field_value

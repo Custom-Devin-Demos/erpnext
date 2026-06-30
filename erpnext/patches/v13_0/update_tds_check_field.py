@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_table("Tax Withholding Category") and frappe.db.has_column(
 		"Tax Withholding Category", "round_off_tax_amount"
 	):

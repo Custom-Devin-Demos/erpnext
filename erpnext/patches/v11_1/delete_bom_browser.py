@@ -2,8 +2,10 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.delete_doc_if_exists("Page", "bom-browser")

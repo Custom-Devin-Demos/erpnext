@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import json
 from pathlib import Path
 
 import frappe
 
 
-def execute():
+def execute() -> None:
 	base_path = Path(frappe.get_app_path("erpnext", "accounts")).resolve()
 	categories_file = (base_path / "financial_report_template" / "account_categories.json").resolve()
 

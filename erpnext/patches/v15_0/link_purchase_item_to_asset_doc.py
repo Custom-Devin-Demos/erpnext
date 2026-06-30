@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.has_column("Asset", "purchase_invoice_item") and frappe.db.has_column(
 		"Asset", "purchase_receipt_item"
 	):

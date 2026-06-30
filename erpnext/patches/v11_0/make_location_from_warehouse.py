@@ -2,11 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils.nestedset import rebuild_tree
 
 
-def execute():
+def execute() -> None:
 	if not frappe.db.get_value("Asset", {"docstatus": ("<", 2)}, "name"):
 		return
 	frappe.reload_doc("assets", "doctype", "location")

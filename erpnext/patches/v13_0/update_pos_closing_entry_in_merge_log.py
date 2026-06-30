@@ -2,10 +2,12 @@
 # MIT License. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("accounts", "doctype", "POS Invoice Merge Log")
 	frappe.reload_doc("accounts", "doctype", "POS Closing Entry")
 	if frappe.db.count("POS Invoice Merge Log"):

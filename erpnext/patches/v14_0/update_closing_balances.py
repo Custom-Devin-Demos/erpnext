@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # License: MIT. See LICENSE
 
+from __future__ import annotations
+
 import itertools
 
 import frappe
@@ -13,7 +15,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 
 
-def execute():
+def execute() -> None:
 	# clear balances, they will be recalculated
 	frappe.db.truncate("Account Closing Balance")
 
@@ -26,7 +28,7 @@ def execute():
 			process_grouped_pcvs(list(pcvs), gl_entries)
 
 
-def process_grouped_pcvs(pcvs, gl_entries):
+def process_grouped_pcvs(pcvs, gl_entries) -> None:
 	pl_account_entries = []
 	closing_account_entries = []
 	first_pcv = pcvs[0]

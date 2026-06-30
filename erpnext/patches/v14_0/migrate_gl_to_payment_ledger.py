@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.query_builder import CustomFunction
@@ -11,14 +13,14 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 
 
-def create_accounting_dimension_fields():
+def create_accounting_dimension_fields() -> None:
 	dimensions_and_defaults = get_dimensions()
 	if dimensions_and_defaults:
 		for dimension in dimensions_and_defaults[0]:
 			make_dimension_in_accounting_doctypes(dimension, ["Payment Ledger Entry"])
 
 
-def generate_name_and_calculate_amount(gl_entries, start, receivable_accounts):
+def generate_name_and_calculate_amount(gl_entries, start, receivable_accounts) -> None:
 	for index, entry in enumerate(gl_entries, 0):
 		entry.name = start + index
 		if entry.account in receivable_accounts:
@@ -83,7 +85,7 @@ def build_insert_query():
 	return insert_query
 
 
-def insert_chunk_into_payment_ledger(insert_query, gl_entries):
+def insert_chunk_into_payment_ledger(insert_query, gl_entries) -> None:
 	if gl_entries:
 		columns = get_columns()
 
@@ -96,7 +98,7 @@ def insert_chunk_into_payment_ledger(insert_query, gl_entries):
 		insert_query.run()
 
 
-def execute():
+def execute() -> None:
 	"""
 	Description:
 	Migrate records from `tabGL Entry` to `tabPayment Ledger Entry`.

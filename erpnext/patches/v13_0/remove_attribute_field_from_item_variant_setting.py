@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Remove has_variants and attribute fields from item variant settings."""
 	frappe.reload_doc("stock", "doctype", "Item Variant Settings")
 

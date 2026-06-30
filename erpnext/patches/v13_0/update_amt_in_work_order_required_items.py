@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""Correct amount in child table of required items table."""
 
 	frappe.reload_doc("manufacturing", "doctype", "work_order")

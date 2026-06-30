@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	# update debit and credit in transaction currency:
 	# if transaction currency is same as account currency,
 	# then debit and credit in transaction currency is same as debit and credit in account currency

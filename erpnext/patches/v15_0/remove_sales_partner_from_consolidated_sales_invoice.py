@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	SalesInvoice = frappe.qb.DocType("Sales Invoice")
 
 	query = (

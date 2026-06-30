@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import click
 import frappe
 from frappe import parse_json
@@ -28,7 +30,7 @@ TAX_WITHHOLDING_DOCS = (
 )
 
 
-def execute():
+def execute() -> None:
 	for tax_doctype, doctypes in DOCTYPES_TO_PATCH.items():
 		for doctype in doctypes:
 			docnames = frappe.get_all(
@@ -149,7 +151,7 @@ def compile_docs(doc_info, taxes, items, doctype, tax_doctype):
 	return response.values()
 
 
-def delete_existing_tax_details(doc_names, doctype):
+def delete_existing_tax_details(doc_names, doctype) -> None:
 	"""
 	Delete existing Item Wise Tax Detail records for the given documents
 	to avoid duplicates when re-running the migration.
@@ -231,7 +233,7 @@ class ItemTax:
 
 		return item_wise_tax_details
 
-	def _handle_rounding_differences(self, tax_differences, last_taxable_items):
+	def _handle_rounding_differences(self, tax_differences, last_taxable_items) -> None:
 		"""
 		Handle rounding errors by applying the difference to the last taxable item
 		"""

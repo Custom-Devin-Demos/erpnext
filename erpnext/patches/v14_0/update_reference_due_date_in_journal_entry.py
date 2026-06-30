@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.get_value("Journal Entry Account", {"reference_due_date": ""}):
 		frappe.db.sql(
 			"""

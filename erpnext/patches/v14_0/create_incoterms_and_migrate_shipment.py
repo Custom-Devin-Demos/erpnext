@@ -1,14 +1,16 @@
+from __future__ import annotations
+
 import frappe
 
 from erpnext.setup.doctype.incoterm.incoterm import create_incoterms
 
 
-def execute():
+def execute() -> None:
 	create_incoterms()
 	migrate_shipments()
 
 
-def migrate_shipments():
+def migrate_shipments() -> None:
 	if not frappe.db.count("Shipment"):
 		return
 

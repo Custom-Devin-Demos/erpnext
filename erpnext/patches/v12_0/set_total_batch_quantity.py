@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "batch")
 
 	for batch in frappe.get_all("Batch", fields=["name", "batch_id"]):

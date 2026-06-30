@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	if frappe.db.exists("DocType", "Member"):
 		frappe.reload_doc("Non Profit", "doctype", "Member")
 

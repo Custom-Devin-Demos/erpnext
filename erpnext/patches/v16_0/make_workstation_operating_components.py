@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
@@ -12,7 +14,7 @@ def get_operating_cost_account(company):
 	)
 
 
-def execute():
+def execute() -> None:
 	components = [
 		"Electricity",
 		"Consumables",

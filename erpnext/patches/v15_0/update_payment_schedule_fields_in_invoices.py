@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder import DocType
 
 
-def execute():
+def execute() -> None:
 	invoice_types = ["Sales Invoice", "Purchase Invoice"]
 	for invoice_type in invoice_types:
 		invoice = DocType(invoice_type)
@@ -10,7 +12,7 @@ def execute():
 		update_payment_schedule(invoice_details)
 
 
-def update_payment_schedule(invoice_details):
+def update_payment_schedule(invoice_details) -> None:
 	ps = DocType("Payment Schedule")
 
 	frappe.qb.update(ps).join(invoice_details).on(ps.parent == invoice_details.name).set(

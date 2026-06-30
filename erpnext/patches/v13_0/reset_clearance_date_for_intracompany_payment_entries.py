@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	"""
 	Reset Clearance Date for Payment Entries of type Internal Transfer that have only been reconciled with one Bank Transaction.
 	This will allow the Payment Entries to be reconciled with the second Bank Transaction using the Bank Reconciliation Tool.

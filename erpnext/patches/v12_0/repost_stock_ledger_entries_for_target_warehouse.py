@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	warehouse_perm = frappe.get_all(
 		"User Permission",
 		fields=[{"COUNT": "*", "as": "p_count"}, "is_default", "user"],

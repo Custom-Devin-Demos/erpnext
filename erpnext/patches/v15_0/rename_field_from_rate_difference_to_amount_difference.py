@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import frappe
 from frappe.model.utils.rename_field import rename_field
 
 
-def execute():
+def execute() -> None:
 	frappe.db.set_value(
 		"DocField",
 		{"parent": "Purchase Receipt Item", "fieldname": "rate_difference_with_purchase_invoice"},

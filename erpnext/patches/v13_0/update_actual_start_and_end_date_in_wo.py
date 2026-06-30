@@ -2,11 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_to_date
 
 
-def execute():
+def execute() -> None:
 	frappe.reload_doc("manufacturing", "doctype", "work_order")
 	frappe.reload_doc("manufacturing", "doctype", "work_order_item")
 	frappe.reload_doc("manufacturing", "doctype", "job_card")

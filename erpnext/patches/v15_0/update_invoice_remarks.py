@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import frappe
 
 
-def execute():
+def execute() -> None:
 	update_sales_invoice_remarks()
 	update_purchase_invoice_remarks()
 
 
-def update_sales_invoice_remarks():
+def update_sales_invoice_remarks() -> None:
 	"""
 	Update remarks in Sales Invoice.
 	Some sites may have very large volume of sales invoices.
@@ -39,7 +41,7 @@ def update_sales_invoice_remarks():
 	frappe.db.sql(update_query, values=values, as_dict=0)
 
 
-def update_purchase_invoice_remarks():
+def update_purchase_invoice_remarks() -> None:
 	"""
 	Update remarks in Purchase Invoice.
 	Some sites may have very large volume of purchase invoices.
@@ -72,7 +74,7 @@ def update_purchase_invoice_remarks():
 	frappe.db.sql(update_query, values=values, as_dict=0)
 
 
-def update_sales_invoice_gle_remarks():
+def update_sales_invoice_gle_remarks() -> None:
 	##	Update query to update GL Entry - Updates all entries which are for Sales Invoice with No Remarks
 	update_query = """
 		UPDATE
@@ -91,7 +93,7 @@ def update_sales_invoice_gle_remarks():
 	frappe.db.sql(update_query, values=values, as_dict=0)
 
 
-def update_sales_invoice_ple_remarks():
+def update_sales_invoice_ple_remarks() -> None:
 	##	Update query to update Payment Ledger Entry - Updates all entries which are for Sales Invoice with No Remarks
 	update_query = """
 		UPDATE
@@ -110,7 +112,7 @@ def update_sales_invoice_ple_remarks():
 	frappe.db.sql(update_query, values=values, as_dict=0)
 
 
-def update_purchase_invoice_gle_remarks():
+def update_purchase_invoice_gle_remarks() -> None:
 	###	Query to update GL Entry - Updates all entries which are for Purchase Invoice with No Remarks
 	update_query = """
 		UPDATE
@@ -129,7 +131,7 @@ def update_purchase_invoice_gle_remarks():
 	frappe.db.sql(update_query, values=values, as_dict=0)
 
 
-def update_purchase_invoice_ple_remarks():
+def update_purchase_invoice_ple_remarks() -> None:
 	###	Query to update Payment Ledger Entry - Updates all entries which are for Purchase Invoice with No Remarks
 	update_query = """
 		UPDATE
