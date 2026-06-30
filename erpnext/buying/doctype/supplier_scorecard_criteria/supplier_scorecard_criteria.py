@@ -1,6 +1,7 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import re
 
@@ -28,15 +29,15 @@ class SupplierScorecardCriteria(Document):
 		weight: DF.Percent
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.validate_variables()
 		self.validate_formula()
 
-	def validate_variables(self):
+	def validate_variables(self) -> None:
 		# make sure all the variables exist
 		_get_variables(self)
 
-	def validate_formula(self):
+	def validate_formula(self) -> None:
 		# evaluate the formula with 0's to make sure it is valid
 		test_formula = self.formula.replace("\r", "").replace("\n", "")
 
@@ -54,19 +55,19 @@ class SupplierScorecardCriteria(Document):
 
 
 @frappe.whitelist()
-def get_criteria_list():
+def get_criteria_list() -> list:
 	"""
 	Get the list of criteria
 	"""
 	return frappe.get_list("Supplier Scorecard Criteria", fields=["name"])
 
 
-def get_variables(criteria_name):
+def get_variables(criteria_name: str) -> list:
 	criteria = frappe.get_doc("Supplier Scorecard Criteria", criteria_name)
 	return _get_variables(criteria)
 
 
-def _get_variables(criteria):
+def _get_variables(criteria) -> list:
 	my_variables = []
 	regex = r"\{(.*?)\}"
 

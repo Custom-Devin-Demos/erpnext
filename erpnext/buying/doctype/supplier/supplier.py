@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 import frappe.defaults
@@ -82,22 +83,22 @@ class Supplier(TransactionBase):
 		website: DF.Data | None
 	# end: auto-generated types
 
-	def onload(self):
+	def onload(self) -> None:
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)
 		self.load_dashboard_info()
 
-	def before_save(self):
+	def before_save(self) -> None:
 		if not self.on_hold:
 			self.release_date = ""
 		elif self.on_hold and not self.hold_type:
 			self.hold_type = "All"
 
-	def load_dashboard_info(self):
+	def load_dashboard_info(self) -> None:
 		info = get_dashboard_info(self.doctype, self.name)
 		self.set_onload("dashboard_info", info)
 
-	def autoname(self):
+	def autoname(self) -> None:
 		supp_master_name = frappe.defaults.get_global_default("supp_master_name")
 		if supp_master_name == "Supplier Name":
 			self.name = self.supplier_name
@@ -106,15 +107,15 @@ class Supplier(TransactionBase):
 		else:
 			set_name_from_naming_options(frappe.get_meta(self.doctype).autoname, self)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.create_primary_contact()
 		self.create_primary_address()
 
-	def add_role_for_user(self):
+	def add_role_for_user(self) -> None:
 		for portal_user in self.portal_users:
 			add_role_for_portal_user(portal_user, "Supplier")
 
-	def _add_supplier_role(self, portal_user):
+	def _add_supplier_role(self, portal_user) -> None:
 		if not portal_user.is_new():
 			return
 
@@ -134,7 +135,7 @@ class Supplier(TransactionBase):
 		user_doc.add_roles("Supplier")
 		frappe.msgprint(_("Added Supplier Role to User {0}.").format(frappe.bold(user_doc.name)), alert=True)
 
-	def validate(self):
+	def validate(self) -> None:
 		self.flags.is_new_doc = self.is_new()
 
 		# validation for Naming Series mandatory field...
@@ -148,7 +149,7 @@ class Supplier(TransactionBase):
 		self.validate_currency_for_receivable_payable_and_advance_account()
 
 	@frappe.whitelist()
-	def get_supplier_group_details(self):
+	def get_supplier_group_details(self) -> None:
 		doc = frappe.get_doc("Supplier Group", self.supplier_group)
 		self.payment_terms = ""
 		self.accounts = []
@@ -162,7 +163,7 @@ class Supplier(TransactionBase):
 		if doc.payment_terms:
 			self.payment_terms = doc.payment_terms
 
-	def validate_internal_supplier(self):
+	def validate_internal_supplier(self) -> None:
 		if not self.is_internal_supplier:
 			self.represents_company = ""
 
@@ -183,7 +184,7 @@ class Supplier(TransactionBase):
 				)
 			)
 
-	def create_primary_contact(self):
+	def create_primary_contact(self) -> None:
 		from erpnext.selling.doctype.customer.mapper import make_contact
 
 		if not self.supplier_primary_contact:
@@ -193,7 +194,7 @@ class Supplier(TransactionBase):
 				self.db_set("mobile_no", self.mobile_no)
 				self.db_set("email_id", self.email_id)
 
-	def create_primary_address(self):
+	def create_primary_address(self) -> None:
 		from frappe.contacts.doctype.address.address import get_address_display
 
 		from erpnext.selling.doctype.customer.mapper import make_address
@@ -205,7 +206,7 @@ class Supplier(TransactionBase):
 			self.db_set("supplier_primary_address", address.name)
 			self.db_set("primary_address", address_display)
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		if self.supplier_primary_contact:
 			self.db_set("supplier_primary_contact", None)
 		if self.supplier_primary_address:
@@ -213,11 +214,11 @@ class Supplier(TransactionBase):
 
 		delete_contact_and_address("Supplier", self.name)
 
-	def before_rename(self, olddn, newdn, merge=False):
+	def before_rename(self, olddn: str, newdn: str, merge: bool = False) -> None:
 		if merge:
 			validate_party_currency_before_merging("Supplier", olddn, newdn)
 
-	def after_rename(self, olddn, newdn, merge=False):
+	def after_rename(self, olddn: str, newdn: str, merge: bool = False) -> None:
 		if frappe.defaults.get_global_default("supp_master_name") == "Supplier Name":
 			self.db_set("supplier_name", newdn)
 
@@ -226,7 +227,7 @@ class Supplier(TransactionBase):
 @frappe.validate_and_sanitize_search_inputs
 def get_supplier_primary(
 	doctype: str | None, txt: str, searchfield: str | None, start: int, page_len: int, filters: dict
-):
+) -> list:
 	supplier = filters.get("supplier")
 	type = filters.get("type")
 	type_doctype = frappe.qb.DocType(type)
