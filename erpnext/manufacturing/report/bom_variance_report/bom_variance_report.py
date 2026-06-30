@@ -2,18 +2,20 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns, data = [], []
 	columns = get_columns(filters)
 	data = get_data(filters)
 	return columns, data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	columns = [
 		{
 			"label": _("Work Order"),
@@ -63,7 +65,7 @@ def get_columns(filters):
 	return columns
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	wo = frappe.qb.DocType("Work Order")
 	query = (
 		frappe.qb.from_(wo)
@@ -93,7 +95,9 @@ def get_data(filters):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_work_orders(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
+def get_work_orders(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict
+) -> list:
 	wo = frappe.qb.DocType("Work Order")
 	query = (
 		frappe.qb.from_(wo)
