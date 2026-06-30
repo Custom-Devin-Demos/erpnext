@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
@@ -9,7 +11,7 @@ from frappe.utils import flt
 from erpnext.selling.doctype.customer.customer import get_credit_limit, get_customer_outstanding
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 	# Check if customer id is according to naming series or customer name
@@ -59,7 +61,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns(customer_naming_type):
+def get_columns(customer_naming_type: str) -> list:
 	columns = [
 		_("Customer") + ":Link/Customer:120",
 		_("Credit Limit") + ":Currency:120",
@@ -76,7 +78,7 @@ def get_columns(customer_naming_type):
 	return columns
 
 
-def get_details(filters):
+def get_details(filters: dict) -> list:
 	c = frappe.qb.DocType("Customer")
 	ccl = frappe.qb.DocType("Customer Credit Limit")
 	query = (

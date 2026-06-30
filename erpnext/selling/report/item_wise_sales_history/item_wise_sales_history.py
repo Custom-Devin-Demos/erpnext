@@ -2,13 +2,15 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import flt
 from frappe.utils.nestedset import get_descendants_of
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	filters = frappe._dict(filters or {})
 	if filters.from_date > filters.to_date:
 		frappe.throw(_("From Date cannot be greater than To Date"))
@@ -21,7 +23,7 @@ def execute(filters=None):
 	return columns, data, None, chart_data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	return [
 		{
 			"label": _("Item Code"),
@@ -128,7 +130,7 @@ def get_columns(filters):
 	]
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	data = []
 
 	company_list = get_descendants_of("Company", filters.get("company"))
@@ -167,7 +169,7 @@ def get_data(filters):
 	return data
 
 
-def get_customer_details():
+def get_customer_details() -> dict:
 	details = frappe.get_all("Customer", fields=["name", "customer_name", "customer_group"])
 	customer_details = {}
 	for d in details:
@@ -177,7 +179,7 @@ def get_customer_details():
 	return customer_details
 
 
-def get_item_details():
+def get_item_details() -> dict:
 	details = frappe.db.get_all("Item", fields=["name", "item_name", "item_group"])
 	item_details = {}
 	for d in details:
@@ -185,7 +187,7 @@ def get_item_details():
 	return item_details
 
 
-def get_sales_order_details(company_list, filters):
+def get_sales_order_details(company_list: list, filters: dict) -> list:
 	db_so = frappe.qb.DocType("Sales Order")
 	db_so_item = frappe.qb.DocType("Sales Order Item")
 
@@ -231,7 +233,7 @@ def get_sales_order_details(company_list, filters):
 	return query.run(as_dict=1)
 
 
-def get_chart_data(data):
+def get_chart_data(data: list) -> dict:
 	item_wise_sales_map = {}
 	labels, datapoints = [], []
 

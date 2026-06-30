@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from typing import Literal
 
 import frappe
@@ -10,14 +12,14 @@ from frappe.query_builder.functions import Coalesce, Count, NullIf, Round, Sum
 from frappe.utils.data import get_timespan_date_range
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns = get_columns(filters.get("group_by"))
 	from_date, to_date = get_timespan_date_range(filters.get("timespan").lower())
 	data = get_data(filters.get("company"), from_date, to_date, filters.get("group_by"))
 	return columns, data
 
 
-def get_columns(group_by: Literal["Lost Reason", "Competitor"]):
+def get_columns(group_by: Literal["Lost Reason", "Competitor"]) -> list:
 	return [
 		{
 			"fieldname": "lost_reason" if group_by == "Lost Reason" else "competitor",
@@ -53,7 +55,9 @@ def get_columns(group_by: Literal["Lost Reason", "Competitor"]):
 	]
 
 
-def get_data(company: str, from_date: str, to_date: str, group_by: Literal["Lost Reason", "Competitor"]):
+def get_data(
+	company: str, from_date: str, to_date: str, group_by: Literal["Lost Reason", "Competitor"]
+) -> list:
 	"""Return quotation value grouped by lost reason or competitor"""
 	if group_by == "Lost Reason":
 		fieldname = "lost_reason"

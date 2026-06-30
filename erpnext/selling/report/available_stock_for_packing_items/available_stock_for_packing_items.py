@@ -2,11 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -40,7 +42,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
+def get_columns() -> list:
 	columns = [
 		"Item Code:Link/Item:100",
 		"Item Name::100",
@@ -53,7 +55,7 @@ def get_columns():
 	return columns
 
 
-def get_item_details(item_codes):
+def get_item_details(item_codes: list) -> dict:
 	# only the bundle items actually shown in the report need detail lookup, not the whole catalogue
 	if not item_codes:
 		return {}
@@ -67,7 +69,7 @@ def get_item_details(item_codes):
 	return item_map
 
 
-def get_item_warehouse_quantity_map():
+def get_item_warehouse_quantity_map() -> dict:
 	# Components of every active product bundle: (bundle item code, component item, qty per bundle)
 	pb = frappe.qb.DocType("Product Bundle")
 	pbi = frappe.qb.DocType("Product Bundle Item")
