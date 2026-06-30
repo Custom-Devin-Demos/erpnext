@@ -1,21 +1,28 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe.utils import nowtime, random_string
 
 from erpnext.tests.utils import ERPNextTestSuite
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class TestBulkTransactionLog(ERPNextTestSuite):
-	def _make_log_doc(self, date):
+	def _make_log_doc(self, date: str) -> Document:
 		# "Bulk Transaction Log" is a virtual doctype named by date; build the doc
 		# in-memory and drive load_from_db() directly to exercise the converted query.
 		doc = frappe.new_doc("Bulk Transaction Log")
 		doc.name = date
 		return doc
 
-	def _insert_detail(self, date, status="Success"):
+	def _insert_detail(self, date: str, status: str = "Success") -> Document:
 		detail = frappe.get_doc(
 			{
 				"doctype": "Bulk Transaction Log Detail",
@@ -32,7 +39,7 @@ class TestBulkTransactionLog(ERPNextTestSuite):
 		detail.insert(ignore_permissions=True, ignore_links=True)
 		return detail
 
-	def test_load_raises_when_no_detail_rows(self):
+	def test_load_raises_when_no_detail_rows(self) -> None:
 		# A date with zero Bulk Transaction Log Detail rows must not resolve to a log.
 		date = "2024-01-01"
 		self.assertFalse(
@@ -43,7 +50,7 @@ class TestBulkTransactionLog(ERPNextTestSuite):
 		doc = self._make_log_doc(date)
 		self.assertRaises(frappe.DoesNotExistError, doc.load_from_db)
 
-	def test_load_succeeds_and_aggregates_after_detail_inserted(self):
+	def test_load_succeeds_and_aggregates_after_detail_inserted(self) -> None:
 		date = "2024-02-02"
 
 		# Initially absent -> load_from_db must raise.
@@ -63,7 +70,7 @@ class TestBulkTransactionLog(ERPNextTestSuite):
 		self.assertEqual(doc.failed, 1)
 		self.assertEqual(doc.log_entries, 3)
 
-	def test_load_isolated_per_date(self):
+	def test_load_isolated_per_date(self) -> None:
 		# Detail rows on a different date must not satisfy the lookup for our date.
 		other_date = "2024-03-03"
 		self._insert_detail(other_date, "Success")

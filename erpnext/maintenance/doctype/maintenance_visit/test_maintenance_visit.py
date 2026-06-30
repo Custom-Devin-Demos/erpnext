@@ -1,17 +1,24 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import frappe
 from frappe.utils.data import add_days, getdate, today
 
 from erpnext.tests.utils import ERPNextTestSuite
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 class TestMaintenanceVisit(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.sales_person = make_sales_person("_Test Maintenance Service Person")
 
-	def make_warranty_claim(self):
+	def make_warranty_claim(self) -> Document:
 		# Warranty Claim is not submittable; it provides a real target for the
 		# purposes-row Dynamic Link (prevdoc_doctype/prevdoc_docname).
 		claim = frappe.new_doc("Warranty Claim")
@@ -24,7 +31,9 @@ class TestMaintenanceVisit(ERPNextTestSuite):
 		claim.insert(ignore_permissions=True)
 		return claim
 
-	def make_visit(self, claim, completion_status, mntc_date=None, mntc_time=None, submit=True):
+	def make_visit(
+		self, claim, completion_status: str, mntc_date=None, mntc_time=None, submit: bool = True
+	) -> Document:
 		visit = frappe.new_doc("Maintenance Visit")
 		visit.company = "_Test Company"
 		visit.customer = "_Test Customer"
@@ -49,7 +58,7 @@ class TestMaintenanceVisit(ERPNextTestSuite):
 			visit.submit()
 		return visit
 
-	def test_cancel_blocked_when_later_visit_exists(self):
+	def test_cancel_blocked_when_later_visit_exists(self) -> None:
 		# check_if_last_visit's converted join query (B): cancelling an EARLIER
 		# submitted visit must be blocked while a LATER one (greater mntc_date)
 		# referencing the same prevdoc_docname is still active.
@@ -65,7 +74,7 @@ class TestMaintenanceVisit(ERPNextTestSuite):
 		# The throw originates in check_if_last_visit's query (B): a later visit exists.
 		self.assertRaisesRegex(frappe.ValidationError, later.name, earlier.cancel)
 
-	def test_cancel_blocked_by_same_date_later_time(self):
+	def test_cancel_blocked_by_same_date_later_time(self) -> None:
 		# Same converted query (B), time-tiebreak branch: equal mntc_date, but the
 		# blocking visit has a strictly greater mntc_time.
 		claim = self.make_warranty_claim()
@@ -74,7 +83,7 @@ class TestMaintenanceVisit(ERPNextTestSuite):
 
 		self.assertRaisesRegex(frappe.ValidationError, later.name, earlier.cancel)
 
-	def test_cancel_allowed_for_latest_visit(self):
+	def test_cancel_allowed_for_latest_visit(self) -> None:
 		# The latest visit has no later sibling -> query (B) returns nothing ->
 		# cancellation proceeds and the visit is marked Cancelled.
 		claim = self.make_warranty_claim()
@@ -88,7 +97,7 @@ class TestMaintenanceVisit(ERPNextTestSuite):
 		# The earlier one is untouched and still submitted.
 		self.assertEqual(frappe.db.get_value("Maintenance Visit", earlier.name, "docstatus"), 1)
 
-	def test_cancel_reopens_claim_to_work_in_progress_from_prior_partial(self):
+	def test_cancel_reopens_claim_to_work_in_progress_from_prior_partial(self) -> None:
 		# Drives the status-update query (A) inside update_customer_issue(flag=0).
 		# A submitted "Partially Completed" visit (prior) exists for the claim; when
 		# a LATER "Fully Completed" visit is cancelled, query (A) finds that prior
@@ -112,7 +121,7 @@ class TestMaintenanceVisit(ERPNextTestSuite):
 		self.assertEqual(claim.resolution_details, prior.purposes[0].work_done)
 		self.assertEqual(getdate(claim.resolution_date), getdate(prior.mntc_date))
 
-	def test_cancel_reopens_claim_to_open_when_no_prior_partial(self):
+	def test_cancel_reopens_claim_to_open_when_no_prior_partial(self) -> None:
 		# Inverse of query (A): a lone "Fully Completed" visit with no prior
 		# "Partially Completed" sibling -> query (A) returns nothing -> the claim
 		# is reset to "Open" with cleared resolution fields on cancel.
@@ -129,7 +138,7 @@ class TestMaintenanceVisit(ERPNextTestSuite):
 		self.assertIsNone(claim.resolution_date)
 
 
-def make_sales_person(name):
+def make_sales_person(name: str) -> Document:
 	sales_person = frappe.get_doc({"doctype": "Sales Person", "sales_person_name": name})
 	sales_person.insert(ignore_if_duplicate=True)
 	if not sales_person.name:
@@ -137,7 +146,7 @@ def make_sales_person(name):
 	return sales_person
 
 
-def make_maintenance_visit():
+def make_maintenance_visit() -> Document:
 	mv = frappe.new_doc("Maintenance Visit")
 	mv.company = "_Test Company"
 	mv.customer = "_Test Customer"

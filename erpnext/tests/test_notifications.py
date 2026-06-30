@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # MIT License. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.desk import notifications
 
@@ -8,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestNotifications(ERPNextTestSuite):
-	def test_get_notifications_for_targets(self):
+	def test_get_notifications_for_targets(self) -> None:
 		"""
 		Test notification config entries for targets as percentages
 		"""
