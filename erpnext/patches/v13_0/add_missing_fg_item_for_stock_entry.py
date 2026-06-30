@@ -96,7 +96,7 @@ def repost_stock_entry(doc) -> None:
 			doc.log_error("Stock respost failed")
 
 
-def get_sle_for_target_warehouse(doc, sl_entries, finished_item_row) -> None:
+def get_sle_for_target_warehouse(doc, sl_entries: list, finished_item_row) -> None:
 	for d in doc.get("items"):
 		if cstr(d.t_warehouse) and finished_item_row and d.name == finished_item_row.name:
 			sle = doc.get_sl_entries(

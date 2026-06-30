@@ -53,7 +53,7 @@ def get_affected_doctypes():
 	return affected_doctypes
 
 
-def is_not_child_table(doctype):
+def is_not_child_table(doctype: str):
 	return not bool(frappe.get_value("DocType", doctype, "istable"))
 
 

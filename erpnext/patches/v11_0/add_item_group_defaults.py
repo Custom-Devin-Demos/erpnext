@@ -50,7 +50,7 @@ def execute() -> None:
 		for item_group in item_groups:
 			item_group_defaults = []
 
-			def insert_into_item_defaults(doc_field_name, doc_field_value, company) -> None:
+			def insert_into_item_defaults(doc_field_name, doc_field_value, company: str) -> None:
 				for d in item_group_defaults:
 					if d.get("company") == company:
 						d[doc_field_name[0]] = doc_field_value

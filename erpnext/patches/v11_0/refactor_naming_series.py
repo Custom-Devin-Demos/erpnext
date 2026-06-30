@@ -79,8 +79,8 @@ def execute() -> None:
 		set_series(doctype, opts["options"], opts["default"])
 
 
-def set_series(doctype, options, default) -> None:
-	def _make_property_setter(property_name, value) -> None:
+def set_series(doctype: str, options, default) -> None:
+	def _make_property_setter(property_name: str, value) -> None:
 		property_setter = frappe.db.exists(
 			"Property Setter",
 			{"doc_type": doctype, "field_name": "naming_series", "property": property_name},
@@ -124,7 +124,7 @@ def get_series():
 	return series_to_set
 
 
-def get_series_to_preserve(doctype):
+def get_series_to_preserve(doctype: str):
 	series_to_preserve = frappe.db.sql_list(
 		f"""select distinct naming_series from `tab{doctype}` where ifnull(naming_series, '') != ''"""
 	)
@@ -132,7 +132,7 @@ def get_series_to_preserve(doctype):
 	return series_to_preserve
 
 
-def get_default_series(doctype):
+def get_default_series(doctype: str):
 	field = frappe.get_meta(doctype).get_field("naming_series")
 	default_series = field.get("default", "") if field else ""
 	return default_series

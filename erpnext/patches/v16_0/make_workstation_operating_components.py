@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 
 
-def get_operating_cost_account(company):
+def get_operating_cost_account(company: str):
 	company_details = frappe.db.get_value(
 		"Company", company, ["default_operating_cost_account", "default_expense_account"], as_dict=True
 	)

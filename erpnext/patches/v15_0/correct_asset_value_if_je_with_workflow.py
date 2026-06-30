@@ -59,7 +59,7 @@ def correct_value_for_assets_with_manual_depr_entries() -> None:
 	).run()
 
 
-def correct_value_for_assets_with_auto_depr(fb_name=None) -> None:
+def correct_value_for_assets_with_auto_depr(fb_name: str | None = None) -> None:
 	asset = frappe.qb.DocType("Asset")
 	gle = frappe.qb.DocType("GL Entry")
 	aca = frappe.qb.DocType("Asset Category Account")

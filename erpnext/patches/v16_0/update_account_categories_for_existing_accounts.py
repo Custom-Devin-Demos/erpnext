@@ -56,7 +56,9 @@ def get_standard_account_category_mapping():
 	return account_mapping
 
 
-def map_account_categories_for_company(company, account_mapping, mapped_account_categories) -> None:
+def map_account_categories_for_company(
+	company: str, account_mapping: dict, mapped_account_categories: dict
+) -> None:
 	accounts = frappe.get_all(
 		"Account",
 		filters={"company": company, "account_category": ["is", "not set"]},

@@ -133,7 +133,7 @@ def get_tax_rate_map():
 	return rate_map
 
 
-def get_tax_rate_for_date(tax_rate_map, category, posting_date):
+def get_tax_rate_for_date(tax_rate_map: dict, category, posting_date):
 	if not category or category not in tax_rate_map or not posting_date:
 		return 0, False
 
@@ -144,7 +144,7 @@ def get_tax_rate_for_date(tax_rate_map, category, posting_date):
 	return 0, False
 
 
-def get_party_tax_id(party_type, party, column_cache, party_tax_id_cache):
+def get_party_tax_id(party_type, party, column_cache: dict, party_tax_id_cache: dict):
 	if not party:
 		return None
 
@@ -188,7 +188,7 @@ def determine_status(taxable_name, withholding_name, under_withheld_reason, is_d
 	return ""
 
 
-def bulk_insert_entries(all_entries) -> None:
+def bulk_insert_entries(all_entries: list) -> None:
 	"""
 	Bulk insert Tax Withholding Entries.
 	all_entries: dict of {(parent_doctype, parent_name): [entries]}
@@ -299,7 +299,9 @@ def bulk_insert_entries(all_entries) -> None:
 
 
 class PurchaseInvoiceMigrator:
-	def __init__(self, tds_accounts, tax_rate_map, column_cache, party_tax_id_cache) -> None:
+	def __init__(
+		self, tds_accounts, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
+	) -> None:
 		self.tds_accounts = tds_accounts
 		self.tax_rate_map = tax_rate_map
 		self.column_cache = column_cache
@@ -888,7 +890,7 @@ class PurchaseInvoiceMigrator:
 			**kwargs,
 		}
 
-	def _add_entries(self, parent_doctype, parent_name, entries) -> None:
+	def _add_entries(self, parent_doctype, parent_name, entries: list) -> None:
 		key = (parent_doctype, parent_name)
 		if key not in self.all_entries:
 			self.all_entries[key] = []
@@ -901,7 +903,9 @@ class PurchaseInvoiceMigrator:
 # =============================================================================
 
 
-def migrate_sales_invoices(tds_accounts, tax_rate_map, column_cache, party_tax_id_cache) -> None:
+def migrate_sales_invoices(
+	tds_accounts, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
+) -> None:
 	"""
 	Migrate Sales Invoice TCS data.
 
@@ -1055,7 +1059,9 @@ def migrate_sales_invoices(tds_accounts, tax_rate_map, column_cache, party_tax_i
 # =============================================================================
 
 
-def migrate_journal_entries(tds_accounts, tax_rate_map, column_cache, party_tax_id_cache) -> None:
+def migrate_journal_entries(
+	tds_accounts, tax_rate_map: dict, column_cache: dict, party_tax_id_cache: dict
+) -> None:
 	"""
 	Migrate Journal Entry TDS data.
 
@@ -1235,7 +1241,7 @@ def migrate_journal_entries(tds_accounts, tax_rate_map, column_cache, party_tax_
 # =============================================================================
 
 
-def copy_category_to_items_for_purchase(column_cache) -> None:
+def copy_category_to_items_for_purchase(column_cache: dict) -> None:
 	parent_doctype = "Purchase Invoice"
 	item_doctype = "Purchase Invoice Item"
 
@@ -1264,7 +1270,7 @@ def copy_category_to_items_for_purchase(column_cache) -> None:
 	)
 
 
-def copy_category_to_items_for_sales(column_cache) -> None:
+def copy_category_to_items_for_sales(column_cache: dict) -> None:
 	parent_doctype = "Sales Invoice"
 	item_doctype = "Sales Invoice Item"
 

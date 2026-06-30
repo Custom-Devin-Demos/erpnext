@@ -32,5 +32,5 @@ def execute() -> None:
 	rebuild_tree("Location")
 
 
-def get_parent_warehouse_name(warehouse):
+def get_parent_warehouse_name(warehouse: str):
 	return frappe.db.get_value("Warehouse", warehouse, "warehouse_name")

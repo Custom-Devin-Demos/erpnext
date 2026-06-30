@@ -28,7 +28,7 @@ def execute() -> None:
 			process_grouped_pcvs(list(pcvs), gl_entries)
 
 
-def process_grouped_pcvs(pcvs, gl_entries) -> None:
+def process_grouped_pcvs(pcvs: list, gl_entries: list) -> None:
 	pl_account_entries = []
 	closing_account_entries = []
 	first_pcv = pcvs[0]
@@ -87,7 +87,7 @@ def get_period_closing_vouchers():
 	)
 
 
-def get_gl_entries(pcv_list):
+def get_gl_entries(pcv_list: list):
 	gl_entries = frappe.get_all(
 		"GL Entry",
 		filters={"voucher_no": ("in", [pcv.name for pcv in pcv_list]), "is_cancelled": 0},

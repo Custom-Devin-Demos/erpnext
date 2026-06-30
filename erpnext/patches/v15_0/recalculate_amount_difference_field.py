@@ -108,7 +108,7 @@ def execute() -> None:
 				adjust_incoming_rate_for_pr(frappe.get_doc("Purchase Receipt", pr))
 
 
-def get_billed_qty_against_purchase_receipt(pr_names):
+def get_billed_qty_against_purchase_receipt(pr_names: list):
 	table = frappe.qb.DocType("Purchase Invoice Item")
 	query = (
 		frappe.qb.from_(table)

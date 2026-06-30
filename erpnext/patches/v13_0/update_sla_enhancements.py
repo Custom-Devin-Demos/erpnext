@@ -104,7 +104,7 @@ def execute() -> None:
 	frappe.delete_doc_if_exists("DocType", "Service Level")
 
 
-def convert_to_seconds(value, unit):
+def convert_to_seconds(value, unit: str):
 	seconds = 0
 	if unit == "Hour":
 		seconds = value * 3600

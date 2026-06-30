@@ -73,7 +73,7 @@ def execute() -> None:
 			)
 
 
-def get_semantic_version(version):
+def get_semantic_version(version: str):
 	try:
 		return Version(version)
 	except Exception:

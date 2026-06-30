@@ -9,7 +9,7 @@ def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "delivery_note_item", force=True)
 	frappe.reload_doc("stock", "doctype", "purchase_receipt_item", force=True)
 
-	def map_rows(doc_row, return_doc_row, detail_field, doctype) -> None:
+	def map_rows(doc_row, return_doc_row, detail_field: str, doctype: str) -> None:
 		"""Map rows after identifying similar ones."""
 
 		frappe.db.sql(
@@ -22,7 +22,7 @@ def execute() -> None:
 			)
 		)  # nosec
 
-	def row_is_mappable(doc_row, return_doc_row, detail_field):
+	def row_is_mappable(doc_row, return_doc_row, detail_field: str):
 		"""Checks if two rows are similar enough to be mapped."""
 
 		if doc_row.item_code == return_doc_row.item_code and not return_doc_row.get(detail_field):
@@ -46,7 +46,7 @@ def execute() -> None:
 		else:
 			return False
 
-	def make_return_document_map(doctype, return_document_map):
+	def make_return_document_map(doctype: str, return_document_map):
 		"""Returns a map of documents and it's return documents.
 		Format => { 'document' : ['return_document_1','return_document_2'] }"""
 
@@ -65,7 +65,7 @@ def execute() -> None:
 
 		return return_document_map
 
-	def set_document_detail_in_return_document(doctype) -> None:
+	def set_document_detail_in_return_document(doctype: str) -> None:
 		"""Map each row of the original document in the return document."""
 		mapped = []
 		return_document_map = defaultdict(list)

@@ -14,7 +14,7 @@ def execute() -> None:
 	frappe.reload_doc("stock", "doctype", "delivery_note_item")
 	frappe.reload_doc("stock", "doctype", "stock_settings")
 
-	def update_from_return_docs(doctype) -> None:
+	def update_from_return_docs(doctype: str) -> None:
 		for return_doc in frappe.get_all(
 			doctype, filters={"is_return": 1, "docstatus": 1, "return_against": ("!=", "")}
 		):

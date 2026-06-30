@@ -78,7 +78,7 @@ def execute() -> None:
 						bulk_insert("Item Wise Tax Detail", rows_to_insert, commit_chunks=True)
 
 
-def get_taxes_for_docs(parents, tax_doctype, doctype):
+def get_taxes_for_docs(parents: list, tax_doctype: str, doctype: str):
 	tax = frappe.qb.DocType(tax_doctype)
 
 	return (
@@ -90,7 +90,7 @@ def get_taxes_for_docs(parents, tax_doctype, doctype):
 	)
 
 
-def get_items_for_docs(parents, doctype):
+def get_items_for_docs(parents: list, doctype: str):
 	item = frappe.qb.DocType(f"{doctype} Item")
 	additional_fields = []
 
@@ -115,7 +115,7 @@ def get_items_for_docs(parents, doctype):
 	)
 
 
-def get_doc_details(parents, doctype):
+def get_doc_details(parents: list, doctype: str):
 	inv = frappe.qb.DocType(doctype)
 	additional_fields = []
 	if doctype in TAX_WITHHOLDING_DOCS:
@@ -134,7 +134,7 @@ def get_doc_details(parents, doctype):
 	)
 
 
-def compile_docs(doc_info, taxes, items, doctype, tax_doctype):
+def compile_docs(doc_info, taxes, items, doctype: str, tax_doctype: str):
 	"""
 	Compile docs, so that each one could be accessed as if it's a single doc.
 	"""
@@ -151,7 +151,7 @@ def compile_docs(doc_info, taxes, items, doctype, tax_doctype):
 	return response.values()
 
 
-def delete_existing_tax_details(doc_names, doctype) -> None:
+def delete_existing_tax_details(doc_names: list, doctype: str) -> None:
 	"""
 	Delete existing Item Wise Tax Detail records for the given documents
 	to avoid duplicates when re-running the migration.

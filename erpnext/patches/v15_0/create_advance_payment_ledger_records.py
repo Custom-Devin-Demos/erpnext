@@ -102,7 +102,7 @@ def make_advance_ledger_entries_for_journal_entries(advance_doctpyes) -> list:
 	bulk_insert_advance_entries(entries)
 
 
-def bulk_insert_advance_entries(entries) -> None:
+def bulk_insert_advance_entries(entries: list) -> None:
 	details = []
 	user = frappe.session.user
 	now = now_datetime()

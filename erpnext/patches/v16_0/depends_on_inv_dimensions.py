@@ -18,7 +18,7 @@ def get_inventory_dimensions():
 	)
 
 
-def get_display_depends_on(doctype, fieldname):
+def get_display_depends_on(doctype: str, fieldname: str):
 	if doctype not in [
 		"Stock Entry Detail",
 		"Sales Invoice Item",

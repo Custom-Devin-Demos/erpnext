@@ -37,7 +37,7 @@ def remove_old_property_setter() -> None:
 		frappe.delete_doc("Property Setter", old_property_setter, force=1)
 
 
-def migrate_single_budget(budget_name) -> None:
+def migrate_single_budget(budget_name: str) -> None:
 	budget_doc = frappe.get_doc("Budget", budget_name)
 
 	account_rows = frappe.get_all(

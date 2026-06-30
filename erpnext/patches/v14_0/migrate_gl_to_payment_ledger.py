@@ -20,7 +20,7 @@ def create_accounting_dimension_fields() -> None:
 			make_dimension_in_accounting_doctypes(dimension, ["Payment Ledger Entry"])
 
 
-def generate_name_and_calculate_amount(gl_entries, start, receivable_accounts) -> None:
+def generate_name_and_calculate_amount(gl_entries: list, start, receivable_accounts) -> None:
 	for index, entry in enumerate(gl_entries, 0):
 		entry.name = start + index
 		if entry.account in receivable_accounts:
@@ -85,7 +85,7 @@ def build_insert_query():
 	return insert_query
 
 
-def insert_chunk_into_payment_ledger(insert_query, gl_entries) -> None:
+def insert_chunk_into_payment_ledger(insert_query, gl_entries: list) -> None:
 	if gl_entries:
 		columns = get_columns()
 

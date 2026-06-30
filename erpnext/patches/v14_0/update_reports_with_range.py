@@ -18,7 +18,7 @@ def execute() -> None:
 		update_reference_reports(report)
 
 
-def update_reference_reports(reference_report) -> None:
+def update_reference_reports(reference_report: str) -> None:
 	reports = frappe.get_all(
 		"Report", filters={"reference_report": reference_report}, fields={"json", "name"}
 	)
@@ -28,7 +28,7 @@ def update_reference_reports(reference_report) -> None:
 		update_reference_reports(report.name)
 
 
-def update_report_json(report) -> None:
+def update_report_json(report: str) -> None:
 	report_json = json.loads(report.json) if report.get("json") else {}
 	report_filter = report_json.get("filters")
 

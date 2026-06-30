@@ -25,7 +25,7 @@ def set_company_reporting_currency() -> None:
 		update_company_subtree_reporting_currency(company_subtree, d.default_currency)
 
 
-def update_company_subtree_reporting_currency(companies, currency) -> None:
+def update_company_subtree_reporting_currency(companies: list, currency: str) -> None:
 	Company = frappe.qb.DocType("Company")
 
 	frappe.qb.update(Company).set(Company.reporting_currency, currency).where(
@@ -115,7 +115,7 @@ def check_exchange_rate_availability(company_details, posting_dates):
 	return exchange_rate_available
 
 
-def set_reporting_currency_by_doctype(doctype, company_details, posting_closing_dates) -> None:
+def set_reporting_currency_by_doctype(doctype: str, company_details, posting_closing_dates) -> None:
 	date_column = "posting_date" if doctype == "GL Entry" else "closing_date"
 	for d in posting_closing_dates:
 		exchange_rate = get_exchange_rate(
@@ -129,7 +129,7 @@ def set_reporting_currency_by_doctype(doctype, company_details, posting_closing_
 		)
 
 
-def get_closing_posting_dates(doctype, company, fiscal_year=None, closing_date=None):
+def get_closing_posting_dates(doctype: str, company: str, fiscal_year=None, closing_date=None):
 	dt = frappe.qb.DocType(doctype)
 
 	date_column = "posting_date" if doctype == "GL Entry" else "closing_date"
@@ -150,7 +150,7 @@ def get_closing_posting_dates(doctype, company, fiscal_year=None, closing_date=N
 
 
 def set_reporting_currency_on_individual_documents(
-	doctype, company, posting_closing_date, exchange_rate
+	doctype: str, company: str, posting_closing_date, exchange_rate
 ) -> None:
 	dt = frappe.qb.DocType(doctype)
 

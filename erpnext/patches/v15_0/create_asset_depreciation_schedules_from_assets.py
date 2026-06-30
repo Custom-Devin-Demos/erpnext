@@ -95,7 +95,7 @@ def get_asset_depreciation_schedules_map():
 
 
 def update_depreciation_schedules(
-	depreciation_schedules,
+	depreciation_schedules: list,
 	asset_depr_schedule_name,
 ) -> None:
 	ds = frappe.qb.DocType("Depreciation Schedule")

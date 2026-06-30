@@ -79,7 +79,7 @@ def execute() -> None:
 			frappe.delete_doc("Report", report, ignore_permissions=True)
 
 
-def convert_to_seconds(value, unit):
+def convert_to_seconds(value, unit: str):
 	seconds = 0
 	if not value:
 		return seconds

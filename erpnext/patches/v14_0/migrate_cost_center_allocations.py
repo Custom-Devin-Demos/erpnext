@@ -15,7 +15,7 @@ def execute() -> None:
 	frappe.delete_doc("DocType", "Distributed Cost Center", ignore_missing=True)
 
 
-def create_new_cost_center_allocation_records(cc_allocations) -> None:
+def create_new_cost_center_allocation_records(cc_allocations: list) -> None:
 	for main_cc, allocations in cc_allocations.items():
 		cca = frappe.new_doc("Cost Center Allocation")
 		cca.main_cost_center = main_cc

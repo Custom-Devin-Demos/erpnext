@@ -89,7 +89,7 @@ def execute() -> None:
 		set_series(doctype, opts["value"])
 
 
-def set_series(doctype, value) -> None:
+def set_series(doctype: str, value) -> None:
 	doc = frappe.db.exists("Property Setter", {"doc_type": doctype, "property": "autoname"})
 	if doc:
 		frappe.db.set_value("Property Setter", doc, "value", value)
@@ -118,6 +118,6 @@ def get_series():
 	return series_to_set
 
 
-def get_series_to_preserve(doctype):
+def get_series_to_preserve(doctype: str):
 	series_to_preserve = frappe.db.get_value("DocType", doctype, "autoname")
 	return series_to_preserve

@@ -47,7 +47,7 @@ def update_sales_debit_notes() -> None:
 	update_gl_entry(doctype="Sales Invoice", invoices=invoices, value="Debit Note")
 
 
-def update_gl_entry(doctype, invoices, value) -> None:
+def update_gl_entry(doctype: str, invoices: list, value) -> None:
 	gl_entry = frappe.qb.DocType("GL Entry")
 	(
 		frappe.qb.update(gl_entry)
