@@ -1,6 +1,7 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.model.document import Document
@@ -32,14 +33,14 @@ class SupplierScorecardStanding(Document):
 
 
 @frappe.whitelist()
-def get_scoring_standing(standing_name: str):
+def get_scoring_standing(standing_name: str) -> Document:
 	standing = frappe.get_doc("Supplier Scorecard Standing", standing_name)
 
 	return standing
 
 
 @frappe.whitelist()
-def get_standings_list():
+def get_standings_list() -> list:
 	"""Returns a list of all Supplier Scorecard Standings."""
 	standings = frappe.get_all("Supplier Scorecard Standing", fields=["name"])
 

@@ -1,6 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -8,13 +9,13 @@ from frappe.query_builder.functions import Max
 from frappe.utils import flt
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	columns = get_columns(filters)
 	data = get_data(filters)
 	return columns, data
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	columns = [
 		{
 			"label": _("Material Request Date"),
@@ -128,7 +129,7 @@ def get_columns(filters):
 	return columns
 
 
-def apply_filters_on_query(filters, parent, child, query):
+def apply_filters_on_query(filters: dict, parent, child, query):
 	if filters.get("company"):
 		query = query.where(parent.company == filters.get("company"))
 
@@ -146,7 +147,7 @@ def apply_filters_on_query(filters, parent, child, query):
 	return query
 
 
-def get_data(filters):
+def get_data(filters: dict) -> list:
 	purchase_order_entry = get_po_entries(filters)
 	mr_records, procurement_record_against_mr = get_mapped_mr_details(filters)
 	pr_records = get_mapped_pr_records()
@@ -187,7 +188,7 @@ def get_data(filters):
 	return procurement_record
 
 
-def get_mapped_mr_details(filters):
+def get_mapped_mr_details(filters: dict) -> tuple:
 	mr_records = {}
 	parent = frappe.qb.DocType("Material Request")
 	child = frappe.qb.DocType("Material Request Item")
@@ -239,7 +240,7 @@ def get_mapped_mr_details(filters):
 	return mr_records, procurement_record_against_mr
 
 
-def get_mapped_pi_records():
+def get_mapped_pi_records() -> dict:
 	po = frappe.qb.DocType("Purchase Order")
 	pi_item = frappe.qb.DocType("Purchase Invoice Item")
 	pi_records = (
@@ -257,7 +258,7 @@ def get_mapped_pi_records():
 	return frappe._dict(pi_records)
 
 
-def get_mapped_pr_records():
+def get_mapped_pr_records() -> dict:
 	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
 	pr_records = (
@@ -275,7 +276,7 @@ def get_mapped_pr_records():
 	return frappe._dict(pr_records)
 
 
-def get_po_entries(filters):
+def get_po_entries(filters: dict) -> list:
 	parent = frappe.qb.DocType("Purchase Order")
 	child = frappe.qb.DocType("Purchase Order Item")
 

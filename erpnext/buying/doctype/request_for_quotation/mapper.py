@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -15,8 +17,8 @@ from erpnext.stock.doctype.material_request.mapper import set_missing_values
 @frappe.whitelist()
 def make_supplier_quotation_from_rfq(
 	source_name: str, target_doc: str | Document | None = None, for_supplier: str | None = None
-):
-	def postprocess(source, target_doc):
+) -> Document:
+	def postprocess(source, target_doc) -> None:
 		if for_supplier:
 			target_doc.supplier = for_supplier
 			args = _get_party_details(for_supplier, party_type="Supplier", ignore_permissions=True)
@@ -56,7 +58,7 @@ def make_supplier_quotation_from_rfq(
 
 # This method is used to make supplier quotation from supplier's portal.
 @frappe.whitelist()
-def create_supplier_quotation(doc: str | Document | dict):
+def create_supplier_quotation(doc: str | Document | dict) -> str | None:
 	doc = frappe.parse_json(doc)
 
 	if frappe.session.user not in frappe.get_all(
@@ -87,7 +89,7 @@ def create_supplier_quotation(doc: str | Document | dict):
 		return None
 
 
-def add_items(sq_doc, supplier, items):
+def add_items(sq_doc, supplier: str, items: list) -> None:
 	for data in items:
 		if isinstance(data, dict):
 			data = frappe._dict(data)
@@ -95,7 +97,7 @@ def add_items(sq_doc, supplier, items):
 		create_rfq_items(sq_doc, supplier, data)
 
 
-def create_rfq_items(sq_doc, supplier, data):
+def create_rfq_items(sq_doc, supplier: str, data) -> None:
 	args = {}
 
 	for field in [
@@ -130,7 +132,7 @@ def create_rfq_items(sq_doc, supplier, data):
 @frappe.whitelist()
 def get_item_from_material_requests_based_on_supplier(
 	source_name: str, target_doc: str | Document | None = None
-):
+) -> Document:
 	Item = frappe.qb.DocType("Item")
 	Item_Supp = frappe.qb.DocType("Item Supplier")
 	MR = frappe.qb.DocType("Material Request")

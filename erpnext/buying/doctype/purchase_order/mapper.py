@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -15,7 +17,7 @@ from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.stock.doctype.item.item import get_item_defaults
 
 
-def set_missing_values(source, target):
+def set_missing_values(source, target) -> None:
 	target.run_method("set_missing_values")
 	target.run_method("calculate_taxes_and_totals")
 	target.run_method("set_use_serial_batch_fields")
@@ -24,21 +26,21 @@ def set_missing_values(source, target):
 @frappe.whitelist()
 def make_purchase_receipt(
 	source_name: str, target_doc: str | Document | None = None, args: str | dict | None = None
-):
+) -> Document:
 	if args is None:
 		args = {}
 	args = frappe.parse_json(args)
 
 	has_unit_price_items = frappe.db.get_value("Purchase Order", source_name, "has_unit_price_items")
 
-	def is_unit_price_row(source):
+	def is_unit_price_row(source) -> bool:
 		return has_unit_price_items and source.qty == 0
 
-	def get_max_receivable_qty(source):
+	def get_max_receivable_qty(source) -> float:
 		tolerance = flt(get_allowance_for(source.item_code, qty_or_amount="qty")[0])
 		return flt(source.qty) * (100 + tolerance) / 100
 
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		received_qty = flt(obj.received_qty)
 		qty = flt(obj.qty)
 		pending_qty = qty - received_qty
@@ -54,7 +56,7 @@ def make_purchase_receipt(
 		target.amount = target.qty * flt(obj.rate)
 		target.base_amount = target.qty * flt(obj.rate) * flt(source_parent.conversion_rate)
 
-	def select_item(d):
+	def select_item(d) -> bool:
 		filtered_items = args.get("filtered_children", [])
 		child_filter = d.name in filtered_items if filtered_items else True
 		return child_filter
@@ -103,12 +105,12 @@ def make_purchase_receipt(
 @frappe.whitelist()
 def make_purchase_invoice(
 	source_name: str, target_doc: str | Document | None = None, args: str | dict | None = None
-):
+) -> Document:
 	return get_mapped_purchase_invoice(source_name, target_doc, args=args)
 
 
 @frappe.whitelist()
-def make_purchase_invoice_from_portal(purchase_order_name: str):
+def make_purchase_invoice_from_portal(purchase_order_name: str) -> None:
 	doc = get_mapped_purchase_invoice(purchase_order_name, ignore_permissions=True)
 	if frappe.session.user not in frappe.get_all("Portal User", {"parent": doc.supplier}, pluck="user"):
 		frappe.throw(_("Not Permitted"), frappe.PermissionError)
@@ -119,12 +121,17 @@ def make_purchase_invoice_from_portal(purchase_order_name: str):
 	frappe.response.location = "/purchase-invoices/" + doc.name
 
 
-def get_mapped_purchase_invoice(source_name, target_doc=None, ignore_permissions=False, args=None):
+def get_mapped_purchase_invoice(
+	source_name: str,
+	target_doc: str | Document | None = None,
+	ignore_permissions: bool = False,
+	args: str | dict | None = None,
+) -> Document:
 	if args is None:
 		args = {}
 	args = frappe.parse_json(args)
 
-	def postprocess(source, target):
+	def postprocess(source, target) -> None:
 		target.flags.ignore_permissions = ignore_permissions
 		set_missing_values(source, target)
 
@@ -137,7 +144,7 @@ def get_mapped_purchase_invoice(source_name, target_doc=None, ignore_permissions
 		PaymentScheduleService(target).set_payment_schedule()
 		target.credit_to = get_party_account("Supplier", source.supplier, source.company)
 
-	def get_billed_qty(po_item_name):
+	def get_billed_qty(po_item_name) -> float:
 		from frappe.query_builder.functions import Sum
 
 		table = frappe.qb.DocType("Purchase Invoice Item")
@@ -148,7 +155,7 @@ def get_mapped_purchase_invoice(source_name, target_doc=None, ignore_permissions
 		)
 		return query.run(pluck="qty")[0] or 0
 
-	def update_item(obj, target, source_parent):
+	def update_item(obj, target, source_parent) -> None:
 		billed_qty = flt(get_billed_qty(obj.name))
 		target.qty = flt(obj.qty) - billed_qty
 
@@ -161,7 +168,7 @@ def get_mapped_purchase_invoice(source_name, target_doc=None, ignore_permissions
 			or item_group.get("buying_cost_center")
 		)
 
-	def select_item(d):
+	def select_item(d) -> bool:
 		filtered_items = args.get("filtered_children", [])
 		child_filter = d.name in filtered_items if filtered_items else True
 		return child_filter
@@ -211,7 +218,7 @@ def get_mapped_purchase_invoice(source_name, target_doc=None, ignore_permissions
 
 
 @frappe.whitelist()
-def make_inter_company_sales_order(source_name: str, target_doc: str | Document | None = None):
+def make_inter_company_sales_order(source_name: str, target_doc: str | Document | None = None) -> Document:
 	from erpnext.accounts.doctype.sales_invoice.mapper import make_inter_company_transaction
 
 	return make_inter_company_transaction("Purchase Order", source_name, target_doc)
@@ -224,7 +231,7 @@ def make_subcontracting_order(
 	save: bool = False,
 	submit: bool = False,
 	notify: bool = False,
-):
+) -> Document:
 	if not is_po_fully_subcontracted(source_name):
 		target_doc = get_mapped_subcontracting_order(source_name, target_doc)
 
@@ -264,7 +271,7 @@ def is_po_fully_subcontracted(po_name: str) -> bool:
 
 
 def get_mapped_subcontracting_order(source_name: str, target_doc: str | Document | None = None) -> Document:
-	def post_process(source_doc, target_doc):
+	def post_process(source_doc, target_doc) -> None:
 		target_doc.populate_items_table()
 
 		if target_doc.set_warehouse:
