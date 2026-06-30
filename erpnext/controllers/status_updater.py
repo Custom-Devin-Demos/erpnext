@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -13,7 +15,7 @@ class OverAllowanceError(frappe.ValidationError):
 	pass
 
 
-def validate_status(status, options):
+def validate_status(status: str, options: list) -> None:
 	if status not in options:
 		frappe.throw(_("Status must be one of {0}").format(comma_or(options)))
 
@@ -186,15 +188,17 @@ class StatusUpdater(Document):
 	Installation Note: Update Installed Qty, Update Percent Qty and Validate over installation
 	"""
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		if self.meta.has_field("status"):
 			self.db_set("status", "Cancelled")
 
-	def update_prevdoc_status(self):
+	def update_prevdoc_status(self) -> None:
 		self.update_qty()
 		self.validate_qty()
 
-	def set_status(self, update=False, status=None, update_modified=True):
+	def set_status(
+		self, update: bool = False, status: str | None = None, update_modified: bool = True
+	) -> None:
 		if self.is_new():
 			if self.get("amended_from"):
 				self.status = "Draft"
@@ -215,7 +219,7 @@ class StatusUpdater(Document):
 			if update:
 				self.db_set("status", new_status, update_modified=update_modified)
 
-	def get_status(self):
+	def get_status(self) -> dict:
 		"""
 		Get the status of the document.
 
@@ -262,7 +266,7 @@ class StatusUpdater(Document):
 
 		return {"status": self.status}
 
-	def validate_qty(self):
+	def validate_qty(self) -> None:
 		"""Validates qty at row level"""
 		for args in self.status_updater:
 			if "target_ref_field" not in args or args.get("validate_qty") is False:
@@ -382,7 +386,7 @@ class StatusUpdater(Document):
 						elif item[args["target_ref_field"]]:
 							self.check_overflow_with_allowance(item, args)
 
-	def fetch_items_with_pending_qty(self, args, item_field, items):
+	def fetch_items_with_pending_qty(self, args: dict, item_field: str, items: list) -> list:
 		doctype = frappe.qb.DocType(args["target_dt"])
 		item_field_col = doctype[item_field]
 		target_ref_field = doctype[args["target_ref_field"]]
@@ -415,7 +419,7 @@ class StatusUpdater(Document):
 
 		return query.run(as_dict=True)
 
-	def check_overflow_with_allowance(self, item, args):
+	def check_overflow_with_allowance(self, item: dict, args: dict) -> None:
 		"""
 		Checks if there is overflow considering a relaxation allowance.
 		"""
@@ -464,7 +468,7 @@ class StatusUpdater(Document):
 			else:
 				self.warn_about_bypassing_with_role(item, qty_or_amount, role)
 
-	def limits_crossed_error(self, args, item, qty_or_amount):
+	def limits_crossed_error(self, args: dict, item: dict, qty_or_amount: str) -> None:
 		"""Raise exception for limits crossed"""
 		if (
 			self.doctype in ["Sales Invoice", "Delivery Note"]
@@ -512,7 +516,7 @@ class StatusUpdater(Document):
 			title=_("Limit Crossed"),
 		)
 
-	def warn_about_bypassing_with_role(self, item, qty_or_amount, role):
+	def warn_about_bypassing_with_role(self, item: dict, qty_or_amount: str, role: str) -> None:
 		if qty_or_amount == "qty":
 			msg = _("Over Receipt/Delivery of {0} {1} ignored for item {2} because you have {3} role.")
 		else:
@@ -529,7 +533,7 @@ class StatusUpdater(Document):
 			alert=True,
 		)
 
-	def update_qty(self, update_modified=True):
+	def update_qty(self, update_modified: bool = True) -> None:
 		"""Updates qty or amount at row level
 
 		:param update_modified: If true, updates `modified` and `modified_by` for target parent doc
@@ -546,7 +550,7 @@ class StatusUpdater(Document):
 			if "percent_join_field" in args or "percent_join_field_parent" in args:
 				self._update_percent_field_in_targets(args, update_modified)
 
-	def _update_children(self, args, update_modified):
+	def _update_children(self, args: dict, update_modified: bool) -> None:
 		"""Update quantities or amount in child table"""
 		for d in self.get_all_children():
 			if d.doctype != args["source_dt"]:
@@ -603,8 +607,8 @@ class StatusUpdater(Document):
 
 	@staticmethod
 	def _calculate_target_parent_percentage(
-		name, target_parent_dt, target_dt, target_ref_field, target_field
-	):
+		name: str, target_parent_dt: str, target_dt: str, target_ref_field: str | dict, target_field: str
+	) -> float:
 		child_records = frappe.get_all(
 			target_dt,
 			filters={"parent": name, "parenttype": target_parent_dt},
@@ -629,7 +633,7 @@ class StatusUpdater(Document):
 		return percentage
 
 	@staticmethod
-	def _determine_status(percentage, keyword):
+	def _determine_status(percentage: float, keyword: str) -> str:
 		if percentage < 0.001:
 			return f"Not {keyword}"
 		elif percentage >= 99.999999:
@@ -637,7 +641,7 @@ class StatusUpdater(Document):
 		else:
 			return f"Partly {keyword}"
 
-	def _update_percent_field_in_targets(self, args, update_modified=True):
+	def _update_percent_field_in_targets(self, args: dict, update_modified: bool = True) -> None:
 		"""Update percent field in parent transaction"""
 		if args.get("percent_join_field_parent"):
 			# if reference to target doc where % is to be updated, is
@@ -654,7 +658,7 @@ class StatusUpdater(Document):
 					args["name"] = name
 					self._update_percent_field(args, update_modified)
 
-	def _update_percent_field(self, args, update_modified=True):
+	def _update_percent_field(self, args: dict, update_modified: bool = True) -> None:
 		"""Update percent field in parent transaction"""
 
 		update_data = {}
@@ -681,7 +685,7 @@ class StatusUpdater(Document):
 				update_data.update(status)
 			target.db_set(update_data, update_modified=update_modified, notify=True)
 
-	def _update_modified(self, args, update_modified):
+	def _update_modified(self, args: dict, update_modified: bool) -> None:
 		if not update_modified:
 			args["update_modified"] = ""
 			return
@@ -690,7 +694,7 @@ class StatusUpdater(Document):
 			frappe.db.escape(now()), frappe.db.escape(frappe.session.user)
 		)
 
-	def update_billing_status_for_zero_amount_refdoc(self, ref_dt):
+	def update_billing_status_for_zero_amount_refdoc(self, ref_dt: str) -> None:
 		ref_fieldname = frappe.scrub(ref_dt)
 
 		ref_docs = [item.get(ref_fieldname) for item in (self.get("items") or []) if item.get(ref_fieldname)]
@@ -706,7 +710,7 @@ class StatusUpdater(Document):
 		if zero_amount_refdocs:
 			self.update_billing_status(zero_amount_refdocs, ref_dt, ref_fieldname)
 
-	def update_billing_status(self, zero_amount_refdoc, ref_dt, ref_fieldname):
+	def update_billing_status(self, zero_amount_refdoc: list, ref_dt: str, ref_fieldname: str) -> None:
 		for ref_dn in zero_amount_refdoc:
 			ref_item = frappe.qb.DocType(f"{ref_dt} Item")
 			ref_doc_qty = flt(
@@ -743,15 +747,15 @@ class StatusUpdater(Document):
 
 
 def get_allowance_for(
-	item_code,
-	item_allowance=None,
-	global_qty_allowance=None,
-	global_amount_allowance=None,
-	qty_or_amount="qty",
-	global_qty_allowance_field="over_delivery_receipt_allowance",
-	global_qty_allowance_doctype="Stock Settings",
-	item_qty_allowance_field="over_delivery_receipt_allowance",
-):
+	item_code: str,
+	item_allowance: dict | None = None,
+	global_qty_allowance: float | None = None,
+	global_amount_allowance: float | None = None,
+	qty_or_amount: str = "qty",
+	global_qty_allowance_field: str = "over_delivery_receipt_allowance",
+	global_qty_allowance_doctype: str = "Stock Settings",
+	item_qty_allowance_field: str = "over_delivery_receipt_allowance",
+) -> tuple:
 	"""
 	Returns the allowance for the item, if not set, returns global allowance.
 

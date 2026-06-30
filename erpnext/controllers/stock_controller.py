@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -38,7 +40,7 @@ from erpnext.stock.stock_ledger import get_items_to_be_repost
 
 
 class StockController(AccountsController):
-	def validate(self):
+	def validate(self) -> None:
 		from erpnext.stock.doctype.putaway_rule.putaway_rule import validate_putaway_capacity
 		from erpnext.stock.services.serial_batch_bundle_service import SerialBatchBundleService
 
@@ -62,11 +64,11 @@ class StockController(AccountsController):
 		validate_putaway_capacity(self)
 		self.reset_conversion_factor()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		super().on_update()
 		self.check_zero_rate()
 
-	def reset_conversion_factor(self):
+	def reset_conversion_factor(self) -> None:
 		for row in self.get("items"):
 			if row.uom != row.stock_uom:
 				continue
@@ -80,7 +82,7 @@ class StockController(AccountsController):
 					alert=True,
 				)
 
-	def check_zero_rate(self):
+	def check_zero_rate(self) -> None:
 		if self.doctype in [
 			"POS Invoice",
 			"Purchase Invoice",
@@ -108,7 +110,7 @@ class StockController(AccountsController):
 						indicator="orange",
 					)
 
-	def validate_items_exist(self):
+	def validate_items_exist(self) -> None:
 		if not self.get("items"):
 			return
 
@@ -120,7 +122,7 @@ class StockController(AccountsController):
 		if non_exists_items:
 			frappe.throw(_("Items {0} do not exist in the Item master.").format(", ".join(non_exists_items)))
 
-	def get_item_wise_inventory_account_map(self):
+	def get_item_wise_inventory_account_map(self) -> dict:
 		inventory_account_map = frappe._dict()
 		for table in ["items", "packed_items", "supplied_items"]:
 			if not self.get(table):
@@ -135,7 +137,9 @@ class StockController(AccountsController):
 	def use_item_inventory_account(self):
 		return frappe.get_cached_value("Company", self.company, "enable_item_wise_inventory_account")
 
-	def get_inventory_account_dict(self, row, inventory_account_map, warehouse_field=None):
+	def get_inventory_account_dict(
+		self, row, inventory_account_map: dict, warehouse_field: str | None = None
+	) -> dict:
 		account_dict = frappe._dict()
 
 		if isinstance(row, dict):
@@ -169,13 +173,15 @@ class StockController(AccountsController):
 
 		return account_dict
 
-	def get_inventory_account_map(self):
+	def get_inventory_account_map(self) -> dict:
 		if self.use_item_inventory_account:
 			return self.get_item_wise_inventory_account_map()
 
 		return get_warehouse_account_map(self.company)
 
-	def make_gl_entries(self, gl_entries=None, from_repost=False, via_landed_cost_voucher=False):
+	def make_gl_entries(
+		self, gl_entries: list | None = None, from_repost: bool = False, via_landed_cost_voucher: bool = False
+	) -> None:
 		if self.docstatus == 2:
 			make_reverse_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
 
@@ -204,14 +210,16 @@ class StockController(AccountsController):
 					)
 				make_gl_entries(gl_entries, from_repost=from_repost)
 
-	def make_bundle_using_old_serial_batch_fields(self, table_name=None, via_landed_cost_voucher=False):
+	def make_bundle_using_old_serial_batch_fields(
+		self, table_name: str | None = None, via_landed_cost_voucher: bool = False
+	):
 		from erpnext.stock.services.serial_batch_bundle_service import SerialBatchBundleService
 
 		return SerialBatchBundleService(self).make_bundle_using_old_serial_batch_fields(
 			table_name, via_landed_cost_voucher
 		)
 
-	def make_bundle_for_sales_purchase_return(self, table_name=None):
+	def make_bundle_for_sales_purchase_return(self, table_name: str | None = None):
 		from erpnext.stock.services.serial_batch_bundle_service import SerialBatchBundleService
 
 		return SerialBatchBundleService(self).make_bundle_for_sales_purchase_return(table_name)
@@ -222,8 +230,11 @@ class StockController(AccountsController):
 		return SerialBatchBundleService(self).set_use_serial_batch_fields()
 
 	def get_gl_entries(
-		self, inventory_account_map=None, default_expense_account=None, default_cost_center=None
-	):
+		self,
+		inventory_account_map: dict | None = None,
+		default_expense_account: str | None = None,
+		default_cost_center: str | None = None,
+	) -> list:
 		from erpnext.stock.services.base_stock_gl_composer import BaseStockGLComposer
 
 		return BaseStockGLComposer(self).compose(
@@ -235,7 +246,7 @@ class StockController(AccountsController):
 
 		return StockLedgerService(self).get_items_and_warehouses()
 
-	def get_stock_ledger_details(self):
+	def get_stock_ledger_details(self) -> dict:
 		from erpnext.stock.services.stock_ledger_service import StockLedgerService
 
 		return StockLedgerService(self).get_stock_ledger_details()
@@ -245,13 +256,18 @@ class StockController(AccountsController):
 
 		return SerialBatchBundleService(self).delete_auto_created_batches()
 
-	def set_serial_and_batch_bundle(self, table_name=None, ignore_validate=False):
+	def set_serial_and_batch_bundle(self, table_name: str | None = None, ignore_validate: bool = False):
 		from erpnext.stock.services.serial_batch_bundle_service import SerialBatchBundleService
 
 		return SerialBatchBundleService(self).set_serial_and_batch_bundle(table_name, ignore_validate)
 
 	def make_package_for_transfer(
-		self, serial_and_batch_bundle, warehouse, type_of_transaction=None, do_not_submit=None, qty=0
+		self,
+		serial_and_batch_bundle,
+		warehouse: str,
+		type_of_transaction: str | None = None,
+		do_not_submit: bool | None = None,
+		qty: float = 0,
 	):
 		from erpnext.stock.services.serial_batch_bundle_service import SerialBatchBundleService
 
@@ -259,7 +275,7 @@ class StockController(AccountsController):
 			serial_and_batch_bundle, warehouse, type_of_transaction, do_not_submit, qty
 		)
 
-	def get_sl_entries(self, d, args):
+	def get_sl_entries(self, d, args: dict) -> dict:
 		from erpnext.stock.services.stock_ledger_service import StockLedgerService
 
 		return StockLedgerService(self).get_sl_entries(d, args)
@@ -271,20 +287,22 @@ class StockController(AccountsController):
 
 		return get_item_account_wise_lcv_entries(self)
 
-	def make_sl_entries(self, sl_entries, allow_negative_stock=False, via_landed_cost_voucher=False):
+	def make_sl_entries(
+		self, sl_entries: list, allow_negative_stock: bool = False, via_landed_cost_voucher: bool = False
+	):
 		from erpnext.stock.services.stock_ledger_service import StockLedgerService
 
 		return StockLedgerService(self).make_sl_entries(
 			sl_entries, allow_negative_stock, via_landed_cost_voucher
 		)
 
-	def make_gl_entries_on_cancel(self, from_repost=False):
+	def make_gl_entries_on_cancel(self, from_repost: bool = False) -> None:
 		if not from_repost:
 			cancel_exchange_gain_loss_journal(frappe._dict(doctype=self.doctype, name=self.name))
 		if frappe.db.exists("GL Entry", {"voucher_type": self.doctype, "voucher_no": self.name}):
 			self.make_gl_entries()
 
-	def validate_warehouse(self):
+	def validate_warehouse(self) -> None:
 		from erpnext.stock.utils import validate_disabled_warehouse, validate_warehouse_company
 
 		warehouses = list(set(d.warehouse for d in self.get("items") if getattr(d, "warehouse", None)))
@@ -305,7 +323,7 @@ class StockController(AccountsController):
 			validate_disabled_warehouse(w)
 			validate_warehouse_company(w, self.company)
 
-	def update_billing_percentage(self, update_modified=True):
+	def update_billing_percentage(self, update_modified: bool = True) -> None:
 		target_ref_field = "amount"
 		if self.doctype == "Delivery Note":
 			total_amount = total_returned = 0
@@ -333,18 +351,18 @@ class StockController(AccountsController):
 
 		return QualityInspectionService(self).validate_inspection()
 
-	def update_blanket_order(self):
+	def update_blanket_order(self) -> None:
 		blanket_orders = list(set([d.blanket_order for d in self.items if d.blanket_order]))
 		for blanket_order in blanket_orders:
 			frappe.get_doc("Blanket Order", blanket_order).update_ordered_qty()
 
-	def validate_customer_provided_item(self):
+	def validate_customer_provided_item(self) -> None:
 		for d in self.get("items"):
 			# Customer Provided parts will have zero valuation rate
 			if frappe.get_cached_value("Item", d.item_code, "is_customer_provided_item"):
 				d.allow_zero_valuation_rate = 1
 
-	def set_rate_of_stock_uom(self):
+	def set_rate_of_stock_uom(self) -> None:
 		if self.doctype in [
 			"Purchase Receipt",
 			"Purchase Invoice",
@@ -357,28 +375,28 @@ class StockController(AccountsController):
 			for d in self.get("items"):
 				d.stock_uom_rate = d.rate / (d.conversion_factor or 1)
 
-	def repost_future_sle_and_gle(self, force=False, via_landed_cost_voucher=False):
+	def repost_future_sle_and_gle(self, force: bool = False, via_landed_cost_voucher: bool = False):
 		from erpnext.stock.services.stock_ledger_service import StockLedgerService
 
 		return StockLedgerService(self).repost_future_sle_and_gle(force, via_landed_cost_voucher)
 
 	def add_gl_entry(
 		self,
-		gl_entries,
-		account,
-		cost_center,
-		debit,
-		credit,
-		remarks,
-		against_account,
-		debit_in_account_currency=None,
-		credit_in_account_currency=None,
-		account_currency=None,
-		project=None,
-		voucher_detail_no=None,
+		gl_entries: list,
+		account: str,
+		cost_center: str,
+		debit: float,
+		credit: float,
+		remarks: str | None,
+		against_account: str | None,
+		debit_in_account_currency: float | None = None,
+		credit_in_account_currency: float | None = None,
+		account_currency: str | None = None,
+		project: str | None = None,
+		voucher_detail_no: str | None = None,
 		item=None,
-		posting_date=None,
-	):
+		posting_date: str | None = None,
+	) -> None:
 		from erpnext.accounts.services.base_gl_composer import add_gl_entry
 
 		add_gl_entry(
@@ -399,8 +417,8 @@ class StockController(AccountsController):
 			posting_date,
 		)
 
-	def update_stock_reservation_entries(self):
-		def get_sre_list():
+	def update_stock_reservation_entries(self) -> None:
+		def get_sre_list() -> list:
 			table = frappe.qb.DocType("Stock Reservation Entry")
 			query = (
 				frappe.qb.from_(table)
@@ -426,7 +444,7 @@ class StockController(AccountsController):
 
 			return query.run(pluck="name")
 
-		def get_data_map():
+		def get_data_map() -> dict:
 			return {
 				"Subcontracting Delivery": {
 					"table_name": "items",
@@ -524,7 +542,7 @@ class StockController(AccountsController):
 	def check_for_on_hold_or_closed_status(
 		self, ref_doctype: str, ref_fieldname: str, exclude_if_field: str | None = None
 	) -> None:
-		def _include(d):
+		def _include(d) -> bool:
 			return d.get(ref_fieldname) and not (exclude_if_field and d.get(exclude_if_field))
 
 		included = [(d, d.get(ref_fieldname)) for d in self.get("items") if _include(d)]
@@ -560,7 +578,7 @@ class StockController(AccountsController):
 
 
 @frappe.whitelist()
-def show_accounting_ledger_preview(company: str, doctype: str, docname: str):
+def show_accounting_ledger_preview(company: str, doctype: str, docname: str) -> dict:
 	from erpnext.controllers.ledger_preview import get_accounting_ledger_preview
 
 	filters = frappe._dict(company=company, include_dimensions=1)
@@ -575,7 +593,7 @@ def show_accounting_ledger_preview(company: str, doctype: str, docname: str):
 
 
 @frappe.whitelist()
-def show_stock_ledger_preview(company: str, doctype: str, docname: str):
+def show_stock_ledger_preview(company: str, doctype: str, docname: str) -> dict:
 	from erpnext.controllers.ledger_preview import get_stock_ledger_preview
 
 	filters = frappe._dict(company=company)
@@ -622,7 +640,7 @@ def repost_required_for_queue(doc: StockController) -> bool:
 
 
 @frappe.whitelist()
-def check_item_quality_inspection(doctype: str, docstatus: str | int, items: str | list[dict]):
+def check_item_quality_inspection(doctype: str, docstatus: str | int, items: str | list[dict]) -> list:
 	from erpnext.stock.services.quality_inspection_service import INSPECTION_FIELDNAME_MAP
 
 	items = frappe.parse_json(items)
@@ -656,7 +674,7 @@ def check_item_quality_inspection(doctype: str, docstatus: str | int, items: str
 @frappe.whitelist()
 def make_quality_inspections(
 	company: str, doctype: str, docname: str, items: str | list, inspection_type: str
-):
+) -> list:
 	items = frappe.parse_json(items)
 
 	inspections = []
@@ -694,13 +712,13 @@ def make_quality_inspections(
 	return inspections
 
 
-def is_reposting_pending():
+def is_reposting_pending() -> str | None:
 	return frappe.db.exists(
 		"Repost Item Valuation", {"docstatus": 1, "status": ["in", ["Queued", "In Progress"]]}
 	)
 
 
-def future_sle_exists(args, sl_entries=None):
+def future_sle_exists(args, sl_entries: list | None = None) -> bool | int | None:
 	from erpnext.stock.utils import get_combine_datetime
 
 	key = (args.voucher_type, args.voucher_no)
@@ -741,7 +759,7 @@ def future_sle_exists(args, sl_entries=None):
 	return len(data)
 
 
-def validate_future_sle_not_exists(args, key, sl_entries=None):
+def validate_future_sle_not_exists(args, key: tuple, sl_entries: list | None = None) -> bool | None:
 	item_key = ""
 	if args.get("item_code"):
 		item_key = (args.get("item_code"), args.get("warehouse"))
@@ -756,7 +774,7 @@ def validate_future_sle_not_exists(args, key, sl_entries=None):
 			return True
 
 
-def get_cached_data(args, key):
+def get_cached_data(args, key: tuple) -> bool | dict:
 	if key not in frappe.local.future_sle:
 		frappe.local.future_sle[key] = frappe._dict({})
 
@@ -769,7 +787,7 @@ def get_cached_data(args, key):
 		return frappe.local.future_sle[key]
 
 
-def get_sle_entries_against_voucher(args):
+def get_sle_entries_against_voucher(args) -> list:
 	return frappe.get_all(
 		"Stock Ledger Entry",
 		filters={"voucher_type": args.voucher_type, "voucher_no": args.voucher_no},
@@ -778,7 +796,7 @@ def get_sle_entries_against_voucher(args):
 	)
 
 
-def get_conditions_to_validate_future_sle(sl_entries):
+def get_conditions_to_validate_future_sle(sl_entries: list) -> list:
 	warehouse_items_map = {}
 	for entry in sl_entries:
 		if entry.warehouse not in warehouse_items_map:
@@ -794,7 +812,7 @@ def get_conditions_to_validate_future_sle(sl_entries):
 	return or_conditions
 
 
-def create_repost_item_valuation_entry(args):
+def create_repost_item_valuation_entry(args) -> None:
 	args = frappe._dict(args)
 	repost_entry = frappe.new_doc("Repost Item Valuation")
 	repost_entry.based_on = args.based_on
@@ -816,8 +834,8 @@ def create_repost_item_valuation_entry(args):
 
 
 def create_item_wise_repost_entries(
-	voucher_type, voucher_no, allow_zero_rate=False, via_landed_cost_voucher=False
-):
+	voucher_type: str, voucher_no: str, allow_zero_rate: bool = False, via_landed_cost_voucher: bool = False
+) -> list:
 	"""Using a voucher create repost item valuation records for all item-warehouse pairs."""
 
 	from erpnext.stock.utils import get_valuation_method
@@ -855,7 +873,7 @@ def create_item_wise_repost_entries(
 	return repost_entries
 
 
-def make_bundle_for_material_transfer(**kwargs):
+def make_bundle_for_material_transfer(**kwargs) -> str:
 	if isinstance(kwargs, dict):
 		kwargs = frappe._dict(kwargs)
 
@@ -909,7 +927,7 @@ def make_bundle_for_material_transfer(**kwargs):
 	return bundle_doc.name
 
 
-def get_item_wise_inventory_account_map(rows, company):
+def get_item_wise_inventory_account_map(rows, company: str) -> dict:
 	# returns dict of item_code and its inventory account details
 	# Example: {"ITEM-001": {"account": "Stock - ABC", "account_currency": "INR"}, ...}
 
