@@ -3,6 +3,7 @@
 
 """Stock reservation for Production Plan (extracted from production_plan.py)."""
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -27,7 +28,7 @@ _RESERVATION_TABLES = {
 }
 
 
-def get_reserved_qty_for_production_plan(item_code, warehouse):
+def get_reserved_qty_for_production_plan(item_code: str, warehouse: str) -> float | None:
 	from erpnext.manufacturing.doctype.work_order.work_order import get_reserved_qty_for_production
 
 	non_completed_production_plans = get_non_completed_production_plans()
@@ -45,7 +46,9 @@ def get_reserved_qty_for_production_plan(item_code, warehouse):
 	return reserved - for_production
 
 
-def _production_plan_reserved_qty(item_code, warehouse, non_completed_production_plans):
+def _production_plan_reserved_qty(
+	item_code: str, warehouse: str, non_completed_production_plans: list
+) -> float | None:
 	table = frappe.qb.DocType("Production Plan")
 	child = frappe.qb.DocType("Material Request Plan Item")
 	qty = (
@@ -66,7 +69,7 @@ def _production_plan_reserved_qty(item_code, warehouse, non_completed_production
 	return flt(result[0][0]) if result and result[0][0] is not None else None
 
 
-def _plan_reserved_filter(table, child, item_code, warehouse):
+def _plan_reserved_filter(table, child, item_code: str, warehouse: str):
 	return (
 		(table.docstatus == 1)
 		& (child.item_code == item_code)
@@ -75,7 +78,7 @@ def _plan_reserved_filter(table, child, item_code, warehouse):
 	)
 
 
-def get_non_completed_production_plans():
+def get_non_completed_production_plans() -> list:
 	table = frappe.qb.DocType("Production Plan")
 
 	return (
@@ -86,7 +89,7 @@ def get_non_completed_production_plans():
 	).run(pluck="name")
 
 
-def get_reserved_qty_for_sub_assembly(item_code, warehouse):
+def get_reserved_qty_for_sub_assembly(item_code: str, warehouse: str) -> float | None:
 	table = frappe.qb.DocType("Production Plan")
 	child = frappe.qb.DocType("Production Plan Sub Assembly Item")
 	qty_field = Case().when(child.qty > 0, child.qty).else_(child.required_qty) - IfNull(
@@ -107,7 +110,7 @@ def get_reserved_qty_for_sub_assembly(item_code, warehouse):
 	return qty if qty > 0 else 0.0
 
 
-def _sub_assembly_reserved_filter(table, child, item_code, warehouse):
+def _sub_assembly_reserved_filter(table, child, item_code: str, warehouse: str):
 	return (
 		(table.docstatus == 1)
 		& (child.production_item == item_code)
@@ -130,10 +133,12 @@ class ProductionPlanStockReservation:
 	rather than methods, mirroring the engine's own query helpers.
 	"""
 
-	def __init__(self, doc):
+	def __init__(self, doc: Document) -> None:
 		self.doc = doc
 
-	def reserve(self, items: str | list | None = None, table_name: str | None = None, notify: bool = False):
+	def reserve(
+		self, items: str | list | None = None, table_name: str | None = None, notify: bool = False
+	) -> None:
 		"""Reserve (docstatus 1) or release (docstatus 2) stock for the plan's tables."""
 		if items and isinstance(items, str):
 			items = parse_json(items)
@@ -145,7 +150,7 @@ class ProductionPlanStockReservation:
 
 		self.doc.reload()
 
-	def _reserve_or_cancel_plan_table(self, items, kwargs):
+	def _reserve_or_cancel_plan_table(self, items: str | list | None, kwargs: dict) -> None:
 		sre = StockReservation(self.doc, items=items, kwargs=kwargs)
 		if self.doc.docstatus == 1:
 			if sre.make_stock_reservation_entries():
@@ -153,7 +158,7 @@ class ProductionPlanStockReservation:
 		elif self.doc.docstatus == 2:
 			sre.cancel_stock_reservation_entries()
 
-	def cancel(self, sre_list: str | list | None = None):
+	def cancel(self, sre_list: str | list | None = None) -> None:
 		"""Cancel specific (or all) Stock Reservation Entries held by the plan."""
 		StockReservation(self.doc).cancel_stock_reservation_entries(sre_list)
 		self.doc.reload()
@@ -162,7 +167,7 @@ class ProductionPlanStockReservation:
 @frappe.whitelist()
 def make_stock_reservation_entries(
 	doc: str | Document, items: str | list | None = None, table_name: str | None = None, notify: bool = False
-):
+) -> None:
 	"""Whitelisted entry point: verify Production Plan write access, then reserve stock."""
 	doc = _load_production_plan(doc)
 	frappe.has_permission("Production Plan", "write", doc=doc, throw=True)
@@ -171,14 +176,14 @@ def make_stock_reservation_entries(
 
 def reserve_stock_for_production_plan(
 	doc: Document, items: str | list | None = None, table_name: str | None = None, notify: bool = False
-):
+) -> None:
 	"""Reserve stock for a Production Plan. Internal: no permission check (also called
 	from the Production Plan submit/cancel lifecycle)."""
 	ProductionPlanStockReservation(doc).reserve(items=items, table_name=table_name, notify=notify)
 
 
 @frappe.whitelist()
-def cancel_stock_reservation_entries(doc: str | Document, sre_list: str | list):
+def cancel_stock_reservation_entries(doc: str | Document, sre_list: str | list) -> None:
 	"""Whitelisted entry point: verify Production Plan write access, then cancel reservations."""
 	doc = _load_production_plan(doc)
 	frappe.has_permission("Production Plan", "write", doc=doc, throw=True)

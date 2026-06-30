@@ -3,11 +3,17 @@
 
 """Work Order / subcontract PO creation from a Production Plan (extracted from production_plan.py)."""
 
+from __future__ import annotations
+
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe import _, msgprint
 from frappe.utils import flt, get_filtered_list_link, getdate, nowdate
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 from erpnext.manufacturing.doctype.production_plan.services.planning_queries import set_default_warehouses
 
@@ -34,10 +40,10 @@ _SUBCONTRACT_PO_ITEM_FIELDS = [
 
 
 class WorkOrderCreationService:
-	def __init__(self, doc):
+	def __init__(self, doc: Document) -> None:
 		self.doc = doc
 
-	def get_production_items(self):
+	def get_production_items(self) -> dict:
 		item_dict = {}
 		for d in self.doc.po_items:
 			item_details = self._production_item_details(d)
@@ -52,7 +58,7 @@ class WorkOrderCreationService:
 				item_dict[key] = item_details
 		return item_dict
 
-	def _production_item_details(self, d):
+	def _production_item_details(self, d) -> dict:
 		details = {
 			"production_item": d.item_code,
 			"use_multi_level_bom": d.include_exploded_items,
@@ -76,14 +82,14 @@ class WorkOrderCreationService:
 			details["project"] = frappe.get_cached_value("Sales Order", d.sales_order, "project")
 		return details
 
-	def _production_item_key(self, d):
+	def _production_item_key(self, d) -> tuple:
 		if not d.sales_order:
 			return (d.name, d.item_code, d.warehouse, d.planned_start_date)
 		if self.doc.combine_items:
 			return (d.item_code, d.sales_order, d.warehouse, d.planned_start_date)
 		return (d.item_code, d.sales_order, d.sales_order_item, d.warehouse, d.planned_start_date)
 
-	def make_work_order(self):
+	def make_work_order(self) -> None:
 		from erpnext.manufacturing.doctype.work_order.work_order import get_default_warehouse
 
 		wo_list, po_list = [], []
@@ -101,7 +107,7 @@ class WorkOrderCreationService:
 		if not po_list:
 			frappe.msgprint(_("No Purchase Orders were created"))
 
-	def make_work_order_for_finished_goods(self, wo_list, default_warehouses):
+	def make_work_order_for_finished_goods(self, wo_list: list, default_warehouses: dict) -> None:
 		for _key, item in self.get_production_items().items():
 			if self.doc.sub_assembly_items:
 				item["use_multi_level_bom"] = 0
@@ -111,7 +117,9 @@ class WorkOrderCreationService:
 			if work_order:
 				wo_list.append(work_order)
 
-	def make_work_order_for_subassembly_items(self, wo_list, subcontracted_po, default_warehouses):
+	def make_work_order_for_subassembly_items(
+		self, wo_list: list, subcontracted_po: dict, default_warehouses: dict
+	) -> None:
 		for row in self.doc.sub_assembly_items:
 			if row.type_of_manufacturing == "Subcontract":
 				subcontracted_po.setdefault(row.supplier, []).append(row)
@@ -123,7 +131,7 @@ class WorkOrderCreationService:
 			if work_order:
 				wo_list.append(work_order)
 
-	def _sub_assembly_work_order(self, row, default_warehouses):
+	def _sub_assembly_work_order(self, row, default_warehouses: dict) -> str | None:
 		if flt(row.qty) <= flt(row.ordered_qty):
 			return None
 
@@ -139,7 +147,7 @@ class WorkOrderCreationService:
 			return None
 		return self.create_work_order(work_order_data)
 
-	def prepare_data_for_sub_assembly_items(self, row, wo_data):
+	def prepare_data_for_sub_assembly_items(self, row, wo_data: dict) -> None:
 		for field in _SUB_ASSEMBLY_WO_FIELDS:
 			if row.get(field):
 				wo_data[field] = row.get(field)
@@ -153,7 +161,7 @@ class WorkOrderCreationService:
 			}
 		)
 
-	def make_subcontracted_purchase_order(self, subcontracted_po, purchase_orders):
+	def make_subcontracted_purchase_order(self, subcontracted_po: dict, purchase_orders: list) -> None:
 		if not subcontracted_po:
 			return
 
@@ -162,7 +170,7 @@ class WorkOrderCreationService:
 			po = self._create_subcontract_po(supplier, po_list)
 			purchase_orders.append(po.name)
 
-	def _create_subcontract_po(self, supplier, po_list):
+	def _create_subcontract_po(self, supplier: str, po_list: list) -> Document:
 		po = frappe.new_doc("Purchase Order")
 		po.company = self.doc.company
 		po.supplier = supplier
@@ -178,7 +186,7 @@ class WorkOrderCreationService:
 		po.insert()
 		return po
 
-	def _subcontract_po_item(self, row):
+	def _subcontract_po_item(self, row) -> dict:
 		po_data = {
 			"fg_item": row.production_item,
 			"warehouse": row.fg_warehouse,
@@ -191,14 +199,14 @@ class WorkOrderCreationService:
 			po_data[field] = row.get(field)
 		return po_data
 
-	def show_list_created_message(self, doctype, doc_list=None):
+	def show_list_created_message(self, doctype: str, doc_list: list | None = None) -> None:
 		if not doc_list:
 			return
 
 		frappe.flags.mute_messages = False
 		msgprint(_("{0} created").format(get_filtered_list_link(doctype, doc_list)))
 
-	def create_work_order(self, item):
+	def create_work_order(self, item: dict) -> str | None:
 		from erpnext.manufacturing.doctype.work_order.work_order import OverProductionError
 
 		if flt(item.get("qty")) <= 0:
@@ -214,7 +222,7 @@ class WorkOrderCreationService:
 		except OverProductionError:
 			pass
 
-	def _new_work_order(self, item):
+	def _new_work_order(self, item: dict) -> Document:
 		wo = frappe.new_doc("Work Order")
 		wo.update(item)
 		if not wo.source_warehouse:
@@ -230,7 +238,7 @@ class WorkOrderCreationService:
 		return wo
 
 
-def _consolidate_subcontracted_po(subcontracted_po):
+def _consolidate_subcontracted_po(subcontracted_po: dict) -> dict:
 	items_to_remove = defaultdict(list)
 	for supplier, items in subcontracted_po.items():
 		for item in items:
