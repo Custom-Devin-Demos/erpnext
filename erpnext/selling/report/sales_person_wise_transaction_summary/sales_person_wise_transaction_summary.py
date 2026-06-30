@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, msgprint, qb
 from frappe.query_builder import Case, Criterion
@@ -9,7 +11,7 @@ from frappe.query_builder import Case, Criterion
 from erpnext import get_company_currency
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	if not filters:
 		filters = {}
 
@@ -51,7 +53,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def validate_filters(filters):
+def validate_filters(filters: dict) -> None:
 	ALLOWED_DOCTYPES = ["Sales Order", "Sales Invoice", "Delivery Note"]
 
 	if not filters.get("doc_type"):
@@ -61,7 +63,7 @@ def validate_filters(filters):
 		frappe.throw(_("{0}, {1} or {2} are the only allowed options.").format(*ALLOWED_DOCTYPES))
 
 
-def get_columns(filters):
+def get_columns(filters: dict) -> list:
 	columns = [
 		{
 			"label": _(filters["doc_type"]),
@@ -154,7 +156,7 @@ def get_columns(filters):
 	return columns
 
 
-def get_entries(filters):
+def get_entries(filters: dict) -> list:
 	doc_type = filters["doc_type"]
 
 	date_field = "transaction_date" if doc_type == "Sales Order" else "posting_date"
@@ -211,7 +213,7 @@ def get_entries(filters):
 	return query.run(as_dict=True)
 
 
-def get_conditions(filters, date_field):
+def get_conditions(filters: dict, date_field: str) -> tuple:
 	conditions = [""]
 	values = []
 
@@ -245,7 +247,7 @@ def get_conditions(filters, date_field):
 	return " and ".join(conditions), values
 
 
-def get_items(filters):
+def get_items(filters: dict) -> list:
 	item = qb.DocType("Item")
 
 	item_query_conditions = []
@@ -268,6 +270,6 @@ def get_items(filters):
 	return items
 
 
-def get_item_details():
+def get_item_details() -> dict:
 	items = frappe.get_all("Item", fields=["name", "item_group", "brand"])
 	return {d.name: d for d in items}
