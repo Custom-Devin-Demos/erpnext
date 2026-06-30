@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -46,39 +48,39 @@ class Contract(Document):
 		status: DF.Literal["Unsigned", "Active", "Inactive", "Cancelled"]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		self.set_missing_values()
 		self.validate_dates()
 		self.update_contract_status()
 		self.update_fulfilment_status()
 
-	def set_missing_values(self):
+	def set_missing_values(self) -> None:
 		if not self.party_full_name:
 			field = self.party_type.lower() + "_name"
 			if res := frappe.db.get_value(self.party_type, self.party_name, field):
 				self.party_full_name = res
 
-	def before_submit(self):
+	def before_submit(self) -> None:
 		self.signed_by_company = frappe.session.user
 
-	def on_discard(self):
+	def on_discard(self) -> None:
 		self.db_set("status", "Cancelled")
 
-	def before_update_after_submit(self):
+	def before_update_after_submit(self) -> None:
 		self.update_contract_status()
 		self.update_fulfilment_status()
 
-	def validate_dates(self):
+	def validate_dates(self) -> None:
 		if self.end_date and self.end_date < self.start_date:
 			frappe.throw(_("End Date cannot be before Start Date."))
 
-	def update_contract_status(self):
+	def update_contract_status(self) -> None:
 		if self.is_signed:
 			self.status = get_status(self.start_date, self.end_date)
 		else:
 			self.status = "Unsigned"
 
-	def update_fulfilment_status(self):
+	def update_fulfilment_status(self) -> None:
 		fulfilment_status = "N/A"
 
 		if self.requires_fulfilment:
@@ -100,11 +102,11 @@ class Contract(Document):
 
 		self.fulfilment_status = fulfilment_status
 
-	def get_fulfilment_progress(self):
+	def get_fulfilment_progress(self) -> int:
 		return len([term for term in self.fulfilment_terms if term.fulfilled])
 
 
-def get_status(start_date, end_date):
+def get_status(start_date, end_date) -> str:
 	"""
 	Get a Contract's status based on the start, current and end dates
 
@@ -126,7 +128,7 @@ def get_status(start_date, end_date):
 	return "Active" if start_date <= now_date <= end_date else "Inactive"
 
 
-def update_status_for_contracts():
+def update_status_for_contracts() -> None:
 	"""
 	Run the daily hook to update the statuses for all signed
 	and submitted Contracts

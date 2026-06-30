@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
@@ -30,12 +32,12 @@ class CRMSettings(Document):
 		update_timestamp_on_new_communication: DF.Check
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		frappe.db.set_default("campaign_naming_by", self.get("campaign_naming_by", ""))
 		self.validate_enable_opportunity_creation_from_contact_us()
 		self.validate_allowed_users()
 
-	def validate_enable_opportunity_creation_from_contact_us(self):
+	def validate_enable_opportunity_creation_from_contact_us(self) -> None:
 		contact_disabled = frappe.get_single_value("Contact Us Settings", "is_disabled")
 
 		if self.enable_opportunity_creation_from_contact_us and contact_disabled:
@@ -45,7 +47,7 @@ class CRMSettings(Document):
 				)
 			)
 
-	def validate_allowed_users(self):
+	def validate_allowed_users(self) -> None:
 		if self.enable_frappe_crm_data_synchronization and not self.allowed_users:
 			frappe.throw(
 				_(
@@ -53,17 +55,17 @@ class CRMSettings(Document):
 				)
 			)
 
-	def before_save(self):
+	def before_save(self) -> None:
 		self.clear_allowed_users()
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.custom_fields_for_frappe_crm_data_sync()
 
-	def clear_allowed_users(self):
+	def clear_allowed_users(self) -> None:
 		if not self.enable_frappe_crm_data_synchronization:
 			self.allowed_users = []
 
-	def custom_fields_for_frappe_crm_data_sync(self):
+	def custom_fields_for_frappe_crm_data_sync(self) -> None:
 		custom_fields = {
 			"Quotation": [
 				{

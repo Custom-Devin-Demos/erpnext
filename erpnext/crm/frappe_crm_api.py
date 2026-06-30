@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -5,7 +7,7 @@ from frappe import _
 
 
 @frappe.whitelist()
-def create_prospect_against_crm_deal():
+def create_prospect_against_crm_deal() -> None:
 	validate_frappe_crm_sync()
 
 	doc = frappe.form_dict
@@ -40,7 +42,12 @@ def create_prospect_against_crm_deal():
 	frappe.response["message"] = prospect_name
 
 
-def create_contacts(contacts, organization=None, link_doctype=None, link_docname=None):
+def create_contacts(
+	contacts: list,
+	organization: str | None = None,
+	link_doctype: str | None = None,
+	link_docname: str | None = None,
+) -> None:
 	for c in contacts:
 		c = frappe._dict(c)
 		existing_contact = contact_exists(c.email, c.mobile_no)
@@ -67,7 +74,7 @@ def create_contacts(contacts, organization=None, link_doctype=None, link_docname
 		contact.save(ignore_permissions=True)
 
 
-def create_address(doctype, docname, address):
+def create_address(doctype: str, docname: str, address) -> str | None:
 	if not address:
 		return
 	address = frappe.parse_json(address)
@@ -103,7 +110,7 @@ def create_address(doctype, docname, address):
 		frappe.log_error(frappe.get_traceback(), f"Error while creating address for {docname}")
 
 
-def link_doc(doc, link_doctype, link_docname):
+def link_doc(doc, link_doctype: str, link_docname: str) -> None:
 	already_linked = any(
 		[(link.link_doctype == link_doctype and link.link_name == link_docname) for link in doc.links]
 	)
@@ -113,7 +120,7 @@ def link_doc(doc, link_doctype, link_docname):
 		)
 
 
-def contact_exists(email, mobile_no):
+def contact_exists(email, mobile_no) -> str | bool:
 	email_exist = frappe.db.exists("Contact Email", {"email_id": email})
 	mobile_exist = frappe.db.exists("Contact Phone", {"phone": mobile_no})
 
@@ -139,7 +146,7 @@ CUSTOMER_ALLOWED_FIELDS = {
 
 
 @frappe.whitelist()
-def create_customer(customer_data: dict | None = None):
+def create_customer(customer_data: dict | None = None) -> str | None:
 	validate_frappe_crm_sync()
 
 	if not customer_data:
@@ -165,7 +172,7 @@ def create_customer(customer_data: dict | None = None):
 		pass
 
 
-def validate_frappe_crm_sync():
+def validate_frappe_crm_sync() -> None:
 	CRMSettings = frappe.get_single("CRM Settings")
 	if not CRMSettings.enable_frappe_crm_data_synchronization:
 		frappe.throw(

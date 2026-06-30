@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.contacts.doctype.address.address import get_default_address
@@ -11,14 +13,14 @@ from frappe.model.mapper import get_mapped_doc
 
 
 @frappe.whitelist()
-def make_customer(source_name: str, target_doc: str | Document | None = None):
+def make_customer(source_name: str, target_doc: str | Document | None = None) -> Document:
 	return _make_customer(source_name, target_doc)
 
 
 def _make_customer(
 	source_name: str, target_doc: str | Document | None = None, ignore_permissions: bool = False
-):
-	def set_missing_values(source, target):
+) -> Document:
+	def set_missing_values(source, target) -> None:
 		if source.company_name:
 			target.customer_type = "Company"
 			target.customer_name = source.company_name
@@ -60,8 +62,8 @@ def _make_customer(
 
 
 @frappe.whitelist()
-def make_opportunity(source_name: str, target_doc: str | Document | None = None):
-	def set_missing_values(source, target):
+def make_opportunity(source_name: str, target_doc: str | Document | None = None) -> Document:
+	def set_missing_values(source, target) -> None:
 		_set_missing_values(source, target)
 
 	target_doc = get_mapped_doc(
@@ -90,8 +92,8 @@ def make_opportunity(source_name: str, target_doc: str | Document | None = None)
 
 
 @frappe.whitelist()
-def make_quotation(source_name: str, target_doc: str | Document | None = None):
-	def set_missing_values(source, target):
+def make_quotation(source_name: str, target_doc: str | Document | None = None) -> Document:
+	def set_missing_values(source, target) -> None:
 		_set_missing_values(source, target)
 
 	target_doc = get_mapped_doc(
@@ -111,7 +113,7 @@ def make_quotation(source_name: str, target_doc: str | Document | None = None):
 
 
 @frappe.whitelist()
-def make_lead_from_communication(communication: str, ignore_communication_links: bool = False):
+def make_lead_from_communication(communication: str, ignore_communication_links: bool = False) -> str:
 	"""raise a issue from email"""
 
 	doc = frappe.get_doc("Communication", communication)
@@ -138,7 +140,7 @@ def make_lead_from_communication(communication: str, ignore_communication_links:
 	return lead_name
 
 
-def _set_missing_values(source, target):
+def _set_missing_values(source, target) -> None:
 	address = frappe.get_all(
 		"Dynamic Link",
 		{

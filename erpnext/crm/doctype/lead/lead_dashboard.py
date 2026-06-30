@@ -1,4 +1,7 @@
-def get_data():
+from __future__ import annotations
+
+
+def get_data() -> dict:
 	return {
 		"fieldname": "lead",
 		"non_standard_fieldnames": {"Quotation": "party_name", "Opportunity": "party_name"},

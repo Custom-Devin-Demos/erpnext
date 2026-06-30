@@ -1,5 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+from __future__ import annotations
+
 import json
 from itertools import groupby
 
@@ -10,21 +12,21 @@ from frappe.utils import flt
 from erpnext.setup.utils import get_exchange_rate
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	return OpportunitySummaryBySalesStage(filters).run()
 
 
 class OpportunitySummaryBySalesStage:
-	def __init__(self, filters=None):
+	def __init__(self, filters: dict | None = None) -> None:
 		self.filters = frappe._dict(filters or {})
 
-	def run(self):
+	def run(self) -> tuple:
 		self.get_columns()
 		self.get_data()
 		self.get_chart_data()
 		return self.columns, self.data, None, self.chart
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = []
 
 		if self.filters.get("based_on") == "Opportunity Owner":
@@ -50,7 +52,7 @@ class OpportunitySummaryBySalesStage:
 
 		self.set_sales_stage_columns()
 
-	def set_sales_stage_columns(self):
+	def set_sales_stage_columns(self) -> None:
 		self.sales_stage_list = frappe.db.get_list("Sales Stage", pluck="name")
 
 		for sales_stage in self.sales_stage_list:
@@ -64,7 +66,7 @@ class OpportunitySummaryBySalesStage:
 					{"label": _(sales_stage), "fieldname": sales_stage, "fieldtype": "Currency", "width": 150}
 				)
 
-	def get_data(self):
+	def get_data(self) -> None:
 		self.data = []
 
 		based_on = {
@@ -82,7 +84,7 @@ class OpportunitySummaryBySalesStage:
 
 		self.get_rows()
 
-	def get_data_query(self, based_on, data_based_on):
+	def get_data_query(self, based_on: str, data_based_on) -> None:
 		if self.filters.get("data_based_on") == "Number":
 			group_by = "{},{}".format("sales_stage", based_on)
 			self.query_result = frappe.db.get_list(
@@ -121,7 +123,7 @@ class OpportunitySummaryBySalesStage:
 
 			self.query_result = self.grouped_data
 
-	def get_rows(self):
+	def get_rows(self) -> None:
 		self.data = []
 		self.get_formatted_data()
 
@@ -140,7 +142,7 @@ class OpportunitySummaryBySalesStage:
 
 			self.data.append(row)
 
-	def get_formatted_data(self):
+	def get_formatted_data(self) -> None:
 		self.formatted_data = frappe._dict()
 
 		for d in self.query_result:
@@ -178,11 +180,11 @@ class OpportunitySummaryBySalesStage:
 				count = d.get(data_based_on)
 				self.set_formatted_data_based_on_sales_stage(value, sales_stage, count)
 
-	def set_formatted_data_based_on_sales_stage(self, based_on, sales_stage, count):
+	def set_formatted_data_based_on_sales_stage(self, based_on, sales_stage, count) -> None:
 		self.formatted_data.setdefault(based_on, frappe._dict()).setdefault(sales_stage, 0)
 		self.formatted_data[based_on][sales_stage] += count
 
-	def get_conditions(self):
+	def get_conditions(self) -> list:
 		filters = []
 
 		if self.filters.get("company"):
@@ -204,7 +206,7 @@ class OpportunitySummaryBySalesStage:
 
 		return filters
 
-	def get_chart_data(self):
+	def get_chart_data(self) -> None:
 		datasets = []
 		values = [0] * len(self.sales_stage_list)
 
@@ -218,7 +220,7 @@ class OpportunitySummaryBySalesStage:
 		datasets.append({"name": options, "values": values})
 		self.chart = {"data": {"labels": self.sales_stage_list, "datasets": datasets}, "type": "line"}
 
-	def get_exchange_rate(self, from_currency, to_currency):
+	def get_exchange_rate(self, from_currency: str, to_currency: str) -> float:
 		cacheobj = frappe.cache()
 		if cacheobj and cacheobj.get(from_currency):
 			return flt(str(cacheobj.get(from_currency), "UTF-8"))
@@ -228,11 +230,11 @@ class OpportunitySummaryBySalesStage:
 			cacheobj.set(from_currency, value)
 			return flt(str(cacheobj.get(from_currency), "UTF-8"))
 
-	def get_default_currency(self):
+	def get_default_currency(self) -> str | None:
 		company = self.filters.get("company")
 		return frappe.db.get_value("Company", company, "default_currency")
 
-	def convert_to_base_currency(self):
+	def convert_to_base_currency(self) -> None:
 		default_currency = self.get_default_currency()
 		for data in self.query_result:
 			if data.get("currency") and data.get("currency") != default_currency:

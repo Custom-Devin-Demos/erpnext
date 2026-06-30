@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -28,13 +30,13 @@ class ContractTemplate(Document):
 		title: DF.Data | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.contract_terms:
 			validate_template(self.contract_terms)
 
 
 @frappe.whitelist()
-def get_contract_template(template_name: str, doc: str | dict | Document):
+def get_contract_template(template_name: str, doc: str | dict | Document) -> dict:
 	doc = frappe.parse_json(doc)
 
 	contract_template = frappe.get_doc("Contract Template", template_name)
