@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import json
 
 import frappe
@@ -49,7 +51,7 @@ def get_requested_item_qty(sales_order: str) -> dict:
 
 
 @frappe.whitelist()
-def make_material_request(source_name: str, target_doc: str | Document | None = None):
+def make_material_request(source_name: str, target_doc: str | Document | None = None) -> Document:
 	requested_item_qty = get_requested_item_qty(source_name)
 
 	def postprocess(source, target):
@@ -141,8 +143,9 @@ def make_material_request(source_name: str, target_doc: str | Document | None = 
 					"delivery_date": "schedule_date",
 					"bom_no": "bom_no",
 				},
-				"condition": lambda item: not is_product_bundle(item.item_code)
-				and get_remaining_qty(item) > 0,
+				"condition": lambda item: (
+					not is_product_bundle(item.item_code) and get_remaining_qty(item) > 0
+				),
 				"postprocess": update_item,
 			},
 		},
@@ -156,7 +159,7 @@ def make_material_request(source_name: str, target_doc: str | Document | None = 
 
 
 @frappe.whitelist()
-def make_project(source_name: str, target_doc: str | Document | None = None):
+def make_project(source_name: str, target_doc: str | Document | None = None) -> Document:
 	def postprocess(source, doc):
 		doc.project_type = "External"
 		doc.project_name = source.name
@@ -182,7 +185,9 @@ def make_project(source_name: str, target_doc: str | Document | None = None):
 	return doc
 
 
-def set_serial_batch_for_bundle_reservation(source, target, use_serial_batch_fields, packed_sre):
+def set_serial_batch_for_bundle_reservation(
+	source, target, use_serial_batch_fields, packed_sre: list
+) -> None:
 	for item in source.packed_items:
 		target_item = next(
 			(
@@ -231,7 +236,7 @@ def set_serial_batch_for_bundle_reservation(source, target, use_serial_batch_fie
 @frappe.whitelist()
 def make_delivery_note(
 	source_name: str, target_doc: str | Document | None = None, kwargs: dict | None = None
-):
+) -> Document | None:
 	if not kwargs:
 		kwargs = {
 			"for_reserved_stock": frappe.flags.args and frappe.flags.args.for_reserved_stock,
@@ -427,7 +432,7 @@ def make_sales_invoice(
 	target_doc: str | Document | None = None,
 	ignore_permissions: bool = False,
 	args: str | dict | None = None,
-):
+) -> Document:
 	if args is None:
 		args = {}
 	args = frappe.parse_json(args)
@@ -576,12 +581,14 @@ def make_sales_invoice(
 				},
 				"postprocess": update_item,
 				"condition": lambda doc: (
-					True
-					if is_unit_price_row(doc)
-					else (doc.qty and (doc.base_amount == 0 or abs(doc.billed_amt) < abs(doc.amount)))
-				)
-				and select_item(doc)
-				and not args.get("skip_item_mapping"),
+					(
+						True
+						if is_unit_price_row(doc)
+						else (doc.qty and (doc.base_amount == 0 or abs(doc.billed_amt) < abs(doc.amount)))
+					)
+					and select_item(doc)
+					and not args.get("skip_item_mapping")
+				),
 			},
 			"Sales Taxes and Charges": {
 				"doctype": "Sales Taxes and Charges",
@@ -609,7 +616,7 @@ def make_sales_invoice(
 
 
 @frappe.whitelist()
-def make_maintenance_schedule(source_name: str, target_doc: str | Document | None = None):
+def make_maintenance_schedule(source_name: str, target_doc: str | Document | None = None) -> Document | None:
 	maint_schedule = frappe.db.exists(
 		"Maintenance Schedule Item", {"sales_order": source_name, "docstatus": 1}
 	)
@@ -632,7 +639,7 @@ def make_maintenance_schedule(source_name: str, target_doc: str | Document | Non
 
 
 @frappe.whitelist()
-def make_maintenance_visit(source_name: str, target_doc: str | Document | None = None):
+def make_maintenance_visit(source_name: str, target_doc: str | Document | None = None) -> Document | None:
 	MaintenanceVisit = frappe.qb.DocType("Maintenance Visit")
 	MaintenanceVisitPurpose = frappe.qb.DocType("Maintenance Visit Purpose")
 
@@ -666,7 +673,7 @@ def make_maintenance_visit(source_name: str, target_doc: str | Document | None =
 @frappe.whitelist()
 def make_purchase_order(
 	source_name: str, selected_items: str | list | None = None, target_doc: str | Document | None = None
-):
+) -> list | None:
 	"""Creates Purchase Order for each Supplier. Returns a list of doc objects."""
 
 	from erpnext.setup.utils import get_exchange_rate
@@ -807,8 +814,9 @@ def make_purchase_order(
 						"pricing_rules",
 					],
 					"postprocess": update_item_for_packed_item,
-					"condition": lambda doc: doc.parent_item in item_codes
-					and flt(doc.ordered_qty) < flt(doc.qty),
+					"condition": lambda doc: (
+						doc.parent_item in item_codes and flt(doc.ordered_qty) < flt(doc.qty)
+					),
 				},
 			},
 			target_doc,
@@ -841,7 +849,7 @@ def set_delivery_date(items: list, sales_order: str) -> None:
 
 
 @frappe.whitelist()
-def make_work_orders(items: str | dict, sales_order: str, company: str, project: str | None = None):
+def make_work_orders(items: str | dict, sales_order: str, company: str, project: str | None = None) -> list:
 	"""Make Work Orders against the given Sales Order for the given `items`"""
 	items = frappe.parse_json(items).get("items")
 	out = []
@@ -873,7 +881,7 @@ def make_work_orders(items: str | dict, sales_order: str, company: str, project:
 
 
 @frappe.whitelist()
-def make_production_plan(source_name: str, target_doc: str | Document | None = None):
+def make_production_plan(source_name: str, target_doc: str | Document | None = None) -> Document:
 	sales_order = frappe.get_doc("Sales Order", source_name)
 
 	production_plan = frappe.new_doc(
@@ -906,7 +914,7 @@ def make_production_plan(source_name: str, target_doc: str | Document | None = N
 @frappe.whitelist()
 def make_raw_material_request(
 	items: str | frappe._dict, company: str, sales_order: str, project: str | None = None
-):
+) -> Document | None:
 	if not frappe.has_permission("Sales Order", "write"):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
@@ -965,14 +973,14 @@ def make_raw_material_request(
 
 
 @frappe.whitelist()
-def make_inter_company_purchase_order(source_name: str, target_doc: str | Document | None = None):
+def make_inter_company_purchase_order(source_name: str, target_doc: str | Document | None = None) -> Document:
 	from erpnext.accounts.doctype.sales_invoice.mapper import make_inter_company_transaction
 
 	return make_inter_company_transaction("Sales Order", source_name, target_doc)
 
 
 @frappe.whitelist()
-def create_pick_list(source_name: str, target_doc: str | Document | None = None):
+def create_pick_list(source_name: str, target_doc: str | Document | None = None) -> Document:
 	def validate_sales_order():
 		so = frappe.get_doc("Sales Order", source_name)
 		for item in so.items:
@@ -1051,7 +1059,7 @@ def create_pick_list(source_name: str, target_doc: str | Document | None = None)
 
 
 @frappe.whitelist()
-def make_subcontracting_inward_order(source_name: str, target_doc: str | Document | None = None):
+def make_subcontracting_inward_order(source_name: str, target_doc: str | Document | None = None) -> Document:
 	if not is_so_fully_subcontracted(source_name):
 		return get_mapped_subcontracting_inward_order(source_name, target_doc)
 	else:
