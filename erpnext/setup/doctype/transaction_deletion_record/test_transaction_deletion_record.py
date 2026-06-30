@@ -1,6 +1,6 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
-
+from __future__ import annotations
 
 import frappe
 
@@ -8,11 +8,11 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestTransactionDeletionRecord(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		# Clear all deletion cache flags from previous tests
 		self._clear_all_deletion_cache_flags()
 
-	def _clear_all_deletion_cache_flags(self):
+	def _clear_all_deletion_cache_flags(self) -> None:
 		"""Clear all deletion_running_doctype:* cache keys"""
 		# Get all keys matching the pattern
 		cache_keys = frappe.cache.get_keys("deletion_running_doctype:*")
@@ -28,7 +28,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 					key_name = key_str
 				frappe.cache.delete_value(key_name)
 
-	def test_doctypes_contain_company_field(self):
+	def test_doctypes_contain_company_field(self) -> None:
 		"""Test that all DocTypes in To Delete list have a valid company link field"""
 		tdr = create_and_submit_transaction_deletion_doc("_Test Company 7")
 		for doctype_row in tdr.doctypes_to_delete:
@@ -49,7 +49,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 					f"DocType {doctype_row.doctype_name} should have company field '{doctype_row.company_field}'",
 				)
 
-	def test_no_of_docs_is_correct(self):
+	def test_no_of_docs_is_correct(self) -> None:
 		"""Test that document counts are calculated correctly in To Delete list"""
 		for _ in range(5):
 			create_task("_Test Company 7")
@@ -65,14 +65,14 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 				break
 		self.assertTrue(task_found, "Task should be in To Delete list")
 
-	def test_deletion_is_successful(self):
+	def test_deletion_is_successful(self) -> None:
 		"""Test that deletion actually removes documents"""
 		create_task("_Test Company 7")
 		create_and_submit_transaction_deletion_doc("_Test Company 7")
 		tasks_containing_company = frappe.get_all("Task", filters={"company": "_Test Company 7"})
 		self.assertEqual(tasks_containing_company, [])
 
-	def test_company_transaction_deletion_request(self):
+	def test_company_transaction_deletion_request(self) -> None:
 		"""Test creation via company deletion request method"""
 		from erpnext.setup.doctype.company.company import create_transaction_deletion_request
 
@@ -82,7 +82,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		# below call should not raise any exceptions or throw errors
 		create_transaction_deletion_request(company)
 
-	def test_generate_to_delete_list(self):
+	def test_generate_to_delete_list(self) -> None:
 		"""Test automatic generation of To Delete list"""
 		company = "_Test Company 7"
 		create_task(company)
@@ -100,7 +100,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		task_in_list = any(d.doctype_name == "Task" for d in tdr.doctypes_to_delete)
 		self.assertTrue(task_in_list, "Task should be in To Delete list")
 
-	def test_validation_prevents_child_tables(self):
+	def test_validation_prevents_child_tables(self) -> None:
 		"""Test that child tables cannot be added to To Delete list"""
 		company = "_Test Company 7"
 
@@ -112,7 +112,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		with self.assertRaises(frappe.ValidationError):
 			tdr.insert()
 
-	def test_validation_prevents_protected_doctypes(self):
+	def test_validation_prevents_protected_doctypes(self) -> None:
 		"""Test that protected DocTypes cannot be added to To Delete list"""
 		company = "_Test Company 7"
 
@@ -124,7 +124,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		with self.assertRaises(frappe.ValidationError):
 			tdr.insert()
 
-	def test_csv_export_import(self):
+	def test_csv_export_import(self) -> None:
 		"""Test CSV export and import functionality with company_field column"""
 		company = "_Test Company 7"
 		create_task(company)
@@ -163,7 +163,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 				# Task should have company field set
 				self.assertIsNotNone(row.company_field, "Task should have company_field set after import")
 
-	def test_progress_tracking(self):
+	def test_progress_tracking(self) -> None:
 		"""Test that deleted checkbox is marked when DocType deletion completes"""
 		company = "_Test Company 7"
 		create_task(company)
@@ -182,7 +182,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		if task_row:
 			self.assertEqual(task_row.deleted, 1, "Task should be marked as deleted")
 
-	def test_composite_key_validation(self):
+	def test_composite_key_validation(self) -> None:
 		"""Test that duplicate (doctype_name + company_field) combinations are prevented"""
 		company = "_Test Company 7"
 
@@ -195,7 +195,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		with self.assertRaises(frappe.ValidationError):
 			tdr.insert()
 
-	def test_same_doctype_different_company_field_allowed(self):
+	def test_same_doctype_different_company_field_allowed(self) -> None:
 		"""Test that same DocType can be added with different company_field values"""
 		company = "_Test Company 7"
 
@@ -216,7 +216,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		except frappe.ValidationError as e:
 			self.fail(f"Should allow same DocType with different company_field values, but got error: {e}")
 
-	def test_company_field_validation(self):
+	def test_company_field_validation(self) -> None:
 		"""Test that invalid company_field values are rejected"""
 		company = "_Test Company 7"
 
@@ -229,7 +229,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		with self.assertRaises(frappe.ValidationError):
 			tdr.insert()
 
-	def test_get_naming_series_prefix_with_dot(self):
+	def test_get_naming_series_prefix_with_dot(self) -> None:
 		"""Test prefix extraction for standard dot-separated naming series"""
 		from erpnext.setup.doctype.transaction_deletion_record.transaction_deletion_record import (
 			TransactionDeletionRecord,
@@ -242,7 +242,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 			TransactionDeletionRecord.get_naming_series_prefix("TASK-.YYYY.-.#####", "Task"), "TASK-.YYYY.-"
 		)
 
-	def test_get_naming_series_prefix_with_brace(self):
+	def test_get_naming_series_prefix_with_brace(self) -> None:
 		"""Test prefix extraction for format patterns with brace separators"""
 		from erpnext.setup.doctype.transaction_deletion_record.transaction_deletion_record import (
 			TransactionDeletionRecord,
@@ -257,7 +257,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		)
 		self.assertEqual(TransactionDeletionRecord.get_naming_series_prefix("{####}", "Task"), "")
 
-	def test_get_naming_series_prefix_fallback(self):
+	def test_get_naming_series_prefix_fallback(self) -> None:
 		"""Test prefix extraction fallback for patterns without standard separators"""
 		from erpnext.setup.doctype.transaction_deletion_record.transaction_deletion_record import (
 			TransactionDeletionRecord,
@@ -270,7 +270,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 			TransactionDeletionRecord.get_naming_series_prefix("JUSTPREFIX", "Task"), "JUSTPREFIX"
 		)
 
-	def test_cache_flag_management(self):
+	def test_cache_flag_management(self) -> None:
 		"""Test that cache flags can be set and cleared correctly"""
 		company = "_Test Company 7"
 		create_task(company)
@@ -295,7 +295,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		cached_value = frappe.cache.get_value("deletion_running_doctype:Task")
 		self.assertIsNone(cached_value, "Cache flag should be cleared for Task")
 
-	def test_check_for_running_deletion_blocks_save(self):
+	def test_check_for_running_deletion_blocks_save(self) -> None:
 		"""Test that check_for_running_deletion_job blocks saves when cache flag exists"""
 		from erpnext.setup.doctype.transaction_deletion_record.transaction_deletion_record import (
 			check_for_running_deletion_job,
@@ -323,7 +323,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 			# Cleanup: clear the manually set flag
 			frappe.cache.delete_value("deletion_running_doctype:Task")
 
-	def test_check_for_running_deletion_allows_save_when_no_flag(self):
+	def test_check_for_running_deletion_allows_save_when_no_flag(self) -> None:
 		"""Test that documents can be saved when no deletion is running"""
 		company = "_Test Company 7"
 
@@ -343,7 +343,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 		except frappe.ValidationError as e:
 			self.fail(f"Should allow save when no deletion is running, but got: {e}")
 
-	def test_only_one_deletion_allowed_globally(self):
+	def test_only_one_deletion_allowed_globally(self) -> None:
 		"""Test that only one deletion can be submitted at a time (global enforcement)"""
 		company1 = "_Test Company 6"
 		company2 = "_Test Company 7"
@@ -375,7 +375,7 @@ class TestTransactionDeletionRecord(ERPNextTestSuite):
 			tdr1.cancel()
 
 
-def create_and_submit_transaction_deletion_doc(company):
+def create_and_submit_transaction_deletion_doc(company: str):
 	"""Create and execute a transaction deletion record"""
 	tdr = frappe.get_doc({"doctype": "Transaction Deletion Record", "company": company})
 	tdr.insert()
@@ -388,6 +388,6 @@ def create_and_submit_transaction_deletion_doc(company):
 	return tdr
 
 
-def create_task(company):
+def create_task(company: str) -> None:
 	task = frappe.get_doc({"doctype": "Task", "company": company, "subject": "Delete"})
 	task.insert()

@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -39,7 +40,7 @@ class Vehicle(Document):
 		wheels: DF.Int
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if getdate(self.start_date) > getdate(self.end_date):
 			frappe.throw(_("Insurance Start date should be less than Insurance End date"))
 		if getdate(self.carbon_check_date) > getdate():

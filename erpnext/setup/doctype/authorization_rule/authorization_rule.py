@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -48,7 +49,7 @@ class AuthorizationRule(Document):
 		value: DF.Float
 	# end: auto-generated types
 
-	def check_duplicate_entry(self):
+	def check_duplicate_entry(self) -> None:
 		exists = frappe.get_all(
 			"Authorization Rule",
 			filters={
@@ -68,7 +69,7 @@ class AuthorizationRule(Document):
 		if auth_exists:
 			frappe.throw(_("Duplicate Entry. Please check Authorization Rule {0}").format(auth_exists))
 
-	def validate_rule(self):
+	def validate_rule(self) -> None:
 		if not self.approving_role and not self.approving_user:
 			frappe.throw(_("Please enter Approving Role or Approving User"))
 		elif self.system_user and self.system_user == self.approving_user:
@@ -92,7 +93,7 @@ class AuthorizationRule(Document):
 		elif self.based_on == "Customerwise Discount" and not self.master_name:
 			frappe.throw(_("Customer required for 'Customerwise Discount'"))
 
-	def validate(self):
+	def validate(self) -> None:
 		self.check_duplicate_entry()
 		self.validate_rule()
 		if not self.value:

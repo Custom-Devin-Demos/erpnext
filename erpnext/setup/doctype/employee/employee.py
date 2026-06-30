@@ -1,5 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
+from __future__ import annotations
+
 import frappe
 from frappe import _, scrub, throw
 from frappe.model.naming import set_name_by_naming_series
@@ -113,11 +115,11 @@ class Employee(NestedSet):
 
 	nsm_parent_field = "reports_to"
 
-	def autoname(self):
+	def autoname(self) -> None:
 		set_name_by_naming_series(self)
 		self.employee = self.name
 
-	def validate(self):
+	def validate(self) -> None:
 		from erpnext.controllers.status_updater import validate_status
 
 		validate_status(self.status, ["Active", "Inactive", "Suspended", "Left"])
@@ -141,22 +143,22 @@ class Employee(NestedSet):
 				user.save(ignore_permissions=True)
 				remove_user_permission("Employee", self.name, existing_user_id)
 
-	def after_rename(self, old, new, merge):
+	def after_rename(self, old: str, new: str, merge: bool) -> None:
 		self.db_set("employee", new)
 
-	def set_employee_name(self):
+	def set_employee_name(self) -> None:
 		self.employee_name = " ".join(
 			filter(lambda x: x, [self.first_name, self.middle_name, self.last_name])
 		)
 
-	def validate_user_details(self):
+	def validate_user_details(self) -> None:
 		if not self.user_id:
 			return
 
 		self.validate_for_enabled_user_id()
 		self.validate_duplicate_user_id()
 
-	def validate_auto_user_creation(self):
+	def validate_auto_user_creation(self) -> None:
 		if self.create_user_automatically and not (
 			self.prefered_email or self.company_email or self.personal_email
 		):
@@ -166,10 +168,10 @@ class Employee(NestedSet):
 				title=_("Auto User Creation Error"),
 			)
 
-	def update_nsm_model(self):
+	def update_nsm_model(self) -> None:
 		frappe.utils.nestedset.update_nsm(self)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		self.update_nsm_model()
 		frappe.clear_cache()
 		if self.user_id:
@@ -178,10 +180,10 @@ class Employee(NestedSet):
 			self.update_user_status()
 		self.reset_employee_emails_cache()
 
-	def before_insert(self):
+	def before_insert(self) -> None:
 		self.validate_auto_user_creation()
 
-	def after_insert(self):
+	def after_insert(self) -> None:
 		if not self.create_user_automatically:
 			return
 
@@ -194,7 +196,7 @@ class Employee(NestedSet):
 			create_user_permission=self.create_user_permission,
 		)
 
-	def update_user_permissions(self):
+	def update_user_permissions(self) -> None:
 		if not self.has_value_changed("user_id") and not self.has_value_changed("create_user_permission"):
 			return
 
@@ -209,7 +211,7 @@ class Employee(NestedSet):
 			add_user_permission("Employee", self.name, self.user_id)
 			add_user_permission("Company", self.company, self.user_id)
 
-	def update_user(self):
+	def update_user(self) -> None:
 		# add employee role if missing
 		user = frappe.get_doc("User", self.user_id)
 		user.flags.ignore_permissions = True
@@ -252,7 +254,7 @@ class Employee(NestedSet):
 
 		user.save()
 
-	def validate_date(self):
+	def validate_date(self) -> None:
 		if self.date_of_birth and getdate(self.date_of_birth) > getdate(today()):
 			throw(_("Date of Birth cannot be greater than today."))
 
@@ -261,17 +263,17 @@ class Employee(NestedSet):
 		self.validate_from_to_dates("date_of_joining", "relieving_date")
 		self.validate_from_to_dates("date_of_joining", "contract_end_date")
 
-	def validate_email(self):
+	def validate_email(self) -> None:
 		if self.company_email:
 			validate_email_address(self.company_email, True)
 		if self.personal_email:
 			validate_email_address(self.personal_email, True)
 
-	def set_preferred_email(self):
+	def set_preferred_email(self) -> None:
 		preferred_email_field = frappe.scrub(self.prefered_contact_email)
 		self.prefered_email = self.get(preferred_email_field) if preferred_email_field else None
 
-	def validate_status(self):
+	def validate_status(self) -> None:
 		if self.status == "Left":
 			reports_to = frappe.db.get_all(
 				"Employee",
@@ -293,11 +295,11 @@ class Employee(NestedSet):
 			if not self.relieving_date:
 				throw(_("Please enter relieving date."))
 
-	def validate_for_enabled_user_id(self):
+	def validate_for_enabled_user_id(self) -> None:
 		if not frappe.db.exists("User", self.user_id):
 			frappe.throw(_("User {0} does not exist").format(self.user_id))
 
-	def update_user_status(self):
+	def update_user_status(self) -> None:
 		if not self.user_id:
 			return
 
@@ -311,7 +313,7 @@ class Employee(NestedSet):
 			# Keep linked User status in sync from the Employee lifecycle and record the audit log.
 			user.save(ignore_permissions=True)
 
-	def validate_duplicate_user_id(self):
+	def validate_duplicate_user_id(self) -> None:
 		Employee = frappe.qb.DocType("Employee")
 		employee = (
 			frappe.qb.from_(Employee)
@@ -328,19 +330,19 @@ class Employee(NestedSet):
 				frappe.DuplicateEntryError,
 			)
 
-	def validate_reports_to(self):
+	def validate_reports_to(self) -> None:
 		if self.reports_to == self.name:
 			throw(_("Employee cannot report to himself."))
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		self.update_nsm_model()
 		delete_events(self.doctype, self.name)
 
-	def validate_preferred_email(self):
+	def validate_preferred_email(self) -> None:
 		if self.prefered_contact_email and not self.get(scrub(self.prefered_contact_email)):
 			frappe.msgprint(_("Please enter {0}").format(self.prefered_contact_email))
 
-	def reset_employee_emails_cache(self):
+	def reset_employee_emails_cache(self) -> None:
 		prev_doc = self.get_doc_before_save() or {}
 		cell_number = cstr(self.get("cell_number"))
 		prev_number = cstr(prev_doc.get("cell_number"))
@@ -349,7 +351,7 @@ class Employee(NestedSet):
 			frappe.cache().hdel("employees_with_number", prev_number)
 
 
-def validate_employee_role(doc, method=None, ignore_emp_check=False):
+def validate_employee_role(doc, method=None, ignore_emp_check: bool = False) -> None:
 	# called via User hook
 	if not ignore_emp_check:
 		if frappe.db.get_value("Employee", {"user_id": doc.name}):
@@ -367,13 +369,13 @@ def validate_employee_role(doc, method=None, ignore_emp_check=False):
 		doc.get("roles").remove(doc.get("roles", {"role": "Employee Self Service"})[0])
 
 
-def get_employee_email(employee_doc):
+def get_employee_email(employee_doc) -> str | None:
 	return (
 		employee_doc.get("user_id") or employee_doc.get("personal_email") or employee_doc.get("company_email")
 	)
 
 
-def get_holiday_list_for_employee(employee, raise_exception=True, as_on=None):
+def get_holiday_list_for_employee(employee: str, raise_exception: bool = True, as_on=None) -> str | None:
 	hrms_override = frappe.get_hooks("employee_holiday_list")
 
 	if hrms_override:
@@ -395,7 +397,13 @@ def get_holiday_list_for_employee(employee, raise_exception=True, as_on=None):
 	return holiday_list
 
 
-def is_holiday(employee, date=None, raise_exception=True, only_non_weekly=False, with_description=False):
+def is_holiday(
+	employee: str,
+	date=None,
+	raise_exception: bool = True,
+	only_non_weekly: bool = False,
+	with_description: bool = False,
+) -> bool | tuple:
 	"""
 	Returns True if given Employee has an holiday on the given date
 	        :param employee: Employee `name`
@@ -424,7 +432,7 @@ def is_holiday(employee, date=None, raise_exception=True, only_non_weekly=False,
 
 
 @frappe.whitelist()
-def deactivate_sales_person(status: str, employee: str):
+def deactivate_sales_person(status: str, employee: str) -> None:
 	frappe.has_permission("Employee", doc=employee, ptype="write", throw=True)
 	if status == "Left":
 		sales_person = frappe.db.get_value("Sales Person", {"employee": employee})
@@ -482,7 +490,7 @@ def create_user(employee: str, email: str | None = None, create_user_permission:
 	return user.name
 
 
-def get_all_employee_emails(company):
+def get_all_employee_emails(company: str) -> list:
 	"""Returns list of employee emails either based on user_id or company_email"""
 	employee_list = frappe.get_all(
 		"Employee", fields=["name", "employee_name"], filters={"status": "Active", "company": company}
@@ -500,7 +508,7 @@ def get_all_employee_emails(company):
 	return employee_emails
 
 
-def get_employee_emails(employee_list):
+def get_employee_emails(employee_list: list) -> list:
 	"""Returns list of employee emails either based on user_id or company_email"""
 	employee_emails = []
 	for employee in employee_list:
@@ -522,7 +530,7 @@ def get_children(
 	company: str | None = None,
 	is_root: bool = False,
 	is_tree: bool = False,
-):
+) -> list:
 	filters = [["status", "=", "Active"]]
 	if company and company != "All Companies":
 		filters.append(["company", "=", company])
@@ -545,11 +553,11 @@ def get_children(
 	return employees
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Employee", ["lft", "rgt"])
 
 
-def has_user_permission_for_employee(user_name, employee_name):
+def has_user_permission_for_employee(user_name: str, employee_name: str) -> str | None:
 	return frappe.db.exists(
 		{
 			"doctype": "User Permission",
@@ -560,7 +568,7 @@ def has_user_permission_for_employee(user_name, employee_name):
 	)
 
 
-def has_upload_permission(doc, ptype="read", user=None):
+def has_upload_permission(doc, ptype: str = "read", user: str | None = None) -> bool:
 	if not user:
 		user = frappe.session.user
 	if get_doc_permissions(doc, user=user, ptype=ptype).get(ptype):

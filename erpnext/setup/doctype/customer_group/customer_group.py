@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -33,12 +34,12 @@ class CustomerGroup(NestedSet):
 
 	nsm_parent_field = "parent_customer_group"
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.parent_customer_group:
 			self.parent_customer_group = get_root_of("Customer Group")
 		self.validate_currency_for_receivable_and_advance_account()
 
-	def validate_currency_for_receivable_and_advance_account(self):
+	def validate_currency_for_receivable_and_advance_account(self) -> None:
 		for x in self.accounts:
 			receivable_account_currency = None
 			advance_account_currency = None
@@ -68,12 +69,12 @@ class CustomerGroup(NestedSet):
 					)
 				)
 
-	def on_update(self):
+	def on_update(self) -> None:
 		super().on_update()
 		self.validate_one_root()
 
 
-def get_parent_customer_groups(customer_group):
+def get_parent_customer_groups(customer_group: str) -> list:
 	lft, rgt = frappe.db.get_value("Customer Group", customer_group, ["lft", "rgt"])
 	return frappe.get_all(
 		"Customer Group",
@@ -83,5 +84,5 @@ def get_parent_customer_groups(customer_group):
 	)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Customer Group", ["lft", "rgt"])

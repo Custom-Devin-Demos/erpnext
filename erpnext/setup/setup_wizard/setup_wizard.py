@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -9,7 +10,7 @@ from erpnext.setup.demo import setup_demo_data
 from erpnext.setup.setup_wizard.operations import install_fixtures as fixtures
 
 
-def get_setup_stages(args=None):
+def get_setup_stages(args: dict | None = None) -> list:
 	stages = [
 		{
 			"status": _("Installing presets"),
@@ -42,24 +43,24 @@ def get_setup_stages(args=None):
 	return stages
 
 
-def stage_fixtures(args):
+def stage_fixtures(args: dict) -> None:
 	fixtures.install(args.get("country"))
 
 
-def setup_company(args):
+def setup_company(args: dict) -> None:
 	fixtures.install_company(args)
 
 
-def setup_defaults(args):
+def setup_defaults(args: dict) -> None:
 	fixtures.install_defaults(frappe._dict(args))
 
 
-def setup_demo(args):  # nosemgrep
+def setup_demo(args: dict) -> None:  # nosemgrep
 	setup_demo_data(args.get("company_name"))
 
 
 # Only for programmatical use
-def setup_complete(args=None):
+def setup_complete(args: dict | None = None) -> None:
 	stage_fixtures(args)
 	setup_company(args)
 	setup_defaults(args)

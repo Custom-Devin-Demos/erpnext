@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 
@@ -31,39 +32,39 @@ class Department(NestedSet):
 
 	nsm_parent_field = "parent_department"
 
-	def autoname(self):
+	def autoname(self) -> None:
 		if self.company:
 			self.name = get_abbreviated_name(self.department_name, self.company)
 		else:
 			self.name = self.department_name
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.parent_department:
 			root = get_root_of("Department")
 			if root:
 				self.parent_department = root
 
-	def before_rename(self, old, new, merge=False):
+	def before_rename(self, old: str, new: str, merge: bool = False) -> str:
 		# renaming consistency with abbreviation
 		if frappe.get_cached_value("Company", self.company, "abbr") not in new:
 			new = get_abbreviated_name(new, self.company)
 
 		return new
 
-	def on_update(self):
+	def on_update(self) -> None:
 		if not (frappe.local.flags.ignore_update_nsm or frappe.flags.in_setup_wizard):
 			super().on_update()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		super().on_trash()
 		delete_events(self.doctype, self.name)
 
 
-def on_doctype_update():
+def on_doctype_update() -> None:
 	frappe.db.add_index("Department", ["lft", "rgt"])
 
 
-def get_abbreviated_name(name, company):
+def get_abbreviated_name(name: str, company: str) -> str:
 	abbr = frappe.get_cached_value("Company", company, "abbr")
 	new_name = f"{name} - {abbr}"
 	return new_name
@@ -76,7 +77,7 @@ def get_children(
 	company: str | None = None,
 	is_root: bool = False,
 	include_disabled: str | dict | None = None,
-):
+) -> list:
 	include_disabled = frappe.parse_json(include_disabled)
 	fields = ["name as value", "is_group as expandable"]
 	filters = {}
@@ -96,7 +97,7 @@ def get_children(
 
 
 @frappe.whitelist()
-def add_node():
+def add_node() -> None:
 	from frappe.desk.treeview import make_tree_args
 
 	args = frappe.form_dict

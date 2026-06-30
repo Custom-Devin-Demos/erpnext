@@ -1,5 +1,6 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
+from __future__ import annotations
 
 import frappe
 import frappe.utils
@@ -12,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestEmployee(ERPNextTestSuite):
-	def test_employee_status_left(self):
+	def test_employee_status_left(self) -> None:
 		employee1 = make_employee("test_employee_1@company.com", company="_Test Company")
 		employee2 = make_employee("test_employee_2@company.com", company="_Test Company")
 		employee1_doc = frappe.get_doc("Employee", employee1)
@@ -24,7 +25,7 @@ class TestEmployee(ERPNextTestSuite):
 		employee1_doc.status = "Left"
 		self.assertRaises(InactiveEmployeeStatusError, employee1_doc.save)
 
-	def test_user_has_employee(self):
+	def test_user_has_employee(self) -> None:
 		employee = make_employee("test_emp_user_creation@company.com", company="_Test Company")
 		employee_doc = frappe.get_doc("Employee", employee)
 		user = employee_doc.user_id
@@ -33,7 +34,7 @@ class TestEmployee(ERPNextTestSuite):
 		employee_doc.save()
 		self.assertNotIn("Employee", frappe.get_roles(user))
 
-	def test_employee_user_permission(self):
+	def test_employee_user_permission(self) -> None:
 		employee1 = make_employee(
 			"employee_1_test@company.com", create_user_permission=1, company="_Test Company"
 		)
@@ -63,7 +64,7 @@ class TestEmployee(ERPNextTestSuite):
 		self.assertEqual(qb_employee_list, employee_list)
 		frappe.set_user("Administrator")
 
-	def test_create_user_automatically(self):
+	def test_create_user_automatically(self) -> None:
 		def get_new_employee(email: str, create_user_permission: int):
 			return frappe.get_doc(
 				{
@@ -116,7 +117,7 @@ class TestEmployee(ERPNextTestSuite):
 		)
 
 
-def make_employee(user, company=None, **kwargs):
+def make_employee(user: str, company: str | None = None, **kwargs):
 	if not frappe.db.get_value("User", user):
 		frappe.get_doc(
 			{

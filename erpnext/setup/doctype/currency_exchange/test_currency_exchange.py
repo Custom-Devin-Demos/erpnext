@@ -1,5 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
+from __future__ import annotations
+
 from unittest import mock
 
 import frappe
@@ -9,7 +11,7 @@ from erpnext.setup.utils import get_exchange_rate
 from erpnext.tests.utils import ERPNextTestSuite
 
 
-def save_new_records(test_records):
+def save_new_records(test_records: list) -> None:
 	for record in test_records:
 		# If both selling and buying enabled
 		purpose = "Selling-Buying"
@@ -81,17 +83,17 @@ def patched_requests_get(*args, **kwargs):
 
 @mock.patch("requests.get", side_effect=patched_requests_get)
 class TestCurrencyExchange(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.load_test_records("Currency Exchange")
 		save_new_records(self.globalTestRecords["Currency Exchange"])
 
-	def clear_cache(self):
+	def clear_cache(self) -> None:
 		cache = frappe.cache()
 		for date in test_exchange_values.keys():
 			key = "currency_exchange_rate_{}:{}:{}".format(date, "USD", "INR")
 			cache.delete(key)
 
-	def test_exchange_rate(self, mock_get):
+	def test_exchange_rate(self, mock_get) -> None:
 		frappe.db.set_single_value("Accounts Settings", "allow_stale", 1)
 
 		# Start with allow_stale is True
@@ -114,7 +116,7 @@ class TestCurrencyExchange(ERPNextTestSuite):
 		self.assertNotEqual(exchange_rate, 60)
 		self.assertEqual(flt(exchange_rate, 3), 65.1)
 
-	def test_exchange_rate_via_exchangerate_host(self, mock_get):
+	def test_exchange_rate_via_exchangerate_host(self, mock_get) -> None:
 		# Update Currency Exchange Rate
 		settings = frappe.get_single("Currency Exchange Settings")
 		settings.service_provider = "exchangerate.host"
@@ -148,7 +150,7 @@ class TestCurrencyExchange(ERPNextTestSuite):
 		settings.service_provider = "frankfurter.dev"
 		settings.save()
 
-	def test_exchange_rate_strict(self, mock_get):
+	def test_exchange_rate_strict(self, mock_get) -> None:
 		# strict currency settings
 		frappe.db.set_single_value("Accounts Settings", "allow_stale", 0)
 		frappe.db.set_single_value("Accounts Settings", "stale_days", 1)
@@ -168,7 +170,7 @@ class TestCurrencyExchange(ERPNextTestSuite):
 		exchange_rate = get_exchange_rate("USD", "INR", "2015-12-15", "for_buying")
 		self.assertEqual(flt(exchange_rate, 3), 66.999)
 
-	def test_exchange_rate_strict_switched(self, mock_get):
+	def test_exchange_rate_strict_switched(self, mock_get) -> None:
 		# Start with allow_stale is True
 		exchange_rate = get_exchange_rate("USD", "INR", "2016-01-15", "for_buying")
 		self.assertEqual(exchange_rate, 65.1)

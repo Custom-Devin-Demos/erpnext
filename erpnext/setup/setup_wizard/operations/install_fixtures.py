@@ -1,10 +1,12 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe.desk.doctype.global_search_settings.global_search_settings import (
@@ -17,13 +19,16 @@ from erpnext.accounts.doctype.account.account import RootNotEditable
 from erpnext.regional.address_template.setup import set_up_address_templates
 from erpnext.setup.utils import identity as _
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
+
 
 def read_lines(filename: str) -> list[str]:
 	"""Return a list of lines from a file in the data directory."""
 	return (Path(__file__).parent.parent / "data" / filename).read_text().splitlines()
 
 
-def get_preset_records(country=None):
+def get_preset_records(country: str | None = None) -> list:
 	records = [
 		# ensure at least an empty Address Template exists for this Country
 		{"doctype": "Address Template", "country": country},
@@ -319,7 +324,7 @@ def get_preset_records(country=None):
 	return records
 
 
-def install(country=None):
+def install(country: str | None = None) -> None:
 	records = get_preset_records(country)
 
 	for doctype, title_field, filename in (
@@ -357,7 +362,7 @@ def install(country=None):
 	update_global_search_doctypes()
 
 
-def update_selling_defaults():
+def update_selling_defaults() -> None:
 	selling_settings = frappe.get_doc("Selling Settings")
 	selling_settings.cust_master_name = "Customer Name"
 	selling_settings.so_required = "No"
@@ -367,7 +372,7 @@ def update_selling_defaults():
 	selling_settings.save()
 
 
-def update_buying_defaults():
+def update_buying_defaults() -> None:
 	buying_settings = frappe.get_doc("Buying Settings")
 	buying_settings.supp_master_name = "Supplier Name"
 	buying_settings.po_required = "No"
@@ -377,14 +382,14 @@ def update_buying_defaults():
 	buying_settings.save()
 
 
-def update_item_variant_settings():
+def update_item_variant_settings() -> None:
 	# set no copy fields of an item doctype to item variant settings
 	doc = frappe.get_doc("Item Variant Settings")
 	doc.set_default_fields()
 	doc.save()
 
 
-def add_uom_data():
+def add_uom_data() -> None:
 	# add UOMs
 	uoms = json.loads(
 		open(frappe.get_app_path("erpnext", "setup", "setup_wizard", "data", "uom_data.json")).read()
@@ -420,7 +425,7 @@ def add_uom_data():
 			).db_insert()
 
 
-def add_market_segments():
+def add_market_segments() -> None:
 	records = [
 		# Market Segments
 		{"doctype": "Market Segment", "market_segment": _("Lower Income")},
@@ -431,7 +436,7 @@ def add_market_segments():
 	make_records(records)
 
 
-def get_sale_stages():
+def get_sale_stages() -> list:
 	# Sale Stages
 	return [
 		{"doctype": "Sales Stage", "stage_name": _("Prospecting")},
@@ -445,13 +450,13 @@ def get_sale_stages():
 	]
 
 
-def add_sale_stages():
+def add_sale_stages() -> None:
 	records = get_sale_stages()
 	for sales_stage in records:
 		frappe.get_doc(sales_stage).db_insert()
 
 
-def install_company(args):
+def install_company(args: dict) -> None:
 	records = [
 		# Fiscal Year
 		{
@@ -477,7 +482,7 @@ def install_company(args):
 	make_records(records)
 
 
-def install_defaults(args=None):  # nosemgrep
+def install_defaults(args: dict | None = None) -> None:  # nosemgrep
 	records = [
 		# Price Lists
 		{
@@ -511,7 +516,7 @@ def install_defaults(args=None):  # nosemgrep
 	create_bank_account(args)
 
 
-def set_global_defaults(kwargs):
+def set_global_defaults(kwargs: dict) -> None:
 	global_defaults = frappe.get_doc("Global Defaults", "Global Defaults")
 	company = frappe.db.get_value(
 		"Company",
@@ -530,7 +535,7 @@ def set_global_defaults(kwargs):
 	global_defaults.save()
 
 
-def update_stock_settings():
+def update_stock_settings() -> None:
 	stock_settings = frappe.get_doc("Stock Settings")
 	stock_settings.item_naming_by = "Item Code"
 	stock_settings.valuation_method = "FIFO"
@@ -544,7 +549,7 @@ def update_stock_settings():
 	stock_settings.save()
 
 
-def create_bank_account(args, demo=False):
+def create_bank_account(args: dict, demo: bool = False) -> Document | None:
 	if not args.get("bank_account"):
 		if not demo:
 			return
@@ -589,7 +594,7 @@ def create_bank_account(args, demo=False):
 			pass
 
 
-def get_fy_details(fy_start_date, fy_end_date):
+def get_fy_details(fy_start_date, fy_end_date) -> str:
 	start_year = getdate(fy_start_date).year
 	if start_year == getdate(fy_end_date).year:
 		fy = cstr(start_year)

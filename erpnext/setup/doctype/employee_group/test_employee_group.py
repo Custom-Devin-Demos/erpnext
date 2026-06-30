@@ -1,5 +1,6 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
 
 import frappe
 
@@ -11,7 +12,7 @@ class TestEmployeeGroup(ERPNextTestSuite):
 	pass
 
 
-def make_employee_group():
+def make_employee_group() -> str:
 	employee = make_employee("testemployee@example.com")
 	employee_group = frappe.get_doc(
 		{
@@ -28,6 +29,6 @@ def make_employee_group():
 		return employee_group_exist
 
 
-def get_employee_group():
+def get_employee_group() -> str | None:
 	employee_group = frappe.db.exists("Employee Group", "_Test Employee Group")
 	return employee_group

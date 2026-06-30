@@ -4,6 +4,8 @@
 
 """Global Defaults"""
 
+from __future__ import annotations
+
 import frappe
 import frappe.defaults
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
@@ -55,7 +57,7 @@ class GlobalDefaults(Document):
 		use_posting_datetime_for_naming_documents: DF.Check
 	# end: auto-generated types
 
-	def on_update(self):
+	def on_update(self) -> None:
 		"""update defaults"""
 		for key in keydict:
 			frappe.db.set_default(key, self.get(keydict[key], ""))
@@ -71,10 +73,10 @@ class GlobalDefaults(Document):
 		frappe.clear_cache()
 
 	@frappe.whitelist()
-	def get_defaults(self):
+	def get_defaults(self) -> dict:
 		return frappe.defaults.get_defaults()
 
-	def toggle_rounded_total(self):
+	def toggle_rounded_total(self) -> None:
 		# Make property setters to hide rounded total fields
 		for doctype in ROUNDED_TOTAL_DOCTYPES:
 			make_property_setter(
@@ -113,7 +115,7 @@ class GlobalDefaults(Document):
 				validate_fields_for_doctype=False,
 			)
 
-	def toggle_in_words(self):
+	def toggle_in_words(self) -> None:
 		# Make property setters to hide in words fields
 		for doctype in ROUNDED_TOTAL_DOCTYPES:
 			make_property_setter(
@@ -133,7 +135,7 @@ class GlobalDefaults(Document):
 				validate_fields_for_doctype=False,
 			)
 
-	def set_disable_rounded_total_on_pos_profiles(self):
+	def set_disable_rounded_total_on_pos_profiles(self) -> None:
 		POSProfile = frappe.qb.DocType("POS Profile")
 
 		frappe.qb.update(POSProfile).set(

@@ -1,5 +1,6 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
 
 import frappe
 from frappe.utils import add_days, today
@@ -9,7 +10,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestEmailDigest(ERPNextTestSuite):
-	def test_purchase_orders_items_overdue_list_is_filtered_by_company(self):
+	def test_purchase_orders_items_overdue_list_is_filtered_by_company(self) -> None:
 		digest = create_email_digest(
 			company="_Test Company",
 			frequency="Daily",
@@ -40,7 +41,7 @@ class TestEmailDigest(ERPNextTestSuite):
 		self.assertIn(po1.name, overdue_items)
 		self.assertNotIn(po2.name, overdue_items)
 
-	def test_get_todo_list_priority_and_date_ordering(self):
+	def test_get_todo_list_priority_and_date_ordering(self) -> None:
 		"""Original SQL ordered by `field(priority,'High','Medium','Low') asc, date asc`: MySQL
 		FIELD() returns 0 for empty/unknown priority (sorts FIRST under asc) and MariaDB sorts NULL
 		dates FIRST. The conversion preserves this: the priority CASE uses else_(0) (unknown/empty

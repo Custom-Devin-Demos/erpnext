@@ -1,5 +1,6 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
 
 import frappe
 
@@ -7,7 +8,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAuthorizationRule(ERPNextTestSuite):
-	def test_duplicate_rule_is_blocked(self):
+	def test_duplicate_rule_is_blocked(self) -> None:
 		"""check_duplicate_entry uses frappe.get_all over Authorization Rule; a second rule with the
 		same transaction/based_on/approving_role/value must be rejected as a duplicate (the converted
 		query must find the existing row on both engines)."""

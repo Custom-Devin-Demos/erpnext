@@ -1,15 +1,20 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import json
 import os
+from typing import TYPE_CHECKING
 
 import frappe
 from frappe import _
 
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
-def setup_taxes_and_charges(company_name: str, country: str):
+
+def setup_taxes_and_charges(company_name: str, country: str) -> None:
 	if not frappe.db.exists("Company", company_name):
 		frappe.throw(_("Company {0} does not exist yet. Taxes setup aborted.").format(company_name))
 
@@ -29,7 +34,7 @@ def setup_taxes_and_charges(company_name: str, country: str):
 	update_regional_tax_settings(country, company_name)
 
 
-def simple_to_detailed(templates):
+def simple_to_detailed(templates: dict) -> dict:
 	"""
 	Convert a simple taxes object into a more detailed data structure.
 
@@ -84,7 +89,7 @@ def simple_to_detailed(templates):
 	}
 
 
-def from_detailed_data(company_name, data):
+def from_detailed_data(company_name: str, data: dict) -> None:
 	"""Create Taxes and Charges Templates from detailed data."""
 	charts_company_name = company_name
 	if (
@@ -117,7 +122,7 @@ def from_detailed_data(company_name, data):
 			make_item_tax_template(company_name, template)
 
 
-def update_regional_tax_settings(country, company):
+def update_regional_tax_settings(country: str, company: str) -> None:
 	path = frappe.get_app_path("erpnext", "regional", frappe.scrub(country))
 	if os.path.exists(path.encode("utf-8")):
 		frappe.db.savepoint("regional_tax_settings")
@@ -132,7 +137,7 @@ def update_regional_tax_settings(country, company):
 			frappe.log_error("Unable to setup regional tax settings")
 
 
-def make_taxes_and_charges_template(company_name, doctype, template):
+def make_taxes_and_charges_template(company_name: str, doctype: str, template: dict) -> Document | None:
 	template["company"] = company_name
 	template["doctype"] = doctype
 
@@ -175,7 +180,7 @@ def make_taxes_and_charges_template(company_name, doctype, template):
 	return doc
 
 
-def make_item_tax_template(company_name, template):
+def make_item_tax_template(company_name: str, template: dict) -> Document | None:
 	"""Create an Item Tax Template.
 
 	This requires a separate method because Item Tax Template is structured
@@ -208,7 +213,7 @@ def make_item_tax_template(company_name, template):
 	return doc
 
 
-def get_or_create_account(company_name, account):
+def get_or_create_account(company_name: str, account: dict) -> Document:
 	"""
 	Check if account already exists. If not, create it.
 	Return a tax account or None.
@@ -244,7 +249,7 @@ def get_or_create_account(company_name, account):
 	return doc
 
 
-def get_or_create_tax_group(company_name, root_type):
+def get_or_create_tax_group(company_name: str, root_type: str) -> str:
 	# Look for a group account of type 'Tax'
 	tax_group_name = frappe.db.get_value(
 		"Account",
@@ -300,7 +305,7 @@ def get_or_create_tax_group(company_name, root_type):
 	return tax_group_name
 
 
-def make_tax_category(tax_category):
+def make_tax_category(tax_category: str | dict) -> None:
 	doctype = "Tax Category"
 	if isinstance(tax_category, str):
 		tax_category = {"title": tax_category}

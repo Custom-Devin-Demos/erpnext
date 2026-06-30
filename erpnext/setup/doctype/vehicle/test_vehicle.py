@@ -1,5 +1,6 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+from __future__ import annotations
 
 import frappe
 from frappe.utils import random_string
@@ -8,7 +9,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestVehicle(ERPNextTestSuite):
-	def test_make_vehicle(self):
+	def test_make_vehicle(self) -> None:
 		vehicle = frappe.get_doc(
 			{
 				"doctype": "Vehicle",
@@ -25,7 +26,7 @@ class TestVehicle(ERPNextTestSuite):
 		)
 		vehicle.insert()
 
-	def test_renaming_vehicle(self):
+	def test_renaming_vehicle(self) -> None:
 		license_plate = random_string(10).upper()
 
 		vehicle = frappe.get_doc(

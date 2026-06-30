@@ -1,6 +1,7 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -30,14 +31,14 @@ class ItemGroup(NestedSet):
 		taxes: DF.Table[ItemTax]
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.parent_item_group and not frappe.in_test:
 			if frappe.db.exists("Item Group", _("All Item Groups")):
 				self.parent_item_group = _("All Item Groups")
 		self.validate_item_group_defaults()
 		self.check_item_tax()
 
-	def check_item_tax(self):
+	def check_item_tax(self) -> None:
 		"""Check whether Tax Rate is not entered twice for same Tax Type"""
 		check_list = []
 		for d in self.get("taxes"):
@@ -54,25 +55,25 @@ class ItemGroup(NestedSet):
 				else:
 					check_list.append((d.item_tax_template, d.tax_category))
 
-	def on_update(self):
+	def on_update(self) -> None:
 		NestedSet.on_update(self)
 		self.validate_one_root()
 		self.delete_child_item_groups_key()
 
-	def on_trash(self):
+	def on_trash(self) -> None:
 		NestedSet.on_trash(self, allow_root_deletion=True)
 		self.delete_child_item_groups_key()
 
-	def delete_child_item_groups_key(self):
+	def delete_child_item_groups_key(self) -> None:
 		frappe.cache().hdel("child_item_groups", self.name)
 
-	def validate_item_group_defaults(self):
+	def validate_item_group_defaults(self) -> None:
 		from erpnext.stock.doctype.item.item import validate_item_default_company_links
 
 		validate_item_default_company_links(self.item_group_defaults)
 
 
-def get_child_item_groups(item_group_name):
+def get_child_item_groups(item_group_name: str) -> list | dict:
 	item_group = frappe.get_cached_value("Item Group", item_group_name, ["lft", "rgt"], as_dict=1)
 
 	child_item_groups = [
@@ -85,7 +86,7 @@ def get_child_item_groups(item_group_name):
 	return child_item_groups or {}
 
 
-def get_item_group_defaults(item, company):
+def get_item_group_defaults(item: str, company: str) -> dict:
 	item = frappe.get_cached_doc("Item", item)
 	item_group = frappe.get_cached_doc("Item Group", item.item_group)
 

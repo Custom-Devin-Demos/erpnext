@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe.contacts.address_and_contact import load_address_and_contact
@@ -39,14 +40,14 @@ class SalesPartner(WebsiteGenerator):
 		template="templates/generators/sales_partner.html",
 	)
 
-	def onload(self):
+	def onload(self) -> None:
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)
 
-	def autoname(self):
+	def autoname(self) -> None:
 		pass
 
-	def validate(self):
+	def validate(self) -> None:
 		if not self.route:
 			self.route = "partners/" + self.scrub(self.partner_name)
 		super().validate()
@@ -62,7 +63,7 @@ class SalesPartner(WebsiteGenerator):
 
 			self.partner_website = urlunsplit(parts)
 
-	def get_context(self, context):
+	def get_context(self, context: dict) -> dict:
 		address_names = frappe.db.get_all(
 			"Dynamic Link",
 			filters={"link_doctype": "Sales Partner", "link_name": self.name, "parenttype": "Address"},
