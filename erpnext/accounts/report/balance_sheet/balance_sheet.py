@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt
@@ -125,7 +127,7 @@ def execute(filters=None):
 
 
 def get_provisional_profit_loss(
-	asset, liability, equity, period_list, company, currency=None, consolidated=False
+	asset, liability, equity, period_list, company, currency=None, consolidated: bool = False
 ):
 	provisional_profit_loss = {}
 	total_row = {}
@@ -200,7 +202,7 @@ def get_report_summary(
 	provisional_profit_loss,
 	currency,
 	filters,
-	consolidated=False,
+	consolidated: bool = False,
 ):
 	net_asset, net_liability, net_equity, net_provisional_profit_loss = 0.0, 0.0, 0.0, 0.0
 
@@ -379,7 +381,7 @@ def _get_data_duckdb(conn, filters, root_type, balance_must_be, period_list):
 	return out
 
 
-def _load_gl_entries_duckdb(conn, filters, period_list, accounts, gl_entries_by_account, root_type):
+def _load_gl_entries_duckdb(conn, filters, period_list, accounts, gl_entries_by_account, root_type) -> None:
 	from erpnext.accounts.report.trial_balance.trial_balance import (
 		_extra_gl_conditions,
 		_fetch_gl_rows_duckdb,

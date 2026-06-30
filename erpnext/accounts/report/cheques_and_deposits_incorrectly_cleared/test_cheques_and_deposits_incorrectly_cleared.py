@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import nowdate
 
@@ -11,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestChequesAndDepositsIncorrectlyCleared(ERPNextTestSuite):
-	def test_report_executes_with_case_amount(self):
+	def test_report_executes_with_case_amount(self) -> None:
 		# Exercises the Payment Entry branch whose amount column uses a db-aware CASE expression
 		# (previously a MySQL-only IF()). IF() does not compile on postgres, so running the report
 		# query guards the portability fix on both databases.

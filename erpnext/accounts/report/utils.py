@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.query_builder.custom import ConstantColumn
 from frappe.query_builder.functions import Sum
@@ -308,7 +310,7 @@ def get_payment_entries(filters, args):
 	return payment_entries
 
 
-def apply_common_conditions(filters, query, doctype, child_doctype=None, payments=False):
+def apply_common_conditions(filters, query, doctype, child_doctype=None, payments: bool = False):
 	parent_doc = frappe.qb.DocType(doctype)
 	if child_doctype:
 		child_doc = frappe.qb.DocType(child_doctype)

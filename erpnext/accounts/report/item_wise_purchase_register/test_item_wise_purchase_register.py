@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import getdate, today
 
@@ -8,12 +10,12 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestItemWisePurchaseRegister(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.supplier = "_Test Supplier"
 		self.item = "_Test Item"
 
-	def create_purchase_invoice(self, do_not_submit=False):
+	def create_purchase_invoice(self, do_not_submit: bool = False):
 		pi = make_purchase_invoice(
 			item=self.item,
 			company=self.company,
@@ -31,7 +33,7 @@ class TestItemWisePurchaseRegister(ERPNextTestSuite, AccountsTestMixin):
 			pi = pi.submit()
 		return pi
 
-	def test_basic_report_output(self):
+	def test_basic_report_output(self) -> None:
 		pi = self.create_purchase_invoice()
 
 		filters = frappe._dict({"from_date": today(), "to_date": today(), "company": self.company})

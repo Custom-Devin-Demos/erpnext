@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # MIT License. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.desk.query_report import export_query
 from frappe.utils import add_days, getdate, today
@@ -13,14 +15,16 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestProfitAndLossStatement(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
 		self.item = "_Test Item"
 		self.debit_to = "Debtors - _TC"
 		self.cost_center = "Main - _TC"
 
-	def create_sales_invoice(self, qty=1, rate=150, no_payment_schedule=False, do_not_submit=False):
+	def create_sales_invoice(
+		self, qty: int = 1, rate: int = 150, no_payment_schedule: bool = False, do_not_submit: bool = False
+	):
 		frappe.set_user("Administrator")
 		si = create_sales_invoice(
 			item=self.item,
@@ -60,7 +64,7 @@ class TestProfitAndLossStatement(ERPNextTestSuite, AccountsTestMixin):
 			accumulated_values=False,
 		)
 
-	def test_profit_and_loss_output_and_summary(self):
+	def test_profit_and_loss_output_and_summary(self) -> None:
 		self.create_sales_invoice(qty=1, rate=150)
 
 		filters = self.get_report_filters()
@@ -91,7 +95,7 @@ class TestProfitAndLossStatement(ERPNextTestSuite, AccountsTestMixin):
 					self.assertEqual(acc[current_period_key], 150)
 					self.assertEqual(acc["total"], 150)
 
-	def test_p_and_l_export(self):
+	def test_p_and_l_export(self) -> None:
 		self.create_sales_invoice(qty=1, rate=150)
 
 		filters = self.get_report_filters()
@@ -109,7 +113,7 @@ class TestProfitAndLossStatement(ERPNextTestSuite, AccountsTestMixin):
 
 		self.assertIn(sales_account, contents)
 
-	def test_accumulate_filter(self):
+	def test_accumulate_filter(self) -> None:
 		# ensure 2 fiscal years
 		cur_fy = self.get_fiscal_year()
 		find_for = add_days(cur_fy.year_start_date, -1)

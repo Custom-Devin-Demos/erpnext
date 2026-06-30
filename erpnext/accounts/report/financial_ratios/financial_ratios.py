@@ -1,6 +1,8 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, flt
@@ -31,7 +33,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def setup_filters(filters):
+def setup_filters(filters) -> None:
 	if not filters.get("period_start_date"):
 		period_start_date = get_fiscal_year(fiscal_year=filters.from_fiscal_year)[1]
 		filters["period_start_date"] = period_start_date
@@ -147,7 +149,7 @@ def get_gl_data(filters, period_list, years):
 	return assets, liabilities, income, expense
 
 
-def add_liquidity_ratios(data, years, current_asset, current_liability, quick_asset):
+def add_liquidity_ratios(data, years, current_asset, current_liability, quick_asset) -> None:
 	precision = frappe.db.get_single_value("System Settings", "float_precision")
 	data.append({"ratio": _("Liquidity Ratios")})
 
@@ -165,7 +167,7 @@ def add_liquidity_ratios(data, years, current_asset, current_liability, quick_as
 
 def add_solvency_ratios(
 	data, years, total_asset, total_liability, net_sales, cogs, total_income, total_expense
-):
+) -> None:
 	precision = frappe.db.get_single_value("System Settings", "float_precision")
 	data.append({"ratio": _("Solvency Ratios")})
 
@@ -195,7 +197,9 @@ def add_solvency_ratios(
 	data.append(return_on_equity_ratio)
 
 
-def add_turnover_ratios(data, years, period_list, filters, fixed_asset, net_sales, cogs, direct_expense):
+def add_turnover_ratios(
+	data, years, period_list, filters, fixed_asset, net_sales, cogs, direct_expense
+) -> None:
 	precision = frappe.db.get_single_value("System Settings", "float_precision")
 	data.append({"ratio": _("Turnover Ratios")})
 
@@ -233,8 +237,8 @@ def update_balances(
 	root_type_data,
 	root_type,
 	net_dict=None,
-	total_net=0,
-):
+	total_net: int = 0,
+) -> None:
 	for entry in root_type_data:
 		if not entry.get("parent_account") and entry.get("is_group"):
 			total_dict[year] = entry[year]

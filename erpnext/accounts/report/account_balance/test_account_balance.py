@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import getdate
 
@@ -7,7 +9,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestAccountBalance(ERPNextTestSuite):
-	def test_account_balance(self):
+	def test_account_balance(self) -> None:
 		filters = {
 			"company": "_Test Company 2",
 			"report_date": getdate(),
@@ -59,7 +61,7 @@ class TestAccountBalance(ERPNextTestSuite):
 		self.assertEqual(expected_data, report[1])
 
 
-def make_sales_invoice():
+def make_sales_invoice() -> None:
 	frappe.set_user("Administrator")
 
 	create_sales_invoice(

@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # MIT License. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, today
 
@@ -9,7 +11,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestTrialBalance(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		from erpnext.accounts.doctype.account.test_account import create_account
 		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 		from erpnext.accounts.utils import get_fiscal_year
@@ -36,7 +38,7 @@ class TestTrialBalance(ERPNextTestSuite):
 		)
 		dim.save()
 
-	def test_offsetting_entries_for_accounting_dimensions(self):
+	def test_offsetting_entries_for_accounting_dimensions(self) -> None:
 		"""
 		Checks if Trial Balance Report is balanced when filtered using a particular Accounting Dimension
 		"""
@@ -96,7 +98,7 @@ class TestTrialBalanceReport(ERPNextTestSuite):
 		data = execute(frappe._dict(filters))[1]
 		return {row["account"]: row for row in data if row.get("account")}, data[-1]
 
-	def test_posted_entry_lands_in_period_and_total_balances(self):
+	def test_posted_entry_lands_in_period_and_total_balances(self) -> None:
 		debit_account, credit_account = self.make_accounts_and_entry(500, today())
 
 		rows, total_row = self.rows_by_account()
@@ -105,7 +107,7 @@ class TestTrialBalanceReport(ERPNextTestSuite):
 		self.assertEqual(rows[credit_account]["credit"], 500)
 		self.assertEqual(total_row["debit"], total_row["credit"])
 
-	def test_entry_before_from_date_shows_as_opening_balance(self):
+	def test_entry_before_from_date_shows_as_opening_balance(self) -> None:
 		from erpnext.accounts.utils import get_fiscal_year
 
 		fiscal_year, year_start, year_end = get_fiscal_year(today(), company="_Test Company")
@@ -120,7 +122,7 @@ class TestTrialBalanceReport(ERPNextTestSuite):
 		self.assertEqual(rows[debit_account]["debit"], 0)
 		self.assertEqual(rows[credit_account]["opening_credit"], 500)
 
-	def test_show_zero_values_includes_unposted_accounts(self):
+	def test_show_zero_values_includes_unposted_accounts(self) -> None:
 		from erpnext.accounts.doctype.account.test_account import create_account
 
 		account = create_account(
@@ -133,14 +135,14 @@ class TestTrialBalanceReport(ERPNextTestSuite):
 		self.assertNotIn(account, self.rows_by_account()[0])
 		self.assertIn(account, self.rows_by_account(show_zero_values=1)[0])
 
-	def test_show_group_accounts_includes_parent_rows(self):
+	def test_show_group_accounts_includes_parent_rows(self) -> None:
 		self.make_accounts_and_entry(500, today())
 
 		# group (parent) accounts are hidden by default, shown when the filter is on
 		self.assertNotIn("Current Assets - _TC", self.rows_by_account()[0])
 		self.assertIn("Current Assets - _TC", self.rows_by_account(show_group_accounts=1)[0])
 
-	def test_show_net_values_nets_opening_and_closing(self):
+	def test_show_net_values_nets_opening_and_closing(self) -> None:
 		from erpnext.accounts.doctype.account.test_account import create_account
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 		from erpnext.accounts.utils import get_fiscal_year
@@ -170,7 +172,7 @@ class TestTrialBalanceReport(ERPNextTestSuite):
 		self.assertEqual(net["closing_debit"], 200)  # 500 debit - 300 credit
 		self.assertEqual(net["closing_credit"], 0)
 
-	def test_opening_balance_respects_ignore_account_closing_balance(self):
+	def test_opening_balance_respects_ignore_account_closing_balance(self) -> None:
 		"""With a Period Closing Voucher present, opening can be read from the cached
 		Account Closing Balance or recomputed from GL; both must agree."""
 		self.close_fiscal_year_2021_for_pcv_company()
@@ -189,7 +191,7 @@ class TestTrialBalanceReport(ERPNextTestSuite):
 		self.assertEqual(from_gl, 400)
 		self.assertEqual(from_cache, from_gl)
 
-	def test_period_closing_entry_filter_includes_closing_entries(self):
+	def test_period_closing_entry_filter_includes_closing_entries(self) -> None:
 		surplus = self.close_fiscal_year_2021_for_pcv_company()
 
 		def surplus_period_credit(include_closing):
@@ -207,7 +209,7 @@ class TestTrialBalanceReport(ERPNextTestSuite):
 		self.assertEqual(surplus_period_credit(0), 0)
 		self.assertEqual(surplus_period_credit(1), 400)
 
-	def test_show_unclosed_fy_pl_balances_controls_pl_opening(self):
+	def test_show_unclosed_fy_pl_balances_controls_pl_opening(self) -> None:
 		"""P&L opening from a prior, unclosed fiscal year is excluded by default and
 		included only when 'show unclosed FY P&L balances' is on."""
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
@@ -242,7 +244,7 @@ class TestTrialBalanceReport(ERPNextTestSuite):
 		self.assertEqual(cogs_opening(0), 0)  # prior-year P&L excluded by default
 		self.assertEqual(cogs_opening(1), 250)  # included when showing unclosed FY P&L
 
-	def test_include_default_book_entries_controls_default_fb_opening(self):
+	def test_include_default_book_entries_controls_default_fb_opening(self) -> None:
 		"""An opening entry tagged with the company's default finance book is included in
 		opening only when 'Include Default FB Entries' is on."""
 		from erpnext.accounts.doctype.account.test_account import create_account

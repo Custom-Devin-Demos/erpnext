@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe import qb
 from frappe.utils import nowdate
@@ -16,7 +18,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 class TestDeferredRevenueAndExpense(ERPNextTestSuite, AccountsTestMixin):
 	maxDiff = None
 
-	def clear_old_entries(self):
+	def clear_old_entries(self) -> None:
 		sinv = qb.DocType("Sales Invoice")
 		sinv_item = qb.DocType("Sales Invoice Item")
 		pinv = qb.DocType("Purchase Invoice")
@@ -45,7 +47,7 @@ class TestDeferredRevenueAndExpense(ERPNextTestSuite, AccountsTestMixin):
 		if deferred_invoices:
 			qb.from_(pinv).delete().where(pinv.name.isin(deferred_invoices)).run()
 
-	def setup_deferred_accounts_and_items(self):
+	def setup_deferred_accounts_and_items(self) -> None:
 		# created deferred expense accounts, if not found
 		self.deferred_revenue_account = create_account(
 			account_name="Deferred Revenue",
@@ -60,7 +62,7 @@ class TestDeferredRevenueAndExpense(ERPNextTestSuite, AccountsTestMixin):
 			company=self.company,
 		)
 
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.company_abbr = "_TC"
 		self.customer = "_Test Customer"
@@ -73,7 +75,7 @@ class TestDeferredRevenueAndExpense(ERPNextTestSuite, AccountsTestMixin):
 		self.setup_deferred_accounts_and_items()
 
 	@ERPNextTestSuite.change_settings("Accounts Settings", {"book_deferred_entries_based_on": "Months"})
-	def test_deferred_revenue(self):
+	def test_deferred_revenue(self) -> None:
 		self.create_item("_Test Internet Subscription", 0, self.warehouse, self.company)
 		item = frappe.get_doc("Item", self.item)
 		item.enable_deferred_revenue = 1
@@ -140,7 +142,7 @@ class TestDeferredRevenueAndExpense(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(report.period_total, expected)
 
 	@ERPNextTestSuite.change_settings("Accounts Settings", {"book_deferred_entries_based_on": "Months"})
-	def test_deferred_expense(self):
+	def test_deferred_expense(self) -> None:
 		self.create_item("_Test Office Desk", 0, self.warehouse, self.company)
 		item = frappe.get_doc("Item", self.item)
 		item.enable_deferred_expense = 1
@@ -210,7 +212,7 @@ class TestDeferredRevenueAndExpense(ERPNextTestSuite, AccountsTestMixin):
 		self.assertEqual(report.period_total, expected)
 
 	@ERPNextTestSuite.change_settings("Accounts Settings", {"book_deferred_entries_based_on": "Months"})
-	def test_zero_months(self):
+	def test_zero_months(self) -> None:
 		self.create_item("_Test Internet Subscription", 0, self.warehouse, self.company)
 		item = frappe.get_doc("Item", self.item)
 		item.enable_deferred_revenue = 1
@@ -278,7 +280,7 @@ class TestDeferredRevenueAndExpense(ERPNextTestSuite, AccountsTestMixin):
 		"Accounts Settings",
 		{"book_deferred_entries_based_on": "Months", "book_deferred_entries_via_journal_entry": 0},
 	)
-	def test_zero_amount(self):
+	def test_zero_amount(self) -> None:
 		self.create_item("_Test Office Desk", 0, self.warehouse, self.company)
 		item = frappe.get_doc("Item", self.item)
 		item.enable_deferred_expense = 1

@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import add_days, today
 
@@ -11,7 +13,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestInactiveSalesItems(ERPNextTestSuite):
-	def test_days_since_last_order_is_computed(self):
+	def test_days_since_last_order_is_computed(self) -> None:
 		# Exercises the date-arithmetic path (DATEDIFF/CURRENT_DATE on mariadb, date subtraction on
 		# postgres) which must produce the same integer day count on both databases.
 		item = make_item("_Test Inactive Sales Item").name
@@ -27,6 +29,6 @@ class TestInactiveSalesItems(ERPNextTestSuite):
 		self.assertIsNotNone(row, "Inactive item should appear in the report")
 		self.assertGreaterEqual(row["days_since_last_order"], 30)
 
-	def test_report_runs_for_sales_invoice(self):
+	def test_report_runs_for_sales_invoice(self) -> None:
 		columns, _data = execute(frappe._dict({"based_on": "Sales Invoice", "days": 30}))
 		self.assertTrue(columns)

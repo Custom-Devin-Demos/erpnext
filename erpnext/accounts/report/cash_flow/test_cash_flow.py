@@ -1,6 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import today
 
@@ -10,7 +12,7 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestCashFlow(ERPNextTestSuite):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 
 	def net_change_in_cash(self):
@@ -30,7 +32,7 @@ class TestCashFlow(ERPNextTestSuite):
 		row = next(row for row in rows if row.get("section") == "'Net Change in Cash'")
 		return row["total"]
 
-	def test_report_executes(self):
+	def test_report_executes(self) -> None:
 		# Smoke-guards the raw-SQL -> query-builder port: the report query must compile and run on
 		# both MariaDB and postgres.
 		company = frappe.db.get_value("Company", {}, "name")
@@ -48,7 +50,7 @@ class TestCashFlow(ERPNextTestSuite):
 		)
 		self.assertTrue(columns)
 
-	def test_cash_sale_increases_net_change_in_cash(self):
+	def test_cash_sale_increases_net_change_in_cash(self) -> None:
 		"""A cash sale (debit Cash, credit Income) increases net change in cash by the amount."""
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 
@@ -57,7 +59,7 @@ class TestCashFlow(ERPNextTestSuite):
 
 		self.assertEqual(self.net_change_in_cash() - before, 500)
 
-	def test_cash_purchase_of_asset_is_investing_outflow(self):
+	def test_cash_purchase_of_asset_is_investing_outflow(self) -> None:
 		"""Buying a fixed asset for cash is an investing outflow that reduces net change in cash."""
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 

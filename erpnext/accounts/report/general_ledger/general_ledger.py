@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, _dict
 from frappe.query_builder import Criterion
@@ -54,7 +56,7 @@ def execute(filters=None):
 	return columns, res
 
 
-def validate_filters(filters, account_details):
+def validate_filters(filters, account_details) -> None:
 	if not filters.get("company"):
 		frappe.throw(_("{0} is mandatory").format(_("Company")))
 
@@ -92,7 +94,7 @@ def validate_filters(filters, account_details):
 		filters.cost_center = frappe.parse_json(filters.get("cost_center"))
 
 
-def validate_party(filters):
+def validate_party(filters) -> None:
 	party_type, party = filters.get("party_type"), filters.get("party")
 
 	if party and party_type:
@@ -390,7 +392,7 @@ def get_accounts_with_children(accounts):
 	return frappe.qb.from_(doctype).select(doctype.name).where(Criterion.any(conditions)).run(pluck=True)
 
 
-def set_bill_no(gl_entries):
+def set_bill_no(gl_entries) -> None:
 	inv_details = get_supplier_invoice_details()
 	for gl in gl_entries:
 		gl["bill_no"] = inv_details.get(gl.get("against_voucher"), "")
@@ -408,7 +410,7 @@ def get_translated_labels_for_totals():
 
 
 def get_data_with_opening_closing(filters, account_details, accounting_dimensions, gl_entries):
-	def add_total_to_data(totals, key):
+	def add_total_to_data(totals, key) -> None:
 		row = totals[key]
 		row["account"] = labels[key]
 		data.append(row)
@@ -512,7 +514,7 @@ def get_accountwise_gle(filters, accounting_dimensions, gl_entries, gle_map):
 
 	immutable_ledger = frappe.get_single_value("Accounts Settings", "enable_immutable_ledger")
 
-	def update_value_in_dict(data, key, gle, show_net_values=False):
+	def update_value_in_dict(data, key, gle, show_net_values: bool = False) -> None:
 		data[key].debit += gle.debit
 		data[key].credit += gle.credit
 

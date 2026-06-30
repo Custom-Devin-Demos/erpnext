@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frappe
 from frappe.utils import getdate, today
 
@@ -8,14 +10,14 @@ from erpnext.tests.utils import ERPNextTestSuite
 
 
 class TestItemWiseSalesRegister(ERPNextTestSuite, AccountsTestMixin):
-	def setUp(self):
+	def setUp(self) -> None:
 		self.company = "_Test Company"
 		self.customer = "_Test Customer"
 		self.item = "_Test Item"
 		self.debit_to = "Debtors - _TC"
 		self.cost_center = "Main - _TC"
 
-	def create_sales_invoice(self, item=None, taxes=None, do_not_submit=False):
+	def create_sales_invoice(self, item=None, taxes=None, do_not_submit: bool = False):
 		si = create_sales_invoice(
 			item=item or self.item,
 			item_name=item or self.item,
@@ -48,7 +50,7 @@ class TestItemWiseSalesRegister(ERPNextTestSuite, AccountsTestMixin):
 			si = si.submit()
 		return si
 
-	def test_basic_report_output(self):
+	def test_basic_report_output(self) -> None:
 		si = self.create_sales_invoice()
 
 		filters = frappe._dict({"from_date": today(), "to_date": today(), "company": self.company})
@@ -77,7 +79,7 @@ class TestItemWiseSalesRegister(ERPNextTestSuite, AccountsTestMixin):
 		report_output = {k: v for k, v in report[1][0].items() if k in expected_result}
 		self.assertDictEqual(report_output, expected_result)
 
-	def test_grouped_report_handles_different_tax_descriptions(self):
+	def test_grouped_report_handles_different_tax_descriptions(self) -> None:
 		self.create_item(
 			item_name="_Test Item Tax Description A", company="_Test Company", warehouse="Stores - _TC"
 		)

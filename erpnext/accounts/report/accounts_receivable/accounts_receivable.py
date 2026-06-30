@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from __future__ import annotations
+
 from collections import OrderedDict
 
 import frappe
@@ -47,7 +49,7 @@ def execute(filters=None):
 
 
 class ReceivablePayableReport:
-	def __init__(self, filters=None):
+	def __init__(self, filters=None) -> None:
 		self.filters = frappe._dict(filters or {})
 		self.qb_selection_filter = []
 		self.ple = qb.DocType("Payment Ledger Entry")
@@ -80,7 +82,7 @@ class ReceivablePayableReport:
 		self.get_chart_data()
 		return self.columns, self.data, None, self.chart, None, self.skip_total_row
 
-	def set_defaults(self):
+	def set_defaults(self) -> None:
 		if not self.filters.get("company"):
 			self.filters.company = frappe.db.get_single_value("Global Defaults", "default_company")
 		self.company_currency = frappe.get_cached_value(
@@ -106,7 +108,7 @@ class ReceivablePayableReport:
 			else:
 				self.skip_total_row = 1
 
-	def get_data(self):
+	def get_data(self) -> None:
 		self.get_sales_invoices_or_customers_based_on_sales_person()
 
 		# Get invoice details like bill_no, due_date etc for all invoices
@@ -136,7 +138,7 @@ class ReceivablePayableReport:
 
 		self.build_data()
 
-	def fetch_ple_in_buffered_cursor(self):
+	def fetch_ple_in_buffered_cursor(self) -> None:
 		self.ple_entries = self.ple_query.run(as_dict=True)
 
 		for ple in self.ple_entries:
@@ -148,7 +150,7 @@ class ReceivablePayableReport:
 
 		delattr(self, "ple_entries")
 
-	def fetch_ple_in_unbuffered_cursor(self):
+	def fetch_ple_in_unbuffered_cursor(self) -> None:
 		self.ple_entries = []
 		with frappe.db.unbuffered_cursor():
 			for ple in self.ple_query.run(as_dict=True, as_iterator=True):
@@ -179,7 +181,7 @@ class ReceivablePayableReport:
 			outstanding_in_account_currency=0.0,
 		)
 
-	def init_voucher_balance(self, ple):
+	def init_voucher_balance(self, ple) -> None:
 		if self.filters.get("ignore_accounts"):
 			key = (ple.voucher_type, ple.voucher_no, ple.party)
 		else:
@@ -203,7 +205,7 @@ class ReceivablePayableReport:
 		if self.filters.get("group_by_party") and not self.filters.get("in_party_currency"):
 			self.init_subtotal_row("Total")
 
-	def get_invoices(self, ple):
+	def get_invoices(self, ple) -> None:
 		if ple.voucher_type in ("Sales Invoice", "Purchase Invoice"):
 			if self.filters.get("sales_person"):
 				if ple.voucher_no in self.sales_person_records.get(
@@ -213,7 +215,7 @@ class ReceivablePayableReport:
 			else:
 				self.invoices.add(ple.voucher_no)
 
-	def init_subtotal_row(self, party):
+	def init_subtotal_row(self, party) -> None:
 		if not self.total_row_map.get(party):
 			self.total_row_map.setdefault(party, {"party": party, "bold": 1})
 
@@ -284,7 +286,7 @@ class ReceivablePayableReport:
 		row.party_type = ple.party_type
 		return row
 
-	def update_voucher_balance(self, ple):
+	def update_voucher_balance(self, ple) -> None:
 		# get the row where this balance needs to be updated
 		# if its a payment, it will return the linked invoice or will be considered as advance
 		row = self.get_voucher_balance(ple)
@@ -320,7 +322,7 @@ class ReceivablePayableReport:
 				row.paid -= amount
 				row.paid_in_account_currency -= amount_in_account_currency
 
-	def update_sub_total_row(self, row, party):
+	def update_sub_total_row(self, row, party) -> None:
 		total_row = self.total_row_map.get(party)
 
 		if total_row:
@@ -328,7 +330,7 @@ class ReceivablePayableReport:
 				total_row[field] += row.get(field, 0.0)
 			total_row["currency"] = row.get("currency", "")
 
-	def append_subtotal_row(self, party):
+	def append_subtotal_row(self, party) -> None:
 		sub_total_row = self.total_row_map.get(party)
 
 		if sub_total_row:
@@ -336,7 +338,7 @@ class ReceivablePayableReport:
 			self.data.append({})
 			self.update_sub_total_row(sub_total_row, "Total")
 
-	def build_data(self):
+	def build_data(self) -> None:
 		# set outstanding for all the accumulated balances
 		# as we can use this to filter out invoices without outstanding
 		for _key, row in self.voucher_balance.items():
@@ -389,7 +391,7 @@ class ReceivablePayableReport:
 			if self.data:
 				self.data.append(self.total_row_map.get("Total", {}))
 
-	def append_row(self, row):
+	def append_row(self, row) -> None:
 		self.allocate_future_payments(row)
 		self.set_invoice_details(row)
 		self.set_party_details(row)
@@ -403,7 +405,7 @@ class ReceivablePayableReport:
 
 		self.data.append(row)
 
-	def set_invoice_details(self, row):
+	def set_invoice_details(self, row) -> None:
 		invoice_details = self.invoice_details.get(row.voucher_no, {})
 		if row.due_date:
 			invoice_details.pop("due_date", None)
@@ -417,12 +419,12 @@ class ReceivablePayableReport:
 				row.sales_person = ", ".join(row.sales_team)
 				del row["sales_team"]
 
-	def set_delivery_notes(self, row):
+	def set_delivery_notes(self, row) -> None:
 		delivery_notes = self.delivery_notes.get(row.voucher_no, [])
 		if delivery_notes:
 			row.delivery_notes = ", ".join(delivery_notes)
 
-	def build_delivery_note_map(self):
+	def build_delivery_note_map(self) -> None:
 		if self.invoices and self.filters.show_delivery_notes:
 			self.delivery_notes = frappe._dict()
 
@@ -447,7 +449,7 @@ class ReceivablePayableReport:
 			for d in dn_against_si:
 				self.delivery_notes.setdefault(d.against_sales_invoice, set()).add(d.parent)
 
-	def get_invoice_details(self):
+	def get_invoice_details(self) -> None:
 		self.invoice_details = frappe._dict()
 		if self.account_type == "Receivable":
 			# nosemgrep
@@ -506,7 +508,7 @@ class ReceivablePayableReport:
 			if je.bill_no:
 				self.invoice_details.setdefault(je.name, je)
 
-	def set_party_details(self, row):
+	def set_party_details(self, row) -> None:
 		if not row.party:
 			return
 		# customer / supplier name
@@ -518,7 +520,7 @@ class ReceivablePayableReport:
 		else:
 			row.currency = self.company_currency
 
-	def allocate_outstanding_based_on_payment_terms(self, row):
+	def allocate_outstanding_based_on_payment_terms(self, row) -> None:
 		self.get_payment_terms(row)
 		for term in row.payment_terms:
 			# update "paid" and "outstanding" for this term
@@ -531,7 +533,7 @@ class ReceivablePayableReport:
 
 		row.payment_terms = sorted(row.payment_terms, key=lambda x: x["due_date"])
 
-	def get_payment_terms(self, row):
+	def get_payment_terms(self, row) -> None:
 		# build payment_terms for row
 		si = frappe.qb.DocType(row.voucher_type)
 		ps = frappe.qb.DocType("Payment Schedule")
@@ -582,7 +584,7 @@ class ReceivablePayableReport:
 			term = frappe._dict(original_row)
 			self.append_payment_term(row, d, term, company_currency)
 
-	def append_payment_term(self, row, d, term, company_currency):
+	def append_payment_term(self, row, d, term, company_currency) -> None:
 		invoiced = d.base_payment_amount
 		paid_amount = d.base_paid_amount
 
@@ -616,7 +618,7 @@ class ReceivablePayableReport:
 		if paid_amount:
 			row["paid"] -= paid_amount + d.discounted_amount
 
-	def allocate_closing_to_term(self, row, term, key):
+	def allocate_closing_to_term(self, row, term, key) -> None:
 		if row[key]:
 			if row[key] > term.outstanding:
 				term[key] = term.outstanding
@@ -626,7 +628,7 @@ class ReceivablePayableReport:
 				row[key] = 0
 		term.outstanding -= term[key]
 
-	def allocate_extra_payments_or_credits(self, row):
+	def allocate_extra_payments_or_credits(self, row) -> None:
 		# allocate extra payments / credits
 		additional_row = None
 		for key in ("paid", "credit_note"):
@@ -642,7 +644,7 @@ class ReceivablePayableReport:
 			)
 			self.append_row(additional_row)
 
-	def get_future_payments(self):
+	def get_future_payments(self) -> None:
 		if self.filters.show_future_payments:
 			self.future_payments = frappe._dict()
 			future_payments = list(self.get_future_payments_from_payment_entry())
@@ -737,7 +739,7 @@ class ReceivablePayableReport:
 		query = query.having(future_amount > 0)
 		return query.run(as_dict=True)
 
-	def allocate_future_payments(self, row):
+	def allocate_future_payments(self, row) -> None:
 		# future payments are captured in additional columns
 		# this method allocates pending future payments against a voucher to
 		# the current row (which could be generated from payment terms)
@@ -769,7 +771,7 @@ class ReceivablePayableReport:
 		if row.future_ref:
 			row.future_ref = ", ".join(row.future_ref)
 
-	def get_return_entries(self):
+	def get_return_entries(self) -> None:
 		doctype = "Sales Invoice" if self.account_type == "Receivable" else "Purchase Invoice"
 		filters = {
 			"posting_date": ("<=", self.filters.report_date),
@@ -791,7 +793,7 @@ class ReceivablePayableReport:
 			)
 		)
 
-	def set_ageing(self, row):
+	def set_ageing(self, row) -> None:
 		if self.filters.ageing_based_on == "Due Date":
 			# use posting date as a fallback for advances posted via journal and payment entry
 			# when ageing viewed by due date
@@ -813,7 +815,7 @@ class ReceivablePayableReport:
 
 		row.total_due = sum(row[f"range{i}"] for i in self.range_numbers)
 
-	def get_ageing_data(self, entry_date, row):
+	def get_ageing_data(self, entry_date, row) -> None:
 		# [0-30, 30-60, 60-90, 90-120, 120-above]
 		[setattr(row, f"range{i}", 0.0) for i in self.range_numbers]
 
@@ -827,7 +829,7 @@ class ReceivablePayableReport:
 		)
 		row["range" + str(index + 1)] = row.outstanding
 
-	def prepare_ple_query(self):
+	def prepare_ple_query(self) -> None:
 		# get all the GL entries filtered by the given filters
 
 		self.prepare_conditions()
@@ -886,7 +888,7 @@ class ReceivablePayableReport:
 
 		self.ple_query = query
 
-	def get_sales_invoices_or_customers_based_on_sales_person(self):
+	def get_sales_invoices_or_customers_based_on_sales_person(self) -> None:
 		if self.filters.get("sales_person"):
 			lft, rgt = frappe.db.get_value("Sales Person", self.filters.get("sales_person"), ["lft", "rgt"])
 
@@ -909,7 +911,7 @@ class ReceivablePayableReport:
 			for d in records:
 				self.sales_person_records.setdefault(d.parenttype, set()).add(d.parent)
 
-	def prepare_conditions(self):
+	def prepare_conditions(self) -> None:
 		self.qb_selection_filter = []
 		self.or_filters = []
 
@@ -933,7 +935,7 @@ class ReceivablePayableReport:
 
 		self.add_accounting_dimensions_filters()
 
-	def add_user_permission_filters(self):
+	def add_user_permission_filters(self) -> None:
 		# Party is a dynamic link, so match conditions cannot auto-apply Customer/Supplier user permissions
 		from frappe.core.doctype.user_permission.user_permission import get_user_permissions
 		from frappe.permissions import get_allowed_docs_for_doctype
@@ -951,11 +953,11 @@ class ReceivablePayableReport:
 				(self.ple.party_type != party_type) | self.ple.party.isin(allowed_parties or [""])
 			)
 
-	def get_cost_center_conditions(self):
+	def get_cost_center_conditions(self) -> None:
 		cost_center_list = get_cost_centers_with_children(self.filters.cost_center)
 		self.qb_selection_filter.append(self.ple.cost_center.isin(cost_center_list))
 
-	def add_common_filters(self):
+	def add_common_filters(self) -> None:
 		if self.filters.company:
 			self.qb_selection_filter.append(self.ple.company == self.filters.company)
 
@@ -984,7 +986,7 @@ class ReceivablePayableReport:
 
 	def add_customer_filters(
 		self,
-	):
+	) -> None:
 		self.customer = qb.DocType("Customer")
 		if self.filters.get("customer_group"):
 			groups = get_party_group_with_children("Customer", self.filters.customer_group)
@@ -1020,10 +1022,10 @@ class ReceivablePayableReport:
 				)
 			)
 
-	def exclude_employee_transaction(self):
+	def exclude_employee_transaction(self) -> None:
 		self.qb_selection_filter.append(self.ple.party_type != "Employee")
 
-	def add_supplier_filters(self):
+	def add_supplier_filters(self) -> None:
 		supplier = qb.DocType("Supplier")
 		if self.filters.get("supplier_group"):
 			self.qb_selection_filter.append(
@@ -1082,7 +1084,7 @@ class ReceivablePayableReport:
 
 		return ptt
 
-	def get_hierarchical_filters(self, doctype, key):
+	def get_hierarchical_filters(self, doctype, key) -> None:
 		lft, rgt = frappe.db.get_value(doctype, self.filters.get(key), ["lft", "rgt"])
 
 		doc = qb.DocType(doctype)
@@ -1092,7 +1094,7 @@ class ReceivablePayableReport:
 		customers = qb.from_(customer).select(customer.name).where(customer[key].isin(groups))
 		self.qb_selection_filter.append(ple.party.isin(customers))
 
-	def add_accounting_dimensions_filters(self):
+	def add_accounting_dimensions_filters(self) -> None:
 		accounting_dimensions = get_accounting_dimensions(as_list=False)
 
 		if accounting_dimensions:
@@ -1135,7 +1137,7 @@ class ReceivablePayableReport:
 
 		return self.party_details[party]
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		self.columns = []
 		self.add_column(_("Posting Date"), fieldname="posting_date", fieldtype="Date")
 		self.add_column(
@@ -1264,7 +1266,15 @@ class ReceivablePayableReport:
 		if self.filters.show_remarks:
 			self.add_column(label=_("Remarks"), fieldname="remarks", fieldtype="Text", width=200)
 
-	def add_column(self, label, fieldname=None, fieldtype="Currency", options=None, width=120, sticky=False):
+	def add_column(
+		self,
+		label,
+		fieldname=None,
+		fieldtype: str = "Currency",
+		options=None,
+		width: int = 120,
+		sticky: bool = False,
+	) -> None:
 		if not fieldname:
 			fieldname = scrub(label)
 		if fieldtype == "Currency":
@@ -1283,7 +1293,7 @@ class ReceivablePayableReport:
 			)
 		)
 
-	def setup_ageing_columns(self):
+	def setup_ageing_columns(self) -> None:
 		# for charts
 		self.ageing_column_labels = []
 		ranges = [*self.ranges, _("Above")]
@@ -1300,7 +1310,7 @@ class ReceivablePayableReport:
 			if curr_range_value.isdigit():
 				prev_range_value = cint(curr_range_value) + 1
 
-	def get_chart_data(self):
+	def get_chart_data(self) -> None:
 		precision = cint(frappe.db.get_default("float_precision")) or 2
 		rows = []
 		for row in self.data:
@@ -1316,7 +1326,7 @@ class ReceivablePayableReport:
 			"type": "percentage",
 		}
 
-	def get_exchange_rate_revaluations(self):
+	def get_exchange_rate_revaluations(self) -> None:
 		je = qb.DocType("Journal Entry")
 		results = (
 			qb.from_(je)

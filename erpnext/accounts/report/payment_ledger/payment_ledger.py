@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 from collections import OrderedDict
 
 import frappe
@@ -9,14 +11,14 @@ from frappe.query_builder import Criterion
 
 
 class PaymentLedger:
-	def __init__(self, filters=None):
+	def __init__(self, filters=None) -> None:
 		self.filters = filters
 		self.columns, self.data = [], []
 		self.voucher_dict = OrderedDict()
 		self.voucher_amount = []
 		self.ple = qb.DocType("Payment Ledger Entry")
 
-	def init_voucher_dict(self):
+	def init_voucher_dict(self) -> None:
 		if self.voucher_amount:
 			# for each ple, using group_by_key to create a key and assign it to +/- list
 			for ple in self.voucher_amount:
@@ -54,7 +56,7 @@ class PaymentLedger:
 
 					target.append(entry)
 
-	def build_data(self):
+	def build_data(self) -> None:
 		self.data.clear()
 
 		for value in self.voucher_dict.values():
@@ -95,7 +97,7 @@ class PaymentLedger:
 				)
 				self.data.extend(voucher_data)
 
-	def build_conditions(self):
+	def build_conditions(self) -> None:
 		self.conditions = []
 
 		if self.filters.company:
@@ -122,7 +124,7 @@ class PaymentLedger:
 		if self.filters.party:
 			self.conditions.append(self.ple.party.isin(self.filters.party))
 
-	def get_data(self):
+	def get_data(self) -> None:
 		ple = self.ple
 
 		self.build_conditions()
@@ -136,7 +138,7 @@ class PaymentLedger:
 			.run(as_dict=True)
 		)
 
-	def get_columns(self):
+	def get_columns(self) -> None:
 		options = None
 		self.columns.append(
 			dict(

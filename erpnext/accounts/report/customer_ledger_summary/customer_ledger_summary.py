@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 
+from __future__ import annotations
+
 import frappe
 from frappe import _, qb, scrub
 from frappe.query_builder import Criterion, Tuple
@@ -21,7 +23,7 @@ TREE_DOCTYPES = frozenset(
 
 
 class PartyLedgerSummaryReport:
-	def __init__(self, filters=None):
+	def __init__(self, filters=None) -> None:
 		self.filters = frappe._dict(filters or {})
 		self.filters.from_date = getdate(self.filters.from_date or nowdate())
 		self.filters.to_date = getdate(self.filters.to_date or nowdate())
@@ -45,7 +47,7 @@ class PartyLedgerSummaryReport:
 
 		return columns, data
 
-	def validate_filters(self):
+	def validate_filters(self) -> None:
 		if not self.filters.get("company"):
 			frappe.throw(_("{0} is mandatory").format(_("Company")))
 
@@ -54,13 +56,13 @@ class PartyLedgerSummaryReport:
 
 		self.update_hierarchical_filters()
 
-	def update_hierarchical_filters(self):
+	def update_hierarchical_filters(self) -> None:
 		for doctype in TREE_DOCTYPES:
 			key = scrub(doctype)
 			if self.filters.get(key):
 				self.filters[key] = get_children(doctype, self.filters[key])
 
-	def get_party_details(self):
+	def get_party_details(self) -> None:
 		"""
 		Additional Columns for 'User Permission' based access control
 		"""
@@ -326,7 +328,7 @@ class PartyLedgerSummaryReport:
 
 		return out
 
-	def get_gl_entries(self):
+	def get_gl_entries(self) -> None:
 		gle = qb.DocType("GL Entry")
 		query = (
 			qb.from_(gle)
@@ -409,7 +411,7 @@ class PartyLedgerSummaryReport:
 
 		return query
 
-	def get_return_invoices(self):
+	def get_return_invoices(self) -> None:
 		doctype = "Sales Invoice" if self.filters.party_type == "Customer" else "Purchase Invoice"
 		filters = (
 			{
@@ -422,7 +424,7 @@ class PartyLedgerSummaryReport:
 
 		self.return_invoices = frappe.get_all(doctype, filters=filters, pluck="name")
 
-	def get_party_adjustment_amounts(self):
+	def get_party_adjustment_amounts(self) -> None:
 		account_type = "Expense Account" if self.filters.party_type == "Customer" else "Income Account"
 
 		invoice_dr_or_cr = "debit" if self.filters.party_type == "Customer" else "credit"
