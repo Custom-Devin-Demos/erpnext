@@ -1,13 +1,22 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe.utils import cint, cstr, flt, fmt_money
 
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_for_item
 
 
-def get_price(item_code, price_list, customer_group, company, qty=1, party=None):
+def get_price(
+	item_code: str,
+	price_list: str | None,
+	customer_group: str | None,
+	company: str | None,
+	qty: float = 1,
+	party=None,
+) -> dict | None:
 	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
 
 	if price_list:
@@ -110,7 +119,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, party=None)
 			return price_obj
 
 
-def get_item_codes_by_attributes(attribute_filters, template_item_code=None):
+def get_item_codes_by_attributes(attribute_filters: dict, template_item_code: str | None = None) -> list:
 	items = []
 
 	for attribute, values in attribute_filters.items():

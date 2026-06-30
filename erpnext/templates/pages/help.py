@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import json
 
 import frappe
 import requests
 
 
-def get_context(context):
+def get_context(context) -> None:
 	context.no_cache = 1
 	settings = frappe.get_doc("Support Settings", "Support Settings")
 	s = settings
@@ -26,7 +28,7 @@ def get_context(context):
 		context.issues = []
 
 
-def get_forum_posts(s):
+def get_forum_posts(s) -> tuple:
 	response = requests.get(s.forum_url + "/" + s.get_latest_query)
 	response.raise_for_status()
 	response_json = response.json()

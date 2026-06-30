@@ -16,13 +16,15 @@ the base of the query, prefer ``frappe.qb.get_query(doctype, ignore_permissions=
 directly instead of these helpers.
 """
 
+from __future__ import annotations
+
 import json
 
 import frappe
 from frappe import _
 
 
-def get_match_conditions_qb(doctype, table=None, user=None):
+def get_match_conditions_qb(doctype: str, table=None, user: str | None = None) -> list:
 	"""Return user-permission match conditions for ``doctype`` as query-builder criteria.
 
 	Query-builder equivalent of ``frappe.desk.reportview.get_match_cond`` /
@@ -44,7 +46,7 @@ def get_match_conditions_qb(doctype, table=None, user=None):
 	return [condition] if condition is not None else []
 
 
-def get_filter_conditions_qb(doctype, filters, ignore_permissions=None):
+def get_filter_conditions_qb(doctype: str, filters, ignore_permissions: bool | None = None) -> list:
 	"""Return ``filters`` for ``doctype`` as a list of query-builder criteria.
 
 	Query-builder equivalent of ``frappe.desk.reportview.get_filters_cond`` (which returns a
@@ -82,7 +84,7 @@ def get_filter_conditions_qb(doctype, filters, ignore_permissions=None):
 	return criteria
 
 
-def get_event_conditions_qb(doctype, filters=None):
+def get_event_conditions_qb(doctype: str, filters=None) -> list:
 	"""Return user-permission match conditions + ``filters`` for event/calendar queries.
 
 	Query-builder equivalent of ``frappe.desk.calendar.get_event_conditions(..., as_qb=True)``:

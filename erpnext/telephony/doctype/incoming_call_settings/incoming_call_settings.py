@@ -1,6 +1,7 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -29,7 +30,7 @@ class IncomingCallSettings(Document):
 		greeting_message: DF.Data | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		"""List of validations
 		* Make sure that to time slot is ahead of from time slot in call schedule
 		* Make sure that no overlapping timeslots for a given day
@@ -37,7 +38,7 @@ class IncomingCallSettings(Document):
 		self.validate_call_schedule_timeslot(self.call_handling_schedule)
 		self.validate_call_schedule_overlaps(self.call_handling_schedule)
 
-	def validate_call_schedule_timeslot(self, schedule: list):
+	def validate_call_schedule_timeslot(self, schedule: list) -> None:
 		"""Make sure that to time slot is ahead of from time slot."""
 		errors = []
 		for record in schedule:
@@ -53,7 +54,7 @@ class IncomingCallSettings(Document):
 		if errors:
 			frappe.throw("<br/>".join(errors))
 
-	def validate_call_schedule_overlaps(self, schedule: list):
+	def validate_call_schedule_overlaps(self, schedule: list) -> None:
 		"""Check if any time slots are overlapped in a day schedule."""
 		week_days = set([each.day_of_week for each in schedule])
 

@@ -1,6 +1,7 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
 
 import re
 from datetime import datetime
@@ -36,16 +37,16 @@ class Video(Document):
 		youtube_video_id: DF.Data | None
 	# end: auto-generated types
 
-	def validate(self):
+	def validate(self) -> None:
 		if self.provider == "YouTube" and is_tracking_enabled():
 			self.set_video_id()
 			self.set_youtube_statistics()
 
-	def set_video_id(self):
+	def set_video_id(self) -> None:
 		if self.url and not self.get("youtube_video_id"):
 			self.youtube_video_id = get_id_from_url(self.url)
 
-	def set_youtube_statistics(self):
+	def set_youtube_statistics(self) -> None:
 		api_key = frappe.db.get_single_value("Video Settings", "api_key")
 		api = Api(api_key=api_key)
 
@@ -66,7 +67,7 @@ def is_tracking_enabled():
 	return frappe.db.get_single_value("Video Settings", "enable_youtube_tracking")
 
 
-def get_frequency(value):
+def get_frequency(value: str) -> int:
 	# Return numeric value from frequency field, return 1 as fallback default value: 1 hour
 	if value != "Daily":
 		return cint(value[:2].strip())
@@ -75,7 +76,7 @@ def get_frequency(value):
 	return 1
 
 
-def update_youtube_data():
+def update_youtube_data() -> None:
 	from zoneinfo import ZoneInfo
 
 	# Called every 30 minutes via hooks
@@ -95,7 +96,7 @@ def update_youtube_data():
 		batch_update_youtube_data()
 
 
-def get_formatted_ids(video_list):
+def get_formatted_ids(video_list: list) -> str:
 	# format ids to comma separated string for bulk request
 	ids = []
 	for video in video_list:
@@ -105,7 +106,7 @@ def get_formatted_ids(video_list):
 
 
 @frappe.whitelist()
-def get_id_from_url(url: str):
+def get_id_from_url(url: str) -> str | None:
 	"""
 	Returns video id from url
 	:param youtube url: String URL
@@ -119,8 +120,8 @@ def get_id_from_url(url: str):
 
 
 @frappe.whitelist()
-def batch_update_youtube_data():
-	def get_youtube_statistics(video_ids):
+def batch_update_youtube_data() -> None:
+	def get_youtube_statistics(video_ids: str) -> list | None:
 		api_key = frappe.db.get_single_value("Video Settings", "api_key")
 		api = Api(api_key=api_key)
 		try:
@@ -130,12 +131,12 @@ def batch_update_youtube_data():
 		except Exception:
 			frappe.log_error("Unable to update YouTube statistics")
 
-	def prepare_and_set_data(video_list):
+	def prepare_and_set_data(video_list: list) -> None:
 		video_ids = get_formatted_ids(video_list)
 		stats = get_youtube_statistics(video_ids)
 		set_youtube_data(stats)
 
-	def set_youtube_data(entries):
+	def set_youtube_data(entries: list) -> None:
 		for entry in entries:
 			video_stats = entry.to_dict().get("statistics")
 			video_id = entry.to_dict().get("id")

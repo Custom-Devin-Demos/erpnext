@@ -1,11 +1,17 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import frappe
 import frappe.share
 from frappe import _
 from frappe.utils import cint, flt, get_time, now_datetime
+
+if TYPE_CHECKING:
+	from frappe.model.document import Document
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_dimensions
 from erpnext.controllers.status_updater import StatusUpdater
@@ -18,7 +24,7 @@ class UOMMustBeIntegerError(frappe.ValidationError):
 
 
 class TransactionBase(StatusUpdater):
-	def on_change(self):
+	def on_change(self) -> None:
 		# `on_change` also fires for `db_set()`, so only run during an actual insert/save.
 		is_real_save = self.flags.in_insert or (self.doctype, self.name) in frappe.flags.currently_saving
 		if not is_real_save:
@@ -26,7 +32,7 @@ class TransactionBase(StatusUpdater):
 
 		self.copy_terms_and_conditions_attachments()
 
-	def validate_posting_time(self):
+	def validate_posting_time(self) -> None:
 		# set Edit Posting Date and Time to 1 while data import and restore
 		if (frappe.flags.in_import or self.flags.from_restore) and self.posting_date:
 			self.set_posting_time = 1
@@ -41,10 +47,12 @@ class TransactionBase(StatusUpdater):
 			except ValueError:
 				frappe.throw(_("Invalid Posting Time"))
 
-	def validate_uom_is_integer(self, uom_field, qty_fields, child_dt=None):
+	def validate_uom_is_integer(
+		self, uom_field: str, qty_fields: str | list, child_dt: str | None = None
+	) -> None:
 		validate_uom_is_integer(self, uom_field, qty_fields, child_dt)
 
-	def copy_terms_and_conditions_attachments(self):
+	def copy_terms_and_conditions_attachments(self) -> None:
 		if (
 			not self.name
 			or not self.meta.has_field("tc_name")
@@ -94,7 +102,7 @@ class TransactionBase(StatusUpdater):
 			)
 			existing_file_urls.add(new_attachment.file_url)
 
-	def validate_with_previous_doc(self, ref):
+	def validate_with_previous_doc(self, ref: dict) -> None:
 		self.exclude_fields = ["conversion_factor", "uom"] if self.get("is_return") else []
 
 		for key, val in ref.items():
@@ -117,7 +125,7 @@ class TransactionBase(StatusUpdater):
 			if ref_doc:
 				self.compare_values(ref_doc, val["compare_fields"])
 
-	def compare_values(self, ref_doc, fields, doc=None):
+	def compare_values(self, ref_doc: dict, fields: list, doc=None) -> None:
 		for reference_doctype, ref_dn_list in ref_doc.items():
 			prev_doc_detail_map = self.get_prev_doc_reference_details(ref_dn_list, reference_doctype, fields)
 			for reference_name in ref_dn_list:
@@ -129,7 +137,7 @@ class TransactionBase(StatusUpdater):
 					if prevdoc_values[field] not in [None, ""] and field not in self.exclude_fields:
 						self.validate_value(field, condition, prevdoc_values[field], doc)
 
-	def get_prev_doc_reference_details(self, reference_names, reference_doctype, fields):
+	def get_prev_doc_reference_details(self, reference_names, reference_doctype: str, fields: list) -> dict:
 		prev_doc_detail_map = {}
 		details = frappe.get_all(
 			reference_doctype,
@@ -142,7 +150,7 @@ class TransactionBase(StatusUpdater):
 
 		return prev_doc_detail_map
 
-	def validate_rate_with_reference_doc(self, ref_details):
+	def validate_rate_with_reference_doc(self, ref_details) -> None:
 		if self.get("is_internal_supplier"):
 			return
 
@@ -184,7 +192,7 @@ class TransactionBase(StatusUpdater):
 		if stop_actions:
 			frappe.throw(stop_actions, as_list=True)
 
-	def get_reference_details(self, reference_names, reference_doctype):
+	def get_reference_details(self, reference_names, reference_doctype: str) -> dict:
 		return frappe._dict(
 			frappe.get_all(
 				reference_doctype,
@@ -194,7 +202,7 @@ class TransactionBase(StatusUpdater):
 			)
 		)
 
-	def get_link_filters(self, for_doctype):
+	def get_link_filters(self, for_doctype: str) -> dict | None:
 		if hasattr(self, "prev_link_mapper") and self.prev_link_mapper.get(for_doctype):
 			fieldname = self.prev_link_mapper[for_doctype]["fieldname"]
 
@@ -232,7 +240,7 @@ class TransactionBase(StatusUpdater):
 		if len(child_table_values) > 1:
 			self.set(default_field, None)
 
-	def validate_currency_for_receivable_payable_and_advance_account(self):
+	def validate_currency_for_receivable_payable_and_advance_account(self) -> None:
 		if self.doctype in ["Customer", "Supplier"]:
 			account_type = "Receivable" if self.doctype == "Customer" else "Payable"
 			for x in self.accounts:
@@ -349,7 +357,7 @@ class TransactionBase(StatusUpdater):
 		)
 
 	@frappe.whitelist()
-	def process_item_selection(self, item_idx: int):
+	def process_item_selection(self, item_idx: int) -> None:
 		# Server side 'item' doc. Update this to reflect in UI
 		item_obj = self.get("items", {"idx": item_idx})[0]
 
@@ -443,7 +451,7 @@ class TransactionBase(StatusUpdater):
 				item_obj.precision("rate"),
 			)
 
-	def copy_from_first_row(self, row, fields):
+	def copy_from_first_row(self, row, fields: list) -> None:
 		if self.items and row:
 			fields.extend([x.get("fieldname") for x in get_dimensions(True)[0]])
 			first_row = self.items[0]
@@ -525,7 +533,7 @@ class TransactionBase(StatusUpdater):
 
 		item_obj.rate = item_rate
 
-	def calculate_net_weight(self):
+	def calculate_net_weight(self) -> None:
 		self.total_net_weight = sum([x.get("total_weight") or 0 for x in self.items])
 		self.apply_shipping_rule()
 
@@ -578,7 +586,7 @@ class TransactionBase(StatusUpdater):
 		apply_price_list(cts=args, as_doc=True, doc=self)
 
 
-def delete_events(ref_type, ref_name):
+def delete_events(ref_type: str, ref_name: str) -> None:
 	event = frappe.qb.DocType("Event")
 	participant = frappe.qb.DocType("Event Participants")
 	events = (
@@ -596,7 +604,9 @@ def delete_events(ref_type, ref_name):
 		frappe.delete_doc("Event", events, for_reload=True)
 
 
-def validate_uom_is_integer(doc, uom_field, qty_fields, child_dt=None):
+def validate_uom_is_integer(
+	doc: Document, uom_field: str, qty_fields: str | list, child_dt: str | None = None
+) -> None:
 	if isinstance(qty_fields, str):
 		qty_fields = [qty_fields]
 

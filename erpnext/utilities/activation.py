@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -9,7 +10,7 @@ from frappe.core.doctype.installed_applications.installed_applications import ge
 import erpnext
 
 
-def get_level(site_info):
+def get_level(site_info: dict) -> dict:
 	activation_level = site_info.get("activation", {}).get("activation_level", 0)
 	sales_data = site_info.get("activation", {}).get("sales_data", [])
 	min_count = 0
@@ -65,7 +66,7 @@ def get_level(site_info):
 	return level
 
 
-def get_help_messages():
+def get_help_messages() -> list:
 	"""Returns help messages to be shown on Desktop"""
 	if get_level() > 6:
 		return []
