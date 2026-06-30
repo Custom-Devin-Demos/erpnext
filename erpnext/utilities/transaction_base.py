@@ -217,7 +217,7 @@ class TransactionBase(StatusUpdater):
 
 		return ret
 
-	def reset_default_field_value(self, default_field: str, child_table: str, child_table_field: str):
+	def reset_default_field_value(self, default_field: str, child_table: str, child_table_field: str) -> None:
 		"""Reset "Set default X" fields on forms to avoid confusion.
 
 		example:

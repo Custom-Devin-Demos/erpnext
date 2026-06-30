@@ -63,7 +63,7 @@ class Video(Document):
 			self.log_error("Unable to update YouTube statistics")
 
 
-def is_tracking_enabled():
+def is_tracking_enabled() -> int | None:
 	return frappe.db.get_single_value("Video Settings", "enable_youtube_tracking")
 
 
