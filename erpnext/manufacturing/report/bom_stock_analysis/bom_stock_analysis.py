@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Floor, IfNull, Max, Min, Sum
@@ -9,7 +11,7 @@ from frappe.utils.data import comma_and
 from pypika.terms import ExistsCriterion
 
 
-def execute(filters=None):
+def execute(filters: dict | None = None) -> tuple:
 	filters = filters or {}
 	if filters.get("qty_to_make"):
 		columns = get_columns_with_qty_to_make()
@@ -21,18 +23,18 @@ def execute(filters=None):
 	return columns, data
 
 
-def fmt_qty(value):
+def fmt_qty(value: float) -> str:
 	"""Format a float quantity for display as a string, so blank rows stay blank."""
 	return frappe.utils.fmt_money(value, precision=2, currency=None)
 
 
-def fmt_rate(value):
+def fmt_rate(value: float) -> str:
 	"""Format a currency rate for display as a string."""
 	currency = frappe.defaults.get_global_default("currency")
 	return frappe.utils.fmt_money(value, precision=2, currency=currency)
 
 
-def get_data_with_qty_to_make(filters):
+def get_data_with_qty_to_make(filters: dict) -> list:
 	bom_data = get_bom_data(filters)
 	manufacture_details = get_manufacturer_records()
 	purchase_rates = batch_fetch_purchase_rates(bom_data)
@@ -96,7 +98,7 @@ def get_data_with_qty_to_make(filters):
 	return data
 
 
-def get_columns_with_qty_to_make():
+def get_columns_with_qty_to_make() -> list:
 	return [
 		{"fieldname": "item", "label": _("Item"), "fieldtype": "Link", "options": "Item", "width": 180},
 		{"fieldname": "description", "label": _("Description"), "fieldtype": "Data", "width": 160},
@@ -127,7 +129,7 @@ def get_columns_with_qty_to_make():
 	]
 
 
-def get_data_without_qty_to_make(filters):
+def get_data_without_qty_to_make(filters: dict) -> list:
 	raw_rows = get_producible_fg_items(filters)
 
 	data = []
@@ -160,7 +162,7 @@ def get_data_without_qty_to_make(filters):
 	return data
 
 
-def get_columns_without_qty_to_make():
+def get_columns_without_qty_to_make() -> list:
 	return [
 		{"fieldname": "item", "label": _("Item"), "fieldtype": "Link", "options": "Item", "width": 180},
 		{"fieldname": "description", "label": _("Description"), "fieldtype": "Data", "width": 200},
@@ -176,7 +178,7 @@ def get_columns_without_qty_to_make():
 	]
 
 
-def batch_fetch_purchase_rates(bom_data):
+def batch_fetch_purchase_rates(bom_data: list) -> dict:
 	if not bom_data:
 		return {}
 	item_codes = [row.item_code for row in bom_data]
@@ -190,7 +192,7 @@ def batch_fetch_purchase_rates(bom_data):
 	}
 
 
-def get_bom_data(filters):
+def get_bom_data(filters: dict) -> list:
 	bom_item_table = "BOM Explosion Item" if filters.get("show_exploded_view") else "BOM Item"
 
 	bom_item = frappe.qb.DocType(bom_item_table)
@@ -262,7 +264,7 @@ def get_bom_data(filters):
 	return data
 
 
-def explode_phantom_boms(data, filters):
+def explode_phantom_boms(data: list, filters: dict) -> list:
 	original_bom = filters.get("bom")
 	replacements = []
 
@@ -286,7 +288,7 @@ def explode_phantom_boms(data, filters):
 	return data
 
 
-def get_manufacturer_records():
+def get_manufacturer_records() -> dict:
 	details = frappe.get_all(
 		"Item Manufacturer", fields=["manufacturer", "manufacturer_part_no", "item_code"]
 	)
@@ -298,7 +300,7 @@ def get_manufacturer_records():
 	return manufacture_details
 
 
-def get_producible_fg_items(filters):
+def get_producible_fg_items(filters: dict) -> list:
 	BOM_ITEM = frappe.qb.DocType("BOM Item")
 	BOM = frappe.qb.DocType("BOM")
 	BIN = frappe.qb.DocType("Bin")
